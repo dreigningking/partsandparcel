@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - ScrapStore</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#4F46E5',secondary:'#10B981'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            border-radius: 20px;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .switch-input {
+            height: 0;
+            width: 0;
+            visibility: hidden;
+            position: absolute;
+        }
+        .switch-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            width: 46px;
+            height: 24px;
+            background: #e5e7eb;
+            border-radius: 100px;
+            position: relative;
+            transition: background-color 0.2s;
+        }
+        .switch-label:after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 100px;
+            transition: 0.2s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .switch-input:checked + .switch-label {
+            background: #4F46E5;
+        }
+        .switch-input:checked + .switch-label:after {
+            left: calc(100% - 2px);
+            transform: translateX(-100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10">
+        <div class="flex items-center">
+            <div class="font-['Pacifico'] text-2xl text-primary mr-2">ScrapStore</div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            <button class="text-gray-500 relative w-10 h-10 flex items-center justify-center">
+                <i class="ri-notification-3-line ri-lg"></i>
+                <span class="absolute top-1 right-1 w-5 h-5 bg-primary text-white text-xs rounded-full flex items-center justify-center">3</span>
+            </button>
+            
+            <div class="relative">
+                <button class="flex items-center space-x-3 focus:outline-none">
+                    <div class="w-10 h-10 rounded-full bg-cover bg-center" style="background-image: url('https://readdy.ai/api/search-image?query=professional%20headshot%20of%20a%20young%20man%20with%20short%20brown%20hair%2C%20wearing%20a%20casual%20button-up%20shirt%2C%20neutral%20expression%2C%20studio%20lighting%2C%20high%20quality%20professional%20photo%2C%20linkedin%20profile%20photo%20style&width=200&height=200&seq=1&orientation=squarish')"></div>
+                    <div class="hidden md:block text-left">
+                        <p class="text-sm font-medium text-gray-700">Michael Anderson</p>
+                        <p class="text-xs text-gray-500">Premium Member</p>
+                    </div>
+                    <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-arrow-down-s-line"></i>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-60 bg-white border-r border-gray-200 flex-shrink-0 hidden md:block">
+            <nav class="h-full flex flex-col py-4">
+                <div class="px-4 mb-6">
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">Main</div>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="dashboard.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100">
+                                <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                    <i class="ri-dashboard-line"></i>
+                                </div>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100">
+                                <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                    <i class="ri-store-3-line"></i>
+                                </div>
+                                <span>Listings</span>
+                                <span class="ml-auto bg-gray-200 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">12</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100">
+                                <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                    <i class="ri-shopping-bag-3-line"></i>
+                                </div>
+                                <span>Orders</span>
+                                <span class="ml-auto bg-primary text-white text-xs font-medium px-2 py-0.5 rounded-full">3</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100">
+                                <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                    <i class="ri-message-3-line"></i>
+                                </div>
+                                <span>Messages</span>
+                                <span class="ml-auto bg-primary text-white text-xs font-medium px-2 py-0.5 rounded-full">5</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="px-4 mb-6">
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">Account</div>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="profile.html" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-primary bg-opacity-10 text-primary">
+                                <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                    <i class="ri-user-line"></i>
+                                </div>
+                                <span>Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100">
+                                <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                    <i class="ri-exchange-dollar-line"></i>
+                                </div>
+                                <span>Transactions</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100">
+                                <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                    <i class="ri-wallet-3-line"></i>
+                                </div>
+                                <span>Wallet</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="px-4 mt-auto">
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">System</div>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100">
+                                <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                    <i class="ri-settings-line"></i>
+                                </div>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100">
+                                <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                    <i class="ri-question-line"></i>
+                                </div>
+                                <span>Help & Support</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50">
+                                <div class="w-5 h-5 flex items-center justify-center mr-3">
+                                    <i class="ri-logout-box-r-line"></i>
+                                </div>
+                                <span>Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-gray-50">
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">My Profile</h1>
+                    <p class="text-gray-600">Manage your account settings and preferences</p>
+                </div>
+            </div>
+
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+
+            <!-- Profile Image Upload -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Profile Picture</h2>
+                <div class="flex flex-col md:flex-row items-center gap-6">
+                    <div class="relative w-32 h-32">
+                        <img id="profileImage" src="https://readdy.ai/api/search-image?query=professional%20headshot%20of%20a%20young%20man%20with%20short%20brown%20hair%2C%20wearing%20a%20casual%20button-up%20shirt%2C%20neutral%20expression%2C%20studio%20lighting%2C%20high%20quality%20professional%20photo%2C%20linkedin%20profile%20photo%20style&width=200&height=200&seq=1&orientation=squarish" 
+                             alt="Profile Image" 
+                             class="w-full h-full rounded-full bg-cover bg-center border-4 border-white shadow-md">
+                        <div class="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                             onclick="document.getElementById('imageInput').click()">
+                            <div class="text-white text-center">
+                                <i class="ri-camera-line text-2xl mb-2"></i>
+                                <span class="text-sm font-medium">Change</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                        <button class="bg-primary text-white px-4 py-2 rounded-button flex items-center whitespace-nowrap" onclick="document.getElementById('imageInput').click()">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2">
+                                <i class="ri-upload-line"></i>
+                            </div>
+                            Upload New Photo
+                        </button>
+                        <p class="text-sm text-gray-500">JPG, PNG or GIF (max. 800x800px)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Basic Information Section -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+                <form id="basicInfoForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="fullName" name="fullName" value="Michael Anderson" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-button focus:ring-primary focus:border-primary transition-colors">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
+                            <input type="email" id="email" name="email" value="michael.anderson@example.com" readonly
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-button bg-gray-50 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number <span class="text-red-500">*</span></label>
+                            <input type="tel" id="phone" name="phone" value="+1 (555) 123-4567" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-button focus:ring-primary focus:border-primary transition-colors">
+                        </div>
+                        <div>
+                            <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                            <select id="gender" name="gender"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-button focus:ring-primary focus:border-primary transition-colors">
+                                <option value="">Select...</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                         <div class="md:col-span-2">
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address <span class="text-red-500">*</span></label>
+                            <textarea id="address" name="address" required rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-button focus:ring-primary focus:border-primary transition-colors">123 Main Street, City Center, New York</textarea>
+                        </div>
+                        <div>
+                            <label for="state" class="block text-sm font-medium text-gray-700 mb-1">State/Province <span class="text-red-500">*</span></label>
+                            <select id="state" name="state" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-button focus:ring-primary focus:border-primary transition-colors">
+                                <option value="">Select State...</option>
+                                <option value="ny" selected>New York</option>
+                                <option value="ca">California</option>
+                                <option value="tx">Texas</option>
+                                <option value="fl">Florida</option>
+                                <option value="il">Illinois</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="country" class="block text-sm font-medium text-gray-700 mb-1">Country <span class="text-red-500">*</span></label>
+                            <select id="country" name="country" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-button focus:ring-primary focus:border-primary transition-colors">
+                                <option value="">Select Country...</option>
+                                <option value="usa" selected>United States</option>
+                                <option value="canada">Canada</option>
+                                <option value="uk">United Kingdom</option>
+                                <option value="germany">Germany</option>
+                                <option value="france">France</option>
+                                <option value="australia">Australia</option>
+                                <option value="nigeria">Nigeria</option>
+                                <option value="south-africa">South Africa</option>
+                                <option value="india">India</option>
+                                <option value="brazil">Brazil</option>
+                            </select>
+                        </div>
+                        
+                       
+                    </div>
+                    <div class="flex gap-3 mt-6">
+                        <button type="submit" class="bg-primary text-white px-4 py-2 rounded-button flex items-center whitespace-nowrap">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2">
+                                <i class="ri-save-line"></i>
+                            </div>
+                            Save Changes
+                        </button>
+                        <button type="button" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-button flex items-center whitespace-nowrap" onclick="resetForm()">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2">
+                                <i class="ri-close-line"></i>
+                            </div>
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Password Change Section -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Change Password</h2>
+                <form id="passwordForm">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">Current Password <span class="text-red-500">*</span></label>
+                            <input type="password" id="currentPassword" name="currentPassword" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-button focus:ring-primary focus:border-primary transition-colors">
+                        </div>
+                        <div>
+                            <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">New Password <span class="text-red-500">*</span></label>
+                            <input type="password" id="newPassword" name="newPassword" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-button focus:ring-primary focus:border-primary transition-colors">
+                        </div>
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password <span class="text-red-500">*</span></label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-button focus:ring-primary focus:border-primary transition-colors">
+                        </div>
+                    </div>
+                    <div class="flex gap-3 mt-6">
+                        <button type="submit" class="bg-primary text-white px-4 py-2 rounded-button flex items-center whitespace-nowrap">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2">
+                                <i class="ri-refresh-line"></i>
+                            </div>
+                            Update Password
+                        </button>
+                        <button type="button" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-button flex items-center whitespace-nowrap" onclick="resetPasswordForm()">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2">
+                                <i class="ri-close-line"></i>
+                            </div>
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Verification Section -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Verification</h2>
+                <p class="text-gray-600 text-sm mb-6">Verify your information to unlock all features and enhance your account security.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Address Verification -->
+                    <div class="bg-gray-50 p-4 rounded-lg border border-green-200 bg-green-50">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-medium text-gray-900">Address Verification</h3>
+                            <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full">Verified</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
+                            <i class="ri-map-pin-line text-green-500 text-xl"></i>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">Your address has been verified and is visible to other users.</p>
+                        <button class="bg-white text-green-600 border border-green-300 px-3 py-2 rounded-button text-sm font-medium flex items-center" onclick="verifyAddress()">
+                            <div class="w-4 h-4 flex items-center justify-center mr-2">
+                                <i class="ri-refresh-line"></i>
+                            </div>
+                            Re-verify
+                        </button>
+                    </div>
+
+                    <!-- ID Verification -->
+                    <div class="bg-gray-50 p-4 rounded-lg border border-yellow-200 bg-yellow-50">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-medium text-gray-900">ID Verification</h3>
+                            <span class="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full">Pending</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center mb-3">
+                            <i class="ri-id-card-line text-yellow-500 text-xl"></i>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">Upload a government-issued ID to verify your identity. This helps maintain a safe community.</p>
+                        <button class="bg-yellow-500 text-white px-3 py-2 rounded-button text-sm font-medium flex items-center" onclick="verifyID()">
+                            <div class="w-4 h-4 flex items-center justify-center mr-2">
+                                <i class="ri-upload-line"></i>
+                            </div>
+                            Upload ID
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Preferences -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Notification Preferences</h2>
+                <p class="text-gray-600 text-sm mb-6">Customize how you receive notifications from ScrapStore.</p>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-900">Email Notifications</p>
+                            <p class="text-sm text-gray-600">Receive updates about your listings and messages via email</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-900">SMS Notifications</p>
+                            <p class="text-sm text-gray-600">Get important alerts and updates sent to your phone</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-900">Push Notifications</p>
+                            <p class="text-sm text-gray-600">Receive real-time push notifications on your device</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-900">New Messages</p>
+                            <p class="text-sm text-gray-600">Get notified when you receive a new message from a buyer or seller</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-900">Listing Updates</p>
+                            <p class="text-sm text-gray-600">Receive notifications when your listings get views or offers</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+                </div>
+                <button class="bg-primary text-white px-4 py-2 rounded-button flex items-center whitespace-nowrap mt-6" onclick="saveNotificationPreferences()">
+                    <div class="w-5 h-5 flex items-center justify-center mr-2">
+                        <i class="ri-save-line"></i>
+                    </div>
+                    Save Preferences
+                </button>
+            </div>
+
+            <!-- Delete Account Section -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Delete Account</h2>
+                <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <div class="flex items-start gap-3">
+                        <i class="ri-alert-triangle-line text-red-500 text-xl mt-0.5"></i>
+                        <div>
+                            <h3 class="font-medium text-red-800 mb-2">Permanently Delete Account</h3>
+                            <p class="text-sm text-red-700 mb-4">This action is irreversible. Deleting your account will remove all your listings, messages, and personal information from ScrapStore permanently.</p>
+                            <button class="bg-red-500 text-white px-4 py-2 rounded-button flex items-center whitespace-nowrap" onclick="deleteAccount()">
+                                <div class="w-5 h-5 flex items-center justify-center mr-2">
+                                    <i class="ri-delete-bin-line"></i>
+                                </div>
+                                Delete My Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Show alert message
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            const alertClass = type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' : 
+                              type === 'error' ? 'bg-red-50 border border-red-200 text-red-800' : 'bg-blue-50 border border-blue-200 text-blue-800';
+            alert.className = `p-4 rounded-lg mb-6 ${alertClass} flex items-center gap-3 fade-in`;
+            alert.innerHTML = `
+                <i class="ri-${type === 'success' ? 'check-circle' : type === 'error' ? 'close-circle' : 'information'} Line text-lg"></i>
+                <span>${message}</span>
+            `;
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.classList.add('opacity-0');
+                setTimeout(() => {
+                    alert.remove();
+                }, 300);
+            }, 5000);
+        }
+
+        // Handle image upload
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profileImage').src = e.target.result;
+                    showAlert('Profile image updated successfully!', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Basic info form submission
+        document.getElementById('basicInfoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const button = this.querySelector('button[type="submit"]');
+            const originalHTML = button.innerHTML;
+            
+            button.innerHTML = `
+                <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Saving...
+            `;
+            button.disabled = true;
+
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.disabled = false;
+                showAlert('Basic information updated successfully!', 'success');
+            }, 1500);
+        });
+
+        // Password change form submission
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showAlert('Passwords do not match!', 'error');
+                return;
+            }
+
+            const button = this.querySelector('button[type="submit"]');
+            const originalHTML = button.innerHTML;
+            
+            button.innerHTML = `
+                <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Updating...
+            `;
+            button.disabled = true;
+
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.disabled = false;
+                resetPasswordForm();
+                showAlert('Password updated successfully!', 'success');
+            }, 1500);
+        });
+
+        function resetForm() {
+            document.getElementById('basicInfoForm').reset();
+        }
+
+        function resetPasswordForm() {
+            document.getElementById('passwordForm').reset();
+        }
+
+        function verifyAddress() {
+            showAlert('Address verification process started. You will receive a confirmation within 24 hours.', 'warning');
+        }
+
+        function verifyID() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = 'image/*,.pdf';
+            fileInput.onchange = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    showAlert('ID document uploaded successfully! Verification in progress...', 'success');
+                }
+            };
+            fileInput.click();
+        }
+
+        function saveNotificationPreferences() {
+            showAlert('Notification preferences saved successfully!', 'success');
+        }
+
+        // Country-State cascading dropdown
+        const countryStateMapping = {
+            usa: [
+                { value: 'ny', text: 'New York' },
+                { value: 'ca', text: 'California' },
+                { value: 'tx', text: 'Texas' },
+                { value: 'fl', text: 'Florida' },
+                { value: 'il', text: 'Illinois' },
+                { value: 'pa', text: 'Pennsylvania' },
+                { value: 'oh', text: 'Ohio' },
+                { value: 'ga', text: 'Georgia' },
+                { value: 'nc', text: 'North Carolina' },
+                { value: 'mi', text: 'Michigan' }
+            ],
+            canada: [
+                { value: 'on', text: 'Ontario' },
+                { value: 'qc', text: 'Quebec' },
+                { value: 'bc', text: 'British Columbia' },
+                { value: 'al', text: 'Alberta' },
+                { value: 'mb', text: 'Manitoba' },
+                { value: 'sk', text: 'Saskatchewan' },
+                { value: 'ns', text: 'Nova Scotia' },
+                { value: 'nb', text: 'New Brunswick' }
+            ],
+            uk: [
+                { value: 'eng', text: 'England' },
+                { value: 'sco', text: 'Scotland' },
+                { value: 'wal', text: 'Wales' },
+                { value: 'nir', text: 'Northern Ireland' }
+            ],
+            germany: [
+                { value: 'bw', text: 'Baden-Württemberg' },
+                { value: 'by', text: 'Bavaria' },
+                { value: 'be', text: 'Berlin' },
+                { value: 'bb', text: 'Brandenburg' },
+                { value: 'hb', text: 'Bremen' },
+                { value: 'hh', text: 'Hamburg' },
+                { value: 'he', text: 'Hesse' },
+                { value: 'mv', text: 'Mecklenburg-Vorpommern' }
+            ],
+            france: [
+                { value: 'idf', text: 'Île-de-France' },
+                { value: 'occ', text: 'Occitanie' },
+                { value: 'auv', text: 'Auvergne-Rhône-Alpes' },
+                { value: 'bnr', text: 'Bourgogne-Franche-Comté' },
+                { value: 'cvl', text: 'Centre-Val de Loire' },
+                { value: 'grand', text: 'Grand Est' }
+            ],
+            australia: [
+                { value: 'nsw', text: 'New South Wales' },
+                { value: 'vic', text: 'Victoria' },
+                { value: 'qld', text: 'Queensland' },
+                { value: 'wa', text: 'Western Australia' },
+                { value: 'sa', text: 'South Australia' },
+                { value: 'tas', text: 'Tasmania' },
+                { value: 'act', text: 'Australian Capital Territory' },
+                { value: 'nt', text: 'Northern Territory' }
+            ],
+            nigeria: [
+                { value: 'abj', text: 'Abuja (FCT)' },
+                { value: 'lag', text: 'Lagos' },
+                { value: 'oyo', text: 'Oyo' },
+                { value: 'oga', text: 'Ogun' },
+                { value: 'kad', text: 'Kaduna' },
+                { value: 'riv', text: 'Rivers' },
+                { value: 'ph', text: 'Port Harcourt' },
+                { value: 'kano', text: 'Kano' }
+            ],
+            "south-africa": [
+                { value: 'gauteng', text: 'Gauteng' },
+                { value: 'cape', text: 'Western Cape' },
+                { value: 'kwazulu', text: 'KwaZulu-Natal' },
+                { value: 'eastern', text: 'Eastern Cape' },
+                { value: 'western', text: 'Western Cape' },
+                { value: 'northern', text: 'Northern Cape' },
+                { value: 'mpumalanga', text: 'Mpumalanga' },
+                { value: 'north-west', text: 'North West' }
+            ],
+            india: [
+                { value: 'mh', text: 'Maharashtra' },
+                { value: 'dl', text: 'Delhi' },
+                { value: 'tn', text: 'Tamil Nadu' },
+                { value: 'ka', text: 'Karnataka' },
+                { value: 'gj', text: 'Gujarat' },
+                { value: 'rj', text: 'Rajasthan' },
+                { value: 'up', text: 'Uttar Pradesh' },
+                { value: 'wb', text: 'West Bengal' }
+            ],
+            brazil: [
+                { value: 'sp', text: 'São Paulo' },
+                { value: 'rj', text: 'Rio de Janeiro' },
+                { value: 'mg', text: 'Minas Gerais' },
+                { value: 'rs', text: 'Rio Grande do Sul' },
+                { value: 'ba', text: 'Bahia' },
+                { value: 'pr', text: 'Paraná' },
+                { value: 'ce', text: 'Ceará' },
+                { value: 'pe', text: 'Pernambuco' }
+            ]
+        };
+
+        // Update state dropdown when country changes
+        document.getElementById('country').addEventListener('change', function() {
+            const country = this.value;
+            const stateSelect = document.getElementById('state');
+            
+            // Clear existing options
+            stateSelect.innerHTML = '<option value="">Select State...</option>';
+            
+            // Add new options based on country
+            if (country && countryStateMapping[country]) {
+                countryStateMapping[country].forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state.value;
+                    option.textContent = state.text;
+                    stateSelect.appendChild(option);
+                });
+            }
+        });
+
+        function deleteAccount() {
+            if (confirm('Are you absolutely sure you want to delete your account? This action cannot be undone.')) {
+                showAlert('Account deletion process initiated. You will receive a confirmation email.', 'warning');
+            }
+        }
+    </script>
+</body>
+</html>

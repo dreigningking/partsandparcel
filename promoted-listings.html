@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Promoted Listings - ScrapStore</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>tailwind.config={theme:{extend:{colors:{primary:'#4f46e5',secondary:'#10b981'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body {
+font-family: 'Inter', sans-serif;
+background-color: #f9fafb;
+}
+.search-input:focus {
+outline: none;
+}
+input[type="checkbox"] {
+appearance: none;
+width: 1.25rem;
+height: 1.25rem;
+border: 2px solid #d1d5db;
+border-radius: 4px;
+position: relative;
+}
+input[type="checkbox"]:checked {
+background-color: #4f46e5;
+border-color: #4f46e5;
+}
+input[type="checkbox"]:checked::after {
+content: "";
+position: absolute;
+left: 6px;
+top: 2px;
+width: 5px;
+height: 10px;
+border: solid white;
+border-width: 0 2px 2px 0;
+transform: rotate(45deg);
+}
+input[type="radio"] {
+appearance: none;
+width: 1.25rem;
+height: 1.25rem;
+border: 2px solid #d1d5db;
+border-radius: 50%;
+position: relative;
+}
+input[type="radio"]:checked {
+border-color: #4f46e5;
+}
+input[type="radio"]:checked::after {
+content: "";
+position: absolute;
+left: 4px;
+top: 4px;
+width: 0.75rem;
+height: 0.75rem;
+border-radius: 50%;
+background-color: #4f46e5;
+}
+input[type="range"] {
+appearance: none;
+width: 100%;
+height: 6px;
+background: #e5e7eb;
+border-radius: 5px;
+outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+appearance: none;
+width: 18px;
+height: 18px;
+background: #4f46e5;
+border-radius: 50%;
+cursor: pointer;
+}
+.custom-switch {
+position: relative;
+display: inline-block;
+width: 50px;
+height: 24px;
+}
+.custom-switch input {
+opacity: 0;
+width: 0;
+height: 0;
+}
+.switch-slider {
+position: absolute;
+cursor: pointer;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background-color: #e5e7eb;
+transition: .4s;
+border-radius: 24px;
+}
+.switch-slider:before {
+position: absolute;
+content: "";
+height: 18px;
+width: 18px;
+left: 3px;
+bottom: 3px;
+background-color: white;
+transition: .4s;
+border-radius: 50%;
+}
+input:checked + .switch-slider {
+background-color: #4f46e5;
+}
+input:checked + .switch-slider:before {
+transform: translateX(26px);
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+-webkit-appearance: none;
+margin: 0;
+}
+.filter-overlay {
+transform: translateX(-100%);
+transition: transform 0.3s ease-in-out;
+}
+.filter-overlay.active {
+transform: translateX(0);
+}
+.backdrop {
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.3s ease-in-out;
+}
+.backdrop.active {
+opacity: 1;
+pointer-events: all;
+}
+</style>
+</head>
+<body>
+<!-- Header -->
+<header class="bg-white shadow-sm sticky top-0 z-50">
+<div class="container mx-auto px-4 py-4 flex items-center justify-between">
+<div class="flex items-center">
+<a href="index.html" class="font-['Pacifico'] text-2xl text-primary">ScrapStore</a>
+</div>
+<nav class="hidden md:flex space-x-8">
+<a href="index.html" class="text-gray-600 hover:text-primary transition">Home</a>
+<a href="browse.html" class="text-gray-600 hover:text-primary transition">Browse</a>
+<a href="#" class="text-gray-600 hover:text-primary transition">Sell</a>
+<a href="dashboard.html" class="text-gray-600 hover:text-primary transition">Dashboard</a>
+<a href="#" class="text-gray-600 hover:text-primary transition">Help</a>
+</nav>
+<div class="flex items-center space-x-4">
+<button class="flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-100 rounded-full">
+<i class="ri-notification-3-line ri-lg"></i>
+</button>
+<button class="flex items-center justify-center w-10 h-10 text-gray-600 hover:bg-gray-100 rounded-full">
+<i class="ri-message-3-line ri-lg"></i>
+</button>
+<button class="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full">
+<i class="ri-user-line ri-lg"></i>
+</button>
+</div>
+</div>
+</header>
+
+<!-- Page Header -->
+<section class="py-8 bg-gradient-to-r from-purple-50 to-blue-50">
+<div class="container mx-auto px-4">
+<div class="max-w-3xl mx-auto text-center">
+<h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4 flex items-center justify-center">
+<i class="ri-rocket-line text-primary mr-3"></i>
+Promoted Listings
+</h1>
+<p class="text-lg text-gray-600 mb-6">Discover premium parts from trusted sellers</p>
+<div class="bg-white rounded-lg shadow-sm p-4 max-w-md mx-auto">
+<div class="flex items-center">
+<div class="flex items-center justify-center w-10 h-10 text-gray-400">
+<i class="ri-search-line ri-lg"></i>
+</div>
+<input type="text" class="search-input flex-1 py-2 px-3 text-gray-700 border-none" placeholder="Search promoted listings...">
+<button class="bg-primary text-white px-4 py-2 rounded-button font-medium whitespace-nowrap">
+Search
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Mobile Filter Button -->
+<div class="md:hidden bg-white border-b border-gray-200 sticky top-16 z-40">
+<div class="container mx-auto px-4 py-3 flex items-center justify-between">
+<div class="flex items-center">
+<button id="mobileFilterBtn" class="flex items-center space-x-2 bg-gray-100 px-4 py-2 rounded-button font-medium text-gray-900 hover:bg-gray-200 transition">
+<i class="ri-filter-3-line"></i>
+<span>Filters <span id="activeFilterCount" class="bg-primary text-white text-xs px-2 py-0.5 rounded-full ml-1">0</span></span>
+</button>
+</div>
+<div class="text-sm text-gray-500">
+Showing <span class="font-semibold text-gray-900">1-8</span> of <span class="font-semibold text-gray-900">24</span> promoted listings
+</div>
+</div>
+</div>
+
+<!-- Main Content Area -->
+<section class="py-8">
+<div class="container mx-auto px-4">
+<div class="flex flex-col lg:flex-row gap-8">
+<!-- Desktop Filter Sidebar -->
+<aside class="hidden lg:block w-64 flex-shrink-0">
+<div class="bg-white rounded-lg shadow-sm p-6 sticky top-24">
+<h3 class="font-semibold text-gray-900 mb-6 flex items-center">
+<i class="ri-filter-3-line text-primary mr-2"></i>
+Filters
+</h3>
+
+<!-- Categories -->
+<div class="mb-6">
+<h4 class="font-medium text-gray-900 mb-3">Categories</h4>
+<div class="space-y-2">
+<div class="flex items-center">
+<input type="checkbox" id="category-smartphones" class="category-checkbox">
+<label for="category-smartphones" class="ml-2 text-sm text-gray-600 flex-1">Smartphones</label>
+<span class="text-xs text-gray-400">(12)</span>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="category-laptops" class="category-checkbox">
+<label for="category-laptops" class="ml-2 text-sm text-gray-600 flex-1">Laptops</label>
+<span class="text-xs text-gray-400">(8)</span>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="category-tablets" class="category-checkbox">
+<label for="category-tablets" class="ml-2 text-sm text-gray-600 flex-1">Tablets</label>
+<span class="text-xs text-gray-400">(4)</span>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="category-wearables" class="category-checkbox">
+<label for="category-wearables" class="ml-2 text-sm text-gray-600 flex-1">Wearables</label>
+<span class="text-xs text-gray-400">(3)</span>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="category-gaming" class="category-checkbox">
+<label for="category-gaming" class="ml-2 text-sm text-gray-600 flex-1">Gaming</label>
+<span class="text-xs text-gray-400">(5)</span>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="category-other" class="category-checkbox">
+<label for="category-other" class="ml-2 text-sm text-gray-600 flex-1">Other</label>
+<span class="text-xs text-gray-400">(2)</span>
+</div>
+</div>
+</div>
+
+<!-- Price Range -->
+<div class="mb-6">
+<h4 class="font-medium text-gray-900 mb-3">Price Range</h4>
+<div class="space-y-4">
+<div class="flex space-x-2">
+<input type="number" id="minPrice" placeholder="Min" class="w-1/2 px-3 py-2 border border-gray-300 rounded text-sm">
+<input type="number" id="maxPrice" placeholder="Max" class="w-1/2 px-3 py-2 border border-gray-300 rounded text-sm">
+</div>
+<div class="relative">
+<input type="range" id="priceRange" min="0" max="500" value="250" class="w-full">
+<div class="flex justify-between text-xs text-gray-400 mt-1">
+<span>$0</span>
+<span>$500+</span>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Condition -->
+<div class="mb-6">
+<h4 class="font-medium text-gray-900 mb-3">Condition</h4>
+<div class="space-y-2">
+<div class="flex items-center">
+<input type="radio" id="condition-all" name="condition" value="all" checked class="condition-radio">
+<label for="condition-all" class="ml-2 text-sm text-gray-600">All Conditions</label>
+</div>
+<div class="flex items-center">
+<input type="radio" id="condition-new" name="condition" value="new" class="condition-radio">
+<label for="condition-new" class="ml-2 text-sm text-gray-600">New</label>
+<span class="text-xs text-gray-400 ml-2">(16)</span>
+</div>
+<div class="flex items-center">
+<input type="radio" id="condition-used" name="condition" value="used" class="condition-radio">
+<label for="condition-used" class="ml-2 text-sm text-gray-600">Used</label>
+<span class="text-xs text-gray-400 ml-2">(8)</span>
+</div>
+<div class="flex items-center">
+<input type="radio" id="condition-repaired" name="condition" value="repaired" class="condition-radio">
+<label for="condition-repaired" class="ml-2 text-sm text-gray-600">Repaired</label>
+<span class="text-xs text-gray-400 ml-2">(6)</span>
+</div>
+</div>
+</div>
+
+<!-- Apply/Clear Buttons -->
+<div class="pt-6 border-t border-gray-200">
+<button id="applyFiltersBtn" class="w-full bg-primary text-white py-2 rounded-button font-medium mb-2 hover:bg-primary/90 transition">
+Apply Filters
+</button>
+<button id="clearFiltersBtn" class="w-full bg-gray-100 text-gray-900 py-2 rounded-button font-medium hover:bg-gray-200 transition">
+Clear All
+</button>
+</div>
+</div>
+</aside>
+
+<!-- Listings Grid -->
+<div class="flex-1">
+<div class="lg:flex lg:items-center lg:justify-between mb-6 hidden">
+<div class="text-sm text-gray-500">
+Showing <span class="font-semibold text-gray-900">1-8</span> of <span class="font-semibold text-gray-900">24</span> promoted listings
+</div>
+<div class="mt-2 lg:mt-0">
+<div class="relative">
+<select id="sortSelect" class="appearance-none bg-gray-50 border border-gray-300 text-gray-700 py-2 px-3 pr-8 rounded text-sm">
+<option value="featured">Featured</option>
+<option value="price-low">Price: Low to High</option>
+<option value="price-high">Price: High to Low</option>
+<option value="newest">Newest First</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+<i class="ri-arrow-down-s-line"></i>
+</div>
+</div>
+</div>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<!-- Promoted Listing 1 -->
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition relative">
+<div class="absolute top-2 left-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full flex items-center">
+<i class="ri-star-line mr-1"></i>
+Promoted
+</div>
+<div class="relative h-48 bg-gray-200">
+<img src="https://readdy.ai/api/search-image?query=iphone%2014%20pro%20display%20screen%20replacement%20part%2C%20high%20quality%20OLED%20panel%2C%20professional%20product%20photography%20on%20white%20background%2C%20detailed%20electronic%20component%2C%20smartphone%20repair%20part&width=400&height=300&seq=10&orientation=landscape" alt="iPhone 14 Pro Screen" class="w-full h-full object-cover object-top">
+<span class="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">New</span>
+</div>
+<div class="p-4">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-medium text-gray-900">iPhone 14 Pro Screen</h3>
+<span class="font-bold text-gray-900">$159.99</span>
+</div>
+<p class="text-sm text-gray-600 mb-3">Original OLED display, perfect condition</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+<i class="ri-user-line text-gray-600 ri-sm"></i>
+</div>
+<span class="text-xs text-gray-600">Sarah J.</span>
+</div>
+<button class="bg-primary text-white px-3 py-1 rounded-button text-sm font-medium whitespace-nowrap">Buy Now</button>
+</div>
+</div>
+</div>
+
+<!-- Promoted Listing 2 -->
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition relative">
+<div class="absolute top-2 left-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full flex items-center">
+<i class="ri-star-line mr-1"></i>
+Promoted
+</div>
+<div class="relative h-48 bg-gray-200">
+<img src="https://readdy.ai/api/search-image?query=asus%20rog%20gaming%20laptop%20keyboard%20replacement%2C%20mechanical%20keyboard%20with%20RGB%20backlight%2C%20professional%20product%20photography%20on%20white%20background%2C%20detailed%20computer%20part&width=400&height=300&seq=11&orientation=landscape" alt="ASUS ROG Gaming Keyboard" class="w-full h-full object-cover object-top">
+<span class="absolute top-2 right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">Repaired</span>
+</div>
+<div class="p-4">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-medium text-gray-900">ASUS ROG Gaming Keyboard</h3>
+<span class="font-bold text-gray-900">$199.99</span>
+</div>
+<p class="text-sm text-gray-600 mb-3">RGB backlight, mechanical keys</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+<i class="ri-user-line text-gray-600 ri-sm"></i>
+</div>
+<span class="text-xs text-gray-600">Mike R.</span>
+</div>
+<button class="bg-primary text-white px-3 py-1 rounded-button text-sm font-medium whitespace-nowrap">Buy Now</button>
+</div>
+</div>
+</div>
+
+<!-- Promoted Listing 3 -->
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition relative">
+<div class="absolute top-2 left-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full flex items-center">
+<i class="ri-star-line mr-1"></i>
+Promoted
+</div>
+<div class="relative h-48 bg-gray-200">
+<img src="https://readdy.ai/api/search-image?query=samsung%20galaxy%20z%20flip%20battery%20replacement%2C%20high%20capacity%20lithium-ion%20battery%20pack%2C%20professional%20product%20photography%20on%20white%20background%2C%20detailed%20electronic%20component%2C%20smartphone%20repair%20part&width=400&height=300&seq=12&orientation=landscape" alt="Galaxy Z Flip Battery" class="w-full h-full object-cover object-top">
+<span class="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded">Used</span>
+</div>
+<div class="p-4">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-medium text-gray-900">Galaxy Z Flip Battery</h3>
+<span class="font-bold text-gray-900">$79.99</span>
+</div>
+<p class="text-sm text-gray-600 mb-3">Original battery, 85% health</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+<i class="ri-user-line text-gray-600 ri-sm"></i>
+</div>
+<span class="text-xs text-gray-600">Jessica T.</span>
+</div>
+<button class="bg-primary text-white px-3 py-1 rounded-button text-sm font-medium whitespace-nowrap">Buy Now</button>
+</div>
+</div>
+</div>
+
+<!-- Promoted Listing 4 -->
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition relative">
+<div class="absolute top-2 left-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full flex items-center">
+<i class="ri-star-line mr-1"></i>
+Promoted
+</div>
+<div class="relative h-48 bg-gray-200">
+<img src="https://readdy.ai/api/search-image?query=playstation%205%20controller%20buttons%20replacement%2C%20high%20quality%20gaming%20accessory%2C%20professional%20product%20photography%20on%20white%20background%2C%20detailed%20electronic%20component&width=400&height=300&seq=13&orientation=landscape" alt="PS5 Controller Buttons" class="w-full h-full object-cover object-top">
+<span class="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded">Used</span>
+</div>
+<div class="p-4">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-medium text-gray-900">PS5 Controller Buttons</h3>
+<span class="font-bold text-gray-900">$24.99</span>
+</div>
+<p class="text-sm text-gray-600 mb-3">Original buttons, excellent condition</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+<i class="ri-user-line text-gray-600 ri-sm"></i>
+</div>
+<span class="text-xs text-gray-600">Chris M.</span>
+</div>
+<button class="bg-primary text-white px-3 py-1 rounded-button text-sm font-medium whitespace-nowrap">Buy Now</button>
+</div>
+</div>
+</div>
+
+<!-- Promoted Listing 5 -->
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition relative">
+<div class="absolute top-2 left-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full flex items-center">
+<i class="ri-star-line mr-1"></i>
+Promoted
+</div>
+<div class="relative h-48 bg-gray-200">
+<img src="https://readdy.ai/api/search-image?query=apple%20watch%20series%207%20screen%20replacement%2C%20high%20quality%20OLED%20display%20for%20smartwatch%2C%20professional%20product%20photography%20on%20white%20background%2C%20detailed%20wearable%20component&width=400&height=300&seq=14&orientation=landscape" alt="Apple Watch Series 7 Screen" class="w-full h-full object-cover object-top">
+<span class="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">New</span>
+</div>
+<div class="p-4">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-medium text-gray-900">Apple Watch Series 7 Screen</h3>
+<span class="font-bold text-gray-900">$89.99</span>
+</div>
+<p class="text-sm text-gray-600 mb-3">Original OLED display, 45mm</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+<i class="ri-user-line text-gray-600 ri-sm"></i>
+</div>
+<span class="text-xs text-gray-600">Lisa S.</span>
+</div>
+<button class="bg-primary text-white px-3 py-1 rounded-button text-sm font-medium whitespace-nowrap">Buy Now</button>
+</div>
+</div>
+</div>
+
+<!-- Promoted Listing 6 -->
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition relative">
+<div class="absolute top-2 left-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full flex items-center">
+<i class="ri-star-line mr-1"></i>
+Promoted
+</div>
+<div class="relative h-48 bg-gray-200">
+<img src="https://readdy.ai/api/search-image?query=xiaomi%20redmi%20note%2012%20battery%20replacement%2C%20high%20capacity%20lithium-ion%20battery%20for%20smartphone%2C%20professional%20product%20photography%20on%20white%20background%2C%20detailed%20electronic%20component&width=400&height=300&seq=15&orientation=landscape" alt="Redmi Note 12 Battery" class="w-full h-full object-cover object-top">
+<span class="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded">Used</span>
+</div>
+<div class="p-4">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-medium text-gray-900">Redmi Note 12 Battery</h3>
+<span class="font-bold text-gray-900">$29.99</span>
+</div>
+<p class="text-sm text-gray-600 mb-3">Original battery, 88% health</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+<i class="ri-user-line text-gray-600 ri-sm"></i>
+</div>
+<span class="text-xs text-gray-600">James L.</span>
+</div>
+<button class="bg-primary text-white px-3 py-1 rounded-button text-sm font-medium whitespace-nowrap">Buy Now</button>
+</div>
+</div>
+</div>
+
+<!-- Promoted Listing 7 -->
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition relative">
+<div class="absolute top-2 left-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full flex items-center">
+<i class="ri-star-line mr-1"></i>
+Promoted
+</div>
+<div class="relative h-48 bg-gray-200">
+<img src="https://readdy.ai/api/search-image?query=hp%20spectre%20x360%20touchpad%20replacement%2C%20high%20quality%20laptop%20trackpad%20component%2C%20professional%20product%20photography%20on%20white%20background%2C%20detailed%20computer%20part&width=400&height=300&seq=16&orientation=landscape" alt="HP Spectre x360 Touchpad" class="w-full h-full object-cover object-top">
+<span class="absolute top-2 right-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">Repaired</span>
+</div>
+<div class="p-4">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-medium text-gray-900">HP Spectre x360 Touchpad</h3>
+<span class="font-bold text-gray-900">$79.99</span>
+</div>
+<p class="text-sm text-gray-600 mb-3">Lightly used, fully functional</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+<i class="ri-user-line text-gray-600 ri-sm"></i>
+</div>
+<span class="text-xs text-gray-600">Patricia K.</span>
+</div>
+<button class="bg-primary text-white px-3 py-1 rounded-button text-sm font-medium whitespace-nowrap">Buy Now</button>
+</div>
+</div>
+</div>
+
+<!-- Promoted Listing 8 -->
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition relative">
+<div class="absolute top-2 left-2 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full flex items-center">
+<i class="ri-star-line mr-1"></i>
+Promoted
+</div>
+<div class="relative h-48 bg-gray-200">
+<img src="https://readdy.ai/api/search-image?query=sony%20playstation%205%20power%20supply%20replacement%2C%20gaming%20console%20power%20brick%2C%20professional%20product%20photography%20on%20white%20background%2C%20detailed%20electronic%20component&width=400&height=300&seq=17&orientation=landscape" alt="PS5 Power Supply" class="w-full h-full object-cover object-top">
+<span class="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">New</span>
+</div>
+<div class="p-4">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-medium text-gray-900">PS5 Power Supply</h3>
+<span class="font-bold text-gray-900">$59.99</span>
+</div>
+<p class="text-sm text-gray-600 mb-3">Original Sony power brick, 350W</p>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+<i class="ri-user-line text-gray-600 ri-sm"></i>
+</div>
+<span class="text-xs text-gray-600">David H.</span>
+</div>
+<button class="bg-primary text-white px-3 py-1 rounded-button text-sm font-medium whitespace-nowrap">Buy Now</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Pagination -->
+<div class="mt-10 flex justify-center">
+<div class="flex items-center space-x-1">
+<button id="prevPageBtn" class="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 transition">
+<i class="ri-arrow-left-line"></i>
+</button>
+<button class="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white">1</button>
+<button class="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 transition">2</button>
+<button class="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 transition">3</button>
+<button id="nextPageBtn" class="flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 transition">
+<i class="ri-arrow-right-line"></i>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Mobile Filter Overlay -->
+<div id="filterBackdrop" class="fixed inset-0 bg-black/50 backdrop-blur-sm backdrop-filter z-50 hidden">
+<div id="filterOverlay" class="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-xl overflow-y-auto">
+<div class="p-6">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-semibold text-gray-900 flex items-center">
+<i class="ri-filter-3-line text-primary mr-2"></i>
+Filters
+</h3>
+<button id="closeFilterBtn" class="text-gray-400 hover:text-gray-600 transition">
+<i class="ri-close-line ri-lg"></i>
+</button>
+</div>
+
+<!-- Mobile Categories -->
+<div class="mb-6">
+<h4 class="font-medium text-gray-900 mb-3">Categories</h4>
+<div class="space-y-2">
+<div class="flex items-center">
+<input type="checkbox" id="mobile-category-smartphones" class="category-checkbox">
+<label for="mobile-category-smartphones" class="ml-2 text-sm text-gray-600 flex-1">Smartphones</label>
+<span class="text-xs text-gray-400">(12)</span>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="mobile-category-laptops" class="category-checkbox">
+<label for="mobile-category-laptops" class="ml-2 text-sm text-gray-600 flex-1">Laptops</label>
+<span class="text-xs text-gray-400">(8)</span>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="mobile-category-tablets" class="category-checkbox">
+<label for="mobile-category-tablets" class="ml-2 text-sm text-gray-600 flex-1">Tablets</label>
+<span class="text-xs text-gray-400">(4)</span>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="mobile-category-wearables" class="category-checkbox">
+<label for="mobile-category-wearables" class="ml-2 text-sm text-gray-600 flex-1">Wearables</label>
+<span class="text-xs text-gray-400">(3)</span>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="mobile-category-gaming" class="category-checkbox">
+<label for="mobile-category-gaming" class="ml-2 text-sm text-gray-600 flex-1">Gaming</label>
+<span class="text-xs text-gray-400">(5)</span>
+</div>
+<div class="flex items-center">
+<input type="checkbox" id="mobile-category-other" class="category-checkbox">
+<label for="mobile-category-other" class="ml-2 text-sm text-gray-600 flex-1">Other</label>
+<span class="text-xs text-gray-400">(2)</span>
+</div>
+</div>
+</div>
+
+<!-- Mobile Price Range -->
+<div class="mb-6">
+<h4 class="font-medium text-gray-900 mb-3">Price Range</h4>
+<div class="space-y-4">
+<div class="flex space-x-2">
+<input type="number" id="mobile-minPrice" placeholder="Min" class="w-1/2 px-3 py-2 border border-gray-300 rounded text-sm">
+<input type="number" id="mobile-maxPrice" placeholder="Max" class="w-1/2 px-3 py-2 border border-gray-300 rounded text-sm">
+</div>
+<div class="relative">
+<input type="range" id="mobile-priceRange" min="0" max="500" value="250" class="w-full">
+<div class="flex justify-between text-xs text-gray-400 mt-1">
+<span>$0</span>
+<span>$500+</span>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Mobile Condition -->
+<div class="mb-6">
+<h4 class="font-medium text-gray-900 mb-3">Condition</h4>
+<div class="space-y-2">
+<div class="flex items-center">
+<input type="radio" id="mobile-condition-all" name="mobile-condition" value="all" checked class="condition-radio">
+<label for="mobile-condition-all" class="ml-2 text-sm text-gray-600">All Conditions</label>
+</div>
+<div class="flex items-center">
+<input type="radio" id="mobile-condition-new" name="mobile-condition" value="new" class="condition-radio">
+<label for="mobile-condition-new" class="ml-2 text-sm text-gray-600">New</label>
+<span class="text-xs text-gray-400 ml-2">(16)</span>
+</div>
+<div class="flex items-center">
+<input type="radio" id="mobile-condition-used" name="mobile-condition" value="used" class="condition-radio">
+<label for="mobile-condition-used" class="ml-2 text-sm text-gray-600">Used</label>
+<span class="text-xs text-gray-400 ml-2">(8)</span>
+</div>
+<div class="flex items-center">
+<input type="radio" id="mobile-condition-repaired" name="mobile-condition" value="repaired" class="condition-radio">
+<label for="mobile-condition-repaired" class="ml-2 text-sm text-gray-600">Repaired</label>
+<span class="text-xs text-gray-400 ml-2">(6)</span>
+</div>
+</div>
+</div>
+
+<!-- Mobile Apply/Clear Buttons -->
+<div class="pt-6 border-t border-gray-200 sticky bottom-0 bg-white pb-6">
+<button id="mobile-applyFiltersBtn" class="w-full bg-primary text-white py-2 rounded-button font-medium mb-2 hover:bg-primary/90 transition">
+Apply Filters
+</button>
+<button id="mobile-clearFiltersBtn" class="w-full bg-gray-100 text-gray-900 py-2 rounded-button font-medium hover:bg-gray-200 transition">
+Clear All
+</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-white pt-16 pb-8">
+<div class="container mx-auto px-4">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+<div class="lg:col-span-2">
+<a href="index.html" class="font-['Pacifico'] text-2xl text-white mb-4 inline-block">ScrapStore</a>
+<p class="text-gray-400 mb-6">The trusted marketplace for buying and selling device parts directly from other tech enthusiasts.</p>
+<div class="flex space-x-4">
+<a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition">
+<i class="ri-facebook-fill text-white"></i>
+</a>
+<a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition">
+<i class="ri-twitter-fill text-white"></i>
+</a>
+<a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition">
+<i class="ri-instagram-fill text-white"></i>
+</a>
+<a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition">
+<i class="ri-youtube-fill text-white"></i>
+</a>
+</div>
+</div>
+<div>
+<h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+<ul class="space-y-3">
+<li><a href="index.html" class="text-gray-400 hover:text-white transition">Home</a></li>
+<li><a href="browse.html" class="text-gray-400 hover:text-white transition">Browse</a></li>
+<li><a href="#" class="text-gray-400 hover:text-white transition">Sell</a></li>
+<li><a href="dashboard.html" class="text-gray-400 hover:text-white transition">Dashboard</a></li>
+<li><a href="#" class="text-gray-400 hover:text-white transition">Help Center</a></li>
+</ul>
+</div>
+<div>
+<h3 class="text-lg font-semibold mb-4">Categories</h3>
+<ul class="space-y-3">
+<li><a href="#" class="text-gray-400 hover:text-white transition">Smartphones</a></li>
+<li><a href="#" class="text-gray-400 hover:text-white transition">Laptops</a></li>
+<li><a href="#" class="text-gray-400 hover:text-white transition">Tablets</a></li>
+<li><a href="#" class="text-gray-400 hover:text-white transition">Gaming</a></li>
+<li><a href="#" class="text-gray-400 hover:text-white transition">Wearables</a></li>
+</ul>
+</div>
+<div>
+<h3 class="text-lg font-semibold mb-4">Support</h3>
+<ul class="space-y-3">
+<li><a href="#" class="text-gray-400 hover:text-white transition">Contact Us</a></li>
+<li><a href="#" class="text-gray-400 hover:text-white transition">FAQ</a></li>
+<li><a href="#" class="text-gray-400 hover:text-white transition">Shipping</a></li>
+<li><a href="#" class="text-gray-400 hover:text-white transition">Returns</a></li>
+<li><a href="#" class="text-gray-400 hover:text-white transition">Terms of Service</a></li>
+</ul>
+</div>
+</div>
+<div class="border-t border-gray-800 pt-8">
+<div class="flex flex-col md:flex-row justify-between items-center">
+<p class="text-gray-400 mb-4 md:mb-0">© 2025 ScrapStore. All rights reserved.</p>
+<div class="flex items-center space-x-6">
+<a href="#" class="text-gray-400 hover:text-white transition">Privacy Policy</a>
+<a href="#" class="text-gray-400 hover:text-white transition">Terms of Service</a>
+<a href="#" class="text-gray-400 hover:text-white transition">Cookie Policy</a>
+</div>
+</div>
+</div>
+</div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+// Mobile filter toggle
+const mobileFilterBtn = document.getElementById('mobileFilterBtn');
+const filterBackdrop = document.getElementById('filterBackdrop');
+const filterOverlay = document.getElementById('filterOverlay');
+const closeFilterBtn = document.getElementById('closeFilterBtn');
+const mobileApplyFiltersBtn = document.getElementById('mobile-applyFiltersBtn');
+const mobileClearFiltersBtn = document.getElementById('mobile-clearFiltersBtn');
+
+// Filter count badge
+const activeFilterCount = document.getElementById('activeFilterCount');
+
+// Distance range sliders
+const distanceRange = document.getElementById('distanceRange');
+const distanceValue = document.getElementById('distanceValue');
+const mobileDistanceRange = document.getElementById('mobile-distanceRange');
+const mobileDistanceValue = document.getElementById('mobile-distanceValue');
+
+// Pagination buttons
+const prevPageBtn = document.getElementById('prevPageBtn');
+const nextPageBtn = document.getElementById('nextPageBtn');
+
+// Open filter overlay
+mobileFilterBtn.addEventListener('click', function() {
+filterBackdrop.classList.remove('hidden');
+document.body.style.overflow = 'hidden';
+setTimeout(() => {
+filterBackdrop.classList.add('active');
+filterOverlay.classList.add('active');
+}, 10);
+});
+
+// Close filter overlay
+function closeFilterOverlay() {
+filterBackdrop.classList.remove('active');
+filterOverlay.classList.remove('active');
+document.body.style.overflow = '';
+setTimeout(() => {
+filterBackdrop.classList.add('hidden');
+}, 300);
+}
+
+closeFilterBtn.addEventListener('click', closeFilterOverlay);
+filterBackdrop.addEventListener('click', function(e) {
+if (e.target === filterBackdrop) {
+closeFilterOverlay();
+}
+});
+mobileApplyFiltersBtn.addEventListener('click', closeFilterOverlay);
+mobileClearFiltersBtn.addEventListener('click', closeFilterOverlay);
+
+// Distance range slider functionality
+function updateDistanceValue(range, valueElement) {
+valueElement.textContent = `${range.value} miles`;
+}
+
+if (distanceRange && distanceValue) {
+updateDistanceValue(distanceRange, distanceValue);
+distanceRange.addEventListener('input', function() {
+updateDistanceValue(this, distanceValue);
+});
+}
+
+if (mobileDistanceRange && mobileDistanceValue) {
+updateDistanceValue(mobileDistanceRange, mobileDistanceValue);
+mobileDistanceRange.addEventListener('input', function() {
+updateDistanceValue(this, mobileDistanceValue);
+});
+}
+
+// Filter count update
+const allCheckboxes = document.querySelectorAll('.category-checkbox, .condition-radio');
+function updateFilterCount() {
+let count = 0;
+allCheckboxes.forEach(checkbox => {
+if (checkbox.checked && (checkbox.type === 'checkbox' || (checkbox.type === 'radio' && checkbox.value !== 'all'))) {
+count++;
+}
+});
+activeFilterCount.textContent = count;
+}
+
+allCheckboxes.forEach(checkbox => {
+checkbox.addEventListener('change', updateFilterCount);
+});
+
+// Pagination functionality
+let currentPage = 1;
+const totalPages = 3;
+
+prevPageBtn.addEventListener('click', function() {
+if (currentPage > 1) {
+currentPage--;
+updatePagination();
+}
+});
+
+nextPageBtn.addEventListener('click', function() {
+if (currentPage < totalPages) {
+currentPage++;
+updatePagination();
+}
+});
+
+function updatePagination() {
+console.log('Current page:', currentPage);
+// Update pagination button states
+const pageButtons = document.querySelectorAll('.flex.items-center.space-x-1 button');
+pageButtons.forEach(btn => {
+const text = btn.textContent;
+if (text === currentPage.toString()) {
+btn.classList.add('bg-primary', 'text-white');
+btn.classList.remove('border', 'border-gray-300', 'text-gray-600', 'hover:bg-gray-50');
+} else {
+btn.classList.add('border', 'border-gray-300', 'text-gray-600', 'hover:bg-gray-50');
+btn.classList.remove('bg-primary', 'text-white');
+}
+});
+
+// Disable prev/next buttons at boundaries
+prevPageBtn.disabled = currentPage === 1;
+nextPageBtn.disabled = currentPage === totalPages;
+
+// In a real app, update listings based on current page
+}
+
+// Simulate filter functionality for demo purposes
+const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+applyFiltersBtn.addEventListener('click', function() {
+console.log('Applying filters');
+updateFilterCount();
+alert('Filters applied! (Demo functionality)');
+});
+
+clearFiltersBtn.addEventListener('click', function() {
+// Uncheck all checkboxes
+document.querySelectorAll('.category-checkbox').forEach(checkbox => {
+checkbox.checked = false;
+});
+
+// Check "All Conditions" radio
+document.querySelectorAll('.condition-radio').forEach(radio => {
+radio.checked = (radio.value === 'all');
+});
+
+// Reset price range
+const priceRange = document.getElementById('priceRange');
+const minPrice = document.getElementById('minPrice');
+const maxPrice = document.getElementById('maxPrice');
+if (priceRange) priceRange.value = 250;
+if (minPrice) minPrice.value = '';
+if (maxPrice) maxPrice.value = '';
+
+// Reset location
+const locationInput = document.getElementById('locationInput');
+if (locationInput) locationInput.value = '';
+
+// Reset distance range
+if (distanceRange) distanceRange.value = 50;
+if (distanceValue) distanceValue.textContent = '50 miles';
+
+updateFilterCount();
+console.log('Filters cleared');
+alert('Filters cleared! (Demo functionality)');
+});
+
+// Sort functionality
+const sortSelect = document.getElementById('sortSelect');
+if (sortSelect) {
+sortSelect.addEventListener('change', function() {
+console.log('Sorting by:', this.value);
+alert(`Sorting by ${this.options[this.selectedIndex].text} (Demo functionality)`);
+});
+}
+
+// Buy Now buttons
+const buyNowButtons = document.querySelectorAll('button:contains("Buy Now")');
+document.querySelectorAll('button').forEach(btn => {
+if (btn.textContent.includes('Buy Now')) {
+btn.addEventListener('click', function(e) {
+e.stopPropagation();
+const listing = this.closest('.bg-white.border.border-gray-200.rounded-lg');
+const title = listing.querySelector('h3').textContent;
+const price = listing.querySelector('.font-bold').textContent;
+alert(`Adding to cart: ${title} - ${price} (Demo functionality)`);
+});
+}
+});
+
+// Chat buttons
+const chatButtons = document.querySelectorAll('button:contains("Chat")');
+document.querySelectorAll('button').forEach(btn => {
+if (btn.textContent.includes('Chat')) {
+btn.addEventListener('click', function(e) {
+e.stopPropagation();
+const listing = this.closest('.bg-white.border.border-gray-200.rounded-lg');
+const seller = listing.querySelector('.text-xs.text-gray-600').textContent;
+alert(`Starting chat with: ${seller} (Demo functionality)`);
+});
+}
+});
+
+// Buy with Escrow buttons
+const escrowButtons = document.querySelectorAll('button:contains("Buy with Escrow")');
+document.querySelectorAll('button').forEach(btn => {
+if (btn.textContent.includes('Buy with Escrow')) {
+btn.addEventListener('click', function(e) {
+e.stopPropagation();
+const listing = this.closest('.bg-white.border.border-gray-200.rounded-lg');
+const title = listing.querySelector('h3').textContent;
+const price = listing.querySelector('.font-bold').textContent;
+alert(`Buying with escrow: ${title} - ${price} (Demo functionality)`);
+});
+}
+});
+
+// Listing card click - view details
+const listingCards = document.querySelectorAll('.bg-white.border.border-gray-200.rounded-lg');
+listingCards.forEach(card => {
+card.addEventListener('click', function(e) {
+if (!e.target.closest('button')) {
+const title = this.querySelector('h3').textContent;
+alert(`Viewing details for: ${title} (Demo functionality)`);
+}
+});
+});
+
+// Mobile apply filters
+mobileApplyFiltersBtn.addEventListener('click', function() {
+console.log('Mobile applying filters');
+updateFilterCount();
+alert('Filters applied! (Demo functionality)');
+});
+
+// Mobile clear filters
+mobileClearFiltersBtn.addEventListener('click', function() {
+// Uncheck all checkboxes
+document.querySelectorAll('.category-checkbox').forEach(checkbox => {
+checkbox.checked = false;
+});
+
+// Check "All Conditions" radio
+document.querySelectorAll('.condition-radio').forEach(radio => {
+radio.checked = (radio.value === 'all');
+});
+
+// Reset price range
+const priceRange = document.getElementById('mobile-priceRange');
+const minPrice = document.getElementById('mobile-minPrice');
+const maxPrice = document.getElementById('mobile-maxPrice');
+if (priceRange) priceRange.value = 250;
+if (minPrice) minPrice.value = '';
+if (maxPrice) maxPrice.value = '';
+
+// Reset location
+const locationInput = document.getElementById('mobile-locationInput');
+if (locationInput) locationInput.value = '';
+
+// Reset distance range
+if (mobileDistanceRange) mobileDistanceRange.value = 50;
+if (mobileDistanceValue) mobileDistanceValue.textContent = '50 miles';
+
+updateFilterCount();
+console.log('Mobile filters cleared');
+alert('Filters cleared! (Demo functionality)');
+});
+});
+</script>
+</body>
+</html>

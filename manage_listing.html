@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Your Listings - ScrapStore</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#5b46f4',secondary:'#f0eeff'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb;
+        }
+        .status-active {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status-pending {
+            background-color: #ffedd5;
+            color: #9a3412;
+        }
+        .status-sold {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #5b46f4;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-60 bg-white border-r border-gray-200 flex flex-col">
+            <div class="p-4">
+                <a href="#" class="text-primary font-['Pacifico'] text-2xl">ScrapStore</a>
+            </div>
+            
+            <div class="mt-6">
+                <p class="px-4 text-xs font-medium text-gray-500 mb-2">MAIN</p>
+                <a href="#" class="flex items-center px-4 py-2 text-gray-600 bg-gray-100 rounded-r-none rounded-l-lg">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3">
+                        <i class="ri-dashboard-line"></i>
+                    </div>
+                    <span>Dashboard</span>
+                </a>
+                
+                <a href="#" class="flex items-center px-4 py-2 text-primary bg-secondary rounded-r-none rounded-l-lg mt-1">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3">
+                        <i class="ri-file-list-line"></i>
+                    </div>
+                    <span>Listings</span>
+                    <span class="ml-auto bg-gray-200 text-gray-700 rounded-full px-2 text-xs">12</span>
+                </a>
+                
+                <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-r-none rounded-l-lg mt-1">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3">
+                        <i class="ri-shopping-bag-line"></i>
+                    </div>
+                    <span>Orders</span>
+                    <span class="ml-auto bg-primary text-white rounded-full px-2 text-xs">3</span>
+                </a>
+                
+                <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-r-none rounded-l-lg mt-1">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3">
+                        <i class="ri-message-2-line"></i>
+                    </div>
+                    <span>Messages</span>
+                    <span class="ml-auto bg-primary text-white rounded-full px-2 text-xs">5</span>
+                </a>
+            </div>
+            
+            <div class="mt-6">
+                <p class="px-4 text-xs font-medium text-gray-500 mb-2">ACCOUNT</p>
+                <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-r-none rounded-l-lg">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3">
+                        <i class="ri-user-line"></i>
+                    </div>
+                    <span>Profile</span>
+                </a>
+                
+                <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-r-none rounded-l-lg mt-1">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3">
+                        <i class="ri-exchange-dollar-line"></i>
+                    </div>
+                    <span>Transactions</span>
+                </a>
+                
+                <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-r-none rounded-l-lg mt-1">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3">
+                        <i class="ri-wallet-line"></i>
+                    </div>
+                    <span>Wallet</span>
+                </a>
+            </div>
+            
+            <div class="mt-auto mb-6">
+                <p class="px-4 text-xs font-medium text-gray-500 mb-2">SYSTEM</p>
+                <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-r-none rounded-l-lg">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3">
+                        <i class="ri-settings-line"></i>
+                    </div>
+                    <span>Settings</span>
+                </a>
+                
+                <a href="#" class="flex items-center px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-r-none rounded-l-lg mt-1">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3">
+                        <i class="ri-question-line"></i>
+                    </div>
+                    <span>Help & Support</span>
+                </a>
+                
+                <a href="#" class="flex items-center px-4 py-2 text-red-600 hover:bg-red-50 rounded-r-none rounded-l-lg mt-1">
+                    <div class="w-5 h-5 flex items-center justify-center mr-3">
+                        <i class="ri-logout-box-line"></i>
+                    </div>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-white border-b border-gray-200 py-4 px-6 flex items-center justify-between">
+                <div class="flex-1">
+                    <h1 class="text-2xl font-semibold text-gray-800">Manage Your Listings</h1>
+                    <p class="text-sm text-gray-500">Tuesday, May 20, 2025</p>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <div class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full cursor-pointer">
+                            <i class="ri-notification-3-line text-gray-600"></i>
+                        </div>
+                        <span class="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <img src="https://readdy.ai/api/search-image?query=professional%20headshot%20of%20a%20male%20with%20brown%20hair%20and%20friendly%20smile%2C%20high%20quality%20studio%20portrait%2C%20neutral%20background&width=40&height=40&seq=1&orientation=squarish" alt="User" class="w-10 h-10 rounded-full object-cover border border-gray-200">
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-800">Michael Anderson</p>
+                            <p class="text-xs text-gray-500">Premium Member</p>
+                        </div>
+                        <div class="ml-2 w-5 h-5 flex items-center justify-center">
+                            <i class="ri-arrow-down-s-line text-gray-500"></i>
+                        </div>
+                    </div>
+                    
+                    <button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-button flex items-center whitespace-nowrap">
+                        <div class="w-5 h-5 flex items-center justify-center mr-2">
+                            <i class="ri-add-line"></i>
+                        </div>
+                        <span>Create New Listing</span>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Listing Stats -->
+            <div class="bg-white border-b border-gray-200 px-6 py-4">
+                <div class="flex flex-wrap -mx-3">
+                    <div class="w-1/4 px-3">
+                        <div class="flex items-center p-4 bg-blue-50 rounded-lg">
+                            <div class="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-full mr-4">
+                                <i class="ri-file-list-line text-primary"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Active Listings</p>
+                                <p class="text-xl font-semibold">12</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="w-1/4 px-3">
+                        <div class="flex items-center p-4 bg-orange-50 rounded-lg">
+                            <div class="w-10 h-10 flex items-center justify-center bg-orange-100 rounded-full mr-4">
+                                <i class="ri-time-line text-orange-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Pending Review</p>
+                                <p class="text-xl font-semibold">2</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="w-1/4 px-3">
+                        <div class="flex items-center p-4 bg-green-50 rounded-lg">
+                            <div class="w-10 h-10 flex items-center justify-center bg-green-100 rounded-full mr-4">
+                                <i class="ri-shopping-cart-line text-green-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Sold This Month</p>
+                                <p class="text-xl font-semibold">5</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="w-1/4 px-3">
+                        <div class="flex items-center p-4 bg-purple-50 rounded-lg">
+                            <div class="w-10 h-10 flex items-center justify-center bg-purple-100 rounded-full mr-4">
+                                <i class="ri-eye-line text-purple-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Total Views</p>
+                                <p class="text-xl font-semibold">1,248</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="bg-white border-b border-gray-200 px-6 py-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4 flex-1">
+                        <div class="relative flex-1 max-w-md">
+                            <input type="text" placeholder="Search listings..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center">
+                                <i class="ri-search-line text-gray-400"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="relative">
+                            <select class="appearance-none pl-4 pr-10 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option>All Categories</option>
+                                <option>Phone Parts</option>
+                                <option>Laptop Parts</option>
+                                <option>Tablet Parts</option>
+                                <option>Accessories</option>
+                            </select>
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center pointer-events-none">
+                                <i class="ri-arrow-down-s-line text-gray-400"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="relative">
+                            <select class="appearance-none pl-4 pr-10 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option>All Conditions</option>
+                                <option>New</option>
+                                <option>Like New</option>
+                                <option>Good</option>
+                                <option>Fair</option>
+                            </select>
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center pointer-events-none">
+                                <i class="ri-arrow-down-s-line text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <select class="appearance-none pl-4 pr-10 py-2 border border-gray-300 rounded-lg text-sm">
+                                <option>Sort by: Newest</option>
+                                <option>Sort by: Price Low to High</option>
+                                <option>Sort by: Price High to Low</option>
+                                <option>Sort by: Most Viewed</option>
+                            </select>
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center pointer-events-none">
+                                <i class="ri-arrow-down-s-line text-gray-400"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="flex border border-gray-300 rounded-lg overflow-hidden">
+                            <button class="px-3 py-2 bg-primary text-white">
+                                <div class="w-5 h-5 flex items-center justify-center">
+                                    <i class="ri-layout-grid-line"></i>
+                                </div>
+                            </button>
+                            <button class="px-3 py-2 bg-white text-gray-500">
+                                <div class="w-5 h-5 flex items-center justify-center">
+                                    <i class="ri-list-check"></i>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Listings Grid -->
+            <div class="flex-1 overflow-auto p-6 bg-gray-50">
+                <div class="grid grid-cols-3 gap-6">
+                    <!-- Listing 1 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="relative">
+                            <img src="https://readdy.ai/api/search-image?query=iPhone%2012%20logic%20board%20circuit%20board%20with%20chips%20and%20components%2C%20detailed%20close-up%20on%20white%20background%2C%20professional%20product%20photography&width=400&height=250&seq=2&orientation=landscape" alt="iPhone 12 Logic Board" class="w-full h-48 object-cover object-top">
+                            <span class="absolute top-3 right-3 px-2 py-1 text-xs font-medium rounded-full status-active">Active</span>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-medium text-gray-900 mb-1">iPhone 12 Logic Board</h3>
+                            <p class="text-gray-500 text-sm mb-2">Working condition, tested</p>
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-lg font-semibold text-gray-900">$89.99</p>
+                                <p class="text-xs text-gray-500">Posted 2 days ago</p>
+                            </div>
+                            <div class="flex items-center text-xs text-gray-500 mb-4">
+                                <div class="flex items-center mr-3">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-eye-line"></i>
+                                    </div>
+                                    <span>124 views</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-heart-line"></i>
+                                    </div>
+                                    <span>8 saves</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 py-2 bg-gray-100 text-gray-700 rounded-button text-sm font-medium hover:bg-gray-200 whitespace-nowrap">View</button>
+                                <button class="flex-1 py-2 bg-blue-50 text-primary rounded-button text-sm font-medium hover:bg-blue-100 whitespace-nowrap">Edit</button>
+                                <button class="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-button hover:bg-red-100 whitespace-nowrap">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Listing 2 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="relative">
+                            <img src="https://readdy.ai/api/search-image?query=MacBook%20Pro%20A1708%20keyboard%2C%20top%20view%20of%20laptop%20keyboard%20with%20keys%20visible%2C%20clean%20and%20detailed%20product%20photography%20on%20white%20background&width=400&height=250&seq=3&orientation=landscape" alt="MacBook Pro A1708 Keyboard" class="w-full h-48 object-cover object-top">
+                            <span class="absolute top-3 right-3 px-2 py-1 text-xs font-medium rounded-full status-active">Active</span>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-medium text-gray-900 mb-1">MacBook Pro A1708 Keyboard</h3>
+                            <p class="text-gray-500 text-sm mb-2">Excellent condition, 2017 model</p>
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-lg font-semibold text-gray-900">$129.99</p>
+                                <p class="text-xs text-gray-500">Posted 5 days ago</p>
+                            </div>
+                            <div class="flex items-center text-xs text-gray-500 mb-4">
+                                <div class="flex items-center mr-3">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-eye-line"></i>
+                                    </div>
+                                    <span>98 views</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-heart-line"></i>
+                                    </div>
+                                    <span>12 saves</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 py-2 bg-gray-100 text-gray-700 rounded-button text-sm font-medium hover:bg-gray-200 whitespace-nowrap">View</button>
+                                <button class="flex-1 py-2 bg-blue-50 text-primary rounded-button text-sm font-medium hover:bg-blue-100 whitespace-nowrap">Edit</button>
+                                <button class="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-button hover:bg-red-100 whitespace-nowrap">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Listing 3 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="relative">
+                            <img src="https://readdy.ai/api/search-image?query=Samsung%20S21%20camera%20module%2C%20smartphone%20camera%20component%20with%20multiple%20lenses%2C%20detailed%20close-up%20on%20white%20background%2C%20professional%20product%20photography&width=400&height=250&seq=4&orientation=landscape" alt="Samsung S21 Camera Module" class="w-full h-48 object-cover object-top">
+                            <span class="absolute top-3 right-3 px-2 py-1 text-xs font-medium rounded-full status-pending">Pending</span>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-medium text-gray-900 mb-1">Samsung S21 Camera Module</h3>
+                            <p class="text-gray-500 text-sm mb-2">New, never used</p>
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-lg font-semibold text-gray-900">$79.99</p>
+                                <p class="text-xs text-gray-500">Posted 1 day ago</p>
+                            </div>
+                            <div class="flex items-center text-xs text-gray-500 mb-4">
+                                <div class="flex items-center mr-3">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-eye-line"></i>
+                                    </div>
+                                    <span>45 views</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-heart-line"></i>
+                                    </div>
+                                    <span>3 saves</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 py-2 bg-gray-100 text-gray-700 rounded-button text-sm font-medium hover:bg-gray-200 whitespace-nowrap">View</button>
+                                <button class="flex-1 py-2 bg-blue-50 text-primary rounded-button text-sm font-medium hover:bg-blue-100 whitespace-nowrap">Edit</button>
+                                <button class="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-button hover:bg-red-100 whitespace-nowrap">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Listing 4 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="relative">
+                            <img src="https://readdy.ai/api/search-image?query=iPad%20Pro%20display%20screen%20replacement%2C%20tablet%20screen%20with%20high%20resolution%20display%2C%20detailed%20product%20photography%20on%20white%20background&width=400&height=250&seq=5&orientation=landscape" alt="iPad Pro Display" class="w-full h-48 object-cover object-top">
+                            <span class="absolute top-3 right-3 px-2 py-1 text-xs font-medium rounded-full status-active">Active</span>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-medium text-gray-900 mb-1">iPad Pro Display (11-inch)</h3>
+                            <p class="text-gray-500 text-sm mb-2">Mint condition, 2020 model</p>
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-lg font-semibold text-gray-900">$199.99</p>
+                                <p class="text-xs text-gray-500">Posted 1 week ago</p>
+                            </div>
+                            <div class="flex items-center text-xs text-gray-500 mb-4">
+                                <div class="flex items-center mr-3">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-eye-line"></i>
+                                    </div>
+                                    <span>187 views</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-heart-line"></i>
+                                    </div>
+                                    <span>24 saves</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 py-2 bg-gray-100 text-gray-700 rounded-button text-sm font-medium hover:bg-gray-200 whitespace-nowrap">View</button>
+                                <button class="flex-1 py-2 bg-blue-50 text-primary rounded-button text-sm font-medium hover:bg-blue-100 whitespace-nowrap">Edit</button>
+                                <button class="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-button hover:bg-red-100 whitespace-nowrap">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Listing 5 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="relative">
+                            <img src="https://readdy.ai/api/search-image?query=iPhone%20X%20battery%20replacement%2C%20smartphone%20lithium%20battery%20with%20connectors%2C%20detailed%20close-up%20on%20white%20background%2C%20professional%20product%20photography&width=400&height=250&seq=6&orientation=landscape" alt="iPhone X Battery" class="w-full h-48 object-cover object-top">
+                            <span class="absolute top-3 right-3 px-2 py-1 text-xs font-medium rounded-full status-sold">Sold</span>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-medium text-gray-900 mb-1">iPhone X Battery</h3>
+                            <p class="text-gray-500 text-sm mb-2">New, original capacity</p>
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-lg font-semibold text-gray-900">$39.99</p>
+                                <p class="text-xs text-gray-500">Posted 2 weeks ago</p>
+                            </div>
+                            <div class="flex items-center text-xs text-gray-500 mb-4">
+                                <div class="flex items-center mr-3">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-eye-line"></i>
+                                    </div>
+                                    <span>203 views</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-heart-line"></i>
+                                    </div>
+                                    <span>15 saves</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 py-2 bg-gray-100 text-gray-700 rounded-button text-sm font-medium hover:bg-gray-200 whitespace-nowrap">View</button>
+                                <button class="flex-1 py-2 bg-gray-300 text-gray-500 rounded-button text-sm font-medium cursor-not-allowed whitespace-nowrap">Edit</button>
+                                <button class="w-10 h-10 flex items-center justify-center bg-gray-300 text-gray-500 rounded-button cursor-not-allowed whitespace-nowrap">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Listing 6 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                        <div class="relative">
+                            <img src="https://readdy.ai/api/search-image?query=Google%20Pixel%205%20motherboard%2C%20smartphone%20main%20circuit%20board%20with%20chips%20and%20components%2C%20detailed%20close-up%20on%20white%20background%2C%20professional%20product%20photography&width=400&height=250&seq=7&orientation=landscape" alt="Google Pixel 5 Motherboard" class="w-full h-48 object-cover object-top">
+                            <span class="absolute top-3 right-3 px-2 py-1 text-xs font-medium rounded-full status-active">Active</span>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-medium text-gray-900 mb-1">Google Pixel 5 Motherboard</h3>
+                            <p class="text-gray-500 text-sm mb-2">Fully functional, tested</p>
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-lg font-semibold text-gray-900">$149.99</p>
+                                <p class="text-xs text-gray-500">Posted 3 days ago</p>
+                            </div>
+                            <div class="flex items-center text-xs text-gray-500 mb-4">
+                                <div class="flex items-center mr-3">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-eye-line"></i>
+                                    </div>
+                                    <span>76 views</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 flex items-center justify-center mr-1">
+                                        <i class="ri-heart-line"></i>
+                                    </div>
+                                    <span>7 saves</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="flex-1 py-2 bg-gray-100 text-gray-700 rounded-button text-sm font-medium hover:bg-gray-200 whitespace-nowrap">View</button>
+                                <button class="flex-1 py-2 bg-blue-50 text-primary rounded-button text-sm font-medium hover:bg-blue-100 whitespace-nowrap">Edit</button>
+                                <button class="w-10 h-10 flex items-center justify-center bg-red-50 text-red-500 rounded-button hover:bg-red-100 whitespace-nowrap">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="mt-8 flex items-center justify-between">
+                    <p class="text-sm text-gray-500">Showing 1-6 of 12 listings</p>
+                    
+                    <div class="flex items-center space-x-1">
+                        <button class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="ri-arrow-left-s-line"></i>
+                        </button>
+                        
+                        <button class="w-9 h-9 flex items-center justify-center rounded-lg bg-primary text-white">1</button>
+                        <button class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">2</button>
+                        
+                        <button class="w-9 h-9 flex items-center justify-center rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100">
+                            <i class="ri-arrow-right-s-line"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <span class="text-sm text-gray-500 mr-2">Items per page:</span>
+                        <div class="relative">
+                            <select class="appearance-none pl-3 pr-8 py-1 border border-gray-300 rounded-lg text-sm">
+                                <option>6</option>
+                                <option>12</option>
+                                <option>24</option>
+                                <option>48</option>
+                            </select>
+                            <div class="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 flex items-center justify-center pointer-events-none">
+                                <i class="ri-arrow-down-s-line text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle grid/list view toggle
+            const gridButton = document.querySelector('.ri-layout-grid-line').parentElement;
+            const listButton = document.querySelector('.ri-list-check').parentElement;
+            
+            gridButton.addEventListener('click', function() {
+                gridButton.classList.remove('bg-white', 'text-gray-500');
+                gridButton.classList.add('bg-primary', 'text-white');
+                listButton.classList.remove('bg-primary', 'text-white');
+                listButton.classList.add('bg-white', 'text-gray-500');
+            });
+            
+            listButton.addEventListener('click', function() {
+                listButton.classList.remove('bg-white', 'text-gray-500');
+                listButton.classList.add('bg-primary', 'text-white');
+                gridButton.classList.remove('bg-primary', 'text-white');
+                gridButton.classList.add('bg-white', 'text-gray-500');
+            });
+        });
+    </script>
+</body>
+</html>
