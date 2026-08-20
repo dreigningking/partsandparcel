@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buyer Dashboard — Parts &amp; Parcel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pp: { 50: '#f5f3ff', 100: '#ebe7ff', 200: '#d9d2ff', 500: '#5140c8', 600: '#4634b7', 700: '#38299b', 900: '#20165f' }
+          },
+          boxShadow: { soft: '0 8px 30px rgba(42, 31, 120, .08)' }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50/60 text-slate-900 pb-16 lg:pb-0">
+
+<!-- HEADER -->
+<header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-xl bg-pp-600 text-white grid place-items-center font-bold">P</div>
+      <span class="text-lg font-extrabold text-slate-900">Parts &amp; Parcel</span>
+    </a>
+    <div class="flex items-center gap-3 text-xs font-bold">
+      <a href="seller-dashboard.html" class="px-3 py-1.5 rounded-lg bg-pp-50 text-pp-600 border border-pp-200">Switch to Seller Portal</a>
+      <a href="cart.html" class="p-2 rounded-lg hover:bg-slate-100">🛒</a>
+    </div>
+  </div>
+</header>
+
+<div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="grid lg:grid-cols-12 gap-8">
+    
+    <!-- SIDEBAR -->
+    <aside class="lg:col-span-3">
+      <div class="bg-white rounded-3xl border border-slate-200 p-5 space-y-2 shadow-soft">
+        <div class="p-3 border-b border-slate-100 mb-2">
+          <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white font-extrabold text-lg grid place-items-center mb-2">E</div>
+          <h3 class="text-sm font-extrabold text-slate-900">Emmanuel Reign</h3>
+          <p class="text-[11px] text-slate-500">Member since 2024 · Verified Buyer</p>
+        </div>
+
+        <a href="buyer-dashboard.html" class="flex items-center gap-3 p-2.5 rounded-xl bg-pp-50 text-pp-700 font-bold text-xs">
+          <span>📊 Dashboard</span>
+        </a>
+        <a href="order-detail.html" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-slate-700 font-semibold text-xs">
+          <span>📦 My Orders</span>
+        </a>
+        <a href="offer.html" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-slate-700 font-semibold text-xs">
+          <span>🏷️ My Offers</span>
+        </a>
+        <a href="community.html" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-slate-700 font-semibold text-xs">
+          <span>💬 Community Activity</span>
+        </a>
+        <a href="locations.html" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-slate-700 font-semibold text-xs">
+          <span>📍 Saved Addresses</span>
+        </a>
+        <a href="subscriptions.html" class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-slate-700 font-semibold text-xs">
+          <span>⚡ Subscription Tiers</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="lg:col-span-9 space-y-6">
+      
+      <!-- DASHBOARD METRIC CARDS -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-soft">
+          <span class="text-xs font-bold text-slate-400 block uppercase">Active Orders</span>
+          <span class="text-2xl font-extrabold text-slate-950 mt-1 block">2</span>
+          <span class="text-[10px] text-emerald-600 font-semibold">1 In Transit</span>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-soft">
+          <span class="text-xs font-bold text-slate-400 block uppercase">Pending Offers</span>
+          <span class="text-2xl font-extrabold text-slate-950 mt-1 block">1</span>
+          <span class="text-[10px] text-pp-600 font-semibold">Awaiting Seller</span>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-soft">
+          <span class="text-xs font-bold text-slate-400 block uppercase">Saved Listings</span>
+          <span class="text-2xl font-extrabold text-slate-950 mt-1 block">14</span>
+          <span class="text-[10px] text-slate-500 font-semibold">Items watched</span>
+        </div>
+
+        <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-soft">
+          <span class="text-xs font-bold text-slate-400 block uppercase">Responses Left</span>
+          <span class="text-2xl font-extrabold text-emerald-600 mt-1 block">12</span>
+          <span class="text-[10px] text-slate-500 font-semibold">Free Tier Cap</span>
+        </div>
+
+      </div>
+
+      <!-- RECENT ORDERS STREAM -->
+      <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-soft">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-sm font-extrabold text-slate-900">Recent Orders</h3>
+          <a href="order-detail.html" class="text-xs font-bold text-pp-600 hover:underline">View All Orders →</a>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          
+          <a href="order-detail.html" class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200/70 hover:border-pp-300 transition gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-pp-100 text-pp-700 font-bold grid place-items-center text-lg">💻</div>
+              <div>
+                <h4 class="font-extrabold text-slate-900">Order #PP-89211 · HP EliteBook 840 G5</h4>
+                <p class="text-slate-500">Seller: Adam Computers · ₦283,500</p>
+              </div>
+            </div>
+            <div class="flex items-center justify-between sm:justify-end gap-4">
+              <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[11px]">DISPATCHED</span>
+              <span class="font-bold text-pp-600">Track Order →</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+      <!-- MY COMMUNITY DISCUSSIONS & REQUESTS (KEY USER REQUIREMENT) -->
+      <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-soft">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900">My Community Requests &amp; Activity</h3>
+            <p class="text-xs text-slate-500">Track parts requests you posted to technicians and sellers.</p>
+          </div>
+          <a href="community.html" class="px-4 py-2 rounded-xl bg-pp-600 text-white font-extrabold text-xs">+ New Request</a>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          
+          <a href="discussion-detail.html" class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-purple-50/40 border border-purple-200 hover:border-pp-300 transition gap-4">
+            <div>
+              <div class="flex items-center gap-2 text-slate-500 text-[11px]">
+                <span class="font-bold text-purple-700 uppercase">ACTIVE REQUEST</span>
+                <span>·</span>
+                <span>Posted 2 hours ago</span>
+              </div>
+              <h4 class="font-extrabold text-slate-900 text-sm mt-1">"Looking for HP EliteBook 840 G5 motherboard in Lagos"</h4>
+              <p class="text-slate-500">Target Model: HP EliteBook 840 G5 · Budget: ₦70k - ₦90k</p>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[11px]">3 OFFERS RECEIVED</span>
+              <span class="font-bold text-pp-600">View Responses →</span>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+</div>
+
+</body>
+</html>

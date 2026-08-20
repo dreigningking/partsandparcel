@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Electronics &amp; Devices — Parts &amp; Parcel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pp: {
+              50: '#f5f3ff', 100: '#ebe7ff', 200: '#d9d2ff',
+              500: '#5140c8', 600: '#4634b7', 700: '#38299b', 900: '#20165f'
+            }
+          },
+          boxShadow: { soft: '0 8px 30px rgba(42, 31, 120, .08)', card: '0 3px 18px rgba(31, 25, 79, .07)' }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    
+    /* Connected Tab Active Styles */
+    .tab-item.active {
+      border-bottom-color: #4634b7;
+      color: #4634b7;
+      background-color: rgba(245, 243, 255, 0.7);
+    }
+    .tab-item.active .tab-badge {
+      background-color: #4634b7;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+
+<!-- TOP HEADER -->
+<header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-xs">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16 gap-4">
+      
+      <!-- LOGO -->
+      <a href="index.html" class="flex items-center gap-2.5 shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-pp-600 text-white grid place-items-center font-extrabold text-lg shadow-sm">P</div>
+        <div class="flex flex-col">
+          <span class="text-lg font-extrabold tracking-tight text-slate-900 leading-none">Parts &amp; Parcel</span>
+          <span class="text-[10px] font-semibold text-pp-600 uppercase tracking-widest mt-0.5">Marketplace</span>
+        </div>
+      </a>
+
+      <!-- SEARCH BAR -->
+      <form action="category.html" class="flex-1 max-w-xl mx-4 hidden md:flex items-center border border-slate-200 rounded-xl overflow-hidden h-10 shadow-xs">
+        <input name="q" class="flex-1 px-4 outline-none text-xs font-medium" placeholder="Search devices, parts, scrap, or community..." value="Laptops &amp; Parts" />
+        <button class="px-5 bg-pp-600 hover:bg-pp-700 text-white text-xs font-bold h-full transition">Search</button>
+      </form>
+
+      <div class="flex items-center gap-1.5 sm:gap-2.5">
+        <!-- WISHLIST -->
+        <a href="buyer-dashboard.html?tab=saved" aria-label="Wishlist" class="relative p-2 rounded-xl hover:bg-slate-100 text-slate-700 transition" title="Saved Wishlist">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center">5</span>
+        </a>
+
+        <!-- NOTIFICATIONS -->
+        <button aria-label="Notifications" class="relative p-2 rounded-xl hover:bg-slate-100 text-slate-700 transition" title="Notifications">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold grid place-items-center">2</span>
+        </button>
+
+        <!-- CART -->
+        <a href="cart.html" class="p-2 rounded-xl hover:bg-slate-100 relative text-slate-700">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
+          <span class="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-pp-600 text-white text-[10px] font-bold grid place-items-center">3</span>
+        </a>
+
+        <!-- ACCOUNT DROPDOWN MENU -->
+        <div class="relative inline-block text-left account-menu-wrapper">
+          <button type="button" class="account-menu-trigger hidden sm:flex items-center gap-2 p-1.5 pl-2.5 pr-3 rounded-xl border border-slate-200 hover:border-pp-300 text-xs font-semibold text-slate-800 transition bg-white shadow-xs cursor-pointer">
+            <div class="w-7 h-7 rounded-full bg-slate-900 text-white font-bold text-xs grid place-items-center">A</div>
+            <span>Account</span>
+            <svg class="w-3.5 h-3.5 text-slate-400 ml-0.5 transition-transform duration-200 chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+          </button>
+
+          <!-- DROPDOWN PANEL -->
+          <div class="account-dropdown-panel hidden absolute right-0 mt-2 w-60 rounded-2xl bg-white border border-slate-200 shadow-xl py-2 z-50 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
+            <!-- USER PROFILE HEADER -->
+            <div class="px-4 py-2.5 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-pp-600 text-white font-bold text-xs grid place-items-center shadow-xs">AO</div>
+                <div class="overflow-hidden">
+                  <p class="font-extrabold text-slate-900 truncate">Abel Okon</p>
+                  <p class="text-[11px] text-slate-500 truncate">abel.parts@example.ng</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- DASHBOARD & NAVIGATION LINKS -->
+            <div class="py-1.5 border-b border-slate-100">
+              <a href="seller-dashboard.html" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
+                <span class="text-base">📊</span>
+                <span>Selling Dashboard</span>
+              </a>
+              <a href="buyer-dashboard.html" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
+                <span class="text-base">📦</span>
+                <span>Buying Dashboard</span>
+              </a>
+              <a href="subscriptions.html" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
+                <span class="text-base">💳</span>
+                <span>Subscription</span>
+              </a>
+              <a href="buyer-dashboard.html?tab=profile" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
+                <span class="text-base">👤</span>
+                <span>Profile</span>
+              </a>
+            </div>
+
+            <!-- COLOR MODE SELECTOR -->
+            <div class="px-4 py-3 border-b border-slate-100">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Color Mode</span>
+                <span id="current-mode-label" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">Light</span>
+              </div>
+              <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl text-center">
+                <button type="button" onclick="setThemeMode('light', event)" class="theme-btn active py-1 rounded-lg text-[10px] font-bold text-slate-900 bg-white shadow-xs transition">Light</button>
+                <button type="button" onclick="setThemeMode('dark', event)" class="theme-btn py-1 rounded-lg text-[10px] font-semibold text-slate-600 hover:text-slate-900 transition">Dark</button>
+                <button type="button" onclick="setThemeMode('system', event)" class="theme-btn py-1 rounded-lg text-[10px] font-semibold text-slate-600 hover:text-slate-900 transition">System</button>
+              </div>
+            </div>
+
+            <!-- LOGOUT -->
+            <div class="pt-1">
+              <a href="index.html" class="flex items-center gap-3 px-4 py-2 text-rose-600 hover:bg-rose-50 font-extrabold transition">
+                <span class="text-base">🚪</span>
+                <span>Logout</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- CATEGORY BREADCRUMB & CONTEXT HEADER -->
+<div class="bg-white border-b border-slate-200 pt-6 pb-0">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-2">
+      <a href="index.html" class="hover:text-slate-700">Home</a>
+      <span>/</span>
+      <a href="category.html" class="hover:text-slate-700">Electronics</a>
+      <span>/</span>
+      <span class="text-slate-900 font-bold">Laptops &amp; Computer Parts</span>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950" id="category-heading">Laptops &amp; Complete Devices Marketplace</h1>
+        <p class="text-xs text-slate-500 mt-1">Browse working laptops, replacement components, scrap units for salvage, or community requests.</p>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs">
+        <span class="text-slate-500 font-medium">Verified Sellers:</span>
+        <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">1,240 Sellers Active</span>
+      </div>
+    </div>
+
+    <!-- CONTEXTUAL 4 INTENT TABS (CONNECTED TAB NAV BAR) -->
+    <div class="mt-6 border-b border-slate-200">
+      <nav class="-mb-px flex space-x-2 sm:space-x-4 overflow-x-auto no-scrollbar" aria-label="Tabs">
+        
+        <!-- TAB 1: COMPLETE DEVICES -->
+        <button id="tab-complete-btn" onclick="switchTab('complete')" class="tab-item active group relative inline-flex items-center gap-2 py-3.5 px-4 sm:px-6 font-bold text-xs sm:text-sm border-b-2 border-pp-600 text-pp-600 bg-pp-50/60 rounded-t-xl transition cursor-pointer">
+          <span class="text-base sm:text-lg">💻</span>
+          <span>Complete Laptops</span>
+          <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full bg-pp-600 text-white text-[11px] font-extrabold shadow-xs">142</span>
+        </button>
+
+        <!-- TAB 2: SPARE PARTS -->
+        <button id="tab-parts-btn" onclick="switchTab('parts')" class="tab-item group relative inline-flex items-center gap-2 py-3.5 px-4 sm:px-6 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300 rounded-t-xl transition cursor-pointer">
+          <span class="text-base sm:text-lg">⚙️</span>
+          <span>Parts &amp; Components</span>
+          <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[11px] font-bold">380</span>
+        </button>
+
+        <!-- TAB 3: SCRAP & SALVAGE -->
+        <button id="tab-scrap-btn" onclick="switchTab('scrap')" class="tab-item group relative inline-flex items-center gap-2 py-3.5 px-4 sm:px-6 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-amber-800 hover:border-amber-400 rounded-t-xl transition cursor-pointer">
+          <span class="text-base sm:text-lg">🛠️</span>
+          <span>Scrap &amp; Salvage</span>
+          <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[11px] font-bold">95</span>
+        </button>
+
+        <!-- TAB 4: COMMUNITY REQUESTS -->
+        <button id="tab-community-btn" onclick="switchTab('community')" class="tab-item group relative inline-flex items-center gap-2 py-3.5 px-4 sm:px-6 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300 rounded-t-xl transition cursor-pointer">
+          <span class="text-base sm:text-lg">💬</span>
+          <span>Community Requests</span>
+          <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[11px] font-bold">48</span>
+        </button>
+
+      </nav>
+    </div>
+
+  </div>
+</div>
+
+<!-- MAIN CONTENT AREA WITH SIDEBAR FILTERS & LISTINGS -->
+<div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="grid lg:grid-cols-12 gap-8">
+    
+    <!-- LEFT INTELLIGENT FILTER SIDEBAR (DYNAMICALLY SWITCHES WITH TABS) -->
+    <aside class="lg:col-span-3 space-y-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-6">
+        
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-sm font-extrabold text-slate-900">Filter Listings</h3>
+          <button class="text-[11px] font-bold text-pp-600 hover:underline">Reset All</button>
+        </div>
+
+        <!-- 1. COMPLETE LAPTOPS FILTER SIDEBAR -->
+        <div id="filter-complete" class="space-y-5">
+          <div>
+            <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">Brand</label>
+            <div class="space-y-2 text-xs text-slate-700">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>HP (EliteBook, Envy)</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Dell (Latitude, XPS)</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>Apple (MacBook)</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>Lenovo (ThinkPad)</span></label>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100">
+            <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">RAM Capacity</label>
+            <div class="space-y-2 text-xs text-slate-700">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>8GB RAM</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>16GB RAM</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>32GB RAM</span></label>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100">
+            <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">Processor</label>
+            <div class="space-y-2 text-xs text-slate-700">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Intel Core i5</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Intel Core i7</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>Apple M1 / M2</span></label>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100">
+            <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">Laptop Condition</label>
+            <div class="space-y-2 text-xs text-slate-700">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Tokunbo / Direct Foreign</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Used - Clean</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>Brand New</span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. PARTS & COMPONENTS FILTER SIDEBAR -->
+        <div id="filter-parts" class="hidden space-y-5">
+          <div>
+            <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">Component / Part Type</label>
+            <div class="space-y-2 text-xs text-slate-700">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Laptop Batteries</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Display LCD Screens</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Motherboards &amp; Logic Boards</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>Keyboards &amp; Top Cases</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>RAM &amp; NVMe SSD Storage</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>Original Chargers</span></label>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100">
+            <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">Compatible Brand</label>
+            <div class="space-y-2 text-xs text-slate-700">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>HP EliteBook / ProBook</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Dell Latitude / Inspiron</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>Apple MacBook</span></label>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100">
+            <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">Testing Grade</label>
+            <div class="space-y-2 text-xs text-slate-700">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>100% Tested Working</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Brand New Genuine</span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. SCRAP & SALVAGE FILTER SIDEBAR -->
+        <div id="filter-scrap" class="hidden space-y-5">
+          <div>
+            <label class="block text-xs font-extrabold text-amber-900 uppercase tracking-wider mb-2.5">Primary Damage / Fault</label>
+            <div class="space-y-2 text-xs text-amber-900">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-amber-600 w-4 h-4" /><span>Screen Fault / Cracked LCD</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-amber-600 w-4 h-4" /><span>Water / Liquid Damage</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-amber-600 w-4 h-4" /><span>Dead Board / No Power</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-amber-600 w-4 h-4" /><span>Hinge / Case Broken</span></label>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100">
+            <label class="block text-xs font-extrabold text-amber-900 uppercase tracking-wider mb-2.5">Harvestable Working Parts</label>
+            <div class="space-y-2 text-xs text-slate-700">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-amber-600 w-4 h-4" /><span class="font-semibold text-emerald-700">✓ Motherboard Working</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-amber-600 w-4 h-4" /><span class="font-semibold text-emerald-700">✓ RAM &amp; Storage Intact</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-amber-600 w-4 h-4" /><span class="font-semibold text-emerald-700">✓ Original Casing Good</span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. COMMUNITY REQUESTS FILTER SIDEBAR (BUYER PERSPECTIVE) -->
+        <div id="filter-community" class="hidden space-y-5">
+          <!-- BRAND FILTER -->
+          <div>
+            <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">Filter Brands</label>
+            <div class="space-y-2 text-xs text-slate-700">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>HP Laptops</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Dell Laptops</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>Apple MacBook</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>Lenovo ThinkPad</span></label>
+            </div>
+          </div>
+
+          <!-- SERVICE / HELP TYPE FILTER -->
+          <div class="pt-4 border-t border-slate-100">
+            <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">Service &amp; Help Needed</label>
+            <div class="space-y-2 text-xs text-slate-700">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span class="font-semibold text-slate-800">🛠️ Hardware Repairs (Screen, Board)</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span class="font-semibold text-slate-800">💻 Software, OS &amp; BIOS Unlock</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span class="font-semibold text-slate-800">🔍 Spare Part Sourcing &amp; Verify</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span class="font-semibold text-slate-800">🚚 Deliveries &amp; Logistics Help</span></label>
+            </div>
+          </div>
+
+          <!-- LOCATION FILTER -->
+          <div class="pt-4 border-t border-slate-100">
+            <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">Buyer Location</label>
+            <div class="space-y-2 text-xs text-slate-700">
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Computer Village, Ikeja (Lagos)</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked class="rounded accent-pp-600 w-4 h-4" /><span>Wuse Zone 4 (Abuja)</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>Bompai Market (Kano)</span></label>
+              <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" class="rounded accent-pp-600 w-4 h-4" /><span>Garrison (Port Harcourt)</span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMMON PRICE RANGE (NGN) -->
+        <div class="pt-4 border-t border-slate-100">
+          <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">Price / Budget Range (₦)</label>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <input placeholder="Min ₦" class="p-2 border border-slate-200 rounded-lg outline-none" value="10,000" />
+            <input placeholder="Max ₦" class="p-2 border border-slate-200 rounded-lg outline-none" value="500,000" />
+          </div>
+        </div>
+
+        <!-- COMMON LOCATION FILTER -->
+        <div class="pt-4 border-t border-slate-100">
+          <label class="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-2.5">Seller Location</label>
+          <select class="w-full p-2 border border-slate-200 rounded-lg text-xs font-medium outline-none">
+            <option>All Locations (Nigeria)</option>
+            <option selected>Lagos (Computer Village, Ikeja)</option>
+            <option>Abuja (CBD, Wuse)</option>
+            <option>Port Harcourt</option>
+            <option>Kano (Bompai)</option>
+            <option>Onitsha</option>
+          </select>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- RIGHT RESULTS DISPLAY GRID -->
+    <main class="lg:col-span-9 space-y-6">
+      
+      <!-- RESULTS BAR & SORT (DYNAMIC PER TAB) -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white px-5 py-3.5 rounded-2xl border border-slate-200 text-xs shadow-xs gap-3">
+        <div>
+          <span id="top-bar-complete" class="font-bold text-slate-900">Showing 1-12 of 142 Complete Laptops in Lagos</span>
+          <span id="top-bar-parts" class="hidden font-bold text-slate-900">Showing 1-12 of 380 Replacement Spare Parts</span>
+          <span id="top-bar-scrap" class="hidden font-bold text-amber-900">Showing 1-12 of 95 Scrap &amp; Salvage Units</span>
+          <span id="top-bar-community" class="hidden font-bold text-slate-900">Showing 1-8 of 48 Open Community Requests</span>
+        </div>
+        
+        <div class="flex items-center gap-3">
+          <!-- POST NEW DISCUSSION BUTTON (Visible on Community Tab) -->
+          <button id="btn-new-discussion" onclick="openNewDiscussionModal()" class="hidden px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-sm flex items-center gap-1.5 transition">
+            <span>+ Post New Discussion</span>
+          </button>
+
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400 font-medium">Sort by:</span>
+            <select class="border border-slate-200 rounded-lg p-1.5 font-semibold text-slate-800 outline-none bg-slate-50">
+              <option>Relevance</option>
+              <option>Newest First</option>
+              <option>Price / Budget: Low to High</option>
+              <option>Price / Budget: High to Low</option>
+              <option>Most Offers Received</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB CONTENT PANELS -->
+
+      <!-- PANEL 1: COMPLETE DEVICES -->
+      <div id="panel-complete" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        
+        <!-- LAPTOP 1 -->
+        <a href="listing-detail.html" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+          <div class="relative product-img h-48 grid place-items-center p-4">
+            <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white">COMPLETE DEVICE</span>
+            <span class="text-6xl group-hover:scale-105 transition">💻</span>
+          </div>
+          <div class="p-5">
+            <span class="text-xs font-bold text-pp-600">Adam Computers</span>
+            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">HP EliteBook 840 G5</h3>
+            <p class="text-xs text-slate-500 mt-1">Intel Core i5 · 8GB RAM · 256GB SSD · 14"</p>
+            <div class="mt-4 flex items-baseline justify-between">
+              <span class="text-xl font-extrabold text-slate-900">₦280,000</span>
+              <span class="text-xs font-bold text-emerald-600">3 available</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>📍 Ikeja, Lagos</span>
+              <span class="font-semibold text-slate-700">Used - Excellent</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- LAPTOP 2 -->
+        <a href="listing-detail.html" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+          <div class="relative product-img h-48 grid place-items-center p-4">
+            <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white">COMPLETE DEVICE</span>
+            <span class="text-6xl group-hover:scale-105 transition">💻</span>
+          </div>
+          <div class="p-5">
+            <span class="text-xs font-bold text-pp-600">Adam Computers</span>
+            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">Dell Latitude 5400</h3>
+            <p class="text-xs text-slate-500 mt-1">Intel Core i5 8th Gen · 8GB RAM · 256GB</p>
+            <div class="mt-4 flex items-baseline justify-between">
+              <span class="text-xl font-extrabold text-slate-900">₦250,000</span>
+              <span class="text-xs font-bold text-emerald-600">2 available</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>📍 Computer Village, Lagos</span>
+              <span class="font-semibold text-slate-700">Used</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- LAPTOP 3 -->
+        <a href="listing-detail.html" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+          <div class="relative product-img h-48 grid place-items-center p-4">
+            <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white">COMPLETE DEVICE</span>
+            <span class="text-6xl group-hover:scale-105 transition">💻</span>
+          </div>
+          <div class="p-5">
+            <span class="text-xs font-bold text-pp-600">Lagos Tech Hub</span>
+            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">MacBook Pro 2019 13"</h3>
+            <p class="text-xs text-slate-500 mt-1">Core i5 · 8GB RAM · Touch Bar · Space Gray</p>
+            <div class="mt-4 flex items-baseline justify-between">
+              <span class="text-xl font-extrabold text-slate-900">₦660,000</span>
+              <span class="text-xs font-bold text-emerald-600">1 available</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>📍 Victoria Island, Lagos</span>
+              <span class="font-semibold text-slate-700">Used</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- LAPTOP 4 -->
+        <a href="listing-detail.html" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+          <div class="relative product-img h-48 grid place-items-center p-4">
+            <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white">COMPLETE DEVICE</span>
+            <span class="text-6xl group-hover:scale-105 transition">💻</span>
+          </div>
+          <div class="p-5">
+            <span class="text-xs font-bold text-pp-600">ThinkPad Depot</span>
+            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">Lenovo ThinkPad X1 Carbon</h3>
+            <p class="text-xs text-slate-500 mt-1">Core i7 10th Gen · 16GB RAM · 512GB SSD</p>
+            <div class="mt-4 flex items-baseline justify-between">
+              <span class="text-xl font-extrabold text-slate-900">₦420,000</span>
+              <span class="text-xs font-bold text-emerald-600">4 available</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>📍 Abuja CBD</span>
+              <span class="font-semibold text-slate-700">Tokunbo</span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+
+      <!-- PANEL 2: PARTS & COMPONENTS -->
+      <div id="panel-parts" class="hidden grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        
+        <!-- PART 1 -->
+        <a href="listing-detail.html" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card transition duration-200">
+          <div class="relative product-img h-48 grid place-items-center p-4">
+            <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">SPARE PART</span>
+            <span class="text-6xl group-hover:scale-105 transition">🔋</span>
+          </div>
+          <div class="p-5">
+            <span class="text-xs font-bold text-pp-600">Seth Electronics</span>
+            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">HP EliteBook 840 G5 Battery</h3>
+            <p class="text-xs text-slate-500 mt-1">Part #TT03XL · Fits 840 G5 &amp; G6</p>
+            <div class="mt-4 flex items-baseline justify-between">
+              <span class="text-xl font-extrabold text-slate-900">₦25,000</span>
+              <span class="text-xs font-bold text-emerald-600">7 available</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>📍 Ikeja, Lagos</span>
+              <span class="font-bold text-emerald-600">Tested Working</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- PART 2 -->
+        <a href="listing-detail.html" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card transition duration-200">
+          <div class="relative product-img h-48 grid place-items-center p-4">
+            <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">SPARE PART</span>
+            <span class="text-6xl group-hover:scale-105 transition">🖥️</span>
+          </div>
+          <div class="p-5">
+            <span class="text-xs font-bold text-pp-600">Computer Village Screens</span>
+            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">HP 14" FHD IPS Display LCD</h3>
+            <p class="text-xs text-slate-500 mt-1">30-Pin EDP Connector · Matte Anti-glare</p>
+            <div class="mt-4 flex items-baseline justify-between">
+              <span class="text-xl font-extrabold text-slate-900">₦45,000</span>
+              <span class="text-xs font-bold text-emerald-600">12 available</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>📍 Ikeja, Lagos</span>
+              <span class="font-bold text-slate-700">Tested Grade A</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- PART 3 -->
+        <a href="listing-detail.html" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card transition duration-200">
+          <div class="relative product-img h-48 grid place-items-center p-4">
+            <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">SPARE PART</span>
+            <span class="text-6xl group-hover:scale-105 transition">⚙️</span>
+          </div>
+          <div class="p-5">
+            <span class="text-xs font-bold text-pp-600">Abel Tech Parts</span>
+            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">Dell Latitude 5420 Motherboard</h3>
+            <p class="text-xs text-slate-500 mt-1">Intel i5 11th Gen · Onboard Graphics · Clean</p>
+            <div class="mt-4 flex items-baseline justify-between">
+              <span class="text-xl font-extrabold text-slate-900">₦110,000</span>
+              <span class="text-xs font-bold text-emerald-600">2 available</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>📍 Ikeja, Lagos</span>
+              <span class="font-bold text-emerald-600">100% Tested</span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+
+      <!-- PANEL 3: SCRAP & SALVAGE -->
+      <div id="panel-scrap" class="hidden grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        
+        <!-- SCRAP UNIT 1 -->
+        <a href="scrap-detail.html" class="group rounded-2xl border border-amber-300 bg-amber-50/20 overflow-hidden hover:shadow-card transition duration-200">
+          <div class="relative product-img h-48 grid place-items-center p-4">
+            <span class="absolute top-3 left-3 text-[10px] font-extrabold px-2.5 py-0.5 rounded bg-amber-600 text-white uppercase tracking-wider">SCRAP / SALVAGE</span>
+            <span class="text-6xl group-hover:scale-105 transition">🛠️</span>
+          </div>
+          <div class="p-5">
+            <span class="text-xs font-bold text-amber-800">Abel Tech Parts</span>
+            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-amber-700 mt-0.5">Dell Latitude 5420 (Screen Fault)</h3>
+            
+            <!-- COMPONENT STATUS MATRIX -->
+            <div class="mt-3 bg-amber-100/50 p-2.5 rounded-xl text-xs space-y-1 text-amber-900 border border-amber-200/60">
+              <div class="font-bold text-[11px] uppercase tracking-wide text-amber-800 border-b border-amber-200 pb-1 mb-1">Component Matrix:</div>
+              <div class="flex items-center justify-between"><span>Motherboard</span><span class="font-extrabold text-emerald-700">✓ WORKING</span></div>
+              <div class="flex items-center justify-between"><span>RAM (16GB)</span><span class="font-extrabold text-emerald-700">✓ WORKING</span></div>
+              <div class="flex items-center justify-between"><span>Screen</span><span class="font-extrabold text-rose-600">✕ DAMAGED</span></div>
+            </div>
+
+            <div class="mt-4 flex items-baseline justify-between">
+              <span class="text-xl font-extrabold text-slate-900">₦150,000</span>
+              <span class="text-xs font-bold text-amber-700">For Harvest</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- SCRAP UNIT 2 -->
+        <a href="scrap-detail.html" class="group rounded-2xl border border-amber-300 bg-amber-50/20 overflow-hidden hover:shadow-card transition duration-200">
+          <div class="relative product-img h-48 grid place-items-center p-4">
+            <span class="absolute top-3 left-3 text-[10px] font-extrabold px-2.5 py-0.5 rounded bg-amber-600 text-white uppercase tracking-wider">SCRAP / SALVAGE</span>
+            <span class="text-6xl group-hover:scale-105 transition">💻</span>
+          </div>
+          <div class="p-5">
+            <span class="text-xs font-bold text-amber-800">Lagos Salvage Yard</span>
+            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-amber-700 mt-0.5">Water Damaged MacBook Air M1</h3>
+            
+            <div class="mt-3 bg-amber-100/50 p-2.5 rounded-xl text-xs space-y-1 text-amber-900 border border-amber-200/60">
+              <div class="font-bold text-[11px] uppercase tracking-wide text-amber-800 border-b border-amber-200 pb-1 mb-1">Component Matrix:</div>
+              <div class="flex items-center justify-between"><span>Retina Display</span><span class="font-extrabold text-emerald-700">✓ PERFECT</span></div>
+              <div class="flex items-center justify-between"><span>Aluminum Case</span><span class="font-extrabold text-emerald-700">✓ CLEAN</span></div>
+              <div class="flex items-center justify-between"><span>Logic Board</span><span class="font-extrabold text-rose-600">✕ WATER DAMAGED</span></div>
+            </div>
+
+            <div class="mt-4 flex items-baseline justify-between">
+              <span class="text-xl font-extrabold text-slate-900">₦180,000</span>
+              <span class="text-xs font-bold text-amber-700">For Harvest</span>
+            </div>
+          </div>
+        </a>
+
+      </div>
+
+      <!-- PANEL 4: COMMUNITY REQUESTS -->
+      <div id="panel-community" class="hidden space-y-4">
+        
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 hover:border-pp-300 transition duration-200 shadow-xs">
+          <div class="flex items-center justify-between text-xs text-slate-500">
+            <span>Posted by TechSam · Computer Village, Ikeja</span>
+            <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-extrabold border border-emerald-200">3 Offers Received</span>
+          </div>
+          <h3 class="text-base font-extrabold text-slate-900 mt-2 hover:text-pp-600">"Looking for HP EliteBook 840 G5 motherboard in Lagos"</h3>
+          <p class="text-xs text-slate-600 mt-1 leading-relaxed">Need a clean tested board without GPU issues. Willing to pick up at Computer Village today. Instant payment guaranteed.</p>
+          <div class="mt-4 flex flex-wrap items-center justify-between pt-3 border-t border-slate-100 text-xs gap-2">
+            <span class="text-slate-500 font-bold">Target Budget: ₦70,000 - ₦90,000</span>
+            <a href="discussion-detail.html" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold transition">View Request &amp; Submit Offer →</a>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 hover:border-pp-300 transition duration-200 shadow-xs">
+          <div class="flex items-center justify-between text-xs text-slate-500">
+            <span>Posted by AbujaAutoFix · Wuse Zone 4, Abuja</span>
+            <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-extrabold border border-amber-200">1 Offer Received</span>
+          </div>
+          <h3 class="text-base font-extrabold text-slate-900 mt-2 hover:text-pp-600">"Where can I get 2015 Toyota Corolla ECU brain box in Abuja?"</h3>
+          <p class="text-xs text-slate-600 mt-1 leading-relaxed">Need original Tokunbo ECU matching 1.8L engine. Must be reset or ready for key registration.</p>
+          <div class="mt-4 flex flex-wrap items-center justify-between pt-3 border-t border-slate-100 text-xs gap-2">
+            <span class="text-slate-500 font-bold">Target Budget: ₦120,000</span>
+            <a href="discussion-detail.html" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold transition">Submit Offer →</a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- DYNAMIC PAGINATION PER TAB -->
+      <div class="pt-6 border-t border-slate-200 flex items-center justify-between text-xs">
+        <span id="pagination-complete" class="text-slate-500">Showing 1 to 12 of 142 complete items</span>
+        <span id="pagination-parts" class="hidden text-slate-500">Showing 1 to 12 of 380 replacement parts</span>
+        <span id="pagination-scrap" class="hidden text-amber-800 font-medium">Showing 1 to 12 of 95 salvage units</span>
+        <span id="pagination-community" class="hidden text-slate-500">Showing 1 to 8 of 48 requests</span>
+
+        <div class="flex gap-1.5">
+          <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-400 cursor-not-allowed">Previous</button>
+          <button class="px-3 py-1.5 rounded-lg bg-pp-600 text-white font-bold shadow-xs">1</button>
+          <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">2</button>
+          <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">3</button>
+          <button class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50">Next →</button>
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+</div>
+
+<!-- POST NEW DISCUSSION MODAL -->
+<div id="new-discussion-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+  <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+    <button onclick="closeNewDiscussionModal()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:text-slate-900 grid place-items-center font-bold text-sm">✕</button>
+
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-2xl bg-pp-50 text-pp-600 font-extrabold grid place-items-center text-xl">💬</div>
+      <div>
+        <h3 class="text-lg font-extrabold text-slate-900">Post Community Request / Discussion</h3>
+        <p class="text-xs text-slate-500">Ask local technicians and dealers for parts, repairs, or guidance.</p>
+      </div>
+    </div>
+
+    <form onsubmit="handleNewDiscussionSubmit(event)" class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Request Title / Summary</label>
+        <input id="modal-title" required type="text" placeholder="e.g. Need replacement screen for HP Envy 13 in Ikeja" class="w-full p-3 border border-slate-200 rounded-xl text-xs outline-none focus:border-pp-600 bg-slate-50/50" />
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Brand / Model</label>
+          <select id="modal-brand" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs outline-none bg-white">
+            <option>HP Laptops</option>
+            <option>Dell Laptops</option>
+            <option>Apple MacBook</option>
+            <option>Lenovo ThinkPad</option>
+            <option>Other / General</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Help / Service Needed</label>
+          <select id="modal-service" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs outline-none bg-white">
+            <option>Hardware Repair (Screen/Board)</option>
+            <option>Software / OS Unlock</option>
+            <option>Spare Part Sourcing</option>
+            <option>Logistics &amp; Delivery</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Target Budget (₦)</label>
+          <input id="modal-budget" type="text" placeholder="e.g. ₦50,000 - ₦80,000" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs outline-none bg-slate-50/50" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Your Location</label>
+          <select id="modal-location" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs outline-none bg-white">
+            <option>Computer Village, Ikeja (Lagos)</option>
+            <option>Wuse Zone 4 (Abuja)</option>
+            <option>Bompai (Kano)</option>
+            <option>Garrison (Port Harcourt)</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Detailed Description</label>
+        <textarea id="modal-desc" rows="3" placeholder="Describe the issue, specific part number, or condition you require..." class="w-full p-3 border border-slate-200 rounded-xl text-xs outline-none focus:border-pp-600 bg-slate-50/50"></textarea>
+      </div>
+
+      <div class="pt-2 flex items-center justify-end gap-3 border-t border-slate-100">
+        <button type="button" onclick="closeNewDiscussionModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-md transition">Publish Discussion →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- JAVASCRIPT TAB SWITCHER FOR THE 4 INTENTS -->
+<script>
+  function switchTab(tab) {
+    const tabs = ['complete', 'parts', 'scrap', 'community'];
+    const headings = {
+      complete: 'Laptops & Complete Devices Marketplace',
+      parts: 'Laptop Replacement Parts & Components',
+      scrap: 'Damaged Laptops & Salvage Units for Scrap',
+      community: 'Community Part & Repair Requests'
+    };
+
+    tabs.forEach(t => {
+      const btn = document.getElementById(`tab-${t}-btn`);
+      const filter = document.getElementById(`filter-${t}`);
+      const topBar = document.getElementById(`top-bar-${t}`);
+      const panel = document.getElementById(`panel-${t}`);
+      const pagination = document.getElementById(`pagination-${t}`);
+
+      if (t === tab) {
+        btn.classList.add('active');
+        if (filter) filter.classList.remove('hidden');
+        if (topBar) topBar.classList.remove('hidden');
+        if (panel) panel.classList.remove('hidden');
+        if (pagination) pagination.classList.remove('hidden');
+      } else {
+        btn.classList.remove('active');
+        if (filter) filter.classList.add('hidden');
+        if (topBar) topBar.classList.add('hidden');
+        if (panel) panel.classList.add('hidden');
+        if (pagination) pagination.classList.add('hidden');
+      }
+    });
+
+    const newDiscBtn = document.getElementById('btn-new-discussion');
+    if (newDiscBtn) {
+      if (tab === 'community') {
+        newDiscBtn.classList.remove('hidden');
+      } else {
+        newDiscBtn.classList.add('hidden');
+      }
+    }
+
+    const headingEl = document.getElementById('category-heading');
+    if (headingEl) headingEl.textContent = headings[tab] || 'Laptops Marketplace';
+  }
+
+  // MODAL FUNCTIONS FOR NEW DISCUSSION
+  function openNewDiscussionModal() {
+    const modal = document.getElementById('new-discussion-modal');
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  function closeNewDiscussionModal() {
+    const modal = document.getElementById('new-discussion-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function handleNewDiscussionSubmit(e) {
+    e.preventDefault();
+    const title = document.getElementById('modal-title').value;
+    const budget = document.getElementById('modal-budget').value || 'Negotiable';
+    const location = document.getElementById('modal-location').value;
+    const desc = document.getElementById('modal-desc').value || 'Looking for fast response from verified sellers or technicians.';
+
+    const panelCommunity = document.getElementById('panel-community');
+    if (panelCommunity) {
+      const newCard = document.createElement('div');
+      newCard.className = 'rounded-2xl border border-pp-300 bg-pp-50/30 p-6 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300';
+      newCard.innerHTML = `
+        <div class="flex items-center justify-between text-xs text-slate-500">
+          <span>Posted by You (Abel Okon) · ${location}</span>
+          <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-extrabold border border-emerald-200">Just Posted</span>
+        </div>
+        <h3 class="text-base font-extrabold text-slate-900 mt-2">"${title}"</h3>
+        <p class="text-xs text-slate-600 mt-1 leading-relaxed">${desc}</p>
+        <div class="mt-4 flex flex-wrap items-center justify-between pt-3 border-t border-slate-200 text-xs gap-2">
+          <span class="text-pp-700 font-bold">Target Budget: ${budget}</span>
+          <a href="discussion-detail.html" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold transition">View Discussion &amp; Manage →</a>
+        </div>
+      `;
+      panelCommunity.prepend(newCard);
+    }
+
+    closeNewDiscussionModal();
+    alert('🎉 Your community request has been published! Technicians and dealers in your area have been notified.');
+  }
+
+  // Handle URL query parameters (e.g., category.html?tab=scrap)
+  window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam && ['complete', 'parts', 'scrap', 'community'].includes(tabParam)) {
+      switchTab(tabParam);
+    }
+  });
+
+  // ACCOUNT DROPDOWN TOGGLE LOGIC
+  const accountTriggers = document.querySelectorAll('.account-menu-trigger');
+  accountTriggers.forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wrapper = trigger.closest('.account-menu-wrapper');
+      const panel = wrapper ? wrapper.querySelector('.account-dropdown-panel') : null;
+      const chevron = trigger.querySelector('.chevron-icon');
+      const isOpen = panel ? !panel.classList.contains('hidden') : false;
+
+      document.querySelectorAll('.account-dropdown-panel').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.chevron-icon').forEach(c => c.classList.remove('rotate-180'));
+
+      if (!isOpen && panel) {
+        panel.classList.remove('hidden');
+        if (chevron) chevron.classList.add('rotate-180');
+      }
+    });
+  });
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.account-dropdown-panel').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.chevron-icon').forEach(c => c.classList.remove('rotate-180'));
+  });
+
+  // COLOR MODE SWITCHER
+  function setThemeMode(mode, event) {
+    if (event) event.stopPropagation();
+    const btns = document.querySelectorAll('.theme-btn');
+    btns.forEach(b => {
+      b.classList.remove('bg-white', 'shadow-xs', 'font-bold', 'text-slate-900');
+      b.classList.add('font-semibold', 'text-slate-600');
+    });
+
+    if (event && event.target) {
+      event.target.classList.add('bg-white', 'shadow-xs', 'font-bold', 'text-slate-900');
+      event.target.classList.remove('text-slate-600');
+    }
+
+    const label = document.getElementById('current-mode-label');
+    if (label) label.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+
+    if (mode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (mode === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }
+</script>
+</body>
+</html>

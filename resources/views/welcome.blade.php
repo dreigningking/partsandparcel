@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parts &amp; Parcel — Find the machine. Find the part.</title>
+    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <script  src="https://cdn.tailwindcss.com"></script>
+        <script>
+        tailwind.config = {
+        theme: {
+            extend: {
+            colors: {
+                pp: {
+                50: '#f5f3ff',
+                100: '#ebe7ff',
+                200: '#d9d2ff',
+                500: '#5140c8',
+                600: '#4634b7',
+                700: '#38299b',
+                800: '#2c1e7a',
+                900: '#20165f'
+                }
+            },
+            boxShadow: {
+                soft: '0 10px 35px -5px rgba(42, 31, 120, .08), 0 4px 12px -2px rgba(0,0,0,0.03)',
+                card: '0 4px 20px rgba(31, 25, 79, .06)',
+                hover: '0 12px 30px rgba(81, 64, 200, .12)'
+            }
+            }
+        }
+        }
+        </script>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+            html { scroll-behavior: smooth; }
+            body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif; }
+            .mega-menu { display:none; }
+            .mega-menu.open { display:block; }
+            .nav-chevron { transition: transform .2s ease; }
+            .nav-trigger.open .nav-chevron { transform: rotate(180deg); }
+            .hero-grid {
+            background-image:
+                linear-gradient(rgba(81,64,200,.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(81,64,200,.03) 1px, transparent 1px);
+            background-size: 32px 32px;
+            }
+            .product-img {
+            background: radial-gradient(circle at 50% 40%, #ffffff 0%, #f8f7ff 60%, #eeeefc 100%);
+            }
+        </style>    
+    @endif
+  
+</head>
+
+<body class="bg-slate-50/50 text-slate-900 pb-16 lg:pb-0">
+
+<!-- TOP ANNOUNCEMENT BAR -->
+<div class="bg-pp-900 text-white py-2 px-4 text-xs font-medium text-center flex items-center justify-center gap-2">
+  <span class="bg-pp-600 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Nigeria's #1</span>
+  <span>Marketplace for devices, machines, spare parts &amp; salvage items.</span>
+  <a href="subscriptions.html" class="underline hover:text-pp-200 ml-1 font-semibold">Sell on Parts &amp; Parcel →</a>
+</div>
+
+<!-- HEADER NAVIGATION (ONLY TOP ROW STICKY) -->
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200/80 shadow-xs">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="h-[72px] flex items-center justify-between gap-4">
+      
+      <!-- LOGO -->
+      <a href="index.html" class="flex items-center gap-2.5 shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-pp-600 text-white grid place-items-center shadow-sm">
+          <svg viewBox="0 0 32 32" class="w-6 h-6" fill="none">
+            <path d="M16 3 27 9.2v13.6L16 29 5 22.8V9.2L16 3Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M16 3v13m11-6.8-11 6.8L5 9.2M16 16v13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="text-xl font-extrabold tracking-tight text-slate-900 leading-tight">Parts &amp; Parcel</span>
+      </a>
+
+      <!-- GLOBAL SEARCH BAR -->
+      <form action="search.html" method="GET" class="hidden md:flex items-center border border-slate-200 rounded-xl overflow-hidden h-11 flex-1 max-w-[680px] mx-4 shadow-sm focus-within:border-pp-500 focus-within:ring-2 focus-within:ring-pp-500/20 transition">
+        <div class="h-full px-3.5 bg-slate-50 border-r border-slate-200 text-xs font-semibold text-slate-600 flex items-center gap-1.5 shrink-0">
+          <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.307-.066l.003-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 003.03 2.198l.019.009.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"/></svg>
+          Nigeria
+        </div>
+        <input name="q" class="flex-1 h-full px-4 outline-none text-sm text-slate-800 placeholder:text-slate-400" placeholder="Search device, model (e.g. iPhone 12, Corolla, CAT Excavator) or part..." />
+        <button type="submit" class="h-full px-5 bg-pp-600 hover:bg-pp-700 text-white font-semibold text-sm flex items-center gap-2 transition">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <span>Search</span>
+        </button>
+      </form>
+
+      <!-- USER ACTIONS & NAVIGATION LINKS -->
+      <div class="flex items-center gap-1.5 sm:gap-2.5">
+        
+        <!-- WISHLIST -->
+        <a href="buyer-dashboard.html?tab=saved" aria-label="Wishlist" class="relative p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 transition" title="Saved Wishlist">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center">5</span>
+        </a>
+
+        <!-- NOTIFICATIONS -->
+        <button aria-label="Notifications" class="relative p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 transition" title="Notifications">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-amber-500 text-white text-[10px] font-bold grid place-items-center">2</span>
+        </button>
+
+        <!-- CART -->
+        <a href="cart.html" aria-label="Cart" class="relative p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 transition" title="Shopping Cart">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
+          <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-pp-600 text-white text-[10px] font-bold grid place-items-center">3</span>
+        </a>
+
+        <!-- ACCOUNT DROPDOWN MENU -->
+        <div class="relative inline-block text-left account-menu-wrapper">
+          <button type="button" class="account-menu-trigger hidden sm:flex items-center gap-2 p-1.5 pl-2.5 pr-3 rounded-xl border border-slate-200 hover:border-pp-300 text-xs font-semibold text-slate-800 transition bg-white shadow-xs cursor-pointer">
+            <div class="w-7 h-7 rounded-full bg-slate-900 text-white font-bold text-xs grid place-items-center">A</div>
+            <span>Account</span>
+            <svg class="w-3.5 h-3.5 text-slate-400 ml-0.5 transition-transform duration-200 chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+          </button>
+
+          <!-- DROPDOWN PANEL -->
+          <div class="account-dropdown-panel hidden absolute right-0 mt-2 w-60 rounded-2xl bg-white border border-slate-200 shadow-xl py-2 z-50 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
+            <!-- USER PROFILE HEADER -->
+            <div class="px-4 py-2.5 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-pp-600 text-white font-bold text-xs grid place-items-center shadow-xs">AO</div>
+                <div class="overflow-hidden">
+                  <p class="font-extrabold text-slate-900 truncate">Abel Okon</p>
+                  <p class="text-[11px] text-slate-500 truncate">abel.parts@example.ng</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- DASHBOARD & NAVIGATION LINKS -->
+            <div class="py-1.5 border-b border-slate-100">
+              <a href="seller-dashboard.html" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
+                <span class="text-base">📊</span>
+                <span>Selling Dashboard</span>
+              </a>
+              <a href="buyer-dashboard.html" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
+                <span class="text-base">📦</span>
+                <span>Buying Dashboard</span>
+              </a>
+              <a href="subscriptions.html" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
+                <span class="text-base">💳</span>
+                <span>Subscription</span>
+              </a>
+              <a href="buyer-dashboard.html?tab=profile" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
+                <span class="text-base">👤</span>
+                <span>Profile</span>
+              </a>
+            </div>
+
+            <!-- COLOR MODE SELECTOR -->
+            <div class="px-4 py-3 border-b border-slate-100">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Color Mode</span>
+                <span id="current-mode-label" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">Light</span>
+              </div>
+              <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl text-center">
+                <button type="button" onclick="setThemeMode('light', event)" class="theme-btn active py-1 rounded-lg text-[10px] font-bold text-slate-900 bg-white shadow-xs transition">Light</button>
+                <button type="button" onclick="setThemeMode('dark', event)" class="theme-btn py-1 rounded-lg text-[10px] font-semibold text-slate-600 hover:text-slate-900 transition">Dark</button>
+                <button type="button" onclick="setThemeMode('system', event)" class="theme-btn py-1 rounded-lg text-[10px] font-semibold text-slate-600 hover:text-slate-900 transition">System</button>
+              </div>
+            </div>
+
+            <!-- LOGOUT -->
+            <div class="pt-1">
+              <a href="index.html" class="flex items-center gap-3 px-4 py-2 text-rose-600 hover:bg-rose-50 font-extrabold transition">
+                <span class="text-base">🚪</span>
+                <span>Logout</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- NON-STICKY CATEGORY BAR (SCROLLS AWAY NATURALLY WITH PAGE) -->
+<div class="bg-white border-b border-slate-200 text-slate-700 relative z-40">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="hidden lg:flex h-11 items-center justify-between w-full text-xs font-bold">
+      <button data-menu="electronics" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+        📱 Electronics <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+      </button>
+      <button data-menu="appliances" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+        🔌 Appliances <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+      </button>
+      <button data-menu="vehicles" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+        🚗 Vehicles <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+      </button>
+      <button data-menu="equipment" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+        🚜 Heavy Equipment <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+      </button>
+      <button data-menu="construction" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+        🏗️ Construction <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+      </button>
+      <button data-menu="industrial" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+        🏭 Industrial <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+      </button>
+      <button data-menu="agricultural" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+        🌾 Agricultural <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+      </button>
+      <button data-menu="equipment" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+        ⚡ Power &amp; Energy <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+      </button>
+      <button data-menu="scrap" class="nav-trigger px-3 h-9 rounded-lg hover:bg-amber-100 flex items-center gap-1 transition text-amber-800 bg-amber-100/80 border border-amber-300/60 shadow-xs">
+        🛠️ Scrap &amp; Salvage <svg class="nav-chevron w-3.5 h-3.5 text-amber-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MEGA MENUS CONTAINERS -->
+  <div id="mega-electronics" class="mega-menu absolute left-0 right-0 top-full bg-white border-b border-slate-200 shadow-soft z-40">
+    <div class="max-w-[1440px] mx-auto px-8 py-7 grid grid-cols-5 gap-8">
+      <div class="col-span-1 rounded-2xl bg-pp-50 p-6 border border-pp-100">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-pp-600">Category Overview</div>
+        <h3 class="mt-2 text-xl font-extrabold text-slate-900">Electronics &amp; Gadgets</h3>
+        <p class="mt-2 text-xs leading-relaxed text-slate-600">Buy complete laptops, phones, replacement batteries, motherboards, screens &amp; damaged salvage devices.</p>
+        <a href="category.html?cat=electronics" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-pp-600 hover:text-pp-700">Explore Electronics →</a>
+      </div>
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Phones</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?cat=phones&brand=apple" class="hover:text-pp-600">Apple iPhone (12, 13, 14, 15)</a></li>
+          <li><a href="category.html?cat=phones&brand=samsung" class="hover:text-pp-600">Samsung Galaxy S &amp; Note Series</a></li>
+          <li><a href="category.html?cat=phones&brand=google" class="hover:text-pp-600">Google Pixel</a></li>
+          <li><a href="category.html?cat=phones&brand=tecno" class="hover:text-pp-600">Tecno &amp; Infinix</a></li>
+          <li><a href="category.html?tab=parts&cat=phones" class="text-pp-600 font-semibold hover:underline">Phone Spare Parts (Screens, Batteries)</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Computers</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?cat=laptops&brand=hp" class="hover:text-pp-600">HP (EliteBook, Envy, ProBook)</a></li>
+          <li><a href="category.html?cat=laptops&brand=dell" class="hover:text-pp-600">Dell (Latitude, Inspiron, XPS)</a></li>
+          <li><a href="category.html?cat=laptops&brand=lenovo" class="hover:text-pp-600">Lenovo ThinkPad</a></li>
+          <li><a href="category.html?cat=laptops&brand=apple" class="hover:text-pp-600">MacBook Air &amp; Pro</a></li>
+          <li><a href="category.html?tab=parts&cat=laptops" class="text-pp-600 font-semibold hover:underline">Laptop Components &amp; Chargers</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Popular Parts</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?tab=parts&part=battery" class="hover:text-pp-600">Original Batteries</a></li>
+          <li><a href="category.html?tab=parts&part=screen" class="hover:text-pp-600">Display Assemblies &amp; LCDs</a></li>
+          <li><a href="category.html?tab=parts&part=motherboard" class="hover:text-pp-600">Tested Motherboards</a></li>
+          <li><a href="category.html?tab=parts&part=ram" class="hover:text-pp-600">RAM &amp; NVMe Storage</a></li>
+          <li><a href="category.html?tab=parts&part=keyboard" class="hover:text-pp-600">Keyboards &amp; Top Cases</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Scrap / For Salvage</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?tab=scrap&cat=laptops" class="hover:text-pp-600">Damaged HP Laptops</a></li>
+          <li><a href="category.html?tab=scrap&cat=laptops" class="hover:text-pp-600">Water Damaged MacBooks</a></li>
+          <li><a href="category.html?tab=scrap&cat=phones" class="hover:text-pp-600">Broken Screen iPhones</a></li>
+          <li><a href="category.html?tab=scrap" class="text-amber-700 font-bold hover:underline">Browse All Scrap Units →</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="mega-vehicles" class="mega-menu absolute left-0 right-0 top-full bg-white border-b border-slate-200 shadow-soft z-40">
+    <div class="max-w-[1440px] mx-auto px-8 py-7 grid grid-cols-5 gap-8">
+      <div class="col-span-1 rounded-2xl bg-emerald-50/70 p-6 border border-emerald-100">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Vehicle Hub</div>
+        <h3 class="mt-2 text-xl font-extrabold text-slate-900">Vehicles &amp; Auto Parts</h3>
+        <p class="mt-2 text-xs leading-relaxed text-slate-600">Cars, trucks, commercial vehicles, engines, gearboxes, ECUs &amp; accident-damaged cars for scrap.</p>
+        <a href="category.html?cat=vehicles" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-emerald-700 hover:underline">View Vehicles →</a>
+      </div>
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Cars</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?cat=vehicles&brand=toyota" class="hover:text-pp-600">Toyota (Corolla, Camry, RAV4)</a></li>
+          <li><a href="category.html?cat=vehicles&brand=honda" class="hover:text-pp-600">Honda (Accord, CR-V, Civic)</a></li>
+          <li><a href="category.html?cat=vehicles&brand=lexus" class="hover:text-pp-600">Lexus (RX350, ES350)</a></li>
+          <li><a href="category.html?cat=vehicles&brand=mercedes" class="hover:text-pp-600">Mercedes-Benz</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Auto Spare Parts</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?tab=parts&part=engine" class="hover:text-pp-600">Complete Engines (Tokunbo / Used)</a></li>
+          <li><a href="category.html?tab=parts&part=gearbox" class="hover:text-pp-600">Gearboxes &amp; Transmission</a></li>
+          <li><a href="category.html?tab=parts&part=ecu" class="hover:text-pp-600">ECUs &amp; Brain Boxes</a></li>
+          <li><a href="category.html?tab=parts&part=suspension" class="hover:text-pp-600">Suspension &amp; Shock Absorbers</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Commercial &amp; Heavy</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?cat=trucks" class="hover:text-pp-600">Trailers &amp; Haulage Trucks</a></li>
+          <li><a href="category.html?cat=buses" class="hover:text-pp-600">Buses &amp; Commercial Vans</a></li>
+          <li><a href="category.html?cat=motorcycles" class="hover:text-pp-600">Motorcycles &amp; Tricycles</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Accident / Salvage Cars</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?tab=scrap&cat=vehicles" class="hover:text-pp-600">Accident Toyota Corolla 2015</a></li>
+          <li><a href="category.html?tab=scrap&cat=vehicles" class="hover:text-pp-600">Engine-Fault Honda Accord</a></li>
+          <li><a href="category.html?tab=scrap&cat=vehicles" class="text-amber-700 font-bold hover:underline">Scrap Vehicles for Parts →</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="mega-appliances" class="mega-menu absolute left-0 right-0 top-full bg-white border-b border-slate-200 shadow-soft z-40">
+    <div class="max-w-[1440px] mx-auto px-8 py-7 grid grid-cols-4 gap-8">
+      <div class="col-span-1 rounded-2xl bg-indigo-50 p-6 border border-indigo-100">
+        <h3 class="text-xl font-extrabold text-slate-900">Appliances &amp; Parts</h3>
+        <p class="mt-2 text-xs text-slate-600">Washing machines, AC compressors, refrigerators, generators and spare components.</p>
+      </div>
+      <div>
+        <h4 class="text-xs font-bold text-slate-900 uppercase mb-3">Home Appliances</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?cat=washing-machines" class="hover:text-pp-600">Washing Machines (Front / Top Load)</a></li>
+          <li><a href="category.html?cat=refrigerators" class="hover:text-pp-600">Deep Freezers &amp; Refrigerators</a></li>
+          <li><a href="category.html?cat=air-conditioners" class="hover:text-pp-600">Air Conditioners &amp; Inverters</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-bold text-slate-900 uppercase mb-3">Appliance Spare Parts</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?tab=parts&cat=appliances" class="hover:text-pp-600">Washing Machine Motors &amp; Pumps</a></li>
+          <li><a href="category.html?tab=parts&cat=appliances" class="hover:text-pp-600">AC Compressors &amp; Gas Tanks</a></li>
+          <li><a href="category.html?tab=parts&cat=appliances" class="hover:text-pp-600">Control Boards &amp; Capacitors</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-xs font-bold text-slate-900 uppercase mb-3">Community Requests</h4>
+        <p class="text-xs text-slate-500 mb-2">Can't find a specific washer motor or AC part?</p>
+        <a href="community.html" class="text-xs font-bold text-pp-600 hover:underline">Post a Request to Technicians →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEGA MENU: EQUIPMENT & POWER -->
+  <div id="mega-equipment" class="mega-menu absolute left-0 right-0 top-full bg-white border-b border-slate-200 shadow-soft z-40">
+    <div class="max-w-[1440px] mx-auto px-8 py-7 grid grid-cols-5 gap-8">
+      <div class="col-span-1 rounded-2xl bg-amber-50 p-6 border border-amber-100">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-amber-700">Power &amp; Tools</div>
+        <h3 class="mt-2 text-xl font-extrabold text-slate-900">Equipment &amp; Power</h3>
+        <p class="mt-2 text-xs leading-relaxed text-slate-600">Generators, industrial power plants, workshop equipment &amp; professional power tools.</p>
+        <a href="category.html?cat=equipment" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-amber-700 hover:underline">Explore Equipment →</a>
+      </div>
+
+      <!-- POWER & GENERATORS -->
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Power &amp; Generators</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar</a></li>
+          <li><a href="category.html?brand=cummins" class="hover:text-pp-600 font-semibold text-slate-800">Cummins</a></li>
+          <li><a href="category.html?brand=perkins" class="hover:text-pp-600 font-semibold text-slate-800">Perkins</a></li>
+          <li><a href="category.html?brand=honda" class="hover:text-pp-600">Honda</a></li>
+          <li><a href="category.html?brand=tiger" class="hover:text-pp-600">Tiger</a></li>
+          <li><a href="category.html?brand=elepaq" class="hover:text-pp-600">Elepaq</a></li>
+        </ul>
+      </div>
+
+      <!-- WORKSHOP EQUIPMENT -->
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Workshop Equipment</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?brand=lincoln-electric" class="hover:text-pp-600 font-semibold text-slate-800">Lincoln Electric</a></li>
+          <li><a href="category.html?brand=bosch" class="hover:text-pp-600 font-semibold text-slate-800">Bosch Workshop Systems</a></li>
+          <li><a href="category.html?tab=parts&cat=workshop" class="text-pp-600 font-semibold hover:underline">Welding Plants &amp; Diagnostic Tools</a></li>
+        </ul>
+      </div>
+
+      <!-- POWER TOOLS -->
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Power Tools</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?brand=bosch" class="hover:text-pp-600 font-semibold text-slate-800">Bosch Power Tools</a></li>
+          <li><a href="category.html?brand=makita" class="hover:text-pp-600 font-semibold text-slate-800">Makita</a></li>
+          <li><a href="category.html?brand=dewalt" class="hover:text-pp-600 font-semibold text-slate-800">DeWalt</a></li>
+          <li><a href="category.html?tab=parts&cat=tools" class="text-pp-600 font-semibold hover:underline">Drills, Grinders &amp; Cutters</a></li>
+        </ul>
+      </div>
+
+      <!-- PARTS & SCRAP -->
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Generator &amp; Tool Parts</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?tab=parts&part=injector" class="hover:text-pp-600">Perkins Diesel Injectors</a></li>
+          <li><a href="category.html?tab=parts&part=alternator" class="hover:text-pp-600">AVR &amp; Alternators</a></li>
+          <li><a href="category.html?tab=scrap&cat=generators" class="text-amber-700 font-bold hover:underline">Faulty Generators for Parts →</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEGA MENU: CONSTRUCTION -->
+  <div id="mega-construction" class="mega-menu absolute left-0 right-0 top-full bg-white border-b border-slate-200 shadow-soft z-40">
+    <div class="max-w-[1440px] mx-auto px-8 py-7 grid grid-cols-5 gap-8">
+      
+      <!-- EXCAVATORS -->
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Excavators</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?cat=excavators&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar (CAT)</a></li>
+          <li><a href="category.html?cat=excavators&brand=komatsu" class="hover:text-pp-600 font-semibold text-slate-800">Komatsu</a></li>
+          <li><a href="category.html?cat=excavators&brand=volvo" class="hover:text-pp-600">Volvo</a></li>
+          <li><a href="category.html?cat=excavators&brand=hitachi" class="hover:text-pp-600">Hitachi</a></li>
+          <li><a href="category.html?tab=parts&cat=excavators" class="text-pp-600 font-semibold hover:underline">Hydraulic Pumps &amp; Boom Parts</a></li>
+        </ul>
+      </div>
+
+      <!-- BULLDOZERS & LOADERS -->
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Bulldozers</h4>
+        <ul class="space-y-2 text-xs text-slate-600 mb-4">
+          <li><a href="category.html?cat=bulldozers&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar (D6, D8, D9)</a></li>
+          <li><a href="category.html?cat=bulldozers&brand=komatsu" class="hover:text-pp-600 font-semibold text-slate-800">Komatsu</a></li>
+        </ul>
+
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Backhoe Loaders</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?cat=backhoe&brand=jcb" class="hover:text-pp-600 font-semibold text-slate-800">JCB (3CX, 4CX)</a></li>
+          <li><a href="category.html?cat=backhoe&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar</a></li>
+        </ul>
+      </div>
+
+      <!-- CRANES & WHEEL LOADERS -->
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Cranes</h4>
+        <ul class="space-y-2 text-xs text-slate-600 mb-4">
+          <li><a href="category.html?cat=cranes&brand=tadano" class="hover:text-pp-600 font-semibold text-slate-800">Tadano</a></li>
+          <li><a href="category.html?cat=cranes&brand=liebherr" class="hover:text-pp-600 font-semibold text-slate-800">Liebherr</a></li>
+        </ul>
+
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Wheel Loaders</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?cat=wheel-loaders&brand=volvo" class="hover:text-pp-600 font-semibold text-slate-800">Volvo</a></li>
+          <li><a href="category.html?cat=wheel-loaders&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar</a></li>
+        </ul>
+      </div>
+
+      <!-- HEAVY PARTS & SALVAGE -->
+      <div class="col-span-2 rounded-2xl bg-amber-50 p-5 border border-amber-200">
+        <h4 class="text-xs font-extrabold text-amber-900 uppercase tracking-wider mb-2">Construction Scrap &amp; Parts Hub</h4>
+        <p class="text-xs text-amber-800 mb-3">Find salvage excavators, broken boom cylinders, tracks, undercarriage, and hydraulic valves.</p>
+        <div class="space-y-2 text-xs">
+          <a href="category.html?tab=parts&cat=construction" class="block font-bold text-pp-600 hover:underline">→ Browse Construction Replacement Parts</a>
+          <a href="category.html?tab=scrap&cat=construction" class="block font-bold text-amber-800 hover:underline">→ Browse Non-Working Construction Scrap Units</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEGA MENU: INDUSTRIAL -->
+  <div id="mega-industrial" class="mega-menu absolute left-0 right-0 top-full bg-white border-b border-slate-200 shadow-soft z-40">
+    <div class="max-w-[1440px] mx-auto px-8 py-7 grid grid-cols-4 gap-8">
+      <div class="col-span-1 rounded-2xl bg-slate-100 p-6 border border-slate-200">
+        <h3 class="text-xl font-extrabold text-slate-900">Industrial Machinery</h3>
+        <p class="mt-2 text-xs text-slate-600">Plant equipment, heavy compressors, 3-phase electric motors, automation &amp; switchgear.</p>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Industrial Brands</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?cat=industrial&brand=ingersoll-rand" class="hover:text-pp-600 font-semibold text-slate-800">Ingersoll Rand (Compressors)</a></li>
+          <li><a href="category.html?cat=industrial&brand=atlas-copco" class="hover:text-pp-600 font-semibold text-slate-800">Atlas Copco</a></li>
+          <li><a href="category.html?cat=industrial&brand=abb" class="hover:text-pp-600 font-semibold text-slate-800">ABB (Motors &amp; Drives)</a></li>
+          <li><a href="category.html?cat=industrial&brand=siemens" class="hover:text-pp-600 font-semibold text-slate-800">Siemens (Automation &amp; Control)</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Industrial Equipment</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?cat=compressors" class="hover:text-pp-600">Screw Compressors &amp; Air Tanks</a></li>
+          <li><a href="category.html?cat=motors" class="hover:text-pp-600">3-Phase Electric Motors</a></li>
+          <li><a href="category.html?cat=switchgear" class="hover:text-pp-600">Switchgear &amp; Transformers</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Industrial Parts &amp; Requests</h4>
+        <p class="text-xs text-slate-500 mb-3">Hard-to-find industrial boards, valves, and mechanical seals.</p>
+        <a href="community.html" class="text-xs font-bold text-pp-600 hover:underline">Post Request to Industrial Dealers →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEGA MENU: AGRICULTURAL -->
+  <div id="mega-agricultural" class="mega-menu absolute left-0 right-0 top-full bg-white border-b border-slate-200 shadow-soft z-40">
+    <div class="max-w-[1440px] mx-auto px-8 py-7 grid grid-cols-4 gap-8">
+      <div class="col-span-1 rounded-2xl bg-emerald-50 p-6 border border-emerald-100">
+        <h3 class="text-xl font-extrabold text-slate-900">Agricultural Machinery</h3>
+        <p class="mt-2 text-xs text-slate-600">Farm tractors, harvesters, processing equipment, diesel irrigation pumps &amp; spare parts.</p>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Tractors &amp; Farm Machinery</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?cat=agricultural&brand=massey-ferguson" class="hover:text-pp-600 font-semibold text-slate-800">Massey Ferguson</a></li>
+          <li><a href="category.html?cat=agricultural&brand=john-deere" class="hover:text-pp-600 font-semibold text-slate-800">John Deere</a></li>
+          <li><a href="category.html?cat=agricultural&brand=mahindra" class="hover:text-pp-600 font-semibold text-slate-800">Mahindra</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Agri Parts &amp; Implements</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?tab=parts&cat=agri" class="hover:text-pp-600">Tractor Engines &amp; Gearbox Parts</a></li>
+          <li><a href="category.html?tab=parts&cat=agri" class="hover:text-pp-600">Irrigation Pumps &amp; Nozzles</a></li>
+          <li><a href="category.html?tab=parts&cat=agri" class="hover:text-pp-600">Ploughs &amp; Harvesting Blades</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Agri Salvage &amp; Scrap</h4>
+        <a href="category.html?tab=scrap&cat=agri" class="text-xs font-bold text-amber-800 hover:underline block mt-2">Browse Damaged Farm Machinery for Salvage →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEGA MENU: SCRAP & SALVAGE HUB -->
+  <div id="mega-scrap" class="mega-menu absolute left-0 right-0 top-full bg-white border-b border-amber-200 shadow-soft z-40">
+    <div class="max-w-[1440px] mx-auto px-8 py-7 grid grid-cols-5 gap-8">
+      <div class="col-span-1 rounded-2xl bg-amber-50 p-6 border border-amber-200">
+        <div class="text-[11px] font-extrabold uppercase tracking-wider text-amber-700">Salvage Marketplace</div>
+        <h3 class="mt-2 text-xl font-extrabold text-slate-900">Scrap &amp; Salvage Hub</h3>
+        <p class="mt-2 text-xs leading-relaxed text-slate-600">Damaged devices, accident vehicles &amp; non-working machines for technicians to harvest functional spare parts.</p>
+        <a href="category.html?tab=scrap" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-amber-800 hover:underline">Explore Salvage Hub →</a>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Salvage Electronics</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?tab=scrap&cat=laptops" class="hover:text-amber-700 font-semibold text-slate-800">Damaged Laptops (HP, Dell, Lenovo)</a></li>
+          <li><a href="category.html?tab=scrap&cat=laptops" class="hover:text-amber-700">Water Damaged MacBooks</a></li>
+          <li><a href="category.html?tab=scrap&cat=phones" class="hover:text-amber-700">Broken Screen iPhones &amp; Samsungs</a></li>
+          <li><a href="category.html?tab=scrap&cat=tablets" class="hover:text-amber-700">Faulty iPads &amp; Tablets</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Salvage Vehicles &amp; Auto</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?tab=scrap&cat=vehicles" class="hover:text-amber-700 font-semibold text-slate-800">Accident Cars (Toyota, Honda, Lexus)</a></li>
+          <li><a href="category.html?tab=scrap&part=engine" class="hover:text-amber-700">Non-running Engine Blocks</a></li>
+          <li><a href="category.html?tab=scrap&cat=trucks" class="hover:text-amber-700">Damaged Haulage Trucks for Parts</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Salvage Heavy Machinery</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?tab=scrap&cat=excavators" class="hover:text-amber-700 font-semibold text-slate-800">Non-working Excavators (CAT 320)</a></li>
+          <li><a href="category.html?tab=scrap&cat=generators" class="hover:text-amber-700">Faulty Generators for Parts</a></li>
+          <li><a href="category.html?tab=scrap&cat=industrial" class="hover:text-amber-700">Damaged Hydraulic Control Valves</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Salvage Home Appliances</h4>
+        <ul class="space-y-2 text-xs text-slate-600">
+          <li><a href="category.html?tab=scrap&cat=appliances" class="hover:text-amber-700 font-semibold text-slate-800">Faulty Washing Machines &amp; Motors</a></li>
+          <li><a href="category.html?tab=scrap&cat=appliances" class="hover:text-amber-700">Blown AC Compressors &amp; Gas Tanks</a></li>
+          <li><a href="category.html?tab=scrap" class="text-amber-800 font-extrabold hover:underline">Browse All 12,000+ Scrap Units →</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HERO SECTION - CLEAN LIGHT BACKGROUND WITH COMPOSITE COLLAGE -->
+<main>
+  <section class="bg-gradient-to-b from-slate-50 via-white to-slate-50 border-b border-slate-200/80 py-10 lg:py-16 relative overflow-hidden">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        
+        <!-- LEFT TEXT & ACTION COLUMN -->
+        <div class="lg:col-span-6 space-y-6">
+          
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-950 tracking-tight leading-[1.15]">
+            Find the <span class="text-pp-600">machine.</span><br />
+            Find the <span class="text-pp-600">part.</span><br />
+            Find who <span class="text-pp-600">has it.</span>
+          </h1>
+
+          <p class="text-sm sm:text-base text-slate-600 leading-relaxed font-medium max-w-xl">
+            Buy complete devices, replacement parts, or damaged machines for salvage across Nigeria. Connect directly with technicians, repair shops &amp; verified dealers.
+          </p>
+
+          <!-- STATS BADGES ROW -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 py-3 border-y border-slate-200/60 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-base">👥</span>
+              <div>
+                <p class="font-extrabold text-slate-900">50K+</p>
+                <p class="text-[11px] text-slate-500">Active Listings</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-base">😊</span>
+              <div>
+                <p class="font-extrabold text-slate-900">20K+</p>
+                <p class="text-[11px] text-slate-500">Happy Buyers</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-base">✅</span>
+              <div>
+                <p class="font-extrabold text-slate-900">5K+</p>
+                <p class="text-[11px] text-slate-500">Verified Sellers</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-base">🔒</span>
+              <div>
+                <p class="font-extrabold text-slate-900">100%</p>
+                <p class="text-[11px] text-slate-500">Secure Payments</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACTION BUTTONS -->
+          <div class="flex flex-wrap items-center gap-3 pt-1">
+            <a href="category.html" class="px-7 py-3.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-md transition transform hover:-translate-y-0.5 flex items-center gap-2">
+              <span>Browse Marketplace</span>
+              <span>→</span>
+            </a>
+            <a href="community.html" class="px-6 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-900 font-bold text-xs shadow-xs transition hover:bg-slate-50">
+              Post a Request in Community
+            </a>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLLAGE IMAGE & POPULAR SEARCHES CARD -->
+        <div class="lg:col-span-6 relative">
+          <div class="relative rounded-3xl overflow-hidden shadow-card border border-slate-200/60 bg-white p-2">
+            <img src="frontend/images/collage.png" alt="Car, Crane, Caterpillar, Motherboard, Phone and Machine Parts" class="w-full h-auto object-cover rounded-2xl" />
+          </div>
+
+          <!-- POPULAR SEARCHES FLOATING CARD -->
+          <div class="mt-4 sm:absolute sm:-bottom-20 sm:right-4 bg-white/95 backdrop-blur border border-slate-200 p-4 rounded-2xl shadow-xl max-w-sm">
+            <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mb-2">Popular Searches</p>
+            <div class="flex flex-wrap gap-1.5 text-xs">
+              <a href="category.html?q=HP+Battery" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-pp-50 hover:text-pp-600 text-slate-700 font-semibold transition">HP Battery</a>
+              <a href="category.html?q=Corolla+Gearbox" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-pp-50 hover:text-pp-600 text-slate-700 font-semibold transition">Corolla Gearbox</a>
+              <a href="category.html?q=iPhone+Screen" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-pp-50 hover:text-pp-600 text-slate-700 font-semibold transition">iPhone Screen</a>
+              <a href="category.html?q=Excavator+Pump" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-pp-50 hover:text-pp-600 text-slate-700 font-semibold transition">Excavator Pump</a>
+              <a href="category.html?q=Dell+Motherboard" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-pp-50 hover:text-pp-600 text-slate-700 font-semibold transition">Dell Motherboard</a>
+              <a href="category.html?tab=scrap" class="px-2.5 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold transition">Damaged Laptop (Scrap)</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+<!-- 4 INTENTS EXPLAINER SECTION -->
+<section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="text-center max-w-2xl mx-auto mb-10">
+    <h2 class="text-xs font-extrabold uppercase tracking-widest text-pp-600">The Parts &amp; Parcel Way</h2>
+    <p class="text-2xl sm:text-3xl font-extrabold text-slate-950 mt-1">4 Ways to Find What You Need</p>
+    <p class="text-sm text-slate-500 mt-2">Whether you need a complete car, an individual laptop screen, or a damaged machine to harvest parts from.</p>
+  </div>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div class="rounded-2xl bg-white border border-slate-200 p-6 hover:border-pp-300 hover:shadow-hover transition duration-200 group cursor-default">
+      <div class="w-12 h-12 rounded-xl bg-indigo-50 text-pp-600 grid place-items-center text-2xl mb-4 group-hover:scale-110 transition duration-200">💻</div>
+      <h3 class="text-lg font-bold text-slate-900">1. Complete Devices</h3>
+      <p class="text-xs text-slate-500 mt-2 leading-relaxed">Working laptops, phones, cars, washing machines &amp; equipment ready for immediate use.</p>
+    </div>
+
+    <div class="rounded-2xl bg-white border border-slate-200 p-6 hover:border-pp-300 hover:shadow-hover transition duration-200 group cursor-default">
+      <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 grid place-items-center text-2xl mb-4 group-hover:scale-110 transition duration-200">⚙️</div>
+      <h3 class="text-lg font-bold text-slate-900">2. Spare Parts</h3>
+      <p class="text-xs text-slate-500 mt-2 leading-relaxed">Original batteries, screens, engines, gearboxes, RAM &amp; hard-to-find replacement components.</p>
+    </div>
+
+    <div class="rounded-2xl bg-white border border-amber-200 p-6 hover:border-amber-400 hover:shadow-hover transition duration-200 group cursor-default bg-amber-50/30">
+      <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 grid place-items-center text-2xl mb-4 group-hover:scale-110 transition duration-200">🛠️</div>
+      <h3 class="text-lg font-bold text-slate-900">3. Scrap &amp; Salvage</h3>
+      <p class="text-xs text-slate-500 mt-2 leading-relaxed">Damaged or broken units sold cheap for technicians to harvest functional components.</p>
+    </div>
+
+    <div class="rounded-2xl bg-white border border-slate-200 p-6 hover:border-pp-300 hover:shadow-hover transition duration-200 group cursor-default">
+      <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 grid place-items-center text-2xl mb-4 group-hover:scale-110 transition duration-200">💬</div>
+      <h3 class="text-lg font-bold text-slate-900">4. Community Forum</h3>
+      <p class="text-xs text-slate-500 mt-2 leading-relaxed">Can't find a part? Post a request to thousands of local technicians and dealers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- POPULAR MARKETPLACE LISTINGS GRID -->
+<section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10 border-t border-slate-200/60">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h2 class="text-xl font-extrabold text-slate-900">Featured Marketplace Listings</h2>
+      <p class="text-xs text-slate-500 mt-0.5">Verified sellers in Lagos, Abuja, Port Harcourt &amp; Computer Village</p>
+    </div>
+    <a href="category.html" class="text-xs font-bold text-pp-600 hover:underline flex items-center gap-1">View all 50K+ listings →</a>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+    
+    <!-- CARD 1 -->
+    <a href="listing-detail.html" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <div class="relative product-img h-44 grid place-items-center p-4">
+        <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white">DEVICE</span>
+        <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
+        <span class="text-6xl group-hover:scale-105 transition">💻</span>
+      </div>
+      <div class="p-4">
+        <span class="text-[11px] font-bold text-pp-600 block">Adam Computers</span>
+        <h3 class="text-sm font-bold text-slate-900 truncate mt-0.5 group-hover:text-pp-600">HP EliteBook 840 G5</h3>
+        <p class="text-[11px] text-slate-500 truncate mt-0.5">Intel i5 · 8GB RAM · 256GB SSD</p>
+        <div class="mt-3 flex items-baseline justify-between">
+          <span class="text-base font-extrabold text-slate-900">₦280,000</span>
+          <span class="text-[10px] font-semibold text-emerald-600">3 available</span>
+        </div>
+        <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+          <span>📍 Computer Village, Lagos</span>
+          <span class="text-slate-500 font-medium">Used</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- CARD 2 (SCRAP) -->
+    <a href="scrap-detail.html" class="group rounded-2xl border border-amber-300 bg-amber-50/20 overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <div class="relative product-img h-44 grid place-items-center p-4">
+        <span class="absolute top-3 left-3 text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-600 text-white uppercase">SCRAP</span>
+        <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
+        <span class="text-6xl group-hover:scale-105 transition">💻</span>
+      </div>
+      <div class="p-4">
+        <span class="text-[11px] font-bold text-amber-700 block">Abel Tech Parts</span>
+        <h3 class="text-sm font-bold text-slate-900 truncate mt-0.5 group-hover:text-amber-700">Dell Latitude 5420</h3>
+        <p class="text-[11px] text-amber-700 font-semibold truncate mt-0.5">✓ Board ✓ RAM ✕ Screen</p>
+        <div class="mt-3 flex items-baseline justify-between">
+          <span class="text-base font-extrabold text-slate-900">₦150,000</span>
+          <span class="text-[10px] font-bold text-amber-700">For Salvage</span>
+        </div>
+        <div class="mt-2 pt-2 border-t border-amber-100 flex items-center justify-between text-[11px] text-slate-400">
+          <span>📍 Ikeja, Lagos</span>
+          <span class="text-amber-700 font-bold">Damaged</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- CARD 3 (PART) -->
+    <a href="listing-detail.html" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <div class="relative product-img h-44 grid place-items-center p-4">
+        <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">PART</span>
+        <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
+        <span class="text-6xl group-hover:scale-105 transition">🔋</span>
+      </div>
+      <div class="p-4">
+        <span class="text-[11px] font-bold text-pp-600 block">Seth Batteries</span>
+        <h3 class="text-sm font-bold text-slate-900 truncate mt-0.5 group-hover:text-pp-600">HP EliteBook Battery</h3>
+        <p class="text-[11px] text-slate-500 truncate mt-0.5">Fits G5, G6 Series · Original</p>
+        <div class="mt-3 flex items-baseline justify-between">
+          <span class="text-base font-extrabold text-slate-900">₦25,000</span>
+          <span class="text-[10px] font-semibold text-emerald-600">7 available</span>
+        </div>
+        <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+          <span>📍 Ikeja, Lagos</span>
+          <span class="text-slate-500 font-medium">New</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- CARD 4 (VEHICLE) -->
+    <a href="category.html?cat=vehicles" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <div class="relative product-img h-44 grid place-items-center p-4">
+        <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white">VEHICLE</span>
+        <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
+        <span class="text-6xl group-hover:scale-105 transition">🚗</span>
+      </div>
+      <div class="p-4">
+        <span class="text-[11px] font-bold text-pp-600 block">Tunde Autos</span>
+        <h3 class="text-sm font-bold text-slate-900 truncate mt-0.5 group-hover:text-pp-600">2018 Toyota Corolla</h3>
+        <p class="text-[11px] text-slate-500 truncate mt-0.5">1.8L Engine · Automatic · Tokunbo</p>
+        <div class="mt-3 flex items-baseline justify-between">
+          <span class="text-base font-extrabold text-slate-900">₦18,500,000</span>
+          <span class="text-[10px] font-semibold text-emerald-600">1 available</span>
+        </div>
+        <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+          <span>📍 Victoria Island, Lagos</span>
+          <span class="text-slate-500 font-medium">Used</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- CARD 5 (EQUIPMENT PART) -->
+    <a href="category.html?cat=equipment" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <div class="relative product-img h-44 grid place-items-center p-4">
+        <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">PART</span>
+        <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
+        <span class="text-6xl group-hover:scale-105 transition">⚙️</span>
+      </div>
+      <div class="p-4">
+        <span class="text-[11px] font-bold text-pp-600 block">Kano Machinery Yard</span>
+        <h3 class="text-sm font-bold text-slate-900 truncate mt-0.5 group-hover:text-pp-600">CAT 320 Hydraulic Pump</h3>
+        <p class="text-[11px] text-slate-500 truncate mt-0.5">Tested · Original Caterpillar</p>
+        <div class="mt-3 flex items-baseline justify-between">
+          <span class="text-base font-extrabold text-slate-900">₦1,450,000</span>
+          <span class="text-[10px] font-semibold text-emerald-600">2 available</span>
+        </div>
+        <div class="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+          <span>📍 Bompai, Kano</span>
+          <span class="text-slate-500 font-medium">Refurbished</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- DUAL ACTION HUB: SELLER & TECHNICIAN CTA CARDS -->
+<section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <div class="grid md:grid-cols-2 gap-6">
+    
+    <!-- CARD 1: SELLER PORTAL -->
+    <div class="rounded-3xl bg-gradient-to-br from-pp-900 via-indigo-950 to-slate-950 text-white p-7 sm:p-9 shadow-soft relative overflow-hidden flex flex-col justify-between border border-pp-800/50 min-h-[300px]">
+      <div class="relative z-10 max-w-sm">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pp-500/30 text-pp-200 text-[11px] font-extrabold uppercase tracking-wider mb-3">
+          <span>⚡ SELLER PORTAL</span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold leading-tight text-white">Do you have something to sell?</h2>
+        <p class="text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed font-medium">
+          List complete devices, spare parts, or damaged machines for salvage to thousands of verified buyers and repair shops across Nigeria.
+        </p>
+      </div>
+
+      <div class="mt-6 pt-4 relative z-10">
+        <a href="seller-dashboard.html" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-pp-600 hover:bg-pp-500 text-white font-extrabold text-xs shadow-md transition transform hover:-translate-y-0.5">
+          <span>Start Selling Now</span>
+          <span>→</span>
+        </a>
+      </div>
+
+      <!-- BOX WITH MACHINE PARTS IMAGE -->
+      <div class="absolute -right-4 -bottom-4 w-44 sm:w-56 h-44 sm:h-56 opacity-90 pointer-events-none">
+        <img src="frontend/images/box.png" alt="Box with machine parts" class="w-full h-full object-cover rounded-2xl" />
+      </div>
+    </div>
+
+    <!-- CARD 2: TECHNICIAN & REPAIR NETWORK -->
+    <div class="rounded-3xl bg-gradient-to-br from-emerald-950 via-slate-900 to-emerald-900 text-white p-7 sm:p-9 shadow-soft relative overflow-hidden flex flex-col justify-between border border-emerald-900/50 min-h-[300px]">
+      <div class="relative z-10 max-w-sm">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-extrabold uppercase tracking-wider mb-3">
+          <span>🔧 REPAIR &amp; HELP NETWORK</span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold leading-tight text-white">Are you a technician or repairer?</h2>
+        <p class="text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed font-medium">
+          Join Nigeria's community of certified technicians. Fulfill buyer part requests, provide repair guidance, and offer repair services.
+        </p>
+      </div>
+
+      <div class="mt-6 pt-4 relative z-10">
+        <a href="community.html" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition transform hover:-translate-y-0.5">
+          <span>Join the Community</span>
+          <span>→</span>
+        </a>
+      </div>
+
+      <!-- TECHNICIAN MAN IMAGE -->
+      <div class="absolute right-0 bottom-0 w-44 sm:w-52 h-48 sm:h-60 opacity-90 pointer-events-none">
+        <img src="frontend/images/artisan.png" alt="African technician smiling with folded arms" class="w-full h-full object-cover object-top rounded-tl-3xl" />
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- VERIFIED & TRUSTED / SECURE PAYMENTS BANNER -->
+<section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pb-4">
+  <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center md:text-left divide-y md:divide-y-0 md:divide-x divide-slate-100">
+      
+      <div class="flex items-center gap-3.5 pt-2 md:pt-0 md:px-4">
+        <div class="w-10 h-10 rounded-xl bg-pp-50 text-pp-600 font-extrabold grid place-items-center text-xl shrink-0">🛡️</div>
+        <div>
+          <h4 class="text-xs font-extrabold text-slate-900">Verified &amp; Trusted</h4>
+          <p class="text-[11px] text-slate-500 mt-0.5">All sellers are identity verified</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3.5 pt-2 md:pt-0 md:px-4">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 font-extrabold grid place-items-center text-xl shrink-0">👛</div>
+        <div>
+          <h4 class="text-xs font-extrabold text-slate-900">Secure Payments</h4>
+          <p class="text-[11px] text-slate-500 mt-0.5">Your money is safe with us</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3.5 pt-2 md:pt-0 md:px-4">
+        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 font-extrabold grid place-items-center text-xl shrink-0">🛡️</div>
+        <div>
+          <h4 class="text-xs font-extrabold text-slate-900">Dispute Protection</h4>
+          <p class="text-[11px] text-slate-500 mt-0.5">We've got your back</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3.5 pt-2 md:pt-0 md:px-4">
+        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 font-extrabold grid place-items-center text-xl shrink-0">👥</div>
+        <div>
+          <h4 class="text-xs font-extrabold text-slate-900">Nationwide Community</h4>
+          <p class="text-[11px] text-slate-500 mt-0.5">In every city across Nigeria</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER TRUST & LINKS -->
+<footer class="bg-white border-t border-slate-200 mt-12">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
+      
+      <div class="col-span-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-pp-600 text-white grid place-items-center font-bold">P</div>
+          <span class="text-lg font-extrabold text-slate-900">Parts &amp; Parcel</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-3 max-w-sm leading-relaxed">
+          Nigeria's trusted marketplace for buying and selling complete devices, spare parts, equipment, and damaged items for salvage.
+        </p>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-4">Marketplace</h4>
+        <ul class="space-y-2.5 text-xs text-slate-600">
+          <li><a href="category.html?tab=complete" class="hover:text-pp-600">Complete Devices</a></li>
+          <li><a href="category.html?tab=parts" class="hover:text-pp-600">Spare Parts</a></li>
+          <li><a href="category.html?tab=scrap" class="hover:text-amber-700 font-semibold">Scrap &amp; Salvage</a></li>
+          <li><a href="community.html" class="hover:text-pp-600">Community Requests</a></li>
+          <li><a href="offer.html" class="hover:text-pp-600">Make an Offer</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-4">Sellers &amp; Dealers</h4>
+        <ul class="space-y-2.5 text-xs text-slate-600">
+          <li><a href="seller-dashboard.html" class="hover:text-pp-600 font-semibold">Seller Portal</a></li>
+          <li><a href="seller-components.html" class="hover:text-pp-600">Item Disassembly Tool</a></li>
+          <li><a href="seller-payouts.html" class="hover:text-pp-600">Payouts &amp; Settlements</a></li>
+          <li><a href="subscriptions.html" class="hover:text-pp-600">Subscription Plans</a></li>
+          <li><a href="locations.html" class="hover:text-pp-600">Store Locations</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-4">Buyer &amp; Account</h4>
+        <ul class="space-y-2.5 text-xs text-slate-600">
+          <li><a href="buyer-dashboard.html" class="hover:text-pp-600">Buyer Dashboard</a></li>
+          <li><a href="cart.html" class="hover:text-pp-600">My Cart</a></li>
+          <li><a href="checkout.html" class="hover:text-pp-600">Checkout Options</a></li>
+          <li><a href="order-detail.html" class="hover:text-pp-600">Track Order</a></li>
+          <li><a href="admin-dashboard.html" class="hover:text-pp-600">Platform Admin</a></li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="mt-12 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-4">
+      <p>© 2026 Parts &amp; Parcel Ltd. Built for Nigeria &amp; Africa.</p>
+      <div class="flex gap-4">
+        <span>Privacy Policy</span>
+        <span>·</span>
+        <span>Terms of Service</span>
+        <span>·</span>
+        <span>Buyer Protection Escrow</span>
+      </div>
+    </div>
+  </div>
+</footer>
+</main>
+
+<!-- MOBILE BOTTOM NAVIGATION (Crucial Mobile UX Requirement) -->
+<div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-t border-slate-200 px-3 py-2 flex items-center justify-around text-center">
+  <a href="index.html" class="flex flex-col items-center text-[10px] font-bold text-pp-600">
+    <span class="text-base">🏠</span>
+    <span>Home</span>
+  </a>
+  <a href="category.html" class="flex flex-col items-center text-[10px] font-semibold text-slate-600">
+    <span class="text-base">🔍</span>
+    <span>Browse</span>
+  </a>
+  <a href="community.html" class="flex flex-col items-center text-[10px] font-semibold text-slate-600">
+    <span class="text-base">💬</span>
+    <span>Community</span>
+  </a>
+  <a href="cart.html" class="flex flex-col items-center text-[10px] font-semibold text-slate-600 relative">
+    <span class="text-base">🛒</span>
+    <span>Cart</span>
+    <span class="absolute -top-1 right-2 w-3.5 h-3.5 bg-pp-600 text-white rounded-full text-[9px] font-bold grid place-items-center">3</span>
+  </a>
+  <a href="buyer-dashboard.html" class="flex flex-col items-center text-[10px] font-semibold text-slate-600">
+    <span class="text-base">👤</span>
+    <span>Account</span>
+  </a>
+</div>
+
+<!-- SCRIPT FOR MEGA MENU INTERACTIVITY & ACCOUNT DROPDOWN -->
+<script>
+  const triggers = document.querySelectorAll('.nav-trigger');
+  const menus = document.querySelectorAll('.mega-menu');
+
+  triggers.forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const key = trigger.dataset.menu;
+      const menu = document.getElementById('mega-' + key);
+      const isOpen = menu ? menu.classList.contains('open') : false;
+
+      menus.forEach(m => m.classList.remove('open'));
+      triggers.forEach(t => t.classList.remove('open'));
+
+      if (!isOpen && menu) {
+        menu.classList.add('open');
+        trigger.classList.add('open');
+      }
+    });
+  });
+
+  menus.forEach(menu => {
+    menu.addEventListener('click', e => e.stopPropagation());
+  });
+
+  document.addEventListener('click', () => {
+    menus.forEach(m => m.classList.remove('open'));
+    triggers.forEach(t => t.classList.remove('open'));
+    document.querySelectorAll('.account-dropdown-panel').forEach(p => p.classList.add('hidden'));
+    document.querySelectorAll('.chevron-icon').forEach(c => c.classList.remove('rotate-180'));
+  });
+
+  const accountTriggers = document.querySelectorAll('.account-menu-trigger');
+  accountTriggers.forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const wrapper = trigger.closest('.account-menu-wrapper');
+      const panel = wrapper ? wrapper.querySelector('.account-dropdown-panel') : null;
+      const chevron = trigger.querySelector('.chevron-icon');
+      const isOpen = panel ? !panel.classList.contains('hidden') : false;
+
+      menus.forEach(m => m.classList.remove('open'));
+      triggers.forEach(t => t.classList.remove('open'));
+      document.querySelectorAll('.account-dropdown-panel').forEach(p => p.classList.add('hidden'));
+      document.querySelectorAll('.chevron-icon').forEach(c => c.classList.remove('rotate-180'));
+
+      if (!isOpen && panel) {
+        panel.classList.remove('hidden');
+        if (chevron) chevron.classList.add('rotate-180');
+      }
+    });
+  });
+
+  function setThemeMode(mode, event) {
+    if (event) event.stopPropagation();
+    const btns = document.querySelectorAll('.theme-btn');
+    btns.forEach(b => {
+      b.classList.remove('bg-white', 'shadow-xs', 'font-bold', 'text-slate-900');
+      b.classList.add('font-semibold', 'text-slate-600');
+    });
+
+    if (event && event.target) {
+      event.target.classList.add('bg-white', 'shadow-xs', 'font-bold', 'text-slate-900');
+      event.target.classList.remove('text-slate-600');
+    }
+
+    const label = document.getElementById('current-mode-label');
+    if (label) label.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+
+    if (mode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else if (mode === 'light') {
+      document.documentElement.classList.remove('dark');
+    } else {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }
+</script>
+
+</body>
+</html>

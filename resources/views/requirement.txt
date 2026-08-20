@@ -1,0 +1,2173 @@
+Design and build a modern responsive web application called "Parts & Parcel".
+
+Parts & Parcel is a Nigerian/African marketplace for buying and selling complete devices, machines, spare parts, components, accessories, and damaged devices for parts.
+
+The core idea is:
+
+"Find the machine. Find the part. Find someone who has it."
+
+This is NOT a conventional ecommerce store.
+
+A seller may sell:
+1. A complete device/item.
+2. A quantity of identical items.
+3. A component/part removed from a device.
+4. A damaged device together with its remaining components.
+5. A damaged device whose components can later be sold individually.
+
+A buyer can:
+1. Browse complete devices.
+2. Browse individual parts/components.
+3. Search for a specific model or component.
+4. Add listings to a cart.
+5. Make offers.
+6. Ask the community/forum for something they cannot find.
+7. Receive responses and offers from other users.
+8. Save/like listings.
+9. Buy through checkout.
+10. Choose how delivery will be handled.
+
+The platform must feel trustworthy, practical, technical and marketplace-oriented rather than like a generic fashion/ecommerce website.
+
+==================================================
+BRAND / DESIGN DIRECTION
+==================================================
+
+Brand:
+Parts & Parcel
+
+Tagline:
+"Find the machine. Find the part."
+
+Target users:
+- Laptop/phone/electronics technicians
+- Repair shops
+- Spare parts dealers
+- Used-device dealers
+- Businesses
+- Individuals looking for difficult-to-find parts
+- People selling damaged devices
+- People selling parts salvaged from old devices
+
+Primary market:
+Nigeria first, with an architecture that can expand across Africa.
+
+Design characteristics:
+- Modern
+- Professional
+- Technical
+- Trustworthy
+- Marketplace-driven
+- Dense enough to be useful for technicians
+- Very easy to understand for ordinary buyers
+- Mobile-first
+- Excellent desktop experience
+- Avoid excessive gradients
+- Avoid generic SaaS aesthetics
+- Avoid making it look like a fashion store
+- Use clear cards, badges, tables, filters and technical specifications
+
+Use a clean neutral background with a strong primary brand color.
+Use strong typography and excellent spacing.
+Make prices prominent and display Nigerian Naira (₦).
+
+==================================================
+CORE DOMAIN MODEL
+==================================================
+
+The important domain concepts are:
+
+USER
+LOCATION
+CATEGORY
+BRAND
+MODEL
+ITEM
+COMPONENT
+LISTING
+CART
+CART ITEM
+WISHLIST
+DISCUSSION
+RESPONSE
+OFFER
+OFFER ITEM
+ORDER
+ORDER ITEM
+SHIPMENT
+PAYMENT
+REFUND
+REVENUE
+SETTLEMENT
+PAYOUT
+PAYOUT SETTLEMENT
+SUBSCRIPTION PLAN
+SUBSCRIPTION
+
+Do not expose technical database terminology such as "polymorphic relationship" to normal users.
+
+The UI should use simple language such as:
+- Device
+- Part
+- Listing
+- Offer
+- Order
+- Saved
+- Discussion
+- Seller
+
+==================================================
+CATALOG STRUCTURE
+==================================================
+
+Catalog hierarchy:
+
+Category
+    ↓
+Brand
+    ↓
+Model
+
+Examples:
+
+Laptop
+    HP
+        EliteBook
+        Envy
+    Dell
+        Latitude
+        Inspiron
+
+Phone
+    Apple
+        iPhone 12
+        iPhone 13
+
+Washing Machine
+    LG
+        Model X
+
+etc.
+
+A model represents the manufacturer's model.
+
+==================================================
+ITEMS AND COMPONENTS
+==================================================
+
+An ITEM represents a physical item owned by a seller.
+
+Example:
+
+Abel owns a damaged Dell Latitude.
+
+Item:
+Dell Latitude
+Serial Number: XYZ123
+Condition: Damaged
+
+That item may have components:
+
+- Screen
+- Motherboard
+- RAM
+- Keyboard
+- Battery
+- Hard Drive
+
+A component belongs to an item.
+
+IMPORTANT:
+
+An item does not necessarily have to be sold as individual components.
+
+A seller may list:
+
+"Damaged Dell Latitude - For Sale"
+
+and show the components that are still present.
+
+Alternatively, the seller can create individual listings:
+
+"Dell Latitude Screen"
+"Dell Latitude Motherboard"
+"Dell Latitude RAM"
+
+The same physical item can therefore evolve during its lifecycle.
+
+==================================================
+LISTINGS
+==================================================
+
+The LISTING is the primary thing buyers browse.
+
+This is extremely important.
+
+Buyers do NOT browse "items" or "components" directly.
+
+They browse LISTINGS.
+
+A listing can point to either:
+
+1. An ITEM
+2. A COMPONENT
+
+Therefore the UI should be able to represent:
+
+COMPLETE ITEM LISTING
+
+Example:
+
+Dell Latitude 5420 Laptop
+₦700,000
+Used
+Available
+
+or:
+
+COMPONENT LISTING
+
+Dell Latitude 5420 Replacement Screen
+₦85,000
+Used
+Available
+
+or:
+
+DAMAGED ITEM WITH COMPONENTS
+
+Dell Latitude 5420
+"For Parts"
+₦150,000
+
+Components available:
+✓ Screen
+✓ Motherboard
+✓ RAM
+✓ Battery
+✕ Keyboard
+
+==================================================
+INVENTORY / QUANTITY
+==================================================
+
+Quantity lives on the LISTING.
+
+Example:
+
+Seller Seth:
+
+HP EliteBook Battery
+Quantity: 10
+Price: ₦25,000 each
+
+This is ONE listing with quantity 10.
+
+Seller Adam:
+
+HP EliteBook 840
+Quantity: 3
+Price: ₦500,000 each
+
+This is ONE listing with quantity 3.
+
+Abel's damaged laptop:
+
+Dell Latitude
+Quantity: 1
+Price: ₦150,000
+
+This is ONE listing with quantity 1.
+
+Display availability clearly:
+
+"7 available"
+
+"Only 1 available"
+
+"3 remaining"
+
+==================================================
+SELLER EXAMPLE
+==================================================
+
+Use these users in prototype data:
+
+Adam:
+Sells complete laptops.
+
+Inventory:
+5 HP laptops
+3 Dell laptops
+2 Acer laptops
+
+Examples:
+HP EliteBook — ₦500,000 — 3 available
+HP Envy — ₦600,000 — 2 available
+Dell Latitude — ₦700,000 — 1 available
+Dell Inspiron — ₦450,000 — 2 available
+
+Abel:
+Sells damaged laptops and components.
+
+Laptop 1:
+Screen damaged
+Motherboard working
+Listed as whole laptop.
+
+Laptop 2:
+Motherboard damaged
+Screen, hard disk and RAM available individually.
+
+Laptop 3:
+Keyboard damaged
+Originally listed as parts.
+Someone bought the screen.
+Remaining components are now being sold as a whole device.
+
+Laptop 4:
+Screen damaged.
+Originally listed as whole.
+Buyer made an offer for motherboard.
+Seller can then split the remaining components into individual listings.
+
+Seth:
+Sells batteries.
+
+Example:
+HP EliteBook battery — 10 available
+Dell Latitude battery — 7 available
+
+==================================================
+GUEST / BUYER EXPERIENCE
+==================================================
+
+Design the public storefront.
+
+Header should include:
+
+Parts & Parcel logo
+
+Browse
+Categories
+Parts
+Devices
+For Parts
+Discussions
+
+Search bar:
+
+"What are you looking for?"
+
+Search examples:
+- iPhone 12 battery
+- HP EliteBook 840 G5 screen
+- Dell Latitude motherboard
+- washing machine motor
+- laptop charger
+
+Header actions:
+
+Saved
+Cart
+Sign In
+Account
+
+Mobile navigation should be excellent.
+
+==================================================
+HOME PAGE
+==================================================
+
+Hero section:
+
+"Find the machine. Find the part."
+
+Supporting text:
+
+"Buy complete devices, spare parts and components from sellers across Nigeria."
+
+Large search bar.
+
+Example:
+
+Search:
+"Search for a device, model, part or component"
+
+Buttons:
+
+Browse Devices
+Browse Parts
+Ask the Community
+
+Below the hero:
+
+Popular categories
+
+Laptops
+Phones
+Tablets
+Washing Machines
+Generators
+Air Conditioners
+Cars
+Industrial Equipment
+etc.
+
+Then:
+
+"Popular Parts"
+
+"Devices for Sale"
+
+"Recently Added"
+
+"Need Something You Can't Find?"
+
+CTA:
+
+"Ask the Community"
+
+Show a forum/discussion preview.
+
+==================================================
+BROWSE EXPERIENCE
+==================================================
+
+Create a professional ecommerce-style browse page.
+
+Important:
+
+The browse page is listing-based.
+
+Each card represents a LISTING.
+
+Cards should display:
+
+Image
+Title
+Category / Brand / Model
+Listing type indicator:
+
+DEVICE
+PART
+FOR PARTS
+
+Condition:
+New
+Used
+Damaged
+Refurbished
+
+Price
+Quantity available
+
+Seller name
+Seller location
+
+Seller rating/trust indicator
+
+Optional:
+"Negotiable"
+
+Save/heart button.
+
+Example card:
+
+--------------------------------
+Dell Latitude 5420
+FOR PARTS
+
+₦150,000
+
+Used / Damaged
+
+Screen ✓
+Motherboard ✓
+RAM ✓
+Battery ✓
+
+Abel Computers
+Lagos
+
+1 available
+
+[View Listing]
+--------------------------------
+
+Another:
+
+--------------------------------
+HP EliteBook 840 G5 Battery
+PART
+
+₦25,000
+
+Used
+
+7 available
+
+Seth Electronics
+Ikeja, Lagos
+
+[View Listing]
+--------------------------------
+
+==================================================
+BROWSE FILTERS
+==================================================
+
+Filters should include:
+
+Category
+Brand
+Model
+Listing type:
+- Devices
+- Parts
+- For Parts
+
+Condition:
+- New
+- Used
+- Refurbished
+- Damaged
+
+Price range
+
+Location
+
+Availability
+
+Seller
+
+Delivery options
+
+Negotiable
+
+Sort:
+
+Relevance
+Newest
+Price: Low to High
+Price: High to Low
+Most Available
+
+Use a responsive filter drawer on mobile.
+
+==================================================
+LISTING DETAIL PAGE
+==================================================
+
+This is one of the most important pages.
+
+Design a highly useful listing detail page.
+
+Left:
+
+Large image gallery.
+
+Right:
+
+Title
+
+Category > Brand > Model
+
+Condition badge
+
+Price
+
+Availability
+
+Seller
+
+Location
+
+Trust indicators
+
+Quantity selector
+
+Actions:
+
+[Add to Cart]
+
+[Make an Offer]
+
+[Save]
+
+[Ask Seller]
+
+Then technical information.
+
+For a complete device:
+
+DEVICE DETAILS
+
+Brand
+Model
+Condition
+Serial number if appropriate/private
+RAM
+Storage
+Processor
+Screen size
+etc.
+
+Then:
+
+COMPONENTS INCLUDED
+
+✓ Screen
+✓ Motherboard
+✓ RAM
+✓ Battery
+✕ Keyboard
+
+For a "For Parts" listing, make the component condition very clear.
+
+Example:
+
+COMPONENT STATUS
+
+Screen
+GOOD
+
+Motherboard
+GOOD
+
+RAM
+GOOD
+
+Keyboard
+FAULTY
+
+Battery
+UNKNOWN
+
+Then:
+
+"Seller says"
+
+description.
+
+Seller information.
+
+Location.
+
+Delivery options.
+
+Similar listings.
+
+==================================================
+PART LISTING DETAIL
+==================================================
+
+Example:
+
+HP EliteBook 840 G5 Battery
+
+PART
+
+₦25,000
+
+7 available
+
+Condition:
+Used
+
+Compatible with:
+
+HP EliteBook 840 G5
+HP EliteBook 840 G6
+
+Show compatibility prominently.
+
+Then:
+
+Seller
+Location
+Availability
+Delivery
+
+[Add to Cart]
+[Make an Offer]
+
+==================================================
+FORUM / DISCUSSION EXPERIENCE
+==================================================
+
+The forum is a core feature.
+
+Call it:
+
+"Community"
+
+or
+
+"Parts Community"
+
+Users can post:
+
+"Looking for HP EliteBook 840 G5 motherboard in Lagos"
+
+A discussion contains:
+
+Title
+Description
+Category
+Model
+Location
+Date
+Author
+
+Responses appear underneath.
+
+A response can be:
+
+1. Plain text advice
+2. A commercial offer
+
+Example:
+
+USER:
+
+"Looking for HP EliteBook 840 G5 motherboard."
+
+RESPONSE:
+
+"Yes, I have one available."
+
+[View Offer]
+
+Another response:
+
+"You can check Computer Village."
+
+Users can make offers from responses.
+
+IMPORTANT:
+
+Forum responses are limited based on the user's subscription.
+
+Show remaining responses subtly:
+
+"12 community responses remaining this month."
+
+Do not make the forum feel like a paywall-heavy product.
+
+==================================================
+OFFERS
+==================================================
+
+Offers should be a first-class UX.
+
+A buyer can make an offer on a listing.
+
+Example:
+
+Listing:
+HP EliteBook 840 G5
+₦500,000
+
+Buyer:
+
+Offer price:
+₦450,000
+
+Quantity:
+1
+
+Message:
+"I can pick up today."
+
+[Send Offer]
+
+An offer may contain multiple listings.
+
+Offer summary:
+
+Items
+Delivery
+Total
+
+Offer statuses:
+
+Pending
+Accepted
+Rejected
+Expired
+Cancelled
+Reserved
+Paid
+
+==================================================
+CART
+==================================================
+
+The cart is grouped by seller.
+
+Example:
+
+MY CART
+
+Adam Computers
+
+HP EliteBook — ₦500,000
+Quantity 1
+
+Dell Latitude — ₦700,000
+Quantity 1
+
+Subtotal ₦1,200,000
+
+[Checkout]
+
+--------------------------------
+
+Seth Batteries
+
+HP EliteBook Battery — ₦25,000
+Quantity 2
+
+Subtotal ₦50,000
+
+[Checkout]
+
+This reflects the actual domain model:
+
+buyer + seller = cart.
+
+Do not make users think they are purchasing from one giant warehouse.
+
+==================================================
+CHECKOUT
+==================================================
+
+Checkout happens per seller cart.
+
+Show:
+
+Order summary
+
+Items
+
+Subtotal
+
+Delivery
+
+Total
+
+Address
+
+Allow the buyer to:
+
+Select saved address
+Add a new address
+Edit saved address
+
+Delivery responsibility:
+
+OPTION 1
+Buyer arranges delivery
+
+"No delivery fee will be added."
+
+OPTION 2
+Seller handles delivery
+
+"Seller will arrange delivery and include the delivery fee."
+
+OPTION 3
+Platform handles delivery
+
+"Delivery fee will be calculated by the platform."
+
+For MVP, platform delivery may be represented as an available option even if the actual logistics API is not yet integrated.
+
+Make the choices extremely clear.
+
+==================================================
+BUYER DASHBOARD
+==================================================
+
+Create a complete buyer dashboard.
+
+Sidebar:
+
+Dashboard
+Orders
+Offers
+Saved
+Community
+Messages
+Addresses
+Payments
+Subscriptions
+Profile
+
+Dashboard cards:
+
+Active Orders
+Pending Offers
+Saved Listings
+Community Responses Remaining
+
+Recent orders.
+
+Recent offers.
+
+Recommended listings.
+
+==================================================
+ORDER DETAIL
+==================================================
+
+Show:
+
+Order number
+
+Seller
+
+Order status
+
+Payment status
+
+Delivery status
+
+Items
+
+Prices
+
+Delivery method
+
+Shipping address
+
+Seller location
+
+Timeline:
+
+Order placed
+Payment received
+Seller preparing
+Dispatched
+Delivered
+
+Actions:
+
+Contact seller
+Track delivery
+Request refund
+Report issue
+
+==================================================
+SELLER DASHBOARD
+==================================================
+
+This is equally important.
+
+Seller sidebar:
+
+Dashboard
+Listings
+Inventory
+Orders
+Offers
+Discussions
+Messages
+Payouts
+Locations
+Subscription
+Profile
+
+Dashboard metrics:
+
+Active Listings
+Items Sold
+Orders
+Pending Offers
+Revenue
+Available Balance
+
+Show sales chart.
+
+==================================================
+SELLER LISTINGS
+==================================================
+
+Create a powerful listing management interface.
+
+Tabs:
+
+All
+Active
+Draft
+Reserved
+Sold
+Ended
+
+Each row:
+
+Image
+Listing
+Type
+Model
+Price
+Available
+Reserved
+Sold
+Status
+
+Actions:
+
+Edit
+Pause
+Duplicate
+View
+Manage Components
+
+==================================================
+SELLER ITEM / COMPONENT MANAGEMENT
+==================================================
+
+This is a key differentiator.
+
+For an item such as Abel's damaged laptop:
+
+Dell Latitude 5420
+
+Components:
+
+Screen
+Motherboard
+RAM
+Battery
+Keyboard
+
+Show component status.
+
+Allow seller to:
+
+Sell whole item
+Sell individual components
+Combine remaining components
+Remove component
+Mark component faulty
+Create listing from component
+
+Example UI:
+
+--------------------------------
+Dell Latitude 5420
+FOR PARTS
+
+Components
+
+✓ Screen       Listed
+✓ Motherboard  Available
+✓ RAM          Available
+✓ Battery      Available
+✕ Keyboard     Faulty
+
+[Sell Whole Device]
+
+[Manage Components]
+--------------------------------
+
+If the screen is sold:
+
+Screen → SOLD
+
+Remaining:
+
+Motherboard
+RAM
+Battery
+
+Seller can then:
+
+"Create listing from remaining components"
+
+==================================================
+SELLER OFFERS
+==================================================
+
+Create an offer management screen.
+
+Tabs:
+
+Received
+Sent
+Pending
+Accepted
+Rejected
+Expired
+
+Offer card:
+
+Buyer
+Items
+Original price
+Offer price
+Delivery
+Total
+Expiration
+
+Actions:
+
+Accept
+Reject
+Counter Offer
+
+When an offer is accepted, show:
+
+"Reserved for this buyer"
+
+with countdown/expiry.
+
+==================================================
+SELLER ORDERS
+==================================================
+
+Show:
+
+New
+Paid
+Processing
+Ready for Pickup
+Dispatched
+Delivered
+Cancelled
+Refunded
+
+Order detail should show:
+
+Buyer
+Items
+Delivery method
+Destination
+Payment
+Seller payout
+
+==================================================
+SELLER PAYOUTS
+==================================================
+
+Show:
+
+Available balance
+Pending settlement
+Paid out
+
+Payout history.
+
+Example:
+
+Payout #PP-10231
+₦850,000
+Successful
+Aug 15, 2026
+
+Show settlement breakdown.
+
+==================================================
+LOCATIONS
+==================================================
+
+Users can manage saved locations.
+
+Buyer:
+
+Home
+Office
+Other
+
+Seller:
+
+Main Store
+Warehouse
+Computer Village Stall
+
+Seller listings/items can have stock locations.
+
+==================================================
+SUBSCRIPTIONS
+==================================================
+
+Create subscription pages that do NOT feel like users are simply paying for forum posts.
+
+Subscription value should include:
+
+Community response allowance
+Seller tools
+Analytics
+Listing tools
+Visibility
+Other marketplace benefits
+
+Plans:
+
+Free
+Pro
+Business
+
+Display:
+
+Community responses remaining
+
+Example:
+
+Free:
+20 responses/month
+
+Pro:
+200 responses/month
+
+Business:
+1000 responses/month
+
+Do not overemphasize the restriction.
+
+==================================================
+TRUST / SAFETY
+==================================================
+
+Trust is extremely important.
+
+Display:
+
+Verified seller
+Seller since
+Location
+Completed orders
+Response rate
+Rating
+Successful transactions
+
+For damaged/used items, emphasize condition.
+
+Never make a damaged item look like a new item.
+
+==================================================
+MOBILE UX
+==================================================
+
+The platform must be excellent on mobile.
+
+Bottom navigation for logged-in users:
+
+Home
+Browse
+Community
+Cart
+Account
+
+Use bottom sheets for filters.
+
+Make search extremely accessible.
+
+Seller dashboard must also work well on mobile.
+
+==================================================
+ADMIN / PLATFORM UX
+==================================================
+
+Create a basic admin interface as well.
+
+Admin sections:
+
+Users
+Categories
+Brands
+Models
+Listings
+Discussions
+Orders
+Payments
+Refunds
+Revenue
+Settlements
+Payouts
+Subscriptions
+Reports
+
+Admin should be able to moderate listings and discussions.
+
+==================================================
+IMPORTANT UX PRINCIPLES
+==================================================
+
+1. The listing is the main object buyers interact with.
+
+2. Never expose database concepts.
+
+3. A "device" can be sold as a whole or its components can be sold individually.
+
+4. A "part" is not necessarily just an inventory SKU. It can come from a specific damaged device.
+
+5. Quantity belongs to a listing.
+
+6. A seller can have one listing with quantity 10.
+
+7. A seller can have one listing with quantity 1.
+
+8. Components should be visible when relevant.
+
+9. Buyers should be able to browse naturally without understanding the internal inventory architecture.
+
+10. Search should understand:
+    device
+    model
+    component
+    compatibility
+    category
+    brand
+
+11. The marketplace should make it easy to discover difficult-to-find parts.
+
+12. The Community should complement ecommerce, not feel like a completely separate product.
+
+13. Offers should work both from listings and through community responses.
+
+14. Delivery should be simple and explicit.
+
+15. Never overwhelm users with technical terminology.
+
+==================================================
+PROTOTYPE DATA
+==================================================
+
+Populate the prototype with realistic Nigerian marketplace data.
+
+Use ₦.
+
+Locations:
+Lagos
+Abuja
+Port Harcourt
+Ibadan
+Kano
+Onitsha
+
+Sellers:
+Adam Computers
+Abel Tech Parts
+Seth Batteries
+
+Use realistic laptop, phone and electronics listings.
+
+Create at least:
+
+20 listings
+10 devices
+10 parts/components
+
+Create:
+
+5 discussions
+10 responses
+5 offers
+5 orders
+
+Use realistic images of laptops, phones, components and electronics.
+
+==================================================
+FINAL DELIVERABLE
+==================================================
+
+Build the application as a polished clickable prototype.
+
+Prioritize UX over backend implementation.
+
+The most important screens are:
+
+1. Homepage
+2. Browse listings
+3. Listing detail
+4. Search
+5. Cart
+6. Checkout
+7. Community
+8. Discussion detail
+9. Offer
+10. Buyer dashboard
+11. Order detail
+12. Seller dashboard
+13. Seller listings
+14. Seller item/component management
+15. Seller offers
+16. Seller orders
+17. Seller payouts
+18. Subscription
+19. Locations
+20. Admin dashboard
+
+Navigation should allow me to click through the entire experience.
+
+Make the prototype feel like a real marketplace, not a wireframe.
+
+PARTS & PARCEL — NAVIGATION AND CATEGORY UX REFINEMENT
+
+Update the existing Parts & Parcel prototype based on the following navigation model.
+
+IMPORTANT:
+Do not rebuild the application from scratch.
+Preserve the existing visual language, components, mock data and overall design quality where they work well.
+
+This is a UX refinement to make the marketplace more scalable across electronics, appliances, vehicles, equipment, machinery, etc.
+
+==================================================
+1. REMOVE GENERIC TOP-LEVEL MARKETPLACE TABS
+==================================================
+
+Do NOT use these as primary navigation:
+
+- Browse
+- Parts
+- Scrap
+- Devices
+- For Parts
+
+These concepts should NOT be primary navigation items.
+
+Instead, the primary navigation should be organized around PRODUCT CATEGORIES.
+
+Example:
+
+Electronics
+Appliances
+Vehicles
+Equipment
+Construction
+Industrial
+Agricultural
+
+Add more categories where appropriate.
+
+The exact categories should be presented as realistic marketplace categories.
+
+==================================================
+2. CATEGORY MEGA MENUS
+==================================================
+
+Each primary navigation category should open a large mega menu.
+
+Example:
+
+ELECTRONICS
+
+--------------------------------------------
+Phones
+  Apple
+  Samsung
+  Google
+  Tecno
+  Infinix
+
+Computers
+  Laptops
+  Desktops
+  Monitors
+
+Tablets
+
+Cameras
+
+TV & Audio
+
+Accessories
+--------------------------------------------
+
+VEHICLES
+
+--------------------------------------------
+Cars
+Motorcycles
+Trucks
+Buses
+Trailers
+Construction Vehicles
+Agricultural Vehicles
+--------------------------------------------
+
+EQUIPMENT
+
+--------------------------------------------
+Generators
+Construction Equipment
+Industrial Equipment
+Agricultural Equipment
+Workshop Equipment
+Power Equipment
+--------------------------------------------
+
+Make the mega menu visually polished and easy to scan.
+
+Use columns, category headings and popular subcategories.
+
+==================================================
+3. CATEGORY / MODEL RESULTS PAGE
+==================================================
+
+When the user clicks a category, subcategory, brand or model, the results page should NOT simply be a generic product grid.
+
+Instead, it should provide four contextual tabs.
+
+Example:
+
+User navigates to:
+
+Electronics → Phones
+
+Display:
+
+PHONES
+
+[ Phones ] [ Parts ] [ Scrap ] [ Community ]
+
+The first tab is the normal marketplace listing.
+
+==================================================
+4. FIRST TAB MUST BE CONTEXTUAL
+==================================================
+
+The first tab should dynamically use the name of the category/model being viewed.
+
+Examples:
+
+Phones | Parts | Scrap | Community
+
+Laptops | Parts | Scrap | Community
+
+iPhone 12 | Parts | Scrap | Community
+
+Toyota Corolla | Parts | Scrap | Community
+
+Excavators | Parts | Scrap | Community
+
+Washing Machines | Parts | Scrap | Community
+
+Do NOT literally call the first tab "Items".
+
+"Item" is an internal domain concept and should never be exposed to customers.
+
+==================================================
+5. FIRST TAB — COMPLETE ITEMS
+==================================================
+
+The first tab represents complete physical items/devices/machines/vehicles being sold.
+
+For example:
+
+PHONES
+
+Listings:
+
+iPhone 12 128GB
+₦450,000
+Used
+Lagos
+
+Samsung Galaxy S22
+₦580,000
+Used
+Abuja
+
+etc.
+
+For vehicles:
+
+TOYOTA COROLLA
+
+Listings:
+
+2018 Toyota Corolla
+₦18,500,000
+Used
+Lagos
+
+2015 Toyota Corolla
+₦11,500,000
+Used
+Abuja
+
+For equipment:
+
+EXCAVATORS
+
+Listings:
+
+CAT 320 Excavator
+₦85,000,000
+Used
+Port Harcourt
+
+etc.
+
+The first tab should represent complete items, not components.
+
+==================================================
+6. PARTS TAB
+==================================================
+
+The Parts tab displays parts and accessories related to the current category/model.
+
+Example:
+
+For:
+
+iPhone 12
+
+Parts:
+
+iPhone 12 Battery
+iPhone 12 Screen
+iPhone 12 Camera
+iPhone 12 Charging Port
+iPhone 12 Housing
+
+For:
+
+Toyota Corolla
+
+Parts:
+
+Corolla Engine
+Corolla Gearbox
+Corolla Alternator
+Corolla Headlamp
+Corolla ECU
+Corolla Suspension
+
+For:
+
+HP EliteBook
+
+Parts:
+
+EliteBook Battery
+EliteBook Screen
+EliteBook Keyboard
+EliteBook Motherboard
+EliteBook RAM
+
+The parts tab should support normal listing filters and sorting.
+
+IMPORTANT:
+
+Parts may come from:
+
+- professional sellers
+- parts dealers
+- salvaged devices
+- individual sellers
+
+The buyer does not need to understand where the part originated.
+
+==================================================
+7. SCRAP TAB
+==================================================
+
+Use the word:
+
+SCRAP
+
+NOT:
+
+"Scrabs"
+
+and preferably NOT:
+
+"For Parts"
+
+as the main tab name.
+
+The Scrap tab represents damaged, broken, incomplete or salvageable physical items that sellers are offering because their components may have value.
+
+Examples:
+
+iPhone 12
+Water Damaged
+For Salvage
+₦120,000
+
+Dell Latitude 5420
+Screen Damaged
+For Salvage
+₦150,000
+
+Toyota Corolla 2015
+Accident Damaged
+For Salvage
+₦3,500,000
+
+Washing Machine
+Motor Fault
+For Salvage
+₦80,000
+
+Make it visually obvious that these are NOT normal working items.
+
+Use labels such as:
+
+SCRAP
+SALVAGE
+DAMAGED
+FOR PARTS
+
+However, the primary navigation/tab should remain "Scrap".
+
+==================================================
+8. SCRAP LISTING DETAIL
+==================================================
+
+A scrap listing should clearly show the useful components that may still be available.
+
+Example:
+
+DELL LATITUDE 5420
+
+SCRAP / SALVAGE
+
+₦150,000
+
+Condition:
+Damaged
+
+Seller:
+Abel Tech Parts
+
+Location:
+Lagos
+
+------------------------------------
+
+COMPONENT CONDITION
+
+✓ Motherboard — Working
+✓ RAM — Working
+✓ Battery — Working
+✓ Keyboard — Working
+✕ Screen — Damaged
+
+------------------------------------
+
+Seller description:
+
+"Screen is broken but motherboard and other components
+are in good working condition."
+
+[Make Offer]
+
+[Contact Seller]
+
+[Save]
+
+The purpose is to help buyers understand:
+
+"Is this damaged machine worth buying for its components?"
+
+==================================================
+9. COMMUNITY TAB
+==================================================
+
+The Community tab is contextual to the category/model.
+
+Example:
+
+Toyota Corolla → Community
+
+Show discussions such as:
+
+"Looking for 2015 Corolla gearbox"
+
+"Where can I find Corolla 2012 ECU in Lagos?"
+
+"Need a mechanic who can diagnose Corolla transmission"
+
+"Does anyone have a damaged Corolla for parts?"
+
+Allow users to:
+
+Create discussion
+Respond
+Make offers
+View listings associated with discussions
+
+Community is NOT just a generic forum.
+
+It should be closely connected to the marketplace.
+
+==================================================
+10. SEARCH SHOULD UNDERSTAND THE FOUR INTENTS
+==================================================
+
+Improve the search experience so the system can understand what the user is looking for.
+
+Example:
+
+Search:
+
+"iPhone 12"
+
+Should lead to:
+
+iPhone 12
+
+[ iPhone 12 ] [ Parts ] [ Scrap ] [ Community ]
+
+Search:
+
+"iPhone 12 battery"
+
+Should recognize that this is likely:
+
+iPhone 12 → Parts → Battery
+
+Search:
+
+"damaged iPhone 12"
+
+Should recognize:
+
+iPhone 12 → Scrap
+
+Search:
+
+"looking for iPhone 12 motherboard"
+
+Should recognize:
+
+iPhone 12 → Community
+
+Search:
+
+"Toyota Corolla gearbox"
+
+Should recognize:
+
+Toyota Corolla → Parts → Gearbox
+
+The search UI should make these contextual results obvious.
+
+==================================================
+11. FILTERS
+==================================================
+
+Filters should change intelligently depending on the active tab.
+
+For the complete-item tab:
+
+Category
+Brand
+Model
+Condition
+Price
+Location
+Seller
+Availability
+Year where appropriate
+
+For Parts:
+
+Category
+Brand
+Model
+Part type
+Condition
+Compatibility
+Price
+Location
+Seller
+Availability
+
+For Scrap:
+
+Category
+Brand
+Model
+Damage type
+Condition
+Available components
+Location
+Price
+
+For Community:
+
+Category
+Brand
+Model
+Location
+Recent
+Most active
+Unanswered
+
+Do not show irrelevant filters.
+
+==================================================
+12. IMPORTANT DOMAIN PRINCIPLE
+==================================================
+
+The four tabs are FOUR DIFFERENT BUYING INTENTS around the same category/model.
+
+They are NOT four different inventory systems.
+
+Conceptually:
+
+                    TOYOTA COROLLA
+                          |
+          ┌───────────────┼───────────────┐
+          |               |               |
+       COMPLETE         PARTS           SCRAP
+          |               |               |
+      Cars for sale    Parts for sale   Damaged cars
+                                          for salvage
+                          |
+                       COMMUNITY
+                          |
+                    People looking for
+                    information, parts,
+                    sellers and solutions
+
+This is the central UX concept.
+
+==================================================
+13. INTERNAL DOMAIN MODEL MUST NOT CHANGE
+==================================================
+
+Do not redesign the underlying data model because of this navigation change.
+
+Continue using the existing concepts:
+
+Category
+Brand
+Model
+Item
+Component
+Listing
+Cart
+Cart Item
+Wishlist
+Discussion
+Response
+Offer
+Offer Item
+Order
+Order Item
+Shipment
+Payment
+Refund
+Revenue
+Settlement
+Payout
+Payout Settlement
+Subscription Plan
+Subscription
+
+The storefront should hide technical implementation details.
+
+For example:
+
+INTERNAL:
+
+Item
+
+CUSTOMER UI:
+
+Phone
+Laptop
+Car
+Excavator
+Washing Machine
+
+==================================================
+14. IMPORTANT TERMINOLOGY
+==================================================
+
+Use:
+
+"Parts"
+
+not:
+
+"Components"
+
+in the customer-facing navigation.
+
+Use:
+
+"Scrap"
+
+as the customer-facing category/tab.
+
+Use:
+
+"Component"
+
+only where it is useful inside a listing detail page.
+
+For example:
+
+"Components still available"
+
+This is appropriate.
+
+Do NOT use:
+
+"Asset"
+"Assetable"
+"Polymorphic"
+"Inventory Item"
+
+anywhere in the customer UI.
+
+==================================================
+15. VEHICLES ARE FIRST-CLASS MARKETPLACE ITEMS
+==================================================
+
+The platform must support vehicles naturally.
+
+Do NOT treat vehicles as an awkward extension of "Devices".
+
+Vehicles should have their own top-level category:
+
+VEHICLES
+
+with subcategories:
+
+Cars
+Motorcycles
+Trucks
+Buses
+Trailers
+Vans
+Special Vehicles
+Agricultural Vehicles
+
+Vehicle listings can also have:
+
+Make
+Model
+Year
+Mileage
+Transmission
+Fuel type
+Condition
+Location
+
+And vehicle parts should connect naturally to the vehicle model.
+
+Example:
+
+Toyota
+  ↓
+Corolla
+  ↓
+2015
+
+Then:
+
+[ Corolla ] [ Parts ] [ Scrap ] [ Community ]
+
+==================================================
+16. EQUIPMENT / MACHINERY
+==================================================
+
+Also support:
+
+Construction equipment
+Industrial machinery
+Agricultural machinery
+Generators
+Workshop equipment
+Heavy equipment
+
+Example:
+
+CAT
+ ↓
+320 Excavator
+
+[ Excavator ] [ Parts ] [ Scrap ] [ Community ]
+
+Parts:
+
+Hydraulic pump
+Engine
+Track
+Control valve
+etc.
+
+Scrap:
+
+Damaged excavator
+Engine-fault excavator
+Hydraulic-fault excavator
+
+Community:
+
+"Looking for CAT 320 hydraulic pump."
+
+==================================================
+17. UPDATE THE HOME PAGE
+==================================================
+
+The homepage should now emphasize the main marketplace categories.
+
+Example:
+
+WHAT ARE YOU LOOKING FOR?
+
+Search:
+"Search for a vehicle, machine, device, part..."
+
+Then category cards:
+
+Electronics
+Appliances
+Vehicles
+Equipment
+Construction
+Industrial
+Agricultural
+
+Below this:
+
+Popular Items
+
+Popular Parts
+
+Recent Scrap
+
+Community Requests
+
+This creates a clear relationship between the four marketplace intents.
+
+==================================================
+18. FINAL UX GOAL
+==================================================
+
+A user should be able to think:
+
+"I need a Toyota Corolla."
+
+and immediately understand:
+
+Toyota Corolla
+├── I can buy a complete Corolla
+├── I can buy Corolla parts
+├── I can buy a damaged Corolla for salvage
+└── I can ask the community
+
+Likewise:
+
+"I need an HP EliteBook."
+
+HP EliteBook
+├── I can buy an EliteBook
+├── I can buy EliteBook parts
+├── I can buy a damaged EliteBook for salvage
+└── I can ask the community
+
+This should become one of the defining UX characteristics of Parts & Parcel.
+
+Preserve the existing prototype's visual quality, but redesign the navigation, category pages, search experience and contextual tabs around this model.
