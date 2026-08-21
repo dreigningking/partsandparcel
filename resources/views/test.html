@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual Role Dashboard</title>
+    <style>
+        :root {
+            --bg-primary: #f4f6f9;
+            --sidebar-bg: #1e293b;
+            --text-light: #f8fafc;
+            --text-dark: #334155;
+            --buyer-color: #2563eb;
+            --seller-color: #16a34a;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            background-color: var(--bg-primary);
+            color: var(--text-dark);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        .brand {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .nav-links li {
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .nav-links li:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Role Switcher Widget */
+        .role-switcher-container {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .role-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            display: block;
+        }
+
+        .toggle-btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .role-badge {
+            padding: 6px 16px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .content-body {
+            padding: 40px;
+        }
+
+        /* Dashboard Grid Layout */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card h3 {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .card .value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* Data Table Styling */
+        .data-section {
+            background-color: var(--card-bg);
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .data-section h2 {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #64748b;
+        }
+
+        /* Dynamic Role State Classes */
+        body.buyer-mode .role-theme-btn { background-color: var(--buyer-color); }
+        body.buyer-mode .role-badge { background-color: var(--buyer-color); }
+        body.buyer-mode .seller-only { display: none; }
+        body.buyer-mode .buyer-only { display: block; }
+
+        body.seller-mode .role-theme-btn { background-color: var(--seller-color); }
+        body.seller-mode .role-badge { background-color: var(--seller-color); }
+        body.seller-mode .buyer-only { display: none; }
+        body.seller-mode .seller-only { display: block; }
+    </style>
+</head>
+<body class="buyer-mode" id="dashboardBody">
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div>
+            <div class="brand">NexusPortal</div>
+            <ul class="nav-links">
+                <li>Dashboard Home</li>
+                <li class="buyer-only">My Purchases</li>
+                <li class="buyer-only">Wishlist</li>
+                <li class="buyer-only">Saved Sellers</li>
+                <li class="seller-only">Inventory Manager</li>
+                <li class="seller-only">Order Fulfillment</li>
+                <li class="seller-only">Payout Settings</li>
+                <li>Messages</li>
+                <li>Account Settings</li>
+            </ul>
+        </div>
+
+        <!-- Role Switcher Component -->
+        <div class="role-switcher-container">
+            <span class="role-label">Current Workspace</span>
+            <button class="toggle-btn role-theme-btn" id="roleToggleBtn" onclick="toggleRole()">Switch to Seller</button>
+        </div>
+    </aside>
+
+    <!-- Main View Area -->
+    <main class="main-content">
+        <header>
+            <h1 id="welcomeHeading">Buyer Dashboard</h1>
+            <div class="role-badge" id="roleBadge">Buyer Account</div>
+        </header>
+
+        <div class="content-body">
+            <!-- Dynamic Metric Cards -->
+            <div class="metrics-grid">
+                <!-- Buyer Cards -->
+                <div class="card buyer-only">
+                    <h3>Total Spend</h3>
+                    <div class="value">$1,240.50</div>
+                </div>
+                <div class="card buyer-only">
+                    <h3>Active Orders</h3>
+                    <div class="value">3 Items</div>
+                </div>
+                <div class="card buyer-only">
+                    <h3>Coupons Available</h3>
+                    <div class="value">4 Active</div>
+                </div>
+
+                <!-- Seller Cards -->
+                <div class="card seller-only">
+                    <h3>Gross Revenue</h3>
+                    <div class="value">$8,450.00</div>
+                </div>
+                <div class="card seller-only">
+                    <h3>Products Listed</h3>
+                    <div class="value">42 Items</div>
+                </div>
+                <div class="card seller-only">
+                    <h3>Pending Shipments</h3>
+                    <div class="value">7 Orders</div>
+                </div>
+            </div>
+
+            <!-- Dynamic Data Tables -->
+            <section class="data-section">
+                <!-- Buyer Table -->
+                <div class="buyer-only">
+                    <h2>Recent Purchase History</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Product</th>
+                                <th>Seller</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#ORD-9482</td>
+                                <td>Wireless Headphones</td>
+                                <td>AudioTech Co.</td>
+                                <td>$89.99</td>
+                                <td>Shipped</td>
+                            </tr>
+                            <tr>
+                                <td>#ORD-7311</td>
+                                <td>Ergonomic Desk Chair</td>
+                                <td>OfficeFit</td>
+                                <td>$249.00</td>
+                                <td>Delivered</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Seller Table -->
+                <div class="seller-only">
+                    <h2>Recent Sales Orders</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Product</th>
+                                <th>Customer</th>
+                                <th>Payout</th>
+                                <th>Action Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>#SALE-4021</td>
+                                <td>Mechanical Keyboard</td>
+                                <td>Alex Rivera</td>
+                                <td>$120.00</td>
+                                <td>Print Shipping Label</td>
+                            </tr>
+                            <tr>
