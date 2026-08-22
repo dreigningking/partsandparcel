@@ -8,20 +8,6 @@ return new class extends Migration {
 
     public function up(): void
     {
-        Schema::create('invoice_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
-            $table->morphs('itemable'); //listing, shipment
-            $table->string('description'); //listing name, shipping description, service description, platform fee description, others
-            $table->unsignedInteger('quantity')->default(1);
-            $table->decimal('unit_price', 15, 2);
-            $table->decimal('amount', 15, 2);
-            $table->unsignedInteger('warranty_period_days')->nullable();
-            $table->text('warranty_terms')->nullable();
-            $table->timestamp('warranty_starts_at')->nullable();
-            $table->timestamp('warranty_ends_at')->nullable();
-            $table->timestamps();
-        });
 
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
@@ -47,6 +33,24 @@ return new class extends Migration {
             $table->index(['buyer_id', 'status']);
             $table->index(['seller_id', 'status']);
         });
+
+        Schema::create('invoice_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
+            $table->nullableMorphs('itemable'); //listing, shipment
+            $table->enum('type', ['item','service','delivery'])->default('item');
+            $table->string('description'); //listing name, shipping description, service description, platform fee description, others
+            $table->unsignedInteger('quantity')->default(1);
+            $table->decimal('unit_price', 15, 2);
+            $table->decimal('amount', 15, 2);
+            $table->unsignedInteger('warranty_period_days')->nullable();
+            $table->text('warranty_terms')->nullable();
+            $table->timestamp('warranty_starts_at')->nullable();
+            $table->timestamp('warranty_ends_at')->nullable();
+            $table->timestamps();
+        });
+
+
     }
 
     public function down(): void

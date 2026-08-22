@@ -66,7 +66,7 @@
         <!-- RIGHT COLLAGE IMAGE & POPULAR SEARCHES CARD -->
         <div class="lg:col-span-6 relative">
           <div class="relative rounded-3xl overflow-hidden shadow-card border border-slate-200/60 bg-white p-2">
-            <img src="frontend/images/collage.png" alt="Car, Crane, Caterpillar, Motherboard, Phone and Machine Parts" class="w-full h-auto object-cover rounded-2xl" />
+            <img src="/images/collage.png" alt="Car, Crane, Caterpillar, Motherboard, Phone and Machine Parts" class="w-full h-auto object-cover rounded-2xl" />
           </div>
 
           <!-- POPULAR SEARCHES FLOATING CARD -->
@@ -272,7 +272,7 @@
 
         <!-- BOX WITH MACHINE PARTS IMAGE -->
         <div class="absolute -right-4 -bottom-4 w-44 sm:w-56 h-44 sm:h-56 opacity-90 pointer-events-none">
-          <img src="frontend/images/box.png" alt="Box with machine parts" class="w-full h-full object-cover rounded-2xl" />
+          <img src="/images/box.png" alt="Box with machine parts" class="w-full h-full object-cover rounded-2xl" />
         </div>
       </div>
 
@@ -282,9 +282,9 @@
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-extrabold uppercase tracking-wider mb-3">
             <span>🔧 REPAIR &amp; HELP NETWORK</span>
           </div>
-          <h2 class="text-2xl sm:text-3xl font-extrabold leading-tight text-white">Are you a technician or repairer?</h2>
+          <h2 class="text-2xl sm:text-3xl font-extrabold leading-tight text-white">Can't find what you need?</h2>
           <p class="text-slate-300 text-xs sm:text-sm mt-2 leading-relaxed font-medium">
-            Join Nigeria's community of certified technicians. Fulfill buyer part requests, provide repair guidance, and offer repair services.
+            Post a request and let sellers, repairers, installers, suppliers and other members of the community help you find it.
           </p>
         </div>
 
@@ -297,7 +297,7 @@
 
         <!-- TECHNICIAN MAN IMAGE -->
         <div class="absolute right-0 bottom-0 w-44 sm:w-52 h-48 sm:h-60 opacity-90 pointer-events-none">
-          <img src="frontend/images/artisan.png" alt="African technician smiling with folded arms" class="w-full h-full object-cover object-top rounded-tl-3xl" />
+          <img src="/images/artisan.png" alt="African technician smiling with folded arms" class="w-full h-full object-cover object-top rounded-tl-3xl" />
         </div>
       </div>
 

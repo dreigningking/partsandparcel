@@ -30,39 +30,6 @@ return new class extends Migration {
             $table->index(['user_id', 'status', 'starts_at', 'ends_at']);
         });
 
-        Schema::create('invoices', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('issuer_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('customer_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('offer_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('discussion_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('invoice_number')->unique();
-            $table->decimal('subtotal', 15, 2)->default(0);
-            $table->decimal('delivery_fee', 15, 2)->default(0);
-            $table->decimal('total', 15, 2)->default(0);
-            $table->string('status')->default('draft');
-            $table->unsignedInteger('warranty_period_days')->nullable();
-            $table->text('warranty_terms')->nullable();
-            $table->timestamp('warranty_starts_at')->nullable();
-            $table->timestamp('warranty_ends_at')->nullable();
-            $table->timestamp('issued_at')->nullable();
-            $table->timestamp('paid_at')->nullable();
-            $table->timestamp('due_at')->nullable();
-            $table->timestamps();
-            $table->index(['issuer_id', 'status']);
-            $table->index(['customer_id', 'status']);
-        });
-
-        Schema::create('invoice_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
-            $table->string('description');
-            $table->unsignedInteger('quantity')->default(1);
-            $table->decimal('unit_price', 15, 2);
-            $table->decimal('line_total', 15, 2);
-            $table->timestamps();
-        });
-
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
@@ -160,8 +127,6 @@ return new class extends Migration {
         Schema::dropIfExists('settlements');
         Schema::dropIfExists('revenues');
         Schema::dropIfExists('payments');
-        Schema::dropIfExists('invoice_items');
-        Schema::dropIfExists('invoices');
         Schema::dropIfExists('subscriptions');
         Schema::dropIfExists('subscription_plans');
     }

@@ -10,37 +10,52 @@ return new class extends Migration {
         Schema::create('discussions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->enum('type',['item','service','delivery','advice'])->default('item');
             $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('model_id')->nullable()->constrained()->nullOnDelete();
             $table->string('title');
             $table->text('body');
+            $table->text('attachments');
             $table->string('status')->default('open');
             $table->timestamps();
             $table->index(['category_id', 'status']);
+            $table->index(['model_id', 'status']);
         });
+
+        Schema::create('responses', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('discussion_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->text('body')->nullable();
+            $table->string('status')->default('visible');
+            $table->timestamps();
+            $table->index(['discussion_id', 'created_at']);
+            $table->index(['user_id', 'created_at']);
+        });
+
 
         Schema::create('offers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('discussion_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('offer_type')->default('product'); // product|service
-            $table->decimal('amount', 15, 2)->default(0);
+            $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('recipient_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('cart_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('response_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('delivery_method', ['buyer_responsible','seller_responsible','platform_responsible'])->nullable();
-            $table->decimal('delivery_fee', 15, 2)->nullable();
-            $table->text('delivery_terms')->nullable();
+            $table->decimal('discount', 15, 2)->default(0);
             $table->text('terms')->nullable();
             $table->string('status')->default('pending');
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
             $table->index(['discussion_id', 'status']);
-            $table->index(['buyer_id', 'seller_id', 'status']);
+            $table->index(['sender_id', 'recipient_id', 'status']);
         });
 
         Schema::create('offer_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('offer_id')->constrained()->cascadeOnDelete();
             $table->foreignId('listing_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('description')->nullable();
+            $table->string('description');
+            $table->enum('type', ['item','service','delivery'])->default('item');
             $table->unsignedInteger('quantity')->default(1);
             $table->decimal('unit_price', 15, 2)->default(0);
             $table->unsignedInteger('warranty_period_days')->nullable();
@@ -51,18 +66,7 @@ return new class extends Migration {
             $table->index(['offer_id', 'listing_id']);
         });
 
-        Schema::create('responses', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('discussion_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('offer_id')->nullable()->constrained()->nullOnDelete();
-            $table->text('body')->nullable();
-            $table->string('status')->default('visible');
-            $table->timestamps();
-            $table->index(['discussion_id', 'created_at']);
-            $table->index(['user_id', 'created_at']);
-        });
-
+        
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
             $table->morphs('contextable'); // listing, offer, etc.
