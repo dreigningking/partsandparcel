@@ -1,6 +1,6 @@
 <!-- FOOTER TRUST & LINKS -->
 <footer class="bg-white border-t border-slate-200 mt-12">
-  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-6">
     <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
       
       <div class="col-span-2">
@@ -19,7 +19,7 @@
           <li><a href="category.html?tab=complete" class="hover:text-pp-600">Complete Devices</a></li>
           <li><a href="category.html?tab=parts" class="hover:text-pp-600">Spare Parts</a></li>
           <li><a href="category.html?tab=scrap" class="hover:text-amber-700 font-semibold">Scrap &amp; Salvage</a></li>
-          <li><a href="community.html" class="hover:text-pp-600">Community Requests</a></li>
+          <li><a href="{{ route('community') }}" class="hover:text-pp-600">Community Requests</a></li>
           <li><a href="offer.html" class="hover:text-pp-600">Make an Offer</a></li>
         </ul>
       </div>

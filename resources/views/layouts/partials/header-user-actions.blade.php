@@ -1,7 +1,7 @@
 <div class="flex items-center gap-1.5 sm:gap-2.5">
     
     <!-- COMMUNITY MENU LINK (WEB ONLY — FIRST ITEM) -->
-    <a href="community.html" class="hidden lg:flex items-center gap-2 px-3.5 py-3 rounded-xl bg-pp-50 hover:bg-pp-100 text-pp-700 border border-pp-200/80 text-xs font-extrabold transition shadow-2xs mr-1" title="Parts & Parcel Community">
+    <a href="{{ route('community') }}" class="hidden lg:flex items-center gap-2 px-3.5 py-3 rounded-xl bg-pp-50 hover:bg-pp-100 text-pp-700 border border-pp-200/80 text-xs font-extrabold transition shadow-2xs mr-1" title="Parts & Parcel Community">
         <svg class="w-4 h-4 text-pp-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
@@ -70,7 +70,7 @@
     </div>
 
     <!-- CART -->
-    <a href="cart.html" aria-label="Cart" class="relative p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 transition" title="Shopping Cart">
+    <a href="cart.html" aria-label="Cart" class="hidden sm:flex relative p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 transition" title="Shopping Cart">
         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
         <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-pp-600 text-white text-[10px] font-bold grid place-items-center">3</span>
     </a>
@@ -129,7 +129,7 @@
 
             <!-- LOGOUT -->
             <div class="pt-1">
-                <a href="index.html" class="flex items-center gap-3 px-4 py-2 text-rose-600 hover:bg-rose-50 font-extrabold transition">
+                <a href="#" class="flex items-center gap-3 px-4 py-2 text-rose-600 hover:bg-rose-50 font-extrabold transition">
                     <span class="text-base">🚪</span>
                     <span>Logout</span>
                 </a>

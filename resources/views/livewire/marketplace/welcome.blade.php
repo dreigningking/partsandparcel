@@ -56,7 +56,7 @@
               <span>Browse Marketplace</span>
               <span>→</span>
             </a>
-            <a href="community.html" class="px-6 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-900 font-bold text-xs shadow-xs transition hover:bg-slate-50">
+            <a href="{{ route('community') }}" class="px-6 py-3.5 rounded-xl bg-white border border-slate-200 hover:border-slate-300 text-slate-900 font-bold text-xs shadow-xs transition hover:bg-slate-50">
               Post a Request in Community
             </a>
           </div>
@@ -135,7 +135,7 @@
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
       
       <!-- CARD 1 -->
-      <a href="listing-detail.html" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
         <div class="relative product-img h-44 grid place-items-center p-4">
           <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white">DEVICE</span>
           <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
@@ -179,7 +179,7 @@
       </a>
 
       <!-- CARD 3 (PART) -->
-      <a href="listing-detail.html" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
         <div class="relative product-img h-44 grid place-items-center p-4">
           <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">PART</span>
           <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
@@ -201,7 +201,7 @@
       </a>
 
       <!-- CARD 4 (VEHICLE) -->
-      <a href="category.html?cat=vehicles" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
         <div class="relative product-img h-44 grid place-items-center p-4">
           <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white">VEHICLE</span>
           <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
@@ -223,7 +223,7 @@
       </a>
 
       <!-- CARD 5 (EQUIPMENT PART) -->
-      <a href="category.html?cat=equipment" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
         <div class="relative product-img h-44 grid place-items-center p-4">
           <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">PART</span>
           <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
@@ -264,7 +264,7 @@
         </div>
 
         <div class="mt-6 pt-4 relative z-10">
-          <a href="seller-dashboard.html" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-pp-600 hover:bg-pp-500 text-white font-extrabold text-xs shadow-md transition transform hover:-translate-y-0.5">
+          <a href="{{ route('dashboard') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-pp-600 hover:bg-pp-500 text-white font-extrabold text-xs shadow-md transition transform hover:-translate-y-0.5">
             <span>Start Selling Now</span>
             <span>→</span>
           </a>
@@ -289,7 +289,7 @@
         </div>
 
         <div class="mt-6 pt-4 relative z-10">
-          <a href="community.html" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition transform hover:-translate-y-0.5">
+          <a href="{{ route('community') }}" class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition transform hover:-translate-y-0.5">
             <span>Join the Community</span>
             <span>→</span>
           </a>

@@ -1,5 +1,5 @@
 <!-- TOP ANNOUNCEMENT BAR -->
-<div class="bg-pp-900 text-white py-2 px-4 text-xs font-medium text-center flex items-center justify-center gap-2">
+<div class="hidden lg:flex bg-pp-900 text-white py-2 px-4 text-xs font-medium text-center flex items-center justify-center gap-2">
   <span class="bg-pp-600 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Nigeria's #1</span>
   <span>Marketplace for devices, machines, spare parts &amp; salvage items.</span>
   <a href="subscriptions.html" class="underline hover:text-pp-200 ml-1 font-semibold">Sell on Parts &amp; Parcel →</a>
@@ -11,7 +11,7 @@
     <div class="h-[72px] flex items-center justify-between gap-4">
       
       <!-- LOGO -->
-      <a href="index.html" class="flex items-center gap-2.5 shrink-0">
+      <a href="{{ route('welcome') }}" class="flex items-center gap-2.5 shrink-0">
         <div class="w-10 h-10 rounded-xl bg-pp-600 text-white grid place-items-center shadow-sm">
           <svg viewBox="0 0 32 32" class="w-6 h-6" fill="none">
             <path d="M16 3 27 9.2v13.6L16 29 5 22.8V9.2L16 3Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
@@ -44,31 +44,31 @@
 <div class="bg-white border-b border-slate-200 text-slate-700 relative z-40">
   <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
     <nav class="hidden lg:flex h-11 items-center justify-between w-full text-xs font-bold">
-      <button data-menu="electronics" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <button data-target="mega-electronics" data-menu="electronics" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
         📱 Electronics <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </button>
-      <button data-menu="appliances" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <button data-target="mega-appliances" data-menu="appliances" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
         🔌 Appliances <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </button>
-      <button data-menu="vehicles" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <button data-target="mega-vehicles" data-menu="vehicles" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
         🚗 Vehicles <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </button>
-      <button data-menu="equipment" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <button data-target="mega-equipment" data-menu="equipment" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
         🚜 Heavy Equipment <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </button>
-      <button data-menu="construction" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <button data-target="mega-construction" data-menu="construction" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
         🏗️ Construction <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </button>
-      <button data-menu="industrial" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <button data-target="mega-industrial" data-menu="industrial" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
         🏭 Industrial <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </button>
-      <button data-menu="agricultural" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <button data-target="mega-agricultural" data-menu="agricultural" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
         🌾 Agricultural <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </button>
-      <button data-menu="equipment" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <button data-target="mega-equipment" data-menu="equipment" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
         ⚡ Power &amp; Energy <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </button>
-      <button data-menu="scrap" class="nav-trigger px-3 h-9 rounded-lg hover:bg-amber-100 flex items-center gap-1 transition text-amber-800 bg-amber-100/80 border border-amber-300/60 shadow-xs">
+      <button data-target="mega-scrap" data-menu="scrap" class="nav-trigger px-3 h-9 rounded-lg hover:bg-amber-100 flex items-center gap-1 transition text-amber-800 bg-amber-100/80 border border-amber-300/60 shadow-xs">
         🛠️ Scrap &amp; Salvage <svg class="nav-chevron w-3.5 h-3.5 text-amber-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </button>
     </nav>
@@ -81,45 +81,45 @@
         <div class="text-[11px] font-bold uppercase tracking-wider text-pp-600">Category Overview</div>
         <h3 class="mt-2 text-xl font-extrabold text-slate-900">Electronics &amp; Gadgets</h3>
         <p class="mt-2 text-xs leading-relaxed text-slate-600">Buy complete laptops, phones, replacement batteries, motherboards, screens &amp; damaged salvage devices.</p>
-        <a href="category.html?cat=electronics" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-pp-600 hover:text-pp-700">Explore Electronics →</a>
+        <a href="{{ route('category') }}?cat=electronics" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-pp-600 hover:text-pp-700">Explore Electronics →</a>
       </div>
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Phones</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?cat=phones&brand=apple" class="hover:text-pp-600">Apple iPhone (12, 13, 14, 15)</a></li>
-          <li><a href="category.html?cat=phones&brand=samsung" class="hover:text-pp-600">Samsung Galaxy S &amp; Note Series</a></li>
-          <li><a href="category.html?cat=phones&brand=google" class="hover:text-pp-600">Google Pixel</a></li>
-          <li><a href="category.html?cat=phones&brand=tecno" class="hover:text-pp-600">Tecno &amp; Infinix</a></li>
-          <li><a href="category.html?tab=parts&cat=phones" class="text-pp-600 font-semibold hover:underline">Phone Spare Parts (Screens, Batteries)</a></li>
+          <li><a href="{{ route('category') }}?cat=phones&brand=apple" class="hover:text-pp-600">Apple iPhone (12, 13, 14, 15)</a></li>
+          <li><a href="{{ route('category') }}?cat=phones&brand=samsung" class="hover:text-pp-600">Samsung Galaxy S &amp; Note Series</a></li>
+          <li><a href="{{ route('category') }}?cat=phones&brand=google" class="hover:text-pp-600">Google Pixel</a></li>
+          <li><a href="{{ route('category') }}?cat=phones&brand=tecno" class="hover:text-pp-600">Tecno &amp; Infinix</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&cat=phones" class="text-pp-600 font-semibold hover:underline">Phone Spare Parts (Screens, Batteries)</a></li>
         </ul>
       </div>
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Computers</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?cat=laptops&brand=hp" class="hover:text-pp-600">HP (EliteBook, Envy, ProBook)</a></li>
-          <li><a href="category.html?cat=laptops&brand=dell" class="hover:text-pp-600">Dell (Latitude, Inspiron, XPS)</a></li>
-          <li><a href="category.html?cat=laptops&brand=lenovo" class="hover:text-pp-600">Lenovo ThinkPad</a></li>
-          <li><a href="category.html?cat=laptops&brand=apple" class="hover:text-pp-600">MacBook Air &amp; Pro</a></li>
-          <li><a href="category.html?tab=parts&cat=laptops" class="text-pp-600 font-semibold hover:underline">Laptop Components &amp; Chargers</a></li>
+          <li><a href="{{ route('category') }}?cat=laptops&brand=hp" class="hover:text-pp-600">HP (EliteBook, Envy, ProBook)</a></li>
+          <li><a href="{{ route('category') }}?cat=laptops&brand=dell" class="hover:text-pp-600">Dell (Latitude, Inspiron, XPS)</a></li>
+          <li><a href="{{ route('category') }}?cat=laptops&brand=lenovo" class="hover:text-pp-600">Lenovo ThinkPad</a></li>
+          <li><a href="{{ route('category') }}?cat=laptops&brand=apple" class="hover:text-pp-600">MacBook Air &amp; Pro</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&cat=laptops" class="text-pp-600 font-semibold hover:underline">Laptop Components &amp; Chargers</a></li>
         </ul>
       </div>
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Popular Parts</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?tab=parts&part=battery" class="hover:text-pp-600">Original Batteries</a></li>
-          <li><a href="category.html?tab=parts&part=screen" class="hover:text-pp-600">Display Assemblies &amp; LCDs</a></li>
-          <li><a href="category.html?tab=parts&part=motherboard" class="hover:text-pp-600">Tested Motherboards</a></li>
-          <li><a href="category.html?tab=parts&part=ram" class="hover:text-pp-600">RAM &amp; NVMe Storage</a></li>
-          <li><a href="category.html?tab=parts&part=keyboard" class="hover:text-pp-600">Keyboards &amp; Top Cases</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&part=battery" class="hover:text-pp-600">Original Batteries</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&part=screen" class="hover:text-pp-600">Display Assemblies &amp; LCDs</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&part=motherboard" class="hover:text-pp-600">Tested Motherboards</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&part=ram" class="hover:text-pp-600">RAM &amp; NVMe Storage</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&part=keyboard" class="hover:text-pp-600">Keyboards &amp; Top Cases</a></li>
         </ul>
       </div>
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Scrap / For Salvage</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?tab=scrap&cat=laptops" class="hover:text-pp-600">Damaged HP Laptops</a></li>
-          <li><a href="category.html?tab=scrap&cat=laptops" class="hover:text-pp-600">Water Damaged MacBooks</a></li>
-          <li><a href="category.html?tab=scrap&cat=phones" class="hover:text-pp-600">Broken Screen iPhones</a></li>
-          <li><a href="category.html?tab=scrap" class="text-amber-700 font-bold hover:underline">Browse All Scrap Units →</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=laptops" class="hover:text-pp-600">Damaged HP Laptops</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=laptops" class="hover:text-pp-600">Water Damaged MacBooks</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=phones" class="hover:text-pp-600">Broken Screen iPhones</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap" class="text-amber-700 font-bold hover:underline">Browse All Scrap Units →</a></li>
         </ul>
       </div>
     </div>
@@ -131,40 +131,40 @@
         <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Vehicle Hub</div>
         <h3 class="mt-2 text-xl font-extrabold text-slate-900">Vehicles &amp; Auto Parts</h3>
         <p class="mt-2 text-xs leading-relaxed text-slate-600">Cars, trucks, commercial vehicles, engines, gearboxes, ECUs &amp; accident-damaged cars for scrap.</p>
-        <a href="category.html?cat=vehicles" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-emerald-700 hover:underline">View Vehicles →</a>
+        <a href="{{ route('category') }}?cat=vehicles" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-emerald-700 hover:underline">View Vehicles →</a>
       </div>
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Cars</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?cat=vehicles&brand=toyota" class="hover:text-pp-600">Toyota (Corolla, Camry, RAV4)</a></li>
-          <li><a href="category.html?cat=vehicles&brand=honda" class="hover:text-pp-600">Honda (Accord, CR-V, Civic)</a></li>
-          <li><a href="category.html?cat=vehicles&brand=lexus" class="hover:text-pp-600">Lexus (RX350, ES350)</a></li>
-          <li><a href="category.html?cat=vehicles&brand=mercedes" class="hover:text-pp-600">Mercedes-Benz</a></li>
+          <li><a href="{{ route('category') }}?cat=vehicles&brand=toyota" class="hover:text-pp-600">Toyota (Corolla, Camry, RAV4)</a></li>
+          <li><a href="{{ route('category') }}?cat=vehicles&brand=honda" class="hover:text-pp-600">Honda (Accord, CR-V, Civic)</a></li>
+          <li><a href="{{ route('category') }}?cat=vehicles&brand=lexus" class="hover:text-pp-600">Lexus (RX350, ES350)</a></li>
+          <li><a href="{{ route('category') }}?cat=vehicles&brand=mercedes" class="hover:text-pp-600">Mercedes-Benz</a></li>
         </ul>
       </div>
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Auto Spare Parts</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?tab=parts&part=engine" class="hover:text-pp-600">Complete Engines (Tokunbo / Used)</a></li>
-          <li><a href="category.html?tab=parts&part=gearbox" class="hover:text-pp-600">Gearboxes &amp; Transmission</a></li>
-          <li><a href="category.html?tab=parts&part=ecu" class="hover:text-pp-600">ECUs &amp; Brain Boxes</a></li>
-          <li><a href="category.html?tab=parts&part=suspension" class="hover:text-pp-600">Suspension &amp; Shock Absorbers</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&part=engine" class="hover:text-pp-600">Complete Engines (Tokunbo / Used)</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&part=gearbox" class="hover:text-pp-600">Gearboxes &amp; Transmission</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&part=ecu" class="hover:text-pp-600">ECUs &amp; Brain Boxes</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&part=suspension" class="hover:text-pp-600">Suspension &amp; Shock Absorbers</a></li>
         </ul>
       </div>
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Commercial &amp; Heavy</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?cat=trucks" class="hover:text-pp-600">Trailers &amp; Haulage Trucks</a></li>
-          <li><a href="category.html?cat=buses" class="hover:text-pp-600">Buses &amp; Commercial Vans</a></li>
-          <li><a href="category.html?cat=motorcycles" class="hover:text-pp-600">Motorcycles &amp; Tricycles</a></li>
+          <li><a href="{{ route('category') }}?cat=trucks" class="hover:text-pp-600">Trailers &amp; Haulage Trucks</a></li>
+          <li><a href="{{ route('category') }}?cat=buses" class="hover:text-pp-600">Buses &amp; Commercial Vans</a></li>
+          <li><a href="{{ route('category') }}?cat=motorcycles" class="hover:text-pp-600">Motorcycles &amp; Tricycles</a></li>
         </ul>
       </div>
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Accident / Salvage Cars</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?tab=scrap&cat=vehicles" class="hover:text-pp-600">Accident Toyota Corolla 2015</a></li>
-          <li><a href="category.html?tab=scrap&cat=vehicles" class="hover:text-pp-600">Engine-Fault Honda Accord</a></li>
-          <li><a href="category.html?tab=scrap&cat=vehicles" class="text-amber-700 font-bold hover:underline">Scrap Vehicles for Parts →</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=vehicles" class="hover:text-pp-600">Accident Toyota Corolla 2015</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=vehicles" class="hover:text-pp-600">Engine-Fault Honda Accord</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=vehicles" class="text-amber-700 font-bold hover:underline">Scrap Vehicles for Parts →</a></li>
         </ul>
       </div>
     </div>
@@ -179,23 +179,23 @@
       <div>
         <h4 class="text-xs font-bold text-slate-900 uppercase mb-3">Home Appliances</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?cat=washing-machines" class="hover:text-pp-600">Washing Machines (Front / Top Load)</a></li>
-          <li><a href="category.html?cat=refrigerators" class="hover:text-pp-600">Deep Freezers &amp; Refrigerators</a></li>
-          <li><a href="category.html?cat=air-conditioners" class="hover:text-pp-600">Air Conditioners &amp; Inverters</a></li>
+          <li><a href="{{ route('category') }}?cat=washing-machines" class="hover:text-pp-600">Washing Machines (Front / Top Load)</a></li>
+          <li><a href="{{ route('category') }}?cat=refrigerators" class="hover:text-pp-600">Deep Freezers &amp; Refrigerators</a></li>
+          <li><a href="{{ route('category') }}?cat=air-conditioners" class="hover:text-pp-600">Air Conditioners &amp; Inverters</a></li>
         </ul>
       </div>
       <div>
         <h4 class="text-xs font-bold text-slate-900 uppercase mb-3">Appliance Spare Parts</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?tab=parts&cat=appliances" class="hover:text-pp-600">Washing Machine Motors &amp; Pumps</a></li>
-          <li><a href="category.html?tab=parts&cat=appliances" class="hover:text-pp-600">AC Compressors &amp; Gas Tanks</a></li>
-          <li><a href="category.html?tab=parts&cat=appliances" class="hover:text-pp-600">Control Boards &amp; Capacitors</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&cat=appliances" class="hover:text-pp-600">Washing Machine Motors &amp; Pumps</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&cat=appliances" class="hover:text-pp-600">AC Compressors &amp; Gas Tanks</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&cat=appliances" class="hover:text-pp-600">Control Boards &amp; Capacitors</a></li>
         </ul>
       </div>
       <div>
         <h4 class="text-xs font-bold text-slate-900 uppercase mb-3">Community Requests</h4>
         <p class="text-xs text-slate-500 mb-2">Can't find a specific washer motor or AC part?</p>
-        <a href="community.html" class="text-xs font-bold text-pp-600 hover:underline">Post a Request to Technicians →</a>
+        <a href="{{ route('community') }}" class="text-xs font-bold text-pp-600 hover:underline">Post a Request to Technicians →</a>
       </div>
     </div>
   </div>
@@ -207,19 +207,19 @@
         <div class="text-[11px] font-bold uppercase tracking-wider text-amber-700">Power &amp; Tools</div>
         <h3 class="mt-2 text-xl font-extrabold text-slate-900">Equipment &amp; Power</h3>
         <p class="mt-2 text-xs leading-relaxed text-slate-600">Generators, industrial power plants, workshop equipment &amp; professional power tools.</p>
-        <a href="category.html?cat=equipment" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-amber-700 hover:underline">Explore Equipment →</a>
+        <a href="{{ route('category') }}?cat=equipment" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-amber-700 hover:underline">Explore Equipment →</a>
       </div>
 
       <!-- POWER & GENERATORS -->
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Power &amp; Generators</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar</a></li>
-          <li><a href="category.html?brand=cummins" class="hover:text-pp-600 font-semibold text-slate-800">Cummins</a></li>
-          <li><a href="category.html?brand=perkins" class="hover:text-pp-600 font-semibold text-slate-800">Perkins</a></li>
-          <li><a href="category.html?brand=honda" class="hover:text-pp-600">Honda</a></li>
-          <li><a href="category.html?brand=tiger" class="hover:text-pp-600">Tiger</a></li>
-          <li><a href="category.html?brand=elepaq" class="hover:text-pp-600">Elepaq</a></li>
+          <li><a href="{{ route('category') }}?brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar</a></li>
+          <li><a href="{{ route('category') }}?brand=cummins" class="hover:text-pp-600 font-semibold text-slate-800">Cummins</a></li>
+          <li><a href="{{ route('category') }}?brand=perkins" class="hover:text-pp-600 font-semibold text-slate-800">Perkins</a></li>
+          <li><a href="{{ route('category') }}?brand=honda" class="hover:text-pp-600">Honda</a></li>
+          <li><a href="{{ route('category') }}?brand=tiger" class="hover:text-pp-600">Tiger</a></li>
+          <li><a href="{{ route('category') }}?brand=elepaq" class="hover:text-pp-600">Elepaq</a></li>
         </ul>
       </div>
 
@@ -227,9 +227,9 @@
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Workshop Equipment</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?brand=lincoln-electric" class="hover:text-pp-600 font-semibold text-slate-800">Lincoln Electric</a></li>
-          <li><a href="category.html?brand=bosch" class="hover:text-pp-600 font-semibold text-slate-800">Bosch Workshop Systems</a></li>
-          <li><a href="category.html?tab=parts&cat=workshop" class="text-pp-600 font-semibold hover:underline">Welding Plants &amp; Diagnostic Tools</a></li>
+          <li><a href="{{ route('category') }}?brand=lincoln-electric" class="hover:text-pp-600 font-semibold text-slate-800">Lincoln Electric</a></li>
+          <li><a href="{{ route('category') }}?brand=bosch" class="hover:text-pp-600 font-semibold text-slate-800">Bosch Workshop Systems</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&cat=workshop" class="text-pp-600 font-semibold hover:underline">Welding Plants &amp; Diagnostic Tools</a></li>
         </ul>
       </div>
 
@@ -237,10 +237,10 @@
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Power Tools</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?brand=bosch" class="hover:text-pp-600 font-semibold text-slate-800">Bosch Power Tools</a></li>
-          <li><a href="category.html?brand=makita" class="hover:text-pp-600 font-semibold text-slate-800">Makita</a></li>
-          <li><a href="category.html?brand=dewalt" class="hover:text-pp-600 font-semibold text-slate-800">DeWalt</a></li>
-          <li><a href="category.html?tab=parts&cat=tools" class="text-pp-600 font-semibold hover:underline">Drills, Grinders &amp; Cutters</a></li>
+          <li><a href="{{ route('category') }}?brand=bosch" class="hover:text-pp-600 font-semibold text-slate-800">Bosch Power Tools</a></li>
+          <li><a href="{{ route('category') }}?brand=makita" class="hover:text-pp-600 font-semibold text-slate-800">Makita</a></li>
+          <li><a href="{{ route('category') }}?brand=dewalt" class="hover:text-pp-600 font-semibold text-slate-800">DeWalt</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&cat=tools" class="text-pp-600 font-semibold hover:underline">Drills, Grinders &amp; Cutters</a></li>
         </ul>
       </div>
 
@@ -248,9 +248,9 @@
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Generator &amp; Tool Parts</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?tab=parts&part=injector" class="hover:text-pp-600">Perkins Diesel Injectors</a></li>
-          <li><a href="category.html?tab=parts&part=alternator" class="hover:text-pp-600">AVR &amp; Alternators</a></li>
-          <li><a href="category.html?tab=scrap&cat=generators" class="text-amber-700 font-bold hover:underline">Faulty Generators for Parts →</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&part=injector" class="hover:text-pp-600">Perkins Diesel Injectors</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&part=alternator" class="hover:text-pp-600">AVR &amp; Alternators</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=generators" class="text-amber-700 font-bold hover:underline">Faulty Generators for Parts →</a></li>
         </ul>
       </div>
     </div>
@@ -264,11 +264,11 @@
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Excavators</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?cat=excavators&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar (CAT)</a></li>
-          <li><a href="category.html?cat=excavators&brand=komatsu" class="hover:text-pp-600 font-semibold text-slate-800">Komatsu</a></li>
-          <li><a href="category.html?cat=excavators&brand=volvo" class="hover:text-pp-600">Volvo</a></li>
-          <li><a href="category.html?cat=excavators&brand=hitachi" class="hover:text-pp-600">Hitachi</a></li>
-          <li><a href="category.html?tab=parts&cat=excavators" class="text-pp-600 font-semibold hover:underline">Hydraulic Pumps &amp; Boom Parts</a></li>
+          <li><a href="{{ route('category') }}?cat=excavators&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar (CAT)</a></li>
+          <li><a href="{{ route('category') }}?cat=excavators&brand=komatsu" class="hover:text-pp-600 font-semibold text-slate-800">Komatsu</a></li>
+          <li><a href="{{ route('category') }}?cat=excavators&brand=volvo" class="hover:text-pp-600">Volvo</a></li>
+          <li><a href="{{ route('category') }}?cat=excavators&brand=hitachi" class="hover:text-pp-600">Hitachi</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&cat=excavators" class="text-pp-600 font-semibold hover:underline">Hydraulic Pumps &amp; Boom Parts</a></li>
         </ul>
       </div>
 
@@ -276,14 +276,14 @@
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Bulldozers</h4>
         <ul class="space-y-2 text-xs text-slate-600 mb-4">
-          <li><a href="category.html?cat=bulldozers&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar (D6, D8, D9)</a></li>
-          <li><a href="category.html?cat=bulldozers&brand=komatsu" class="hover:text-pp-600 font-semibold text-slate-800">Komatsu</a></li>
+          <li><a href="{{ route('category') }}?cat=bulldozers&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar (D6, D8, D9)</a></li>
+          <li><a href="{{ route('category') }}?cat=bulldozers&brand=komatsu" class="hover:text-pp-600 font-semibold text-slate-800">Komatsu</a></li>
         </ul>
 
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Backhoe Loaders</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?cat=backhoe&brand=jcb" class="hover:text-pp-600 font-semibold text-slate-800">JCB (3CX, 4CX)</a></li>
-          <li><a href="category.html?cat=backhoe&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar</a></li>
+          <li><a href="{{ route('category') }}?cat=backhoe&brand=jcb" class="hover:text-pp-600 font-semibold text-slate-800">JCB (3CX, 4CX)</a></li>
+          <li><a href="{{ route('category') }}?cat=backhoe&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar</a></li>
         </ul>
       </div>
 
@@ -291,14 +291,14 @@
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Cranes</h4>
         <ul class="space-y-2 text-xs text-slate-600 mb-4">
-          <li><a href="category.html?cat=cranes&brand=tadano" class="hover:text-pp-600 font-semibold text-slate-800">Tadano</a></li>
-          <li><a href="category.html?cat=cranes&brand=liebherr" class="hover:text-pp-600 font-semibold text-slate-800">Liebherr</a></li>
+          <li><a href="{{ route('category') }}?cat=cranes&brand=tadano" class="hover:text-pp-600 font-semibold text-slate-800">Tadano</a></li>
+          <li><a href="{{ route('category') }}?cat=cranes&brand=liebherr" class="hover:text-pp-600 font-semibold text-slate-800">Liebherr</a></li>
         </ul>
 
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Wheel Loaders</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?cat=wheel-loaders&brand=volvo" class="hover:text-pp-600 font-semibold text-slate-800">Volvo</a></li>
-          <li><a href="category.html?cat=wheel-loaders&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar</a></li>
+          <li><a href="{{ route('category') }}?cat=wheel-loaders&brand=volvo" class="hover:text-pp-600 font-semibold text-slate-800">Volvo</a></li>
+          <li><a href="{{ route('category') }}?cat=wheel-loaders&brand=caterpillar" class="hover:text-pp-600 font-semibold text-slate-800">Caterpillar</a></li>
         </ul>
       </div>
 
@@ -307,8 +307,8 @@
         <h4 class="text-xs font-extrabold text-amber-900 uppercase tracking-wider mb-2">Construction Scrap &amp; Parts Hub</h4>
         <p class="text-xs text-amber-800 mb-3">Find salvage excavators, broken boom cylinders, tracks, undercarriage, and hydraulic valves.</p>
         <div class="space-y-2 text-xs">
-          <a href="category.html?tab=parts&cat=construction" class="block font-bold text-pp-600 hover:underline">→ Browse Construction Replacement Parts</a>
-          <a href="category.html?tab=scrap&cat=construction" class="block font-bold text-amber-800 hover:underline">→ Browse Non-Working Construction Scrap Units</a>
+          <a href="{{ route('category') }}?tab=parts&cat=construction" class="block font-bold text-pp-600 hover:underline">→ Browse Construction Replacement Parts</a>
+          <a href="{{ route('category') }}?tab=scrap&cat=construction" class="block font-bold text-amber-800 hover:underline">→ Browse Non-Working Construction Scrap Units</a>
         </div>
       </div>
     </div>
@@ -325,26 +325,26 @@
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Industrial Brands</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?cat=industrial&brand=ingersoll-rand" class="hover:text-pp-600 font-semibold text-slate-800">Ingersoll Rand (Compressors)</a></li>
-          <li><a href="category.html?cat=industrial&brand=atlas-copco" class="hover:text-pp-600 font-semibold text-slate-800">Atlas Copco</a></li>
-          <li><a href="category.html?cat=industrial&brand=abb" class="hover:text-pp-600 font-semibold text-slate-800">ABB (Motors &amp; Drives)</a></li>
-          <li><a href="category.html?cat=industrial&brand=siemens" class="hover:text-pp-600 font-semibold text-slate-800">Siemens (Automation &amp; Control)</a></li>
+          <li><a href="{{ route('category') }}?cat=industrial&brand=ingersoll-rand" class="hover:text-pp-600 font-semibold text-slate-800">Ingersoll Rand (Compressors)</a></li>
+          <li><a href="{{ route('category') }}?cat=industrial&brand=atlas-copco" class="hover:text-pp-600 font-semibold text-slate-800">Atlas Copco</a></li>
+          <li><a href="{{ route('category') }}?cat=industrial&brand=abb" class="hover:text-pp-600 font-semibold text-slate-800">ABB (Motors &amp; Drives)</a></li>
+          <li><a href="{{ route('category') }}?cat=industrial&brand=siemens" class="hover:text-pp-600 font-semibold text-slate-800">Siemens (Automation &amp; Control)</a></li>
         </ul>
       </div>
 
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Industrial Equipment</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?cat=compressors" class="hover:text-pp-600">Screw Compressors &amp; Air Tanks</a></li>
-          <li><a href="category.html?cat=motors" class="hover:text-pp-600">3-Phase Electric Motors</a></li>
-          <li><a href="category.html?cat=switchgear" class="hover:text-pp-600">Switchgear &amp; Transformers</a></li>
+          <li><a href="{{ route('category') }}?cat=compressors" class="hover:text-pp-600">Screw Compressors &amp; Air Tanks</a></li>
+          <li><a href="{{ route('category') }}?cat=motors" class="hover:text-pp-600">3-Phase Electric Motors</a></li>
+          <li><a href="{{ route('category') }}?cat=switchgear" class="hover:text-pp-600">Switchgear &amp; Transformers</a></li>
         </ul>
       </div>
 
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Industrial Parts &amp; Requests</h4>
         <p class="text-xs text-slate-500 mb-3">Hard-to-find industrial boards, valves, and mechanical seals.</p>
-        <a href="community.html" class="text-xs font-bold text-pp-600 hover:underline">Post Request to Industrial Dealers →</a>
+        <a href="{{ route('community') }}" class="text-xs font-bold text-pp-600 hover:underline">Post Request to Industrial Dealers →</a>
       </div>
     </div>
   </div>
@@ -360,24 +360,24 @@
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Tractors &amp; Farm Machinery</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?cat=agricultural&brand=massey-ferguson" class="hover:text-pp-600 font-semibold text-slate-800">Massey Ferguson</a></li>
-          <li><a href="category.html?cat=agricultural&brand=john-deere" class="hover:text-pp-600 font-semibold text-slate-800">John Deere</a></li>
-          <li><a href="category.html?cat=agricultural&brand=mahindra" class="hover:text-pp-600 font-semibold text-slate-800">Mahindra</a></li>
+          <li><a href="{{ route('category') }}?cat=agricultural&brand=massey-ferguson" class="hover:text-pp-600 font-semibold text-slate-800">Massey Ferguson</a></li>
+          <li><a href="{{ route('category') }}?cat=agricultural&brand=john-deere" class="hover:text-pp-600 font-semibold text-slate-800">John Deere</a></li>
+          <li><a href="{{ route('category') }}?cat=agricultural&brand=mahindra" class="hover:text-pp-600 font-semibold text-slate-800">Mahindra</a></li>
         </ul>
       </div>
 
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Agri Parts &amp; Implements</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?tab=parts&cat=agri" class="hover:text-pp-600">Tractor Engines &amp; Gearbox Parts</a></li>
-          <li><a href="category.html?tab=parts&cat=agri" class="hover:text-pp-600">Irrigation Pumps &amp; Nozzles</a></li>
-          <li><a href="category.html?tab=parts&cat=agri" class="hover:text-pp-600">Ploughs &amp; Harvesting Blades</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&cat=agri" class="hover:text-pp-600">Tractor Engines &amp; Gearbox Parts</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&cat=agri" class="hover:text-pp-600">Irrigation Pumps &amp; Nozzles</a></li>
+          <li><a href="{{ route('category') }}?tab=parts&cat=agri" class="hover:text-pp-600">Ploughs &amp; Harvesting Blades</a></li>
         </ul>
       </div>
 
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Agri Salvage &amp; Scrap</h4>
-        <a href="category.html?tab=scrap&cat=agri" class="text-xs font-bold text-amber-800 hover:underline block mt-2">Browse Damaged Farm Machinery for Salvage →</a>
+        <a href="{{ route('category') }}?tab=scrap&cat=agri" class="text-xs font-bold text-amber-800 hover:underline block mt-2">Browse Damaged Farm Machinery for Salvage →</a>
       </div>
     </div>
   </div>
@@ -389,43 +389,43 @@
         <div class="text-[11px] font-extrabold uppercase tracking-wider text-amber-700">Salvage Marketplace</div>
         <h3 class="mt-2 text-xl font-extrabold text-slate-900">Scrap &amp; Salvage Hub</h3>
         <p class="mt-2 text-xs leading-relaxed text-slate-600">Damaged devices, accident vehicles &amp; non-working machines for technicians to harvest functional spare parts.</p>
-        <a href="category.html?tab=scrap" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-amber-800 hover:underline">Explore Salvage Hub →</a>
+        <a href="{{ route('category') }}?tab=scrap" class="inline-flex items-center gap-1 mt-6 text-xs font-bold text-amber-800 hover:underline">Explore Salvage Hub →</a>
       </div>
 
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Salvage Electronics</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?tab=scrap&cat=laptops" class="hover:text-amber-700 font-semibold text-slate-800">Damaged Laptops (HP, Dell, Lenovo)</a></li>
-          <li><a href="category.html?tab=scrap&cat=laptops" class="hover:text-amber-700">Water Damaged MacBooks</a></li>
-          <li><a href="category.html?tab=scrap&cat=phones" class="hover:text-amber-700">Broken Screen iPhones &amp; Samsungs</a></li>
-          <li><a href="category.html?tab=scrap&cat=tablets" class="hover:text-amber-700">Faulty iPads &amp; Tablets</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=laptops" class="hover:text-amber-700 font-semibold text-slate-800">Damaged Laptops (HP, Dell, Lenovo)</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=laptops" class="hover:text-amber-700">Water Damaged MacBooks</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=phones" class="hover:text-amber-700">Broken Screen iPhones &amp; Samsungs</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=tablets" class="hover:text-amber-700">Faulty iPads &amp; Tablets</a></li>
         </ul>
       </div>
 
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Salvage Vehicles &amp; Auto</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?tab=scrap&cat=vehicles" class="hover:text-amber-700 font-semibold text-slate-800">Accident Cars (Toyota, Honda, Lexus)</a></li>
-          <li><a href="category.html?tab=scrap&part=engine" class="hover:text-amber-700">Non-running Engine Blocks</a></li>
-          <li><a href="category.html?tab=scrap&cat=trucks" class="hover:text-amber-700">Damaged Haulage Trucks for Parts</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=vehicles" class="hover:text-amber-700 font-semibold text-slate-800">Accident Cars (Toyota, Honda, Lexus)</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&part=engine" class="hover:text-amber-700">Non-running Engine Blocks</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=trucks" class="hover:text-amber-700">Damaged Haulage Trucks for Parts</a></li>
         </ul>
       </div>
 
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Salvage Heavy Machinery</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?tab=scrap&cat=excavators" class="hover:text-amber-700 font-semibold text-slate-800">Non-working Excavators (CAT 320)</a></li>
-          <li><a href="category.html?tab=scrap&cat=generators" class="hover:text-amber-700">Faulty Generators for Parts</a></li>
-          <li><a href="category.html?tab=scrap&cat=industrial" class="hover:text-amber-700">Damaged Hydraulic Control Valves</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=excavators" class="hover:text-amber-700 font-semibold text-slate-800">Non-working Excavators (CAT 320)</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=generators" class="hover:text-amber-700">Faulty Generators for Parts</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=industrial" class="hover:text-amber-700">Damaged Hydraulic Control Valves</a></li>
         </ul>
       </div>
 
       <div>
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-3">Salvage Home Appliances</h4>
         <ul class="space-y-2 text-xs text-slate-600">
-          <li><a href="category.html?tab=scrap&cat=appliances" class="hover:text-amber-700 font-semibold text-slate-800">Faulty Washing Machines &amp; Motors</a></li>
-          <li><a href="category.html?tab=scrap&cat=appliances" class="hover:text-amber-700">Blown AC Compressors &amp; Gas Tanks</a></li>
-          <li><a href="category.html?tab=scrap" class="text-amber-800 font-extrabold hover:underline">Browse All 12,000+ Scrap Units →</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=appliances" class="hover:text-amber-700 font-semibold text-slate-800">Faulty Washing Machines &amp; Motors</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap&cat=appliances" class="hover:text-amber-700">Blown AC Compressors &amp; Gas Tanks</a></li>
+          <li><a href="{{ route('category') }}?tab=scrap" class="text-amber-800 font-extrabold hover:underline">Browse All 12,000+ Scrap Units →</a></li>
         </ul>
       </div>
     </div>

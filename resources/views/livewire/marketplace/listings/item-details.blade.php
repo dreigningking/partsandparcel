@@ -1,0 +1,461 @@
+@push('styles')
+<style>
+.sticky-buy { position: sticky; top: 88px; }
+@media (max-width: 1023px) { .sticky-buy { position: static; } }
+</style>
+@endpush
+
+<main class="max-w-[1440px] mx-auto px-4 lg:px-7">
+  <div class="py-4 text-[11px] text-slate-500 flex gap-2 overflow-x-auto whitespace-nowrap">
+    <a href="{{ route('welcome') }}" class="hover:text-slate-900">Home</a> › 
+    <a href="{{ route('category') }}?cat=electronics" class="hover:text-slate-900">Electronics</a> › 
+    <a href="{{ route('category') }}?cat=laptops" class="hover:text-slate-900">Laptops</a> › 
+    <span>Dell</span> › <span>Latitude 5420</span> › 
+    <b class="text-slate-900">Listing Details</b>
+  </div>
+
+  <section class="grid lg:grid-cols-[1.7fr_.95fr_.8fr] gap-6">
+
+    <div>
+      <div class="grid grid-cols-[62px_1fr] gap-4">
+        <div class="space-y-3" id="thumbs">
+          <button class="thumb w-[62px] h-[62px] rounded-lg border-2 border-pp-500 p-1"><img class="w-full h-full object-cover rounded" src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=500&q=85"></button>
+          <button class="thumb w-[62px] h-[62px] rounded-lg border border-slate-200 p-1"><img class="w-full h-full object-cover rounded" src="https://images.unsplash.com/photo-1593642632559-0c6d3d4a0a9a?auto=format&fit=crop&w=500&q=85"></button>
+          <button class="thumb w-[62px] h-[62px] rounded-lg border border-slate-200 p-1"><img class="w-full h-full object-cover rounded" src="https://images.unsplash.com/photo-1541807084-5c52b6b3adef?auto=format&fit=crop&w=500&q=85"></button>
+          <button class="thumb w-[62px] h-[62px] rounded-lg border border-slate-200 p-1"><img class="w-full h-full object-cover rounded" src="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=500&q=85"></button>
+          <div class="w-[62px] h-[62px] rounded-lg bg-pp-50 grid place-items-center font-bold text-pp-700">+4</div>
+        </div>
+        <div class="aspect-square max-h-[510px] rounded-xl bg-slate-100 overflow-hidden relative">
+          <img id="mainImage" class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1200&q=90">
+          <button class="absolute top-4 right-4 bg-white w-10 h-10 rounded-full shadow text-xl">♡</button>
+        </div>
+      </div>
+      <p class="text-center text-[11px] text-slate-500 py-4">◉ Images show the actual item. What you see is what you get.</p>
+    </div>
+
+    <div>
+      <div class="flex gap-2 mb-3">
+        <b class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-[10px]">SCRAP / SALVAGE</b>
+        <b class="bg-red-100 text-red-600 px-2 py-1 rounded text-[10px]">DAMAGED</b>
+        <b class="bg-slate-100 px-2 py-1 rounded text-[10px]">USED</b>
+      </div>
+      <h1 class="text-2xl font-extrabold leading-tight">Dell Latitude 5420 Laptop<br>For Parts / Salvage</h1>
+      <div class="mt-3 text-xs"><b>4.6</b> <span class="text-amber-400">★★★★★</span> <a href="#details-tabs" onclick="switchDetailTab('reviews')" class="underline cursor-pointer">(18 reviews)</a> &nbsp;|&nbsp; 32 sold</div>
+      <div class="text-3xl font-black mt-5">₦150,000</div>
+      <div class="text-[11px] text-slate-500">◉ Negotiable</div>
+      <div class="mt-4 space-y-2 text-xs">
+        <p><b>Availability:</b> <span class="text-emerald-600 font-bold">1 available</span></p>
+        <p><b>Location:</b> Ikeja, Lagos &nbsp;<a class="text-pp-600 font-bold">View on map</a></p>
+        <p><b>Posted:</b> 2 days ago</p>
+      </div>
+      <div class="mt-4 bg-pp-50 border border-pp-100 rounded-xl p-4 text-xs">
+        <b>Condition: <span class="text-red-600">Damaged</span></b>
+        <p class="text-slate-500 mt-1">Unit is damaged but has working components.</p>
+      </div>
+      <div class="mt-4 grid grid-cols-2 gap-2">
+        <button class="h-11 border-2 border-pp-600 text-pp-700 rounded-lg font-bold text-sm hover:bg-pp-50 transition cursor-pointer">
+          🛒 Add to Cart
+        </button>
+        <button class="h-11 bg-pp-600 text-white rounded-lg font-bold text-sm hover:bg-pp-700 transition cursor-pointer">
+          Make an Offer
+        </button>
+      </div>
+      <button class="w-full h-11 mt-2 border rounded-lg font-bold cursor-pointer">Chat with Seller</button>
+      <button class="w-full h-11 mt-2 border rounded-lg font-bold cursor-pointer">♡ Save to Wishlist</button>
+      <div class="mt-4 p-4 bg-pp-50 rounded-xl text-xs">
+        <b class="text-pp-700">♧ Buy with Confidence</b>
+        <p class="text-slate-500 mt-1">All payments are secure and protected by Parts & Parcel.</p>
+      </div>
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="space-y-3 sticky-buy">
+      <div class="border rounded-xl p-4">
+        <h2 class="font-bold text-sm">Seller Information</h2>
+        <div class="flex gap-3 mt-3">
+          <div class="w-11 h-11 rounded-full bg-pp-100 text-pp-700 grid place-items-center font-bold">AT</div>
+          <div><b>Abel Tech Parts</b><p class="text-[10px] text-pp-600 font-bold">✓ Verified Seller</p><p class="text-[10px] text-slate-500">Member since Jan 2022</p></div>
+        </div>
+        <p class="text-xs mt-3"><b>4.8</b> <span class="text-amber-400">★★★★★</span> <span class="text-slate-500">(128 reviews)</span></p>
+        <div class="grid grid-cols-3 border-y my-3 py-3 text-center text-[10px]">
+          <b>212<br><span class="font-normal text-slate-500">Listings</span></b>
+          <b>312<br><span class="font-normal text-slate-500">Sales</span></b>
+          <b>98%<br><span class="font-normal text-slate-500">Response</span></b>
+        </div>
+        <button class="w-full border rounded-lg py-2 text-xs font-bold cursor-pointer">View Shop</button>
+      </div>
+      
+      <div class="border rounded-xl p-4 text-[11px]">
+        <b>Delivery Options</b>
+        <div class="mt-3 space-y-3">
+          <p>♧ <b>Buyer arranges delivery</b><br><span class="ml-5 text-slate-500">No delivery fee will be added.</span></p>
+          <p>♧ <b>Platform delivery</b><br><span class="ml-5 text-slate-500">Trusted courier connection.</span></p>
+        </div>
+      </div>
+
+      <!-- SHARE THIS LISTING (REAL SOCIAL ICONS) -->
+      <div class="border rounded-xl p-4">
+        <b class="text-sm text-slate-900 font-bold">Share this listing</b>
+        <div class="flex items-center gap-2 mt-3">
+          <!-- WHATSAPP -->
+          <a href="#" title="Share on WhatsApp" class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200/60 grid place-items-center hover:bg-emerald-600 hover:text-white transition shadow-2xs">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-1.156 4.225 4.399-1.155z"/></svg>
+          </a>
+          <!-- FACEBOOK -->
+          <a href="#" title="Share on Facebook" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-200/60 grid place-items-center hover:bg-blue-600 hover:text-white transition shadow-2xs">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+          <!-- X / TWITTER -->
+          <a href="#" title="Share on X" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-800 border border-slate-200 grid place-items-center hover:bg-slate-900 hover:text-white transition shadow-2xs">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <!-- TELEGRAM -->
+          <a href="#" title="Share on Telegram" class="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 border border-sky-200/60 grid place-items-center hover:bg-sky-500 hover:text-white transition shadow-2xs">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.901-.903-1.057-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+          </a>
+          <!-- COPY LINK -->
+          <button title="Copy Link" onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied to clipboard!')" class="w-9 h-9 rounded-xl bg-pp-50 text-pp-600 border border-pp-200 grid place-items-center hover:bg-pp-600 hover:text-white transition shadow-2xs cursor-pointer">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- SAFETY TIP (MOVED UNDER SHARE THIS LISTING) -->
+      <div class="bg-pp-50 border border-pp-100 rounded-xl p-4 text-[11px]">
+        <b class="text-pp-700 font-bold flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-pp-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <span>Safety Tip</span>
+        </b>
+        <p class="text-slate-500 mt-1 leading-relaxed">Meet in safe public locations when picking up items. Use Parts &amp; Parcel secure payment for your protection.</p>
+      </div>
+    </aside>
+  </section>
+
+  <!-- TABBED DETAILS SECTION -->
+  <section id="details-tabs" class="mt-10">
+    <!-- TAB NAVIGATION BAR -->
+    <div class="border-b border-slate-200">
+      <nav class="flex space-x-2 sm:space-x-6 overflow-x-auto whitespace-nowrap" aria-label="Details Tabs">
+        <button id="tab-desc-btn" onclick="switchDetailTab('desc')" class="detail-tab-btn py-3.5 px-4 font-bold text-xs sm:text-sm border-b-2 border-pp-600 text-pp-600 bg-pp-50/60 rounded-t-xl transition cursor-pointer flex items-center gap-2">
+          <span>📝</span>
+          <span>Description &amp; Specifications</span>
+        </button>
+        <button id="tab-components-btn" onclick="switchDetailTab('components')" class="detail-tab-btn py-3.5 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-900 rounded-t-xl transition cursor-pointer flex items-center gap-2">
+          <span>🛠️</span>
+          <span>Component Status &amp; Damage</span>
+        </button>
+        <button id="tab-discussions-btn" onclick="switchDetailTab('discussions')" class="detail-tab-btn py-3.5 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-900 rounded-t-xl transition cursor-pointer flex items-center gap-2">
+          <span>💬</span>
+          <span>Related Discussions</span>
+          <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold">4</span>
+        </button>
+        <button id="tab-reviews-btn" onclick="switchDetailTab('reviews')" class="detail-tab-btn py-3.5 px-4 font-semibold text-xs sm:text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-900 rounded-t-xl transition cursor-pointer flex items-center gap-2">
+          <span>★</span>
+          <span>Reviews</span>
+          <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">18</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- TAB PANELS CONTAINER -->
+    <div class="mt-6">
+      
+      <!-- TAB 1: DEVICE DESCRIPTION & SPECIFICATIONS (2 COLUMNS) -->
+      <div id="panel-desc" class="detail-panel">
+        <div class="grid lg:grid-cols-2 gap-6">
+          
+          <!-- LEFT COLUMN: DESCRIPTION -->
+          <article class="border rounded-xl p-5 h-full flex flex-col justify-between">
+            <div>
+              <h2 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+                <span>📝</span>
+                <span>Device Description</span>
+              </h2>
+              <p class="text-[11px] leading-5 text-slate-500 mt-3">Dell Latitude 5420 laptop, damaged screen and body but several components are still in good working condition. Perfect for technicians or repair shops looking for quality parts.</p>
+              <ul class="text-[11px] text-slate-500 list-disc pl-4 mt-3 space-y-1.5">
+                <li>Unit turns on and boots to BIOS</li>
+                <li>No liquid damage</li>
+                <li>All components tested by our technician</li>
+                <li>Sold as seen — no returns</li>
+                <li>Ideal for parts harvesting</li>
+              </ul>
+            </div>
+            <div class="mt-5 pt-4 border-t border-slate-100 text-[10px] text-slate-500 space-y-1">
+              <p><b>Models:</b> Latitude 5420</p>
+              <p><b>Condition:</b> Damaged (For Parts / Salvage)</p>
+              <p><b>Included:</b> Laptop + Original Charger</p>
+            </div>
+          </article>
+
+          <!-- RIGHT COLUMN: SPECIFICATIONS -->
+          <article class="border rounded-xl p-5 h-full">
+            <h2 class="font-bold text-sm text-slate-900 flex items-center gap-2">
+              <span>⚙️</span>
+              <span>Device Specifications</span>
+            </h2>
+            <div class="mt-3 text-[11px] divide-y divide-slate-100">
+              <p class="py-2 grid grid-cols-2"><b>Brand</b><span>Dell</span></p>
+              <p class="py-2 grid grid-cols-2"><b>Model</b><span>Latitude 5420</span></p>
+              <p class="py-2 grid grid-cols-2"><b>Processor</b><span>Intel Core i5-1145G7</span></p>
+              <p class="py-2 grid grid-cols-2"><b>RAM</b><span>8GB DDR4</span></p>
+              <p class="py-2 grid grid-cols-2"><b>Storage</b><span>256GB SSD</span></p>
+              <p class="py-2 grid grid-cols-2"><b>Display</b><span>14.0 inch</span></p>
+              <p class="py-2 grid grid-cols-2"><b>Graphics</b><span>Intel Iris Xe</span></p>
+              <p class="py-2 grid grid-cols-2"><b>Serial Number</b><span>••••8321</span></p>
+              <p class="py-2 grid grid-cols-2"><b>Color</b><span>Black</span></p>
+            </div>
+          </article>
+
+        </div>
+      </div>
+
+      <!-- TAB 2: COMPONENT STATUS & DAMAGE DETAILS (WITH SELLER NOTE INSIDE DAMAGE DETAILS) -->
+      <div id="panel-components" class="detail-panel hidden space-y-6">
+        <div class="grid lg:grid-cols-[1.3fr_1fr] gap-5">
+          <div class="border rounded-xl p-5">
+            <h2 class="font-bold text-sm">Components Status</h2>
+            <p class="text-[11px] text-slate-500">See which parts are available and their condition.</p>
+            <div class="overflow-x-auto mt-4">
+              <table class="min-w-[600px] w-full text-[10px] text-left">
+                <thead class="bg-slate-50"><tr><th class="p-3">Component</th><th>Condition</th><th>Availability</th><th>Notes</th></tr></thead>
+                <tbody class="divide-y">
+                  <tr><td class="p-3 font-bold">Motherboard</td><td>🟢 Working</td><td class="text-emerald-600 font-bold">Available</td><td>Fully functional</td></tr>
+                  <tr><td class="p-3 font-bold">RAM (8GB)</td><td>🟢 Working</td><td class="text-emerald-600 font-bold">Available</td><td>Tested OK</td></tr>
+                  <tr><td class="p-3 font-bold">Storage (256GB SSD)</td><td>🟢 Working</td><td class="text-emerald-600 font-bold">Available</td><td>Healthy</td></tr>
+                  <tr><td class="p-3 font-bold">Battery</td><td>🟡 Weak</td><td class="text-emerald-600 font-bold">Available</td><td>Limited charge</td></tr>
+                  <tr><td class="p-3 font-bold">Keyboard</td><td>🟢 Working</td><td class="text-emerald-600 font-bold">Available</td><td>All keys functional</td></tr>
+                  <tr><td class="p-3 font-bold">Screen</td><td>🔴 Damaged</td><td class="text-red-600 font-bold">Not Available</td><td>Cracked screen</td></tr>
+                  <tr><td class="p-3 font-bold">Top Cover</td><td>🟡 Scratched</td><td class="text-emerald-600 font-bold">Available</td><td>Minor dents</td></tr>
+                  <tr><td class="p-3 font-bold">Cooling Fan</td><td>🟢 Working</td><td class="text-emerald-600 font-bold">Available</td><td>No noise</td></tr>
+                  <tr><td class="p-3 font-bold">Charger</td><td>🟢 Available</td><td class="text-emerald-600 font-bold">Included</td><td>Original Dell 65W</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="mt-4 bg-pp-50 p-3 rounded text-[11px] text-pp-700 font-semibold">♧ Ideal for parts harvesting or repair by professionals.</div>
+          </div>
+          
+          <!-- DAMAGE DETAILS CARD (INCLUDES MOVED SELLER NOTE) -->
+          <div class="border rounded-xl p-5 flex flex-col justify-between">
+            <div>
+              <h2 class="font-bold text-sm">Damage Details</h2>
+              <p class="text-[11px] text-slate-500">Overview of visible and reported damage.</p>
+              <div class="mt-4 text-xs divide-y">
+                <p class="py-2 grid grid-cols-2"><b>Screen</b>Cracked</p>
+                <p class="py-2 grid grid-cols-2"><b>Top Cover</b>Dented &amp; Scratched</p>
+                <p class="py-2 grid grid-cols-2"><b>Bottom Cover</b>Scratched</p>
+                <p class="py-2 grid grid-cols-2"><b>Hinge</b>Loose (Left side)</p>
+                <p class="py-2 grid grid-cols-2"><b>Ports</b>All working</p>
+                <p class="py-2 grid grid-cols-2"><b>Functional Test</b>Boots to BIOS</p>
+                <p class="py-2 grid grid-cols-2"><b>Water Damage</b>No</p>
+                <p class="py-2 grid grid-cols-2"><b>Impact Damage</b>Yes (Front side)</p>
+              </div>
+              <div class="mt-4 bg-amber-50 border border-amber-200 rounded p-3 text-[11px] text-amber-800 font-semibold">♧ This is a salvage unit intended for parts only.</div>
+            </div>
+
+            <!-- MOVED SELLER NOTE -->
+            <div class="mt-5 pt-4 border-t border-slate-100">
+              <b class="text-xs font-bold text-slate-900">Seller Note</b>
+              <blockquote class="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 text-[11px] text-slate-600 mt-2 italic">
+                “Screen is broken but motherboard, RAM, SSD and other components are in excellent working condition. Buy for parts, repair, or reuse. Tested and verified by our team.”
+                <footer class="mt-2 font-bold not-italic text-slate-800">— Abel Tech Parts Team</footer>
+              </blockquote>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: RELATED DISCUSSIONS (SCROLLABLE CONTAINER) -->
+      <div id="panel-discussions" class="detail-panel hidden">
+        <div class="border rounded-xl p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h2 class="font-bold text-sm">Related Discussions</h2>
+              <p class="text-[11px] text-slate-500 mt-1">See what buyers, technicians and sellers are asking about this product or model.</p>
+            </div>
+            <a class="text-[11px] text-pp-600 font-bold whitespace-nowrap cursor-pointer">View all discussions →</a>
+          </div>
+
+          <!-- SCROLLABLE DISCUSSIONS GRID -->
+          <div class="mt-4 max-h-[480px] overflow-y-auto custom-scrollbar p-1">
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+              
+              <article class="border rounded-xl p-4 hover:border-pp-300 transition bg-white">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[9px] font-bold bg-pp-50 text-pp-700 px-2 py-1 rounded">LOOKING FOR PART</span>
+                  <span class="text-[9px] text-slate-400">12 responses</span>
+                </div>
+                <h3 class="font-bold text-xs mt-3">Looking for a Dell Latitude 5420 motherboard</h3>
+                <p class="text-[10px] text-slate-500 mt-2 line-clamp-2">I need a working motherboard for a Latitude 5420. Does anyone have one available in Lagos?</p>
+                <div class="mt-3 flex items-center justify-between text-[9px] text-slate-400">
+                  <span>Emeka P. · Lagos</span>
+                  <span>2h ago</span>
+                </div>
+              </article>
+
+              <article class="border rounded-xl p-4 hover:border-pp-300 transition bg-white">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[9px] font-bold bg-emerald-50 text-emerald-700 px-2 py-1 rounded">PART REQUEST</span>
+                  <span class="text-[9px] text-slate-400">7 responses</span>
+                </div>
+                <h3 class="font-bold text-xs mt-3">Anyone selling original Latitude 5420 battery?</h3>
+                <p class="text-[10px] text-slate-500 mt-2 line-clamp-2">Looking for an original battery with good health. Seller location can be Lagos or Abuja.</p>
+                <div class="mt-3 flex items-center justify-between text-[9px] text-slate-400">
+                  <span>Kehinde O. · Abuja</span>
+                  <span>1d ago</span>
+                </div>
+              </article>
+
+              <article class="border rounded-xl p-4 hover:border-pp-300 transition bg-white">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[9px] font-bold bg-amber-50 text-amber-700 px-2 py-1 rounded">TECHNICIAN</span>
+                  <span class="text-[9px] text-slate-400">5 responses</span>
+                </div>
+                <h3 class="font-bold text-xs mt-3">Can this Latitude 5420 be repaired?</h3>
+                <p class="text-[10px] text-slate-500 mt-2 line-clamp-2">Screen is broken but the motherboard and SSD appear fine. Looking for a technician's opinion.</p>
+                <div class="mt-3 flex items-center justify-between text-[9px] text-slate-400">
+                  <span>Tunde A. · Ikeja</span>
+                  <span>3d ago</span>
+                </div>
+              </article>
+
+              <article class="border rounded-xl p-4 hover:border-pp-300 transition bg-white">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[9px] font-bold bg-pp-50 text-pp-700 px-2 py-1 rounded">COMPATIBILITY</span>
+                  <span class="text-[9px] text-slate-400">9 responses</span>
+                </div>
+                <h3 class="font-bold text-xs mt-3">Does Latitude 5410 screen fit 5420?</h3>
+                <p class="text-[10px] text-slate-500 mt-2 line-clamp-2">Wanted to confirm if the screen panel assembly of Latitude 5410 is interchangeable with 5420.</p>
+                <div class="mt-3 flex items-center justify-between text-[9px] text-slate-400">
+                  <span>Chidi M. · Port Harcourt</span>
+                  <span>4d ago</span>
+                </div>
+              </article>
+
+              <article class="border rounded-xl p-4 hover:border-pp-300 transition bg-white">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[9px] font-bold bg-emerald-50 text-emerald-700 px-2 py-1 rounded">PARTS RECOVERY</span>
+                  <span class="text-[9px] text-slate-400">14 responses</span>
+                </div>
+                <h3 class="font-bold text-xs mt-3">Keyboard replacement procedure for Dell 5420</h3>
+                <p class="text-[10px] text-slate-500 mt-2 line-clamp-2">Detailed guide on removing the top cover and keyboard assembly safely without damaging ribbons.</p>
+                <div class="mt-3 flex items-center justify-between text-[9px] text-slate-400">
+                  <span>Abel Tech · Ikeja</span>
+                  <span>5d ago</span>
+                </div>
+              </article>
+
+              <article class="border rounded-xl p-4 hover:border-pp-300 transition bg-white">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[9px] font-bold bg-purple-50 text-purple-700 px-2 py-1 rounded">SALVAGE TIP</span>
+                  <span class="text-[9px] text-slate-400">4 responses</span>
+                </div>
+                <h3 class="font-bold text-xs mt-3">Best price for 11th Gen i5 laptop motherboard</h3>
+                <p class="text-[10px] text-slate-500 mt-2 line-clamp-2">Comparing fair prices for tested 11th Gen i5 motherboards in Computer Village Lagos.</p>
+                <div class="mt-3 flex items-center justify-between text-[9px] text-slate-400">
+                  <span>Sola B. · Ibadan</span>
+                  <span>1w ago</span>
+                </div>
+              </article>
+
+            </div>
+          </div>
+
+          <div class="mt-4 flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+            <p class="text-[10px] text-slate-500">Can't find the part you need? Ask the community and receive responses or offers.</p>
+            <button class="ml-3 shrink-0 bg-white border border-pp-200 text-pp-700 rounded-lg px-3 py-2 text-[10px] font-bold cursor-pointer">Start a Discussion</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: REVIEWS (SCROLLABLE CONTAINER) -->
+      <div id="panel-reviews" class="detail-panel hidden">
+        <div id="reviews" class="border rounded-xl p-5">
+          <div class="flex justify-between"><h2 class="font-bold text-sm">Customer Reviews (18)</h2><a class="text-[11px] text-pp-600 font-bold cursor-pointer">View all reviews →</a></div>
+          
+          <div class="mt-5 grid lg:grid-cols-[180px_200px_1fr] gap-6">
+            <div><div class="text-5xl font-black">4.6</div><div class="text-amber-400 text-xl">★★★★★</div><span class="text-[11px] text-slate-500">18 reviews</span></div>
+            <div class="space-y-2 text-[10px]">
+              <div class="flex gap-2"><b>5 ★</b><div class="h-2 flex-1 bg-slate-100 rounded"><div class="h-2 w-[80%] bg-amber-400 rounded"></div></div><span>13</span></div>
+              <div class="flex gap-2"><b>4 ★</b><div class="h-2 flex-1 bg-slate-100 rounded"><div class="h-2 w-[30%] bg-amber-400 rounded"></div></div><span>3</span></div>
+              <div class="flex gap-2"><b>3 ★</b><div class="h-2 flex-1 bg-slate-100 rounded"><div class="h-2 w-[10%] bg-amber-400 rounded"></div></div><span>1</span></div>
+              <div class="flex gap-2"><b>2 ★</b><div class="h-2 flex-1 bg-slate-100 rounded"><div class="h-2 w-[8%] bg-amber-400 rounded"></div></div><span>1</span></div>
+              <div class="flex gap-2"><b>1 ★</b><div class="h-2 flex-1 bg-slate-100 rounded"><div class="h-2 w-0 bg-amber-400 rounded"></div></div><span>0</span></div>
+            </div>
+
+            <!-- SCROLLABLE REVIEWS LIST -->
+            <div class="max-h-[420px] overflow-y-auto custom-scrollbar p-1">
+              <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <article class="border rounded-xl p-4 text-[10px] bg-white"><b>Tunde A.</b><p class="text-amber-400 mt-1">★★★★★</p><p class="text-slate-500 mt-2">Item was exactly as described. Got the motherboard and it works perfectly. Great seller!</p><p class="text-slate-400 mt-2">2 days ago</p></article>
+                <article class="border rounded-xl p-4 text-[10px] bg-white"><b>Kehinde O.</b><p class="text-amber-400 mt-1">★★★★★</p><p class="text-slate-500 mt-2">Good communication and fast response. Packaging was secure. Recommended.</p><p class="text-slate-400 mt-2">5 days ago</p></article>
+                <article class="border rounded-xl p-4 text-[10px] bg-white"><b>Emeka P.</b><p class="text-amber-400 mt-1">★★★★★</p><p class="text-slate-500 mt-2">Bought for parts, battery and SSD are in excellent condition. Will buy again.</p><p class="text-slate-400 mt-2">1 week ago</p></article>
+                <article class="border rounded-xl p-4 text-[10px] bg-white"><b>Chidi M.</b><p class="text-amber-400 mt-1">★★★★★</p><p class="text-slate-500 mt-2">Seller responded quickly to questions. Board was tested before shipping.</p><p class="text-slate-400 mt-2">2 weeks ago</p></article>
+                <article class="border rounded-xl p-4 text-[10px] bg-white"><b>Sola B.</b><p class="text-amber-400 mt-1">★★★★☆</p><p class="text-slate-500 mt-2">Good condition salvage unit. Everything worked except minor cosmetic scratches.</p><p class="text-slate-400 mt-2">3 weeks ago</p></article>
+                <article class="border rounded-xl p-4 text-[10px] bg-white"><b>Fatima A.</b><p class="text-amber-400 mt-1">★★★★★</p><p class="text-slate-500 mt-2">Extremely reliable seller in Computer Village. Delivery was prompt.</p><p class="text-slate-400 mt-2">1 month ago</p></article>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SIMILAR LISTINGS SECTION -->
+  <section class="mt-10 mb-10">
+    <div class="flex justify-between mb-4"><h2 class="font-bold text-sm">Similar Listings You Might Like</h2><a class="text-[11px] text-pp-600 font-bold">View all →</a></div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <article class="border rounded-xl overflow-hidden"><div class="h-32 bg-pp-50 grid place-items-center text-5xl">🧠</div><div class="p-3"><b class="text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-1 rounded">PART</b><h3 class="font-bold text-[11px] mt-2">Dell Latitude 5420 RAM 8GB DDR4 3200MHz</h3><strong class="block mt-2">₦15,000</strong><p class="text-[9px] text-slate-500 mt-1">⌖ Ikeja, Lagos</p></div></article>
+      <article class="border rounded-xl overflow-hidden"><div class="h-32 bg-pp-50 grid place-items-center text-5xl">💾</div><div class="p-3"><b class="text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-1 rounded">PART</b><h3 class="font-bold text-[11px] mt-2">Dell 256GB M.2 NVMe SSD (Latitude 5420)</h3><strong class="block mt-2">₦20,000</strong><p class="text-[9px] text-slate-500 mt-1">⌖ Ikeja, Lagos</p></div></article>
+      <article class="border rounded-xl overflow-hidden"><div class="h-32 bg-amber-50 grid place-items-center text-5xl">💻</div><div class="p-3"><b class="text-[8px] bg-amber-100 text-amber-700 px-1.5 py-1 rounded">SCRAP</b><h3 class="font-bold text-[11px] mt-2">HP EliteBook 840 G5 For Parts / Salvage</h3><strong class="block mt-2">₦120,000</strong><p class="text-[9px] text-slate-500 mt-1">⌖ Computer Village</p></div></article>
+      <article class="border rounded-xl overflow-hidden"><div class="h-32 bg-pp-50 grid place-items-center text-5xl">🔋</div><div class="p-3"><b class="text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-1 rounded">PART</b><h3 class="font-bold text-[11px] mt-2">Dell Latitude 5420 Battery Original</h3><strong class="block mt-2">₦18,000</strong><p class="text-[9px] text-slate-500 mt-1">⌖ Ikeja, Lagos</p></div></article>
+      <article class="border rounded-xl overflow-hidden"><div class="h-32 bg-amber-50 grid place-items-center text-5xl">💻</div><div class="p-3"><b class="text-[8px] bg-amber-100 text-amber-700 px-1.5 py-1 rounded">SCRAP</b><h3 class="font-bold text-[11px] mt-2">Dell Latitude 5400 For Parts</h3><strong class="block mt-2">₦110,000</strong><p class="text-[9px] text-slate-500 mt-1">⌖ Abuja, Nigeria</p></div></article>
+    </div>
+  </section>
+</main>
+
+@push('scripts')
+<script>
+document.querySelectorAll('button').forEach(btn => {
+  if (btn.textContent.includes('Add to Cart') || btn.textContent.includes('🛒 Cart')) {
+    btn.addEventListener('click', () => {
+      const original = btn.textContent;
+      btn.textContent = '✓ Added to Cart';
+      btn.classList.add('bg-emerald-600','text-white','border-emerald-600');
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove('bg-emerald-600','text-white','border-emerald-600');
+      }, 1600);
+    });
+  }
+});
+
+const thumbs = [...document.querySelectorAll('.thumb')];
+thumbs.forEach((b, i) => b.onclick = () => {
+  document.querySelector('#mainImage').src = b.querySelector('img').src;
+  thumbs.forEach(x => x.classList.remove('border-2', 'border-pp-500'));
+  b.classList.add('border-2', 'border-pp-500');
+});
+
+function switchDetailTab(tabName) {
+  const tabs = ['desc', 'components', 'discussions', 'reviews'];
+  tabs.forEach(t => {
+    const btn = document.getElementById(`tab-${t}-btn`);
+    const panel = document.getElementById(`panel-${t}`);
+    if (t === tabName) {
+      if (btn) {
+        btn.classList.add('border-pp-600', 'text-pp-600', 'bg-pp-50/60', 'font-bold');
+        btn.classList.remove('border-transparent', 'text-slate-500', 'font-semibold');
+      }
+      if (panel) panel.classList.remove('hidden');
+    } else {
+      if (btn) {
+        btn.classList.remove('border-pp-600', 'text-pp-600', 'bg-pp-50/60', 'font-bold');
+        btn.classList.add('border-transparent', 'text-slate-500', 'font-semibold');
+      }
+      if (panel) panel.classList.add('hidden');
+    }
+  });
+}
+</script>
+@endpush

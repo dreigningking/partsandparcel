@@ -35,15 +35,19 @@
             }
           }
           </script>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
       @endif
-
       <!-- SHARED CUSTOM CSS -->
       <link rel="stylesheet" href="{{ asset('css/app-custom.css') }}">
 
       @livewireStyles
+      @stack('styles')
   </head>
   <body class="bg-slate-50/50 text-slate-900 pb-16 lg:pb-0">
+      <div id="overlay" class="fixed inset-0 bg-slate-900/40 z-[70] hidden lg:hidden" onclick="toggleMobileSidebar()"></div>
+      
       @include('layouts.partials.header')
+      @include('layouts.partials.sidebar', ['sidebarClass' => 'lg:hidden'])
       
       <main>
           {{ $slot }}
@@ -56,8 +60,9 @@
       @include('layouts.partials.drawers')
 
       @livewireScripts
-
+      
       <!-- SHARED CUSTOM JS -->
       <script src="{{ asset('js/app-custom.js') }}"></script>
+      @stack('scripts')
   </body>
 </html>
