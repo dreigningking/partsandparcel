@@ -1,9 +1,0 @@
-browse 
-help
-index2 - user not logged in- header menus are different. no user, notification and message icon
-register
-login 
--------------
-profile
-
-
