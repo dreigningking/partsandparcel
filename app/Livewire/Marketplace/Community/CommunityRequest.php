@@ -2,14 +2,17 @@
 
 namespace App\Livewire\Marketplace\Community;
 
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('layouts.app')]
 class CommunityRequest extends Component
 {
     public $isOwner = true; // Set to true for request owner view, false for public viewers
 
+    public $responseText = '';
     public $composerOfferPrice = '';
-    public $composerOfferWarranty = '7 days';
+    public $composerOfferWarranty = '14 days';
     public $composerOfferDelivery = 'Buyer pickup';
     public $composerOfferMessage = '';
     public $isOfferActive = false;
@@ -120,6 +123,50 @@ class CommunityRequest extends Component
                 'negotiation' => []
             ]
         ];
+    }
+
+    public function toggleOfferComposer()
+    {
+        $this->isOfferActive = !$this->isOfferActive;
+    }
+
+    public function submitResponse()
+    {
+        if (trim($this->responseText) === '') return;
+
+        $newResponse = [
+            'id' => count($this->responses) + 1,
+            'author' => 'My Tech Shop (You)',
+            'verified' => true,
+            'location' => 'Computer Village, Ikeja',
+            'time' => 'Just now',
+            'text' => $this->responseText,
+            'negotiation' => []
+        ];
+
+        if ($this->isOfferActive && $this->composerOfferPrice) {
+            $newResponse['negotiation'][] = [
+                'id' => rand(500, 999),
+                'from' => 'My Tech Shop (You)',
+                'to' => 'TechSam',
+                'price' => '₦' . number_format((float) str_replace(',', '', $this->composerOfferPrice)),
+                'warranty' => $this->composerOfferWarranty,
+                'delivery' => $this->composerOfferDelivery,
+                'message' => $this->composerOfferMessage ?: $this->responseText,
+                'time' => 'Just now',
+                'status' => 'pending',
+                'edited' => false
+            ];
+        }
+
+        array_unshift($this->responses, $newResponse);
+
+        $this->responseText = '';
+        $this->composerOfferPrice = '';
+        $this->composerOfferMessage = '';
+        $this->isOfferActive = false;
+
+        session()->flash('message', 'Your response has been posted successfully!');
     }
 
     public function openOffer($responseId)

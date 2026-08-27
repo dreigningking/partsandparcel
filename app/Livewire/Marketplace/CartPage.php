@@ -8,8 +8,8 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class CartPage extends Component
 {
-    // Seller Carts Array
-    public $sellerCarts = [
+    // Seller Grouped Carts Array
+    public $cartGrouped = [
         [
             'id' => 'adam',
             'name' => 'Adam Computers',
@@ -44,11 +44,17 @@ class CartPage extends Component
                     'specs' => 'Original Units',
                     'price' => 25000,
                     'quantity' => 2,
-                    'icon' => '🔋'
+                    'icon' => '⚡'
                 ]
             ]
         ]
     ];
+
+    // Alias getter for backward compatibility
+    public function getSellerCartsProperty()
+    {
+        return $this->cartGrouped;
+    }
 
     // Saved Addresses
     public $savedAddresses = [
@@ -73,7 +79,7 @@ class CartPage extends Component
     public $activeSellerId = 'adam';
     public $activeSellerName = 'Adam Computers';
     public $activeSellerLocation = 'Computer Village, Ikeja Lagos';
-    public $offerItems = ['item_101']; // Selected item IDs for package
+    public $offerItems = ['item_101'];
     
     // Service Requests
     public $requestDelivery = true;
@@ -96,17 +102,15 @@ class CartPage extends Component
 
     public function openPackageOffer($sellerId)
     {
-        $cart = collect($this->sellerCarts)->firstWhere('id', $sellerId);
+        $cart = collect($this->cartGrouped)->firstWhere('id', $sellerId);
         if (!$cart) return;
 
         $this->activeSellerId = $cart['id'];
         $this->activeSellerName = $cart['name'];
         $this->activeSellerLocation = $cart['location'];
         
-        // Select all item IDs from this seller's cart by default
         $this->offerItems = collect($cart['items'])->pluck('id')->toArray();
         
-        // Calculate initial items total for suggestion
         $itemsTotal = collect($cart['items'])->sum(fn($i) => $i['price'] * $i['quantity']);
         $this->proposedPrice = $itemsTotal;
 
@@ -126,8 +130,7 @@ class CartPage extends Component
             $this->offerItems[] = $itemId;
         }
 
-        // Recalculate proposed price suggestion
-        $cart = collect($this->sellerCarts)->firstWhere('id', $this->activeSellerId);
+        $cart = collect($this->cartGrouped)->firstWhere('id', $this->activeSellerId);
         if ($cart) {
             $itemsTotal = collect($cart['items'])
                 ->filter(fn($i) => in_array($i['id'], $this->offerItems))
@@ -162,7 +165,7 @@ class CartPage extends Component
 
     public function updateQuantity($sellerId, $itemId, $delta)
     {
-        foreach ($this->sellerCarts as &$cart) {
+        foreach ($this->cartGrouped as &$cart) {
             if ($cart['id'] === $sellerId) {
                 foreach ($cart['items'] as &$item) {
                     if ($item['id'] === $itemId) {
@@ -175,12 +178,12 @@ class CartPage extends Component
 
     public function removeItem($sellerId, $itemId)
     {
-        foreach ($this->sellerCarts as &$cart) {
+        foreach ($this->cartGrouped as &$cart) {
             if ($cart['id'] === $sellerId) {
                 $cart['items'] = array_values(array_filter($cart['items'], fn($i) => $i['id'] !== $itemId));
             }
         }
-        $this->sellerCarts = array_values(array_filter($this->sellerCarts, fn($c) => count($c['items']) > 0));
+        $this->cartGrouped = array_values(array_filter($this->cartGrouped, fn($c) => count($c['items']) > 0));
     }
 
     public function render()

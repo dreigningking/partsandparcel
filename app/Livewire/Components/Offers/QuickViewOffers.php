@@ -14,12 +14,12 @@ class QuickViewOffers extends Component
     public int $currentRoundIndex = 0;
 
     #[On('open-quick-view-offer')]
-    public function loadOffers($payload)
+    public function loadOffers($response_id = null, $payload = null)
     {
-        $responseId = is_array($payload) ? ($payload['response_id'] ?? null) : $payload;
-        $this->responseId = $responseId;
+        $targetId = $response_id ?? (is_array($payload) ? ($payload['response_id'] ?? null) : $payload);
+        $this->responseId = $targetId ? (int)$targetId : 1;
 
-        if ($responseId == 1) {
+        if ($this->responseId == 1) {
             $this->authorName = 'Abel Electronics';
             $this->rounds = [
                 [
@@ -53,7 +53,7 @@ class QuickViewOffers extends Component
                     'status' => 'Pending Action'
                 ],
             ];
-        } elseif ($responseId == 2) {
+        } elseif ($this->responseId == 2) {
             $this->authorName = 'Seth Tech Hub';
             $this->rounds = [
                 [
