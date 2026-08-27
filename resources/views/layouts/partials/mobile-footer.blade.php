@@ -12,7 +12,7 @@
     <span class="text-base">💬</span>
     <span>Community</span>
   </a>
-  <a href="cart.html" class="flex flex-col items-center text-[10px] font-semibold text-slate-600 relative">
+  <a href="{{ route('cart') }}" class="flex flex-col items-center text-[10px] font-semibold text-slate-600 relative">
     <span class="text-base">🛒</span>
     <span>Cart</span>
     <span class="absolute -top-1 right-2 w-3.5 h-3.5 bg-pp-600 text-white rounded-full text-[9px] font-bold grid place-items-center">3</span>

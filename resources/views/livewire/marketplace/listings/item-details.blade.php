@@ -56,11 +56,13 @@
         <button class="h-11 border-2 border-pp-600 text-pp-700 rounded-lg font-bold text-sm hover:bg-pp-50 transition cursor-pointer">
           🛒 Add to Cart
         </button>
-        <button class="h-11 bg-pp-600 text-white rounded-lg font-bold text-sm hover:bg-pp-700 transition cursor-pointer">
-          Make an Offer
-        </button>
+        <button wire:click="$dispatch('open-make-offer', { seller_id: 'abel', seller_name: 'Abel Tech Parts' })" class="h-11 bg-pp-600 text-white rounded-lg font-bold text-sm hover:bg-pp-700 transition cursor-pointer">Make an Offer</button>
       </div>
-      <button class="w-full h-11 mt-2 border rounded-lg font-bold cursor-pointer">Chat with Seller</button>
+      <button class="w-full h-11 mt-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs">
+        <i class="fas fa-microchip text-pp-400"></i>
+        <span>Offer on Specific Component (e.g. Board only)</span>
+      </button>
+      <button wire:click="$dispatch('open-conversation', { id: 'abel' })" class="w-full h-11 mt-2 border border-slate-200 rounded-lg font-bold text-xs hover:bg-slate-50 transition cursor-pointer flex items-center justify-center gap-2"><i class="fas fa-comment-dots text-pp-600"></i><span>Message / Chat with Seller</span></button>
       <button class="w-full h-11 mt-2 border rounded-lg font-bold cursor-pointer">♡ Save to Wishlist</button>
       <div class="mt-4 p-4 bg-pp-50 rounded-xl text-xs">
         <b class="text-pp-700">♧ Buy with Confidence</b>

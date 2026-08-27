@@ -57,7 +57,10 @@
       @include('layouts.partials.mobile-footer')
 
       <!-- GLOBAL DRAWERS & OVERLAYS -->
-      @include('layouts.partials.drawers')
+      @livewire('components.messaging.message-drawer')
+      @livewire('components.messaging.conversation-drawer')
+      @livewire('components.offers.quick-view-offers')
+      @livewire('components.offers.make-offer')
 
       @livewireScripts
       

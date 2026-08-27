@@ -39,7 +39,7 @@
         <h4 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-4">Buyer &amp; Account</h4>
         <ul class="space-y-2.5 text-xs text-slate-600">
           <li><a href="buyer-dashboard.html" class="hover:text-pp-600">Buyer Dashboard</a></li>
-          <li><a href="cart.html" class="hover:text-pp-600">My Cart</a></li>
+          <li><a href="{{ route('cart') }}" class="hover:text-pp-600">My Cart</a></li>
           <li><a href="checkout.html" class="hover:text-pp-600">Checkout Options</a></li>
           <li><a href="order-detail.html" class="hover:text-pp-600">Track Order</a></li>
           <li><a href="admin-dashboard.html" class="hover:text-pp-600">Platform Admin</a></li>

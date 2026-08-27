@@ -1,0 +1,104 @@
+Create a request 
+
+Description 
+Type
+If product /part, 
+Category 
+Item 1 text + image
+Item 2 text + image
+Item 3 ..
+Total budget: 100k
+Send
+===================
+Create a response  
+
+Description 
+Item 1 text + image
+Attachment listing 
+Warranty: 
+Warranty terms: 
+Offer: 
+
+Item 2 text + image
+Attachment listing 
+Warranty: 
+Warranty terms: 
+Offer: 
+
+Item 3 ..
+Offer price:
+No listing 
+Warranty: 
+Warranty terms: 
+Offer: 
+
+Total budget: 100k
+Send
+
+========================
+Counter Offer
+
+Description 
+Item 1 text + image
+Attachment listing 
+Offer: 
+
+Item 2 text + image
+Attachment listing 
+Offer: 
+
+Item 3 ..
+No listing 
+Offer price:
+
+
+
+Total budget: 100k
+Add discount: 
+Send
+
+====================
+From Cart.
+
+Cart 1
+--------
+Item 1
+Item 2
+Item 3
+----------
+Checkout | Make Offer 
+-------------
+Cart 2
+--------
+Item 1
+Item 2
+Item 3
+----------
+Checkout | Make Offer 
+-------------
+
+Offer (by buyer) 
+-------------
+Item 1
+Item 2
+Item 3
+Delivery 
+Repair
+Warranty 
+Total: xyx
+
+Counter Offer (by seller) 
+-------------
+Item 1
+Item 2
+Item 3
+Delivery 
+Repair
+Warranty
+Total: xyx
+
+
+User can follow a request from the request front page. 
+User can like a listing
+User can pin an offer
+ 

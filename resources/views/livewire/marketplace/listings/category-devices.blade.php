@@ -1,7 +1,7 @@
 <div class="grid lg:grid-cols-12 gap-8 items-start">
     <!-- LEFT SIDEBAR FILTER (DESKTOP) -->
     <aside class="hidden lg:block lg:col-span-3 sticky top-24">
-        <livewire:components.category-devices-filter :isMobile="false" key="desktop-devices-filter" />
+        <livewire:components.filters.category-devices-filter :isMobile="false" key="desktop-devices-filter" />
     </aside>
 
     <!-- MAIN CONTENT PANEL -->
@@ -126,7 +126,7 @@
             <button onclick="closeCategoryFilterDrawer('devices')" class="w-8 h-8 rounded-lg hover:bg-slate-100 grid place-items-center text-slate-500 text-lg font-bold transition cursor-pointer" aria-label="Close filters">×</button>
         </div>
         <div class="flex-1">
-            <livewire:components.category-devices-filter :isMobile="true" key="mobile-devices-filter" />
+            <livewire:components.filters.category-devices-filter :isMobile="true" key="mobile-devices-filter" />
         </div>
     </aside>
 </div>

@@ -36,6 +36,7 @@ return new class extends Migration {
 
         Schema::create('offers', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('parent_id')->nullable()->constrained('offers')->nullOnDelete();
             $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('recipient_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('cart_id')->nullable()->constrained()->nullOnDelete();

@@ -1,7 +1,7 @@
 <div class="grid lg:grid-cols-12 gap-8 items-start">
     <!-- LEFT SIDEBAR FILTER (DESKTOP) -->
     <aside class="hidden lg:block lg:col-span-3 sticky top-24">
-        <livewire:components.category-requests-filter :isMobile="false" key="desktop-requests-filter" />
+        <livewire:components.filters.category-requests-filter :isMobile="false" key="desktop-requests-filter" />
     </aside>
 
     <!-- MAIN CONTENT PANEL -->
@@ -73,7 +73,7 @@
             <button onclick="closeCategoryFilterDrawer('requests')" class="w-8 h-8 rounded-lg hover:bg-slate-100 grid place-items-center text-slate-500 text-lg font-bold transition cursor-pointer" aria-label="Close filters">×</button>
         </div>
         <div class="flex-1">
-            <livewire:components.category-requests-filter :isMobile="true" key="mobile-requests-filter" />
+            <livewire:components.filters.category-requests-filter :isMobile="true" key="mobile-requests-filter" />
         </div>
     </aside>
 </div>

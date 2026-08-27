@@ -82,12 +82,15 @@
         </header>
 
         <main class="p-4 sm:p-6 lg:p-8 max-w-[1500px] mx-auto">
-            {{ $slot }}
+            {{$slot}}
         </main>
     </div>
     @include('layouts.partials.mobile-footer')
     <!-- GLOBAL DRAWERS & OVERLAYS -->
-    @include('layouts.partials.drawers')
+    @livewire('components.messaging.message-drawer')
+    @livewire('components.messaging.conversation-drawer')
+    @livewire('components.offers.quick-view-offers')
+    @livewire('components.offers.make-offer')
 
     @livewireScripts
 

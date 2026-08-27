@@ -61,7 +61,7 @@
 
             <!-- SIDEBAR (WEB VIEW) -->
             <aside class="hidden lg:block sticky top-24">
-                <livewire:components.community-filter :isMobile="false" key="desktop-filter" />
+                <livewire:components.filters.community-filter :isMobile="false" key="desktop-filter" />
             </aside>
 
             <!-- MAIN CONTENT -->
@@ -283,25 +283,25 @@
             <button onclick="closeMobileFilterDrawer()" class="w-8 h-8 rounded-lg hover:bg-slate-100 grid place-items-center text-slate-500 text-lg font-bold transition cursor-pointer" aria-label="Close filters">×</button>
         </div>
         <div class="flex-1">
-            <livewire:components.community-filter :isMobile="true" key="mobile-filter" />
+            <livewire:components.filters.community-filter :isMobile="true" key="mobile-filter" />
         </div>
     </aside>
 </main>
 
 @push('scripts')
-<script>
-    function toggleMobileFilterDrawer() {
-        const drawer = document.getElementById('communityFilterDrawer');
-        const overlay = document.getElementById('communityFilterOverlay');
-        if (drawer) drawer.classList.toggle('open');
-        if (overlay) overlay.classList.toggle('open');
-    }
+    <script>
+        function toggleMobileFilterDrawer() {
+            const drawer = document.getElementById('communityFilterDrawer');
+            const overlay = document.getElementById('communityFilterOverlay');
+            if (drawer) drawer.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
+        }
 
-    function closeMobileFilterDrawer() {
-        const drawer = document.getElementById('communityFilterDrawer');
-        const overlay = document.getElementById('communityFilterOverlay');
-        if (drawer) drawer.classList.remove('open');
-        if (overlay) overlay.classList.remove('open');
-    }
-</script>
+        function closeMobileFilterDrawer() {
+            const drawer = document.getElementById('communityFilterDrawer');
+            const overlay = document.getElementById('communityFilterOverlay');
+            if (drawer) drawer.classList.remove('open');
+            if (overlay) overlay.classList.remove('open');
+        }
+    </script>
 @endpush
