@@ -128,23 +128,7 @@
           </div>
         </button>
 
-        <!-- CONVERSATION 6: MAX EXPRESS COURIER -->
-        <button wire:click="selectConversation('max_courier')" class="w-full text-left p-4 flex gap-3 transition cursor-pointer {{ $activeConversationId === 'max_courier' ? 'bg-pp-50/70 border-l-4 border-pp-600' : 'hover:bg-slate-50' }}">
-          <div class="relative shrink-0">
-            <span class="w-11 h-11 rounded-full bg-blue-100 text-blue-800 font-extrabold grid place-items-center text-sm"><i class="fas fa-motorcycle"></i></span>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between gap-1">
-              <span class="font-bold text-xs text-slate-900 truncate">Max Express Courier</span>
-              <span class="text-[10px] text-slate-400">Aug 24</span>
-            </div>
-            <div class="flex items-center gap-1.5 mt-0.5">
-              <span class="px-1.5 py-0.2 rounded bg-blue-100 text-blue-800 text-[9px] font-extrabold uppercase">DELIVERY JOB</span>
-              <span class="text-[11px] text-slate-500 truncate">Dispatcher #402</span>
-            </div>
-            <p class="text-xs text-slate-600 mt-1 truncate">I have picked up the parcel from Adam's shop. Heading to Lekki.</p>
-          </div>
-        </button>
+        
 
       </div>
     </div>
@@ -175,7 +159,7 @@
                   @elseif($activeConversationId === 'seth') Seth Repair Yard
                   @elseif($activeConversationId === 'laptopwizard') LaptopWizard
                   @elseif($activeConversationId === 'techsam') TechSam Repairs
-                  @else Max Express Courier @endif
+                  @endif
                 </h3>
                 <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 text-[9px] font-extrabold">VERIFIED SELLER</span>
               </div>

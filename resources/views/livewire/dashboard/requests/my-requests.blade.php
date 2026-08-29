@@ -67,7 +67,7 @@
       <div class="grid sm:grid-cols-12 gap-4 items-center">
         <div class="sm:col-span-6 space-y-1">
           <h3 class="text-base font-extrabold text-slate-900">Need HP 840 G5 Battery (Original 50Wh Tested)</h3>
-          <p class="text-xs text-slate-500">Target Budget: <strong class="text-pp-700">₦20,000 - ₦28,000</strong> · Fulfillment: Community Delivery</p>
+          <p class="text-xs text-slate-500">Target Budget: <strong class="text-pp-700">₦20,000 - ₦28,000</strong> · Fulfillment: Seller Delivery</p>
         </div>
 
         <div class="sm:col-span-3 text-left sm:text-right space-y-0.5">

@@ -44,7 +44,7 @@
               <h4 class="text-sm font-extrabold text-slate-900">HP EliteBook 840 G5 Deal</h4>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">3 Items Included</span>
             </div>
-            <p class="text-xs text-slate-500">Includes: Laptop + 16GB RAM Upgrade + Community Delivery Request</p>
+            <p class="text-xs text-slate-500">Includes: Laptop + 16GB RAM Upgrade + Seller Delivery Request</p>
             <p class="text-xs text-slate-600 italic">Terms: "Can pick up today if RAM upgrade is installed."</p>
           </div>
         </div>

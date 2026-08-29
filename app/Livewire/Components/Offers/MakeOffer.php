@@ -11,7 +11,7 @@ class MakeOffer extends Component
     public ?string $sellerId = null;
     public string $sellerName = 'Adam Computers Ltd';
 
-    public bool $requestDelivery = true;
+    public string $deliveryMode = 'pickup'; // 'pickup' vs 'seller_delivery'
     public int $deliveryAddressId = 1;
     public string $proposedPrice = '';
     public string $offerNote = '';

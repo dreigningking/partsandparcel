@@ -30,30 +30,22 @@
       </span>
     </div>
 
-    <div class="grid sm:grid-cols-3 gap-3">
+    <div class="grid sm:grid-cols-2 gap-3">
       <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
         <div class="w-8 h-8 rounded-xl bg-pp-100 text-pp-700 font-extrabold grid place-items-center text-xs shrink-0">1</div>
         <div>
-          <h4 class="text-xs font-bold text-slate-900">Self-Pickup / Errand</h4>
-          <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">Checkout now &amp; pay for items. Pick up in person or send your own rider.</p>
-        </div>
-      </div>
-
-      <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80">
-        <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 font-extrabold grid place-items-center text-xs shrink-0">2</div>
-        <div>
-          <h4 class="text-xs font-bold text-slate-900">Community Delivery</h4>
-          <p class="text-[11px] text-slate-600 mt-0.5 leading-snug">Checkout now. Post a delivery request to local community riders post-checkout.</p>
+          <h4 class="text-xs font-bold text-slate-900">Buyer Pickup</h4>
+          <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">"I'll collect this from the seller." Pick up directly at seller location. No shipment necessary.</p>
         </div>
       </div>
 
       <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-pp-50/70 border border-pp-200/80">
-        <div class="w-8 h-8 rounded-xl bg-slate-900 text-white font-extrabold grid place-items-center text-xs shrink-0">
-          <i class="fas fa-handshake text-pp-400 text-xs"></i>
+        <div class="w-8 h-8 rounded-xl bg-pp-600 text-white font-extrabold grid place-items-center text-xs shrink-0">
+          <i class="fas fa-truck text-xs"></i>
         </div>
         <div>
-          <h4 class="text-xs font-bold text-slate-900">Seller Delivery Offer</h4>
-          <p class="text-[11px] text-slate-600 mt-0.5 leading-snug">Don't checkout yet! Submit address to seller to negotiate items + seller delivery quote.</p>
+          <h4 class="text-xs font-bold text-slate-900">Seller Delivery</h4>
+          <p class="text-[11px] text-slate-600 mt-0.5 leading-snug">"The seller will deliver this to me." Seller dispatches shipment directly to your address.</p>
         </div>
       </div>
     </div>
@@ -134,26 +126,26 @@
 
             <!-- TWO EXPLICIT ACTION BUTTONS -->
             <div class="grid sm:grid-cols-2 gap-3">
-              <!-- BUTTON 1: SELLER DELIVERY OFFER (DISPATCHES EVENT TO MakeOffer COMPONENT) -->
+              <!-- BUTTON 1: MAKE CUSTOM OFFER -->
               <button wire:click="$dispatch('open-make-offer', { seller_id: '{{ $sellerCart['id'] }}', seller_name: '{{ $sellerCart['name'] }}' })" class="p-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-2xs transition flex items-center gap-3 cursor-pointer text-left">
                 <div class="w-9 h-9 rounded-xl bg-slate-800 text-white grid place-items-center shrink-0">
                   <i class="fas fa-handshake text-pp-400 text-sm"></i>
                 </div>
                 <div>
-                  <div class="font-extrabold text-xs">Request Seller Delivery &amp; Offer</div>
-                  <div class="text-[10px] text-slate-400 font-normal mt-0.5">Send address for seller delivery quote before paying</div>
+                  <div class="font-extrabold text-xs">Make Custom Offer</div>
+                  <div class="text-[10px] text-slate-400 font-normal mt-0.5">Submit custom price &amp; delivery proposal</div>
                 </div>
               </button>
 
-              <!-- BUTTON 2: IMMEDIATE CHECKOUT -->
+              <!-- BUTTON 2: PROCEED TO CHECKOUT -->
               <a href="{{ route('checkout') }}?seller={{ $sellerCart['id'] }}" class="p-3.5 rounded-2xl bg-pp-600 hover:bg-pp-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-between gap-2 text-left">
                 <div class="flex items-center gap-3">
                   <div class="w-9 h-9 rounded-xl bg-pp-500 text-white grid place-items-center shrink-0">
                     <i class="fas fa-shopping-bag text-sm"></i>
                   </div>
                   <div>
-                    <div class="font-extrabold text-xs">Checkout Now (Self / Community)</div>
-                    <div class="text-[10px] text-pp-200 font-normal mt-0.5">Pay now for pickup or post-checkout delivery job</div>
+                    <div class="font-extrabold text-xs">Proceed to Checkout</div>
+                    <div class="text-[10px] text-pp-200 font-normal mt-0.5">Select pickup or seller delivery &amp; pay</div>
                   </div>
                 </div>
                 <i class="fas fa-arrow-right text-xs shrink-0"></i>

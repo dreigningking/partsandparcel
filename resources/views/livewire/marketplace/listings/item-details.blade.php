@@ -88,10 +88,10 @@
       </div>
       
       <div class="border rounded-xl p-4 text-[11px]">
-        <b>Delivery Options</b>
+        <b>Fulfillment &amp; Delivery Options</b>
         <div class="mt-3 space-y-3">
-          <p>♧ <b>Buyer arranges delivery</b><br><span class="ml-5 text-slate-500">No delivery fee will be added.</span></p>
-          <p>♧ <b>Platform delivery</b><br><span class="ml-5 text-slate-500">Trusted courier connection.</span></p>
+          <p>📍 <b>Buyer pickup</b><br><span class="ml-5 text-slate-500">"I'll collect this from the seller." No shipment necessary.</span></p>
+          <p>🚚 <b>Seller delivery</b><br><span class="ml-5 text-slate-500">"The seller will deliver this to me." Seller dispatches shipment to your address.</span></p>
         </div>
       </div>
 

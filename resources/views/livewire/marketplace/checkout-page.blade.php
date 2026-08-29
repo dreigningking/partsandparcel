@@ -1,4 +1,4 @@
-﻿<main class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+<main class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
   
   <div class="flex items-center justify-between flex-wrap gap-4">
     <div>
@@ -29,77 +29,50 @@
       <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-soft">
         <div class="border-b border-slate-100 pb-3">
           <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-            <i class="fas fa-truck text-pp-600"></i> 1. Select Fulfillment &amp; Delivery Method
+            <i class="fas fa-truck text-pp-600"></i> Delivery
           </h3>
-          <p class="text-xs text-slate-500 mt-0.5">Choose how you want to receive your items from {{ $sellerName }}.</p>
+          <p class="text-xs text-slate-500 mt-0.5">Select how you want to receive your item(s) from {{ $sellerName }}.</p>
         </div>
 
         <div class="space-y-3">
           
-          <!-- OPTION 1: SELF-PICKUP / BUYER ARRANGES (DEFAULT) -->
+          <!-- OPTION 1: BUYER PICKUP -->
           <div wire:click="selectDeliveryMethod('pickup')" class="flex items-start gap-4 p-4 rounded-2xl border transition cursor-pointer {{ $deliveryMethod === 'pickup' ? 'border-2 border-pp-600 bg-pp-50/40 shadow-2xs' : 'border-slate-200 hover:border-pp-300 bg-white' }}">
             <input type="radio" name="delivery_method_radio" value="pickup" {{ $deliveryMethod === 'pickup' ? 'checked' : '' }} class="mt-1 accent-pp-600" />
             <div class="space-y-1">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs font-extrabold text-slate-900 uppercase">OPTION 1: Self-Pickup or Buyer-Arranged Courier</span>
-                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">NO DELIVERY FEE (₦0)</span>
+                <span class="text-xs font-extrabold text-slate-900 uppercase">○ I'll pick it up</span>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">NO SHIPMENT NECESSARY</span>
               </div>
               <p class="text-xs text-slate-600 leading-relaxed">
-                Pay for items now. Pick up in person at {{ $sellerName }}'s shop in {{ $sellerLocation }}, or send your own errand rider (Gokada, Uber, Max.ng). No address required from seller.
+                "I'll collect this from the seller." Collect directly from {{ $sellerName }} at {{ $sellerLocation }}. No shipment is created or necessary.
               </p>
             </div>
           </div>
 
-          <!-- OPTION 2: COMMUNITY DELIVERY REQUEST (POST-CHECKOUT JOB) -->
-          <div wire:click="selectDeliveryMethod('community')" class="flex items-start gap-4 p-4 rounded-2xl border transition cursor-pointer {{ $deliveryMethod === 'community' ? 'border-2 border-pp-600 bg-pp-50/40 shadow-2xs' : 'border-slate-200 hover:border-pp-300 bg-white' }}">
-            <input type="radio" name="delivery_method_radio" value="community" {{ $deliveryMethod === 'community' ? 'checked' : '' }} class="mt-1 accent-pp-600" />
+          <!-- OPTION 2: SELLER DELIVERY -->
+          <div wire:click="selectDeliveryMethod('seller_delivery')" class="flex items-start gap-4 p-4 rounded-2xl border transition cursor-pointer {{ $deliveryMethod === 'seller_delivery' ? 'border-2 border-pp-600 bg-pp-50/40 shadow-2xs' : 'border-slate-200 hover:border-pp-300 bg-white' }}">
+            <input type="radio" name="delivery_method_radio" value="seller_delivery" {{ $deliveryMethod === 'seller_delivery' ? 'checked' : '' }} class="mt-1 accent-pp-600" />
             <div class="space-y-1">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs font-extrabold text-slate-900 uppercase">OPTION 2: Post Delivery Request to Community Hub</span>
-                <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-extrabold">COMMUNITY QUOTE POST-CHECKOUT</span>
+                <span class="text-xs font-extrabold text-slate-900 uppercase">○ Seller will deliver</span>
+                <span class="px-2 py-0.5 rounded-full bg-pp-100 text-pp-800 text-[10px] font-extrabold">SELLER IS DELIVERY PARTY</span>
               </div>
               <p class="text-xs text-slate-600 leading-relaxed">
-                Pay for items now. Once checkout is complete, your order will be automatically listed as a delivery job in the Community Hub where local verified dispatchers can offer delivery rates to your address.
+                "The seller will deliver this to me." {{ $sellerName }} delivers to your location. A shipment is created with the seller as the delivery party.
               </p>
             </div>
-          </div>
-
-          <!-- OPTION 3: SELLER DIRECT DELIVERY (REQUIRES PRE-CHECKOUT OFFER) -->
-          <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-2 opacity-90">
-            <div class="flex items-center justify-between gap-2 flex-wrap">
-              <span class="text-xs font-extrabold text-slate-800 uppercase">OPTION 3: Seller Direct Delivery</span>
-              <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold">REQUIRES PRE-CHECKOUT OFFER</span>
-            </div>
-            <p class="text-xs text-slate-600 leading-relaxed">
-              Want {{ $sellerName }} to deliver directly to your address? You must request a seller delivery offer before paying. Return to cart and click "Request Seller Delivery &amp; Offer" to submit your address.
-            </p>
-            <div class="pt-1">
-              <a href="{{ route('cart') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white font-bold text-[11px] hover:bg-slate-800 transition">
-                <i class="fas fa-handshake text-pp-400"></i> Return to Cart &amp; Request Seller Delivery
-              </a>
-            </div>
-          </div>
-
-          <!-- OPTION 4: SYSTEM INTEGRATED COURIER API (DISABLED / MVP) -->
-          <div wire:click="selectDeliveryMethod('integrated')" class="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-1.5 opacity-60 cursor-not-allowed">
-            <div class="flex items-center justify-between gap-2 flex-wrap">
-              <span class="text-xs font-extrabold text-slate-700 uppercase">OPTION 4: Platform Integrated Express Courier API</span>
-              <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-extrabold">COMING SOON (MVP)</span>
-            </div>
-            <p class="text-xs text-slate-500 leading-relaxed">
-              Automated courier dispatch API integration is currently under development. Please select Self-Pickup or Community Delivery for now.
-            </p>
           </div>
 
         </div>
       </div>
 
-      <!-- STEP 2: SHIPPING ADDRESS SELECTOR (DISPLAYED WHEN DELIVERY METHOD IS NOT SELF-PICKUP) -->
-      @if ($deliveryMethod !== 'pickup')
+      <!-- STEP 2: BUYER'S DELIVERY LOCATION (COLLECTED WHEN SELLER DELIVERY IS SELECTED) -->
+      @if ($deliveryMethod === 'seller_delivery')
         <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-soft">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <i class="fas fa-map-marker-alt text-pp-600"></i> 2. Select Destination Address for Delivery
+              <i class="fas fa-map-marker-alt text-pp-600"></i> Select Delivery Location
             </h3>
             <a href="#" class="text-xs font-bold text-pp-600 hover:underline">+ Add New Address</a>
           </div>
@@ -235,7 +208,7 @@
           <div class="flex justify-between pt-2 border-t border-slate-100">
             <span>Fulfillment Method</span>
             <span class="font-bold text-slate-900">
-              @if ($deliveryMethod === 'pickup') Self-Pickup / Errand @else Community Delivery Job @endif
+              @if ($deliveryMethod === 'pickup') Buyer Pickup @else Seller Delivery @endif
             </span>
           </div>
 

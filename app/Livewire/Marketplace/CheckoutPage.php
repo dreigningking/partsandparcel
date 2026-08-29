@@ -45,12 +45,7 @@ class CheckoutPage extends Component
 
     public function selectDeliveryMethod($method)
     {
-        if ($method === 'integrated') {
-            session()->flash('warning', 'Platform Integrated Courier API is coming soon! Please select Self-Pickup or Community Delivery for now.');
-            return;
-        }
-
-        $this->deliveryMethod = $method;
+        $this->deliveryMethod = in_array($method, ['pickup', 'seller_delivery']) ? $method : 'pickup';
     }
 
     public function setPaymentMethod($method)
@@ -60,10 +55,14 @@ class CheckoutPage extends Component
 
     public function placeOrder()
     {
+        $deliveryText = ($this->deliveryMethod === 'seller_delivery') 
+            ? 'Seller delivery shipment created with seller as delivery party.' 
+            : 'Buyer pickup selected (no shipment necessary).';
+
         if ($this->paymentMethod === 'escrow') {
-            session()->flash('message', 'Payment successful via Parts & Parcel Escrow! Funds held safely until item inspection.');
+            session()->flash('message', 'Payment successful via Parts & Parcel Escrow! ' . $deliveryText . ' Funds held safely until item inspection.');
         } else {
-            session()->flash('message', 'Direct payment marked completed! Please notify seller with your transfer proof.');
+            session()->flash('message', 'Direct payment marked completed! ' . $deliveryText . ' Please notify seller with your transfer proof.');
         }
 
         return redirect()->route('welcome');

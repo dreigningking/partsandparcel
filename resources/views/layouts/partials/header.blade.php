@@ -2,7 +2,7 @@
 <div class="hidden lg:flex bg-pp-900 text-white py-2 px-4 text-xs font-medium text-center flex items-center justify-center gap-2">
   <span class="bg-pp-600 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Nigeria's #1</span>
   <span>Marketplace for devices, machines, spare parts &amp; salvage items.</span>
-  <a href="subscriptions.html" class="underline hover:text-pp-200 ml-1 font-semibold">Sell on Parts &amp; Parcel →</a>
+  <a href="{{ route('subscriptions') }}" class="underline hover:text-pp-200 ml-1 font-semibold">Sell on Parts &amp; Parcel →</a>
 </div>
 
 <!-- HEADER NAVIGATION (ONLY TOP ROW STICKY) -->

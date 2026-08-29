@@ -103,12 +103,12 @@
                     <span>Dashboard</span>
                 </a>
                 
-                <a href="subscriptions.html" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
+                <a href="{{ route('subscriptions') }}" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
                     <span class="text-base">💳</span>
                     <span>Subscription</span>
                     <span class="ml-auto text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Free</span>
                 </a>
-                <a href="{{ route('dashboard', ['tab' => 'profile']) }}" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
+                <a href="{{ route('profile') }}" class="flex items-center gap-3 px-4 py-2 text-slate-700 hover:bg-pp-50 hover:text-pp-700 font-semibold transition">
                     <span class="text-base">👤</span>
                     <span>Profile</span>
                 </a>

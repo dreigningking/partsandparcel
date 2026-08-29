@@ -227,8 +227,8 @@
                   <div>
                     <label class="text-[11px] font-bold text-slate-700 block mb-1">Fulfillment Option</label>
                     <select wire:model="composerOfferDelivery" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600">
-                      <option value="Buyer pickup">Buyer Pickup in Shop</option>
-                      <option value="Seller delivery">Seller Direct Delivery</option>
+                      <option value="Buyer pickup">Buyer pickup ("I'll collect this from the seller")</option>
+                      <option value="Seller delivery">Seller delivery ("The seller will deliver this to me")</option>
                     </select>
                   </div>
                 </div>

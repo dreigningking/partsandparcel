@@ -61,7 +61,7 @@ class QuickViewOffers extends Component
                     'from' => 'Seth Tech Hub (Seller)',
                     'price' => '₦90,000',
                     'warranty' => '30-Day Warranty',
-                    'delivery' => 'Seller Delivery Included',
+                    'delivery' => 'Seller Delivery',
                     'message' => 'Grade A tested motherboard with 30 days warranty. Free delivery in Ikeja.',
                     'time' => '1 hour ago',
                     'status' => 'Countered'

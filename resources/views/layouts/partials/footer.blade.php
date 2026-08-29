@@ -30,7 +30,7 @@
           <li><a href="seller-dashboard.html" class="hover:text-pp-600 font-semibold">Seller Portal</a></li>
           <li><a href="seller-components.html" class="hover:text-pp-600">Item Disassembly Tool</a></li>
           <li><a href="seller-payouts.html" class="hover:text-pp-600">Payouts &amp; Settlements</a></li>
-          <li><a href="subscriptions.html" class="hover:text-pp-600">Subscription Plans</a></li>
+          <li><a href="{{ route('subscriptions') }}" class="hover:text-pp-600">Subscription Plans</a></li>
           <li><a href="locations.html" class="hover:text-pp-600">Store Locations</a></li>
         </ul>
       </div>

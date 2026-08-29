@@ -78,7 +78,6 @@
                         <button wire:click="setTab('all')" class="py-3 px-4 font-bold text-xs sm:text-sm border-b-2 transition cursor-pointer rounded-t-xl whitespace-nowrap {{ $tab === 'all' ? 'border-pp-600 text-pp-600 bg-pp-50/60' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">All Requests</button>
                         <button wire:click="setTab('products')" class="py-3 px-4 font-bold text-xs sm:text-sm border-b-2 transition cursor-pointer rounded-t-xl whitespace-nowrap {{ $tab === 'products' ? 'border-pp-600 text-pp-600 bg-pp-50/60' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">Products &amp; Parts</button>
                         <button wire:click="setTab('repairs')" class="py-3 px-4 font-bold text-xs sm:text-sm border-b-2 transition cursor-pointer rounded-t-xl whitespace-nowrap {{ $tab === 'repairs' ? 'border-pp-600 text-pp-600 bg-pp-50/60' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">Repairs &amp; Services</button>
-                        <button wire:click="setTab('delivery')" class="py-3 px-4 font-bold text-xs sm:text-sm border-b-2 transition cursor-pointer rounded-t-xl whitespace-nowrap {{ $tab === 'delivery' ? 'border-pp-600 text-pp-600 bg-pp-50/60' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">Delivery &amp; Logistics</button>
                         <button wire:click="setTab('questions')" class="py-3 px-4 font-bold text-xs sm:text-sm border-b-2 transition cursor-pointer rounded-t-xl whitespace-nowrap {{ $tab === 'questions' ? 'border-pp-600 text-pp-600 bg-pp-50/60' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">Questions &amp; Advice</button>
                     </nav>
                 </div>
@@ -194,7 +193,7 @@
                 <h2 class="text-xl font-extrabold text-slate-900 mb-1 flex items-center gap-2">
                     <i class="fas fa-pen-square text-pp-600"></i> Post a Request
                 </h2>
-                <p class="text-xs text-slate-500 mb-6">Tell the community what you need — products, parts, repairs, delivery, or advice.</p>
+                <p class="text-xs text-slate-500 mb-6">Tell the community what you need — products, parts, repairs, or advice.</p>
 
                 @if($postSuccessMessage)
                     <div class="p-4 mb-5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
@@ -209,7 +208,6 @@
                             <option value="">Select request type</option>
                             <option value="Product / Part">Product / Part</option>
                             <option value="Repair / Service">Repair / Service</option>
-                            <option value="Delivery / Logistics">Delivery / Logistics</option>
                             <option value="Question / Advice">Question / Advice</option>
                         </select>
                         @error('formType') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror

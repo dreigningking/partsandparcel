@@ -25,18 +25,32 @@
             <!-- DRAWER FORM BODY (SCROLLABLE) -->
             <div class="flex-1 min-h-0 overflow-y-auto p-6 space-y-5 text-xs">
                 
-                <!-- STEP 1: DELIVERY ADDRESS SELECTION -->
+                <!-- STEP 1: DELIVERY OPTION SELECTION -->
                 <div class="p-4 rounded-2xl bg-pp-50/70 border border-pp-200 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <label class="flex items-center gap-2 text-xs font-extrabold text-slate-900 cursor-pointer">
-                            <input type="checkbox" wire:model.live="requestDelivery" class="rounded text-pp-600 focus:ring-pp-500" />
-                            <i class="fas fa-truck text-pp-600"></i> Request Seller Direct Delivery to Address
+                    <span class="text-xs font-extrabold text-slate-900 block border-b border-pp-200/60 pb-2">
+                        <i class="fas fa-truck text-pp-600"></i> Delivery
+                    </span>
+
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-900">
+                            <input type="radio" wire:model.live="deliveryMode" value="pickup" class="accent-pp-600" />
+                            <span>○ I'll pick it up</span>
                         </label>
-                        <span class="text-[10px] uppercase font-bold text-pp-700 bg-pp-100 px-2 py-0.5 rounded-full">Primary</span>
+                        <p class="text-[11px] text-slate-600 pl-5 leading-relaxed">
+                            "I'll collect this from the seller." Collect directly from {{ $sellerName }}. No shipment is necessary.
+                        </p>
+
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-900 pt-1">
+                            <input type="radio" wire:model.live="deliveryMode" value="seller_delivery" class="accent-pp-600" />
+                            <span>○ Seller will deliver</span>
+                        </label>
+                        <p class="text-[11px] text-slate-600 pl-5 leading-relaxed">
+                            "The seller will deliver this to me." {{ $sellerName }} dispatches shipment to your location.
+                        </p>
                     </div>
 
-                    @if ($requestDelivery)
-                        <div class="space-y-3 pt-1">
+                    @if ($deliveryMode === 'seller_delivery')
+                        <div class="space-y-3 pt-3 border-t border-pp-200/60">
                             <div>
                                 <label class="text-[11px] font-bold text-slate-700 block mb-1">Select Delivery Destination Address <span class="text-rose-500">*</span></label>
                                 <select wire:model.live="deliveryAddressId" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600">
@@ -48,7 +62,7 @@
 
                             <div class="p-3 rounded-xl bg-amber-50 border border-amber-200/80 text-[11px] text-amber-800 font-medium flex items-start gap-2">
                                 <i class="fas fa-info-circle text-amber-600 text-xs shrink-0 mt-0.5"></i>
-                                <span>Delivery fee is not set by buyer. <strong>{{ $sellerName }}</strong> will review your address and send an offer quote for Goods + Delivery.</span>
+                                <span><strong>{{ $sellerName }}</strong> will review your address and include their delivery quote in the offer.</span>
                             </div>
                         </div>
                     @endif

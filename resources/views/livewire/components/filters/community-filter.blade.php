@@ -37,7 +37,6 @@
             <option value="">All Types</option>
             <option value="Product / Part">Product / Part</option>
             <option value="Repair / Service">Repair / Service</option>
-            <option value="Delivery / Logistics">Delivery / Logistics</option>
             <option value="Question / Advice">Question / Advice</option>
         </select>
     </div>
