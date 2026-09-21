@@ -22,7 +22,6 @@ return new class extends Migration {
             $table->text('description')->nullable();
             $table->timestamps();
             $table->index(['user_id', 'status']);
-            $table->index(['assetable_type', 'assetable_id']);
             $table->index(['location_id', 'status']);
         });
 

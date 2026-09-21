@@ -27,13 +27,34 @@ use App\Livewire\Dashboard\SubscriptionPlans;
 use App\Livewire\Dashboard\Subscriptions;
 use App\Livewire\Dashboard\Wishlists;
 use App\Livewire\Marketplace\CartPage;
+use App\Livewire\Auth\ForgotPassword;
+use App\Livewire\Auth\Login;
+use App\Livewire\Auth\Register;
+use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Marketplace\CheckoutPage;
 use App\Livewire\Marketplace\Community\CommunityHome;
 use App\Livewire\Marketplace\Community\CommunityRequest;
 use App\Livewire\Marketplace\Listings\Category;
 use App\Livewire\Marketplace\Listings\ItemDetails;
 use App\Livewire\Marketplace\Welcome;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
+// Authentication (Guest)
+Route::middleware('guest')->group(function () {
+    Route::get('login', Login::class)->name('login');
+    Route::get('register', Register::class)->name('register');
+    Route::get('forgot-password', ForgotPassword::class)->name('password.request');
+    Route::get('reset-password/{token}', ResetPassword::class)->name('password.reset');
+});
+
+// Logout
+Route::post('logout', function () {
+    Auth::guard('web')->logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect()->route('welcome');
+})->name('logout');
 
 Route::get('/', Welcome::class)->name('welcome');
 Route::get('category', Category::class)->name('category');
@@ -73,4 +94,9 @@ Route::get('mylistings/listing_id', ListingView::class)->name('mylisting.view');
 Route::get('myearnings', Earnings::class)->name('earnings');
 Route::get('disputes', DisputesList::class)->name('disputes');
 Route::get('disputes/dispute_id', DisputeView::class)->name('disputes.view');
+
+// Payments & Webhooks
+Route::get('payment/callback', [\App\Http\Controllers\PaymentController::class, 'callback'])->name('payment.callback');
+Route::post('webhooks/paystack', [\App\Http\Controllers\Webhooks\PaystackWebhookController::class, 'handle'])->name('webhooks.paystack');
+Route::post('webhooks/flutterwave', [\App\Http\Controllers\Webhooks\FlutterwaveWebhookController::class, 'handle'])->name('webhooks.flutterwave');
 

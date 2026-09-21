@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->foreignId('model_id')->nullable()->constrained()->nullOnDelete();
             $table->string('title');
             $table->text('body');
-            $table->text('attachments');
+            $table->text('attachments')->nullable();
             $table->string('status')->default('open');
             $table->timestamps();
             $table->index(['category_id', 'status']);
@@ -39,8 +39,9 @@ return new class extends Migration {
             $table->foreignId('parent_id')->nullable()->constrained('offers')->nullOnDelete();
             $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('recipient_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('cart_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('discussion_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('response_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('cart_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('delivery_method', ['buyer_responsible','seller_responsible','platform_responsible'])->nullable();
             $table->decimal('discount', 15, 2)->default(0);
             $table->text('terms')->nullable();
@@ -99,9 +100,12 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('responses');
+        Schema::dropIfExists('messages');
+        Schema::dropIfExists('conversation_participants');
+        Schema::dropIfExists('conversations');
         Schema::dropIfExists('offer_items');
         Schema::dropIfExists('offers');
+        Schema::dropIfExists('responses');
         Schema::dropIfExists('discussions');
     }
 };

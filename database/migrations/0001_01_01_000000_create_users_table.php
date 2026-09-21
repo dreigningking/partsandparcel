@@ -17,6 +17,14 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('phone')->nullable();
+            $table->string('business_name')->nullable();
+            $table->string('avatar')->nullable();
+            $table->text('bio')->nullable();
+            $table->boolean('is_verified')->default(false);
+            $table->string('theme_preference')->default('system'); // light, dark, system
+            $table->string('country_code', 2)->default('NG');
+            $table->string('currency', 3)->default('NGN');
             $table->rememberToken();
             $table->timestamps();
         });

@@ -103,7 +103,7 @@ return new class extends Migration {
     }
 
     public function down(): void { 
-        Schema::dropIfExists('shipment_items');
-        Schema::dropIfExists('shipments');
+        Schema::dropIfExists('service_reviews');
+        Schema::dropIfExists('service_jobs');
     }
 };

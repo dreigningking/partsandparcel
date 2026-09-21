@@ -111,7 +111,6 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('refund_id')->constrained()->cascadeOnDelete();
             $table->foreignId('invoice_item_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('invoice_item_id')->nullable()->constrained()->nullOnDelete();
             $table->unsignedInteger('quantity')->default(1);
             $table->decimal('amount', 15, 2);
             $table->timestamps();

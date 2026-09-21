@@ -35,4 +35,21 @@ return [
         ],
     ],
 
+    'paystack' => [
+        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+        'secret' => env('PAYSTACK_SECRET_KEY'),
+        'webhook_secret' => env('PAYSTACK_SECRET_KEY'),
+    ],
+
+    'flutterwave' => [
+        'public_key' => env('FLW_PUBLIC_KEY'),
+        'secret' => env('FLW_SECRET_KEY'),
+        'webhook_hash' => env('FLW_SECRET_HASH'),
+    ],
+
+    'escrow' => [
+        'default_inspection_hours' => (int) env('ESCROW_DEFAULT_INSPECTION_HOURS', 48),
+        'platform_commission_percent' => (float) env('PLATFORM_COMMISSION_PERCENT', 5.0),
+    ],
+
 ];
