@@ -4,6 +4,7 @@ set -e
 # If running as production, warm up Laravel caches for maximum performance
 if [ "$APP_ENV" = "production" ]; then
     echo "Warming Laravel production caches..."
+    php /var/www/html/artisan package:discover --ansi || true
     php /var/www/html/artisan config:cache || true
     php /var/www/html/artisan route:cache || true
     php /var/www/html/artisan view:cache || true

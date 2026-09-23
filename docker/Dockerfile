@@ -21,8 +21,8 @@ FROM composer:2 AS composer_builder
 WORKDIR /app
 
 COPY composer.json composer.lock ./
-# Install production dependencies only, skipping development tools (Pint, Sail, PHPUnit)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs
+# Install production dependencies only, skipping development tools and post-scripts (artisan not yet present)
+RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs
 
 # ==============================================================================
 # STAGE 3: PRODUCTION RUNTIME (PHP 8.3 FPM + Nginx + Supervisor on Alpine)
