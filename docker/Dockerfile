@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy dependency manifests first for maximum Docker layer caching
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # Copy frontend source files and compile Vite production bundle
 COPY vite.config.js tailwind.config.js postcss.config.js ./

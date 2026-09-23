@@ -58,7 +58,7 @@ jobs:
 
       - name: 6. Install NPM Dependencies & Compile Vite Assets
         run: |
-          npm ci
+          npm install
           npm run build
 
       - name: 7. Prepare Test Environment
