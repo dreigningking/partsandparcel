@@ -22,7 +22,7 @@ return new class extends Migration {
         Schema::create('issue_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('issue_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('invoice_item_id')->constrained()->nullOnDelete();
+            $table->foreignId('invoice_item_id')->nullable()->constrained()->nullOnDelete();
             $table->text('reason')->nullable();
             $table->text('evidence')->nullable();
             $table->timestamps();

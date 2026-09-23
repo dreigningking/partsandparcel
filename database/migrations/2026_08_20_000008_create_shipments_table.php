@@ -9,8 +9,8 @@ return new class extends Migration {
     {
         Schema::create('shipments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sender_id')->constrained('users')->nullOnDelete();
-            $table->foreignId('receiver_id')->constrained('users')->nullOnDelete();
+            $table->foreignId('sender_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('receiver_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('provider_name')->nullable();
             $table->string('tracking_number')->nullable();
             $table->string('status')->default('pending');
