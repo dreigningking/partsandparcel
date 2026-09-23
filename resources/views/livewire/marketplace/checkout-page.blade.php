@@ -74,31 +74,61 @@
             <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
               <i class="fas fa-map-marker-alt text-pp-600"></i> Select Delivery Location
             </h3>
-            <a href="#" class="text-xs font-bold text-pp-600 hover:underline">+ Add New Address</a>
+            <button type="button" wire:click="$toggle('showNewAddressModal')" class="text-xs font-bold text-pp-600 hover:underline cursor-pointer">
+              {{ $showNewAddressModal ? 'Cancel' : '+ Add New Address' }}
+            </button>
           </div>
 
-          <div class="grid sm:grid-cols-2 gap-4">
-            <!-- SAVED ADDRESS 1 -->
-            <label class="p-4 rounded-2xl border-2 border-pp-600 bg-pp-50/50 cursor-pointer block">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold text-pp-700 uppercase">Home Address (Default)</span>
-                <input type="radio" name="address" checked class="accent-pp-600" />
+          @if ($showNewAddressModal)
+            <div class="p-4 rounded-2xl bg-pp-50/70 border border-pp-200 space-y-3">
+              <span class="font-extrabold text-xs text-slate-900 block">Add New Delivery Address</span>
+              <div class="grid sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label class="font-bold text-slate-700 block mb-1">Label</label>
+                  <input type="text" wire:model="newAddressLabel" placeholder="e.g. Home, Office, Workshop" class="w-full p-2 border border-slate-200 rounded-xl bg-white text-xs" />
+                </div>
+                <div>
+                  <label class="font-bold text-slate-700 block mb-1">Contact Phone</label>
+                  <input type="text" wire:model="newPhone" placeholder="+234 800 000 0000" class="w-full p-2 border border-slate-200 rounded-xl bg-white text-xs" />
+                </div>
               </div>
-              <p class="text-xs font-bold text-slate-900 mt-2">Emmanuel Reign</p>
-              <p class="text-xs text-slate-600 mt-1">Block 4B, Lekki Phase 1, Victoria Island, Lagos</p>
-              <p class="text-[11px] text-slate-500 mt-1"><i class="fas fa-phone text-slate-400"></i> +234 803 123 4567</p>
-            </label>
+              <div class="space-y-1 text-xs">
+                <label class="font-bold text-slate-700 block mb-1">Address Line</label>
+                <input type="text" wire:model="newAddressLine" placeholder="Street number, building, street name..." class="w-full p-2 border border-slate-200 rounded-xl bg-white text-xs" />
+              </div>
+              <div class="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label class="font-bold text-slate-700 block mb-1">City</label>
+                  <input type="text" wire:model="newCity" class="w-full p-2 border border-slate-200 rounded-xl bg-white text-xs" />
+                </div>
+                <div>
+                  <label class="font-bold text-slate-700 block mb-1">State</label>
+                  <input type="text" wire:model="newState" class="w-full p-2 border border-slate-200 rounded-xl bg-white text-xs" />
+                </div>
+              </div>
+              <button type="button" wire:click="saveNewAddress" class="py-2 px-4 rounded-xl bg-pp-600 text-white font-bold text-xs hover:bg-pp-700 transition cursor-pointer">
+                Save &amp; Select Address
+              </button>
+            </div>
+          @endif
 
-            <!-- SAVED ADDRESS 2 -->
-            <label class="p-4 rounded-2xl border border-slate-200 bg-white cursor-pointer block hover:border-slate-300">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold text-slate-500 uppercase">Workshop Address</span>
-                <input type="radio" name="address" class="accent-pp-600" />
+          <div class="grid sm:grid-cols-2 gap-4">
+            @foreach ($savedAddresses as $addr)
+              @php
+                $isChosen = ($selectedAddressId == $addr['id']);
+              @endphp
+              <div wire:click="$set('selectedAddressId', {{ $addr['id'] }})" class="p-4 rounded-2xl cursor-pointer transition {{ $isChosen ? 'border-2 border-pp-600 bg-pp-50/50 shadow-2xs' : 'border border-slate-200 bg-white hover:border-slate-300' }}">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-extrabold {{ $isChosen ? 'text-pp-700' : 'text-slate-700' }} uppercase">{{ $addr['name'] ?? $addr['label'] ?? 'Address' }}</span>
+                  <input type="radio" name="address_radio" @checked($isChosen) class="accent-pp-600" />
+                </div>
+                <p class="text-xs font-bold text-slate-900 mt-2">{{ $addr['address_line_1'] ?? $addr['address'] ?? '' }}</p>
+                <p class="text-xs text-slate-600 mt-0.5">{{ $addr['city'] ?? '' }}, {{ $addr['state'] ?? '' }}</p>
+                @if (!empty($addr['phone']))
+                  <p class="text-[11px] text-slate-500 mt-1"><i class="fas fa-phone text-slate-400"></i> {{ $addr['phone'] }}</p>
+                @endif
               </div>
-              <p class="text-xs font-bold text-slate-900 mt-2">Reign Tech Workshop</p>
-              <p class="text-xs text-slate-600 mt-1">No 14 Otigba Street, Computer Village, Ikeja, Lagos</p>
-              <p class="text-[11px] text-slate-500 mt-1"><i class="fas fa-phone text-slate-400"></i> +234 812 987 6543</p>
-            </label>
+            @endforeach
           </div>
         </div>
       @endif

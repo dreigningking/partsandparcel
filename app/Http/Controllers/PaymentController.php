@@ -41,6 +41,11 @@ class PaymentController extends Controller
             : $paystackService->verify($reference);
 
         if (! empty($result['success'])) {
+            if (($payment->metadata['payment_type'] ?? '') === 'subscription') {
+                app(\App\Services\Commercial\SubscriptionService::class)->activateSubscription($payment);
+                return redirect()->route('subscriptions')->with('success', 'Subscription successfully activated!');
+            }
+
             $escrowService->handlePaymentSuccessful($payment, $result);
             return $this->redirectAfterPayment($payment, 'Payment successfully confirmed!');
         }
@@ -56,7 +61,7 @@ class PaymentController extends Controller
             return redirect()->route('invoices')->with($statusKey, $message);
         }
 
-        if ($payment->subscription_id) {
+        if ($payment->subscription_id || ($payment->metadata['payment_type'] ?? '') === 'subscription') {
             return redirect()->route('subscriptions')->with($statusKey, $message);
         }
 

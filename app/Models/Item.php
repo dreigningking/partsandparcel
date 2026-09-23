@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Item extends Model
 {
-    use HasFactory;
+    use HasFactory, HasMedia;
 
     protected $fillable = [
         'user_id',
@@ -46,5 +47,13 @@ class Item extends Model
     public function listing(): MorphOne
     {
         return $this->morphOne(Listing::class, 'assetable');
+    }
+
+    public function mediaDimensionRequirements(): array
+    {
+        return [
+            'default' => ['width' => 1000, 'height' => 1000, 'bg_color' => 'ffffff', 'quality' => 90],
+            'images' => ['width' => 1000, 'height' => 1000, 'bg_color' => 'ffffff', 'quality' => 90],
+        ];
     }
 }

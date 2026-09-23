@@ -1,0 +1,35 @@
+# Git and IDE files
+.git
+.gitignore
+.editorconfig
+.idea
+.vscode
+*.log
+
+# Node dependencies and build artifacts (built in Docker stage 1)
+node_modules
+npm-debug.log
+
+# Composer vendor (built in Docker stage 2)
+vendor
+
+# Testing and coverage artifacts
+tests
+phpunit.xml
+.phpunit.result.cache
+
+# Local environment files (production env injected via AWS/Docker Compose)
+.env
+.env.backup
+.env.testing
+
+# Local storage caches (re-generated in container)
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+bootstrap/cache/*.php
+
+# Docker files themselves
+docker-compose.yml
+.dockerignore

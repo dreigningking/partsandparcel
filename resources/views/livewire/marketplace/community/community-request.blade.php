@@ -42,6 +42,16 @@
     </div>
   @endif
 
+  @if (session()->has('warning'))
+    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 font-bold text-xs flex items-center justify-between shadow-2xs">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-exclamation-triangle text-amber-600 text-base"></i>
+        <span>{{ session('warning') }}</span>
+      </div>
+      <button onclick="this.parentElement.remove()" class="text-amber-700 hover:text-amber-900 cursor-pointer"><i class="fas fa-times"></i></button>
+    </div>
+  @endif
+
   <div class="grid lg:grid-cols-12 gap-8 items-start">
     
     <!-- LEFT COLUMN: SOCIAL MEDIA POST CARD & RESPONSES -->
@@ -53,22 +63,39 @@
         <!-- POST AUTHOR HEADER & CATEGORY BADGES -->
         <div class="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
           
+          @php
+            $authorName = $discussion?->user?->name ?? 'TechSam';
+            $authorAvatar = strtoupper(substr($authorName, 0, 2));
+            $authorLocation = $discussion?->user?->primaryLocation?->city ? "{$discussion->user->primaryLocation->city}, {$discussion->user->primaryLocation->state}" : ($discussion?->attachments['location'] ?? 'Computer Village, Ikeja, Lagos');
+            $postedTime = $discussion ? $discussion->created_at->diffForHumans() : '2 hours ago';
+            $categoryName = $discussion?->category?->name ?? 'Electronics';
+            $typeLabel = match ($discussion?->type) {
+              'service' => 'Repair / Service',
+              'delivery' => 'Delivery / Logistics',
+              'advice' => 'Question / Advice',
+              default => 'Product / Part',
+            };
+            $postTitle = $discussion?->title ?? 'Looking for HP EliteBook 840 G5 motherboard in Lagos';
+            $postBody = $discussion?->body ?? "I need a clean, tested HP EliteBook 840 G5 motherboard without GPU issues.\nI am willing to pick up at Computer Village today. Instant payment guaranteed.";
+            $budget = $discussion?->attachments['budget'] ?? '₦70,000 - ₦90,000';
+          @endphp
+
           <!-- AUTHOR INFO (AVATAR, NAME, TIME, LOCATION) -->
           <div class="flex items-center gap-3">
             <div class="w-11 h-11 rounded-full bg-pp-100 text-pp-700 font-extrabold text-sm grid place-items-center shrink-0 border-2 border-pp-200">
-              TS
+              {{ $authorAvatar }}
             </div>
             <div>
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="font-extrabold text-slate-950 text-sm">TechSam</span>
+                <span class="font-extrabold text-slate-950 text-sm">{{ $authorName }}</span>
                 <span class="px-2 py-0.5 rounded-full bg-pp-50 text-pp-700 font-bold text-[10px] border border-pp-100">
                   ✓ Verified Member
                 </span>
               </div>
               <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 flex-wrap">
-                <span><i class="fas fa-map-marker-alt text-slate-400 mr-0.5"></i> Computer Village, Ikeja, Lagos</span>
+                <span><i class="fas fa-map-marker-alt text-slate-400 mr-0.5"></i> {{ $authorLocation }}</span>
                 <span>·</span>
-                <span><i class="far fa-clock text-slate-400 mr-0.5"></i> 2 hours ago</span>
+                <span><i class="far fa-clock text-slate-400 mr-0.5"></i> {{ $postedTime }}</span>
               </div>
             </div>
           </div>
@@ -76,21 +103,20 @@
           <!-- CATEGORY TAG & REQUEST TYPE BADGE -->
           <div class="flex flex-col items-end gap-1.5 shrink-0">
             <span class="px-3 py-1 rounded-full bg-pp-50 text-pp-700 font-extrabold text-[10px] uppercase tracking-wider border border-pp-100">
-              <i class="fas fa-microchip mr-1"></i> Product / Part
+              <i class="fas fa-microchip mr-1"></i> {{ $typeLabel }}
             </span>
-            <span class="text-[10px] text-slate-400 font-semibold">Electronics › Laptops</span>
+            <span class="text-[10px] text-slate-400 font-semibold">{{ $categoryName }}</span>
           </div>
         </div>
 
         <!-- POST TITLE & BODY CONTENT -->
         <div class="space-y-3">
           <h1 class="text-xl sm:text-2xl font-extrabold text-slate-950 leading-snug">
-            Looking for HP EliteBook 840 G5 motherboard in Lagos
+            {{ $postTitle }}
           </h1>
 
           <p class="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">
-            I need a clean, tested HP EliteBook 840 G5 motherboard without GPU issues.
-            I am willing to pick up at Computer Village today. Instant payment guaranteed.
+            {{ $postBody }}
           </p>
         </div>
 
@@ -98,17 +124,17 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
           <div class="space-y-0.5">
             <span class="text-slate-400 font-bold uppercase text-[10px] block">Target Budget</span>
-            <span class="font-extrabold text-pp-700 text-sm">₦70,000 - ₦90,000</span>
+            <span class="font-extrabold text-pp-700 text-sm">{{ $budget }}</span>
           </div>
 
           <div class="space-y-0.5">
             <span class="text-slate-400 font-bold uppercase text-[10px] block">Preferred Fulfilment</span>
-            <span class="font-bold text-slate-800">Pickup in Shop</span>
+            <span class="font-bold text-slate-800">{{ $discussion?->attachments['fulfillment'] ?? 'Pickup / Delivery' }}</span>
           </div>
 
           <div class="space-y-0.5">
-            <span class="text-slate-400 font-bold uppercase text-[10px] block">Condition Desired</span>
-            <span class="font-bold text-slate-800">Used / Tested</span>
+            <span class="text-slate-400 font-bold uppercase text-[10px] block">Status</span>
+            <span class="font-bold text-emerald-700 uppercase">{{ $discussion?->status ?? 'Open' }}</span>
           </div>
         </div>
 

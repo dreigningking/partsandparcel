@@ -2,6 +2,9 @@
 
 namespace App\Livewire\Marketplace\Community;
 
+use App\Models\Category;
+use App\Models\Discussion;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -28,8 +31,8 @@ class CommunityHome extends Component
     public $showMobileDrawer = false;
 
     // Form fields
-    public $formType = '';
-    public $formCategory = '';
+    public $formType = 'Product / Part';
+    public $formCategory = 'Electronics';
     public $formTitle = '';
     public $formDesc = '';
     public $formLocation = '';
@@ -39,9 +42,45 @@ class CommunityHome extends Component
 
     public function getRequestsData()
     {
-        return [
+        $dbDiscussions = Discussion::with(['user.primaryLocation', 'category', 'responses', 'offers'])
+            ->inCurrentCountry()
+            ->latest()
+            ->get();
+
+        $items = [];
+        foreach ($dbDiscussions as $d) {
+            $typeLabel = match ($d->type) {
+                'service' => 'Repair / Service',
+                'delivery' => 'Delivery / Logistics',
+                'advice' => 'Question / Advice',
+                default => 'Product / Part',
+            };
+
+            $loc = $d->user?->primaryLocation?->city
+                ? "{$d->user->primaryLocation->city}, {$d->user->primaryLocation->state}"
+                : ($d->attachments['location'] ?? 'Lagos, Nigeria');
+
+            $budget = $d->attachments['budget'] ?? 'Flexible';
+
+            $items[] = [
+                'id' => $d->id,
+                'name' => $d->user?->name ?? 'Community Member',
+                'location' => $loc,
+                'time' => $d->created_at->diffForHumans(),
+                'title' => $d->title,
+                'desc' => $d->body,
+                'type' => $typeLabel,
+                'category' => $d->category?->name ?? 'General',
+                'offers' => $d->offers->count(),
+                'budget' => $budget,
+                'status' => $d->status,
+            ];
+        }
+
+        // Merge with sample requests if database has few
+        $defaults = [
             [
-                'id' => 1,
+                'id' => 1001,
                 'name' => 'TechSam',
                 'location' => 'Computer Village, Ikeja',
                 'time' => '2 hours ago',
@@ -54,7 +93,7 @@ class CommunityHome extends Component
                 'status' => 'open'
             ],
             [
-                'id' => 2,
+                'id' => 1002,
                 'name' => 'AbujaAutoFix',
                 'location' => 'Wuse Zone 4, Abuja',
                 'time' => '5 hours ago',
@@ -67,7 +106,7 @@ class CommunityHome extends Component
                 'status' => 'offers'
             ],
             [
-                'id' => 3,
+                'id' => 1003,
                 'name' => 'GenTechNG',
                 'location' => 'Ikeja, Lagos',
                 'time' => '1 day ago',
@@ -78,110 +117,20 @@ class CommunityHome extends Component
                 'offers' => 5,
                 'budget' => '₦25,000 – ₦40,000',
                 'status' => 'open'
-            ],
-            [
-                'id' => 4,
-                'name' => 'LekkiMovers',
-                'location' => 'Lekki, Lagos',
-                'time' => '2 days ago',
-                'title' => 'Need someone to move a washing machine from Ikeja to Lekki',
-                'desc' => 'Need a reliable transporter with a van to move a washing machine. Pickup in Ikeja, drop-off in Lekki Phase 1.',
-                'type' => 'Delivery / Logistics',
-                'category' => 'Appliances',
-                'offers' => 12,
-                'budget' => '₦8,000 – ₦12,000',
-                'status' => 'open'
-            ],
-            [
-                'id' => 5,
-                'name' => 'PhoneDoc',
-                'location' => 'Surulere, Lagos',
-                'time' => '3 days ago',
-                'title' => 'iPhone battery is swelling — should I replace the battery or the phone?',
-                'desc' => 'My iPhone 11 battery is visibly swelling and the screen is lifting. Is it safe to just replace the battery or should I get a new phone?',
-                'type' => 'Question / Advice',
-                'category' => 'Electronics',
-                'offers' => 14,
-                'budget' => null,
-                'status' => 'open'
-            ],
-            [
-                'id' => 6,
-                'name' => 'FarmEquip',
-                'location' => 'Kano, Kano',
-                'time' => '4 days ago',
-                'title' => 'Need a water pump for a 5-hectare farm in Kano',
-                'desc' => 'Looking for a reliable water pump (diesel or electric) for irrigation. Must be able to handle 5 hectares. Open to new or used.',
-                'type' => 'Product / Part',
-                'category' => 'Agricultural',
-                'offers' => 2,
-                'budget' => '₦150,000 – ₦250,000',
-                'status' => 'open'
-            ],
-            [
-                'id' => 7,
-                'name' => 'BuildRight',
-                'location' => 'Abuja, FCT',
-                'time' => '5 days ago',
-                'title' => 'Where can I source quality roofing sheets in Abuja?',
-                'desc' => 'Building a 3-bedroom house and need durable, affordable roofing sheets. Recommendations for suppliers in Abuja appreciated.',
-                'type' => 'Question / Advice',
-                'category' => 'Construction',
-                'offers' => 9,
-                'budget' => null,
-                'status' => 'offers'
-            ],
-            [
-                'id' => 8,
-                'name' => 'TechRepairHub',
-                'location' => 'Port Harcourt, Rivers',
-                'time' => '1 week ago',
-                'title' => 'Looking for a PS5 HDMI port repair specialist in PH',
-                'desc' => 'My PS5 HDMI port is damaged and needs replacement. Need someone with experience and the right tools in Port Harcourt.',
-                'type' => 'Repair / Service',
-                'category' => 'Electronics',
-                'offers' => 4,
-                'budget' => '₦15,000 – ₦25,000',
-                'status' => 'open'
-            ],
-            [
-                'id' => 9,
-                'name' => 'LogisticsPro',
-                'location' => 'Lagos, Lagos',
-                'time' => '1 week ago',
-                'title' => 'Need a 3-ton truck to move furniture from Lagos to Ibadan',
-                'desc' => 'Moving a 3-bedroom apartment worth of furniture. Need a covered 3-ton truck with helpers.',
-                'type' => 'Delivery / Logistics',
-                'category' => 'Vehicles',
-                'offers' => 18,
-                'budget' => '₦60,000 – ₦80,000',
-                'status' => 'open'
-            ],
-            [
-                'id' => 10,
-                'name' => 'SolarGuy',
-                'location' => 'Abuja, FCT',
-                'time' => '1 week ago',
-                'title' => 'Need solar inverter installation for a 3-bedroom house',
-                'desc' => 'Looking for a certified installer for a 3.5KVA solar system. Should include panels, batteries, and inverter installation.',
-                'type' => 'Repair / Service',
-                'category' => 'Equipment',
-                'offers' => 6,
-                'budget' => '₦120,000 – ₦180,000',
-                'status' => 'open'
-            ],
+            ]
         ];
+
+        return array_merge($items, $defaults);
     }
 
-    #[On('filtersUpdated')]
+    #[On('filters-updated')]
     public function handleFiltersUpdated($filters)
     {
-        $this->search = $filters['search'] ?? '';
         $this->category = $filters['category'] ?? '';
         $this->type = $filters['type'] ?? '';
         $this->location = $filters['location'] ?? '';
-        $this->budgetMin = isset($filters['budgetMin']) && $filters['budgetMin'] !== '' ? (float)$filters['budgetMin'] : null;
-        $this->budgetMax = isset($filters['budgetMax']) && $filters['budgetMax'] !== '' ? (float)$filters['budgetMax'] : null;
+        $this->budgetMin = $filters['budgetMin'] ?? null;
+        $this->budgetMax = $filters['budgetMax'] ?? null;
         $this->status = $filters['status'] ?? ['open'];
         $this->page = 1;
     }
@@ -192,9 +141,8 @@ class CommunityHome extends Component
         $this->page = 1;
     }
 
-    public function setSort($sort)
+    public function updatedSort()
     {
-        $this->sort = $sort;
         $this->page = 1;
     }
 
@@ -240,8 +188,37 @@ class CommunityHome extends Component
             'formLocation' => 'required',
         ]);
 
+        $user = Auth::user();
+        if (! $user) {
+            session()->flash('warning', 'Please sign in to publish a community request.');
+            return redirect()->route('login');
+        }
+
+        $typeEnum = match ($this->formType) {
+            'Repair / Service' => 'service',
+            'Delivery / Logistics' => 'delivery',
+            'Question / Advice' => 'advice',
+            default => 'item',
+        };
+
+        $cat = Category::where('name', 'like', "%{$this->formCategory}%")->first();
+
+        $discussion = Discussion::create([
+            'user_id' => $user->id,
+            'type' => $typeEnum,
+            'category_id' => $cat?->id,
+            'title' => $this->formTitle,
+            'body' => $this->formDesc,
+            'attachments' => [
+                'location' => $this->formLocation,
+                'budget' => $this->formBudget ?: 'Flexible',
+            ],
+            'status' => 'open',
+        ]);
+
         $this->postSuccessMessage = true;
         $this->reset(['formType', 'formCategory', 'formTitle', 'formDesc', 'formLocation', 'formBudget', 'formResponse']);
+        session()->flash('message', "Your request #REQ-{$discussion->id} has been posted to the Community Hub!");
     }
 
     public function getFilteredRequests()

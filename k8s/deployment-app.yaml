@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pp-web
+  namespace: partsandparcel
+  labels:
+    app.kubernetes.io/name: partsandparcel
+    app.kubernetes.io/component: web
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Spin up 1 new pod before shutting down old pod
+      maxUnavailable: 0  # Zero downtime during deployments
+  selector:
+    matchLabels:
+      app: pp-web
+  template:
+    metadata:
+      labels:
+        app: pp-web
+        app.kubernetes.io/component: web
+    spec:
+      # ========================================================================
+      # INIT CONTAINER: Run database migrations safely before web pods start
+      # ========================================================================
+      initContainers:
+        - name: run-migrations
+          image: partsandparcel:latest # Replaced with actual tag during CI/CD
+          imagePullPolicy: IfNotPresent
+          command: ["php", "/var/www/html/artisan", "migrate", "--force"]
+          envFrom:
+            - configMapRef:
+                name: pp-config
+            - secretRef:
+                name: pp-secrets
+
+      # ========================================================================
+      # MAIN WEB CONTAINER: Nginx + PHP-FPM serving HTTP traffic
+      # ========================================================================
+      containers:
+        - name: web
+          image: partsandparcel:latest # Replaced with actual tag during CI/CD
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+              name: http
+          envFrom:
+            - configMapRef:
+                name: pp-config
+            - secretRef:
+                name: pp-secrets
+          resources:
+            requests:
+              cpu: "250m"      # 0.25 vCPU guaranteed
+              memory: "512Mi"  # 512 MB RAM guaranteed
+            limits:
+              cpu: "1000m"     # 1 vCPU maximum ceiling
+              memory: "1Gi"    # 1 GB RAM maximum ceiling
+          livenessProbe:
+            httpGet:
+              path: /up
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /up
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 2

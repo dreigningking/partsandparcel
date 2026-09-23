@@ -62,7 +62,11 @@ class ConfirmPaymentJob implements ShouldQueue
         }
 
         if ($isSuccess) {
-            $escrowService->handlePaymentSuccessful($payment, $verification);
+            if (($payment->metadata['payment_type'] ?? '') === 'subscription') {
+                app(\App\Services\Commercial\SubscriptionService::class)->activateSubscription($payment);
+            } else {
+                $escrowService->handlePaymentSuccessful($payment, $verification);
+            }
             Log::info("ConfirmPaymentJob: Payment '{$this->reference}' verified and handled successfully.");
         } else {
             Log::warning("ConfirmPaymentJob: Verification failed for reference '{$this->reference}'. Provider: {$provider}.");

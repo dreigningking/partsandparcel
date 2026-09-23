@@ -40,7 +40,7 @@ class Login extends Component
         app(\App\Services\Location\LocationService::class)->resolveForRequest(request());
 
         if (Auth::user()->isAdmin()) {
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended(route('admin.dashboard'));
         }
 
         return redirect()->intended(route('dashboard'));

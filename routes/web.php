@@ -70,12 +70,12 @@ Route::get('subscription-plans', SubscriptionPlans::class)->name('subscription-p
 Route::get('messages', MessageList::class)->name('messages');
 Route::get('messages/conversation', MessageConversation::class)->name('conversation');
 Route::get('offers', OffersList::class)->name('offers');
-Route::get('offers/offer_id', OfferView::class)->name('offers.view');
+Route::get('offers/{offer_id?}', OfferView::class)->name('offers.view');
 
 Route::get('invoices', InvoicesList::class)->name('invoices');
-Route::get('invoices/invoice_id', InvoiceView::class)->name('invoices.view');
+Route::get('invoices/{invoice_id?}', InvoiceView::class)->name('invoices.view');
 Route::get('shipments', ShipmentsList::class)->name('shipments');
-Route::get('shipments/shipment_id', ShipmentView::class)->name('shipments.view');
+Route::get('shipments/{shipment_id?}', ShipmentView::class)->name('shipments.view');
 Route::get('locations', Locations::class)->name('locations');
 Route::get('notifications', Notifications::class)->name('notifications');
 Route::get('profile', Profile::class)->name('profile');
@@ -83,10 +83,10 @@ Route::get('help', Overview::class)->name('help');
 //Buying
 Route::get('wishlists', Wishlists::class)->name('wishlists');
 Route::get('myrequests', MyRequests::class)->name('myrequests');
-Route::get('myrequests/request_id', MyRequestView::class)->name('myrequest.view');
+Route::get('myrequests/{id?}', MyRequestView::class)->name('myrequest.view');
 //Selling
 Route::get('myresponses', MyResponses::class)->name('myresponses');
-Route::get('myresponses/response_id', MyResponseView::class)->name('myresponse.view');
+Route::get('myresponses/{id?}', MyResponseView::class)->name('myresponse.view');
 Route::get('myitems', ItemsList::class)->name('myitems');
 Route::get('myitems/item_id', ItemView::class)->name('item.view');
 Route::get('mylistings', Listings::class)->name('mylistings');
@@ -99,4 +99,24 @@ Route::get('disputes/dispute_id', DisputeView::class)->name('disputes.view');
 Route::get('payment/callback', [\App\Http\Controllers\PaymentController::class, 'callback'])->name('payment.callback');
 Route::post('webhooks/paystack', [\App\Http\Controllers\Webhooks\PaystackWebhookController::class, 'handle'])->name('webhooks.paystack');
 Route::post('webhooks/flutterwave', [\App\Http\Controllers\Webhooks\FlutterwaveWebhookController::class, 'handle'])->name('webhooks.flutterwave');
+
+// Invoice Document & Spreadsheet Exports
+Route::middleware('auth')->group(function () {
+    Route::get('invoices/export/excel', [\App\Http\Controllers\InvoiceExportController::class, 'exportExcel'])->name('invoices.export.excel');
+    Route::get('invoices/{invoice}/export/pdf', [\App\Http\Controllers\InvoiceExportController::class, 'exportPdf'])->name('invoices.export.pdf');
+});
+
+// Admin Control Center (Protected by EnsureUserIsAdmin)
+Route::middleware(['auth', 'admin'])->prefix('admin')->as('admin.')->group(function () {
+    Route::get('/', \App\Livewire\Admin\AdminDashboard::class)->name('index');
+    Route::get('dashboard', \App\Livewire\Admin\AdminDashboard::class)->name('dashboard');
+});
+
+// Admin Direct Logout
+Route::get('admin/logout', function () {
+    Auth::guard('web')->logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect()->route('welcome');
+})->name('admin.logout');
 

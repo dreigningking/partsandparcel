@@ -127,7 +127,7 @@ function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const main = document.getElementById('main');
     if (sidebar) sidebar.classList.toggle('collapsed');
-    if (main) main.classList.toggle('ml-[76px]');
+    if (main) main.classList.toggle('collapsed');
 }
 
 function toggleMobileSidebar() {
@@ -166,23 +166,19 @@ function openSection(s) {
     }
 }
 
-// 7. COLOR MODE THEME SWITCHER
-function setThemeMode(mode, event) {
-    if (event) event.stopPropagation();
-    const btns = document.querySelectorAll('.theme-btn');
-    btns.forEach(b => {
-        b.classList.remove('bg-white', 'shadow-xs', 'font-bold', 'text-slate-900');
-        b.classList.add('font-semibold', 'text-slate-600');
+// 6B. ADMIN ACCORDION GROUPS
+const adminNavGroups = ["market", "users", "tx", "trust", "community", "logistics", "finance", "system"];
+function openGroup(id) {
+    adminNavGroups.forEach((x) => {
+        const el = document.getElementById(x);
+        if (x !== id && el) el.classList.remove("open");
     });
+    const target = document.getElementById(id);
+    if (target) target.classList.toggle("open");
+}
 
-    if (event && event.target) {
-        event.target.classList.add('bg-white', 'shadow-xs', 'font-bold', 'text-slate-900');
-        event.target.classList.remove('text-slate-600');
-    }
-
-    const label = document.getElementById('current-mode-label');
-    if (label) label.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
-
+// 7. COLOR MODE THEME SWITCHER
+function applyThemeMode(mode) {
     if (mode === 'dark') {
         document.documentElement.classList.add('dark');
     } else if (mode === 'light') {
@@ -194,7 +190,46 @@ function setThemeMode(mode, event) {
             document.documentElement.classList.remove('dark');
         }
     }
+
+    const label = document.getElementById('current-mode-label');
+    if (label) label.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+
+    const btns = document.querySelectorAll('.theme-btn');
+    btns.forEach(b => {
+        const btnMode = b.textContent.trim().toLowerCase();
+        if (btnMode === mode) {
+            b.classList.add('bg-white', 'shadow-xs', 'font-bold', 'text-slate-900');
+            b.classList.remove('text-slate-600');
+        } else {
+            b.classList.remove('bg-white', 'shadow-xs', 'font-bold', 'text-slate-900');
+            b.classList.add('font-semibold', 'text-slate-600');
+        }
+    });
 }
+
+function setThemeMode(mode, event) {
+    if (event) event.stopPropagation();
+    try {
+        localStorage.setItem('pp_theme_mode', mode);
+    } catch (e) {}
+
+    applyThemeMode(mode);
+}
+
+// Initial theme apply
+(function initTheme() {
+    const saved = localStorage.getItem('pp_theme_mode') || 'light';
+    applyThemeMode(saved);
+
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            const current = localStorage.getItem('pp_theme_mode') || 'system';
+            if (current === 'system') {
+                applyThemeMode('system');
+            }
+        });
+    }
+})();
 
 // 8. MOBILE BROWSE OVERLAY & ACCOUNT CLICK CONTROLS
 function toggleMobileBrowse() {

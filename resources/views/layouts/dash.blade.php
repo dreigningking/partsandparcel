@@ -6,12 +6,26 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>{{ $title ?? 'Parts & Parcel — Dashboard' }}</title>
     
+    <script>
+        (function() {
+            try {
+                const mode = localStorage.getItem('pp_theme_mode') || 'light';
+                if (mode === 'dark' || (mode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @else
         <script src="https://cdn.tailwindcss.com"></script>
         <script>
             tailwind.config = {
+                darkMode: 'class',
                 theme: {
                     extend: {
                         colors: {
@@ -69,10 +83,11 @@
                   <button onclick="toggleSidebar()" class="hidden lg:grid w-10 h-10 place-items-center rounded-xl hover:bg-slate-100 text-slate-700 font-extrabold" title="Toggle Retract Sidebar">›</button>
 
                   <div class="hidden sm:flex flex-col">
-                      <div class="text-xs text-slate-400">Dashboard</div>
-                      <b class="text-sm font-extrabold text-slate-900">Good morning, Emmanuel Reign 👋</b>
+                      <div class="text-xs text-slate-400">{{ Route::is('admin.*') ? 'Admin Console' : 'Dashboard' }}</div>
+                      <b class="text-sm font-extrabold text-slate-900">Good morning, {{ auth()->user()->first_name ?? auth()->user()->name ?? 'User' }} 👋</b>
                   </div>
                 </div>
+
                 <div class="flex items-center gap-2">
                   <a href="{{ route('welcome') }}" class="hidden md:flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition border border-slate-200/80">Marketplace ↗</a>
                   

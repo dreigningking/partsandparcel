@@ -1,0 +1,79 @@
+name: Continuous Integration (CI)
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Automated Tests & Linting
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
+    steps:
+      - name: 1. Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: 2. Setup PHP 8.3 Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, bcmath, gd, zip, pcntl, redis
+          coverage: none
+          tools: composer:v2
+
+      - name: 3. Setup Node.js 20 Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 4. Cache Composer Vendor Directory
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: 5. Install Composer Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: 6. Install NPM Dependencies & Compile Vite Assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: 7. Prepare Test Environment
+        run: |
+          cp .env.example .env.testing
+          php artisan key:generate --env=testing
+
+      - name: 8. Run Automated Test Suite (65+ Tests)
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+        run: php artisan test

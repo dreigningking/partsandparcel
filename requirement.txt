@@ -66,3 +66,5 @@
   }
 }
 13. Admin Interfaces
+
+Now we are ready to do phase 6. Concerning the admin, use the same [dash.blade.php](file;file:///c%3A/laragon/www/partsandparcel/resources/views/layouts/dash.blade.php)  I already have a code snippet for the admin dashboard [parts-parcel-admin-dashboard.html](file;file:///c%3A/laragon/www/partsandparcel/resources/views/livewire/admin/parts-parcel-admin-dashboard.html) which is very similar to the dash. So, we will create user-nav and admin-nav in resources/view/layouts/partials. We will move the current <nav> tag inside sidebar to user-nav and for admin users. use role switching to determine which sidebar to show. 

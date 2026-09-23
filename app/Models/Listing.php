@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Listing extends Model
 {
-    use HasFactory;
+    use HasFactory, HasMedia;
 
     protected $fillable = [
         'user_id',
@@ -78,5 +79,13 @@ class Listing extends Model
         $code = strtoupper($countryCode ?? session('current_location.country_code', 'NG'));
 
         return $query->whereHas('seller', fn ($q) => $q->where('country_code', $code));
+    }
+
+    public function mediaDimensionRequirements(): array
+    {
+        return [
+            'default' => ['width' => 1000, 'height' => 1000, 'bg_color' => 'ffffff', 'quality' => 90],
+            'images' => ['width' => 1000, 'height' => 1000, 'bg_color' => 'ffffff', 'quality' => 90],
+        ];
     }
 }

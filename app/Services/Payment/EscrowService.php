@@ -94,6 +94,10 @@ class EscrowService
                     'eligible_at' => null, // Set when delivery/warranty period begins
                 ]
             );
+
+            if ($invoice->seller) {
+                $invoice->seller->notify(new \App\Notifications\PaymentHeldInEscrowNotification($invoice));
+            }
         }
     }
 

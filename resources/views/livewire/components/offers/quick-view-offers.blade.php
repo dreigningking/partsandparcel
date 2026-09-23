@@ -4,12 +4,13 @@
         <div wire:click="closeDrawer" class="fixed inset-0 z-[98] bg-slate-950/50 backdrop-blur-xs transition"></div>
 
         <!-- QUICK-VIEW OFFER DRAWER (DESKTOP SLIDE-OVER) -->
-        <div class="fixed top-0 right-0 bottom-0 z-[99] w-full sm:w-[460px] bg-white shadow-2xl flex flex-col transition">
+        <div class="fixed top-0 right-0 bottom-0 z-[99] w-full sm:w-[480px] bg-white shadow-2xl flex flex-col transition">
             
             <!-- DRAWER HEADER -->
             <div class="h-16 px-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
                 <div>
                     <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                        <i class="fas fa-handshake text-pp-600"></i>
                         <span>Offer Negotiation Quick View</span>
                     </h3>
                     <p class="text-[11px] text-slate-400">Response by: <strong class="text-slate-700">{{ $authorName }}</strong></p>
@@ -45,7 +46,12 @@
                     
                     <div class="p-4 rounded-2xl bg-white border-2 border-pp-500 space-y-3 shadow-2xs">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                            <span class="font-extrabold text-slate-900 text-xs">{{ $currentRound['from'] }}</span>
+                            <div>
+                                <span class="font-extrabold text-slate-900 text-xs">{{ $currentRound['from'] }}</span>
+                                @if(!empty($currentRound['to']))
+                                    <span class="text-slate-400 text-[10px] block">to {{ $currentRound['to'] }}</span>
+                                @endif
+                            </div>
                             <span class="px-2.5 py-0.5 rounded-full bg-pp-100 text-pp-800 font-extrabold text-[10px] uppercase">
                                 {{ $currentRound['status'] }}
                             </span>
@@ -71,14 +77,25 @@
                         <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 italic text-slate-700 leading-relaxed">
                             "{{ $currentRound['message'] }}"
                         </div>
+
+                        <div class="text-[10px] text-slate-400 text-right">
+                            <i class="fas fa-clock mr-1"></i> {{ $currentRound['time'] }}
+                        </div>
                     </div>
 
                 </div>
 
                 <!-- DRAWER FOOTER ACTIONS -->
                 <div class="p-4 border-t border-slate-100 bg-white flex flex-col gap-2 shrink-0">
-                    <a href="{{ route('offers.view', ['id' => 'OFF-9021']) }}" class="w-full py-3 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs text-center shadow-xs transition block">
-                        Open Full Offer &amp; Respond →
+                    @if (!empty($currentRound['can_accept']))
+                        <button wire:click="acceptCurrentOffer({{ $currentRound['id'] }})" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs text-center shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Accept Round {{ $currentRoundIndex + 1 }} Offer ({{ $currentRound['price'] }})</span>
+                        </button>
+                    @endif
+
+                    <a href="{{ route('offers.view', ['offer_id' => 'OFF-' . $currentRound['id']]) }}" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs text-center shadow-xs transition block">
+                        Open Full Offer Thread &amp; Counter →
                     </a>
                 </div>
             @endif

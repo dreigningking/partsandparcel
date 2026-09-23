@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Component extends Model
 {
-    use HasFactory;
+    use HasFactory, HasMedia;
 
     protected $fillable = [
         'item_id',

@@ -7,11 +7,16 @@
       <p class="text-xs text-slate-500 mt-0.5">Track commercial invoice records, Escrow payment states, and billing history.</p>
     </div>
 
-    <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 text-xs font-bold shadow-2xs">
-      <button class="px-3 py-1.5 rounded-lg bg-pp-600 text-white">All (6)</button>
-      <button class="px-3 py-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50">Paid &amp; Protected (4)</button>
-      <button class="px-3 py-1.5 rounded-lg text-amber-800 hover:bg-amber-50">Pending Escrow (1)</button>
-      <button class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-50">Direct Payment (1)</button>
+    <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 text-xs font-bold shadow-2xs">
+        <button class="px-3 py-1.5 rounded-lg bg-pp-600 text-white">All (6)</button>
+        <button class="px-3 py-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50">Paid &amp; Protected (4)</button>
+        <button class="px-3 py-1.5 rounded-lg text-amber-800 hover:bg-amber-50">Pending Escrow (1)</button>
+        <button class="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-50">Direct Payment (1)</button>
+      </div>
+      <a href="{{ route('invoices.export.excel') }}" class="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs" title="Export Invoices as Excel Spreadsheet">
+        <i class="fas fa-file-excel text-emerald-600"></i> Export Excel
+      </a>
     </div>
   </div>
 

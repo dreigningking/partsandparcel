@@ -46,6 +46,18 @@ class RolesAndPermissionsSeeder extends Seeder
                 ],
                 'is_active' => true,
             ],
+            [
+                'name' => 'Customer Support',
+                'slug' => 'customer_support',
+                'description' => 'Staff agent assisting buyers and sellers with tickets, inquiries, order tracking, and dispute triaging.',
+                'permissions' => [
+                    'manage_tickets' => true,
+                    'view_orders' => true,
+                    'view_users' => true,
+                    'moderate_discussions' => true,
+                ],
+                'is_active' => true,
+            ],
         ];
 
         foreach ($adminRoles as $roleData) {

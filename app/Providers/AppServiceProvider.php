@@ -23,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \App\Models\Media::observe(\App\Observers\MediaObserver::class);
+
         Blade::directive('money', function ($expression) {
             return "<?php echo app(\\App\\Services\\Location\\LocationService::class)->formatMoney($expression); ?>";
         });

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pp-worker
+  namespace: partsandparcel
+  labels:
+    app.kubernetes.io/name: partsandparcel
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: pp-worker
+  template:
+    metadata:
+      labels:
+        app: pp-worker
+        app.kubernetes.io/component: worker
+    spec:
+      containers:
+        - name: queue-worker
+          image: partsandparcel:latest
+          imagePullPolicy: IfNotPresent
+          # Override container CMD to run queue worker directly
+          command:
+            - "php"
+            - "/var/www/html/artisan"
+            - "queue:work"
+            - "--sleep=3"
+            - "--tries=3"
+            - "--max-time=3600"
+            - "--timeout=90"
+          envFrom:
+            - configMapRef:
+                name: pp-config
+            - secretRef:
+                name: pp-secrets
+          resources:
+            requests:
+              cpu: "150m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          lifecycle:
+            preStop:
+              exec:
+                # Graceful queue stop: allows in-flight jobs to finish before killing pod
+                command: ["php", "/var/www/html/artisan", "queue:restart"]

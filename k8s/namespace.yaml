@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: partsandparcel
+  labels:
+    app.kubernetes.io/name: partsandparcel
+    app.kubernetes.io/environment: production

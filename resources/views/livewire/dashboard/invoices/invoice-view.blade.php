@@ -23,9 +23,15 @@
       <button onclick="window.print()" class="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
         <i class="fas fa-print"></i> Print Invoice
       </button>
-      <button class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-        <i class="fas fa-download"></i> Download Receipt
-      </button>
+      @if($invoice && $invoice->id)
+        <a href="{{ route('invoices.export.pdf', $invoice->id) }}" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fas fa-download"></i> Download PDF
+        </a>
+      @else
+        <button disabled class="px-4 py-2 rounded-xl bg-slate-200 text-slate-400 font-bold text-xs flex items-center gap-1.5">
+          <i class="fas fa-download"></i> Download PDF
+        </button>
+      @endif
     </div>
   </div>
 

@@ -1,22 +1,571 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Parts & Parcel Admin Dashboard</title><script src="https://cdn.tailwindcss.com"></script><script>tailwind.config={theme:{extend:{colors:{pp:{50:'#f5f3ff',100:'#ebe7ff',200:'#d9d2ff',600:'#4634b7',700:'#38299b',900:'#20165f'}}}}}</script><style>body{font-family:Inter,ui-sans-serif,system-ui;background:#f8fafc}.sidebar{transition:.25s;width:280px}.sidebar.collapsed{width:76px}.sidebar.collapsed .label,.sidebar.collapsed .section{display:none}.sidebar.collapsed .nav{justify-content:center}.main{margin-left:280px;transition:.25s}.sub{max-height:0;overflow:hidden;transition:max-height .25s}.sub.open{max-height:600px}@media(max-width:1023px){.sidebar{transform:translateX(-100%);position:fixed!important}.sidebar.mobile{transform:translateX(0)}.main{margin-left:0!important}}</style></head><body class="text-slate-900">
-<div id="shade" class="fixed inset-0 bg-black/40 z-40 hidden lg:hidden" onclick="mobile()"></div>
-<aside id="side" class="sidebar fixed inset-y-0 left-0 z-50 bg-white border-r flex flex-col"><div class="h-[72px] px-5 flex items-center justify-between border-b"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-pp-600 text-white grid place-items-center font-black text-xl">P</div><div class="label"><b class="text-lg">Parts & Parcel</b><div class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Admin Console</div></div></div><button class="hidden lg:block" onclick="collapse()">‹</button></div>
-<div class="p-4 border-b"><div class="flex gap-3 items-center p-3 rounded-xl bg-slate-50"><div class="w-10 h-10 rounded-full bg-slate-800 text-white grid place-items-center font-bold">AD</div><div class="label"><b class="text-sm">Admin User</b><div class="text-[11px] text-emerald-600 font-semibold">Super Administrator</div></div></div></div>
-<nav class="flex-1 overflow-y-auto p-3 space-y-2">
-<a class="nav flex items-center gap-3 p-3 rounded-xl bg-pp-50 text-pp-700 font-semibold text-sm" href="#">⌂ <span class="label">Dashboard</span></a>
-<a class="nav flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-sm" href="#">▣ <span class="label">Analytics & Reports</span></a>
-<div><button class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500" onclick="openGroup('market')">MARKETPLACE　⌄</button><div id="market" class="sub open pl-1"><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">▤ <span class="label">Listings</span><span class="label ml-auto text-[10px] bg-amber-100 text-amber-700 rounded-full px-2">12</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">◈ <span class="label">Categories</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">◆ <span class="label">Brands</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">◇ <span class="label">Models</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">▥ <span class="label">Items & Components</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">⚑ <span class="label">Listing Moderation</span><span class="label ml-auto text-[10px] bg-red-100 text-red-600 rounded-full px-2">7</span></a></div></div>
-<div><button class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500" onclick="openGroup('users')">USERS & ACCOUNTS　⌄</button><div id="users" class="sub pl-1"><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">👥 <span class="label">All Users</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">✓ <span class="label">Verification / KYC</span><span class="label ml-auto text-[10px] bg-amber-100 text-amber-700 rounded-full px-2">18</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">⛔ <span class="label">Suspended / Restricted</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">♙ <span class="label">Admin Users & Roles</span></a></div></div>
-<div><button class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500" onclick="openGroup('tx')">TRANSACTIONS　⌄</button><div id="tx" class="sub pl-1"><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">🧾 <span class="label">Invoices</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">◇ <span class="label">Offers</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">₦ <span class="label">Payments</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">↩ <span class="label">Refunds</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">◷ <span class="label">Settlements</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">⇢ <span class="label">Payout Batches</span></a></div></div>
-<div><button class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500" onclick="openGroup('trust')">TRUST & RESOLUTION　⌄</button><div id="trust" class="sub pl-1"><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">⚠ <span class="label">Issues</span><span class="label ml-auto text-[10px] bg-red-100 text-red-600 rounded-full px-2">5</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">↩ <span class="label">Returns</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">⇄ <span class="label">Replacements</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">⚖ <span class="label">Disputes</span><span class="label ml-auto text-[10px] bg-red-100 text-red-600 rounded-full px-2">3</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">🛡 <span class="label">Fraud & Risk</span></a></div></div>
-<div><button class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500" onclick="openGroup('community')">COMMUNITY　⌄</button><div id="community" class="sub pl-1"><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">💬 <span class="label">Discussions</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">✉ <span class="label">Forum Responses</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">▣ <span class="label">Services & Invoices</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">⚑ <span class="label">Moderation Queue</span></a></div></div>
-<div><button class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500" onclick="openGroup('logistics')">LOGISTICS　⌄</button><div id="logistics" class="sub pl-1"><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">⇢ <span class="label">Shipments</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">🚚 <span class="label">Delivery Providers</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">📍 <span class="label">Locations</span></a></div></div>
-<div><button class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500" onclick="openGroup('finance')">FINANCE & REVENUE　⌄</button><div id="finance" class="sub pl-1"><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">◈ <span class="label">Subscriptions</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">₦ <span class="label">Revenue</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">▤ <span class="label">Commission Rules</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">↗ <span class="label">Financial Reports</span></a></div></div>
-<div><button class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500" onclick="openGroup('system')">SYSTEM　⌄</button><div id="system" class="sub pl-1"><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">⚙ <span class="label">Platform Settings</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">🔔 <span class="label">Notifications</span></a><a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600" href="#">▣ <span class="label">Audit Logs</span></a></div></div>
-</nav><div class="p-3 border-t"><a class="nav flex gap-3 p-3 rounded-xl hover:bg-red-50 text-red-600 text-sm" href="#">↪ <span class="label">Logout</span></a></div></aside>
-<main id="main" class="main min-h-screen"><header class="sticky top-0 z-30 h-[72px] bg-white/95 backdrop-blur border-b"><div class="h-full px-5 lg:px-8 flex items-center justify-between"><div class="flex items-center gap-3"><button class="lg:hidden" onclick="mobile()">☰</button><button class="hidden lg:block" onclick="collapse()">☰</button><div><div class="text-xs text-slate-400">Admin Console</div><b class="text-sm">Platform Overview</b></div></div><div class="flex items-center gap-3"><a class="hidden md:block text-xs font-bold text-slate-600" href="#">View Marketplace ↗</a><span class="text-lg">🔔</span><div class="w-10 h-10 rounded-xl bg-slate-800 text-white grid place-items-center font-bold">AD</div></div></div></header>
-<section class="p-5 sm:p-7 lg:p-8 max-w-[1550px] mx-auto"><div class="rounded-2xl bg-gradient-to-br from-slate-900 to-pp-900 text-white p-7"><div class="text-xs uppercase tracking-widest text-pp-200 font-bold">Platform control center</div><h1 class="text-3xl font-extrabold mt-2">Good morning, Admin 👋</h1><p class="text-sm text-slate-300 mt-2 max-w-2xl">Monitor marketplace activity, transactions, community health, logistics and issues requiring administrative attention.</p></div>
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6"><div class="bg-white border rounded-2xl p-5"><div class="text-xs text-slate-500">GMV this month</div><div class="text-2xl font-extrabold mt-2">₦48.6m</div><div class="text-xs text-emerald-600 mt-1">↑ 12.4% vs last month</div></div><div class="bg-white border rounded-2xl p-5"><div class="text-xs text-slate-500">Platform revenue</div><div class="text-2xl font-extrabold mt-2">₦3.24m</div><div class="text-xs text-emerald-600 mt-1">↑ 8.7% vs last month</div></div><div class="bg-white border rounded-2xl p-5"><div class="text-xs text-slate-500">Active users</div><div class="text-2xl font-extrabold mt-2">12,842</div><div class="text-xs text-slate-400 mt-1">+436 this week</div></div><div class="bg-white border rounded-2xl p-5"><div class="text-xs text-slate-500">Needs attention</div><div class="text-2xl font-extrabold mt-2">27</div><div class="text-xs text-red-600 mt-1">Disputes, moderation & KYC</div></div></div>
-<div class="grid xl:grid-cols-[1.35fr_1fr] gap-6 mt-6"><div class="bg-white border rounded-2xl p-5"><h2 class="font-extrabold">Platform activity</h2><p class="text-xs text-slate-500">Transaction volume — last 7 days</p><div class="h-48 flex items-end gap-3 mt-5"><div class="flex-1 bg-pp-100 rounded-t-lg" style="height:42%"></div><div class="flex-1 bg-pp-100 rounded-t-lg" style="height:58%"></div><div class="flex-1 bg-pp-200 rounded-t-lg" style="height:51%"></div><div class="flex-1 bg-pp-200 rounded-t-lg" style="height:68%"></div><div class="flex-1 bg-pp-200 rounded-t-lg" style="height:74%"></div><div class="flex-1 bg-pp-200 rounded-t-lg" style="height:64%"></div><div class="flex-1 bg-pp-600 rounded-t-lg" style="height:88%"></div></div></div><div class="bg-white border rounded-2xl p-5"><h2 class="font-extrabold">Action queue</h2><p class="text-xs text-slate-500">Items requiring attention</p><div class="space-y-2 mt-4"><a class="flex items-center gap-3 p-3 rounded-xl bg-red-50" href="#"><span class="text-lg">⚖</span><div class="flex-1"><b class="text-xs">3 active disputes</b><div class="text-[11px] text-slate-500">Oldest opened 2 days ago</div></div>›</a><a class="flex items-center gap-3 p-3 rounded-xl bg-amber-50" href="#"><span class="text-lg">⚑</span><div class="flex-1"><b class="text-xs">12 listings awaiting moderation</b><div class="text-[11px] text-slate-500">7 reported by users</div></div>›</a><a class="flex items-center gap-3 p-3 rounded-xl bg-blue-50" href="#"><span class="text-lg">✓</span><div class="flex-1"><b class="text-xs">18 users awaiting verification</b><div class="text-[11px] text-slate-500">KYC / account review</div></div>›</a><a class="flex items-center gap-3 p-3 rounded-xl bg-emerald-50" href="#"><span class="text-lg">↗</span><div class="flex-1"><b class="text-xs">9 payout batches ready</b><div class="text-[11px] text-slate-500">₦1.82m pending settlement</div></div>›</a></div></div></div>
-<div class="grid xl:grid-cols-3 gap-6 mt-6"><div class="bg-white border rounded-2xl p-5"><h2 class="font-extrabold">Marketplace</h2><p class="text-xs text-slate-500 mt-1">Current ecosystem activity</p><div class="space-y-3 mt-5"><div class="flex justify-between text-sm"><span class="text-slate-500">Active listings</span><b>8,421</b></div><div class="flex justify-between text-sm"><span class="text-slate-500">New today</span><b>184</b></div><div class="flex justify-between text-sm"><span class="text-slate-500">Offers today</span><b>327</b></div><div class="flex justify-between text-sm"><span class="text-slate-500">Completed sales</span><b>96</b></div><button class="w-full mt-2 rounded-xl bg-pp-600 text-white py-3 text-xs font-bold">Manage Marketplace</button></div></div><div class="bg-white border rounded-2xl p-5"><h2 class="font-extrabold">Financial snapshot</h2><p class="text-xs text-slate-500 mt-1">Money flowing through the platform</p><div class="space-y-3 mt-5"><div><div class="text-xs text-slate-500">Payments collected</div><div class="text-xl font-extrabold mt-1">₦45.8m</div></div><div><div class="text-xs text-slate-500">Seller settlements pending</div><div class="text-xl font-extrabold mt-1">₦1.82m</div></div><div><div class="text-xs text-slate-500">Refunds this month</div><div class="text-xl font-extrabold mt-1">₦640k</div></div><button class="w-full mt-2 rounded-xl border py-3 text-xs font-bold">Open Finance</button></div></div><div class="bg-white border rounded-2xl p-5"><h2 class="font-extrabold">Community health</h2><p class="text-xs text-slate-500 mt-1">Forum and service activity</p><div class="space-y-3 mt-5"><div class="flex justify-between text-xs"><span class="text-slate-500">Discussions today</span><b>74</b></div><div class="flex justify-between text-xs"><span class="text-slate-500">Responses today</span><b>421</b></div><div class="flex justify-between text-xs"><span class="text-slate-500">Reports awaiting review</span><b>7</b></div><div class="flex justify-between text-xs"><span class="text-slate-500">Service invoices</span><b>31</b></div><button class="w-full mt-2 rounded-xl border py-3 text-xs font-bold">Moderate Community</button></div></div></div><div class="bg-white border rounded-2xl mt-6"><div class="p-5 border-b"><b>Recent platform events</b><p class="text-xs text-slate-500 mt-1">Latest important activity</p></div><div class="p-4 flex gap-3 items-center border-b"><span class="w-9 h-9 rounded-lg bg-emerald-50 grid place-items-center">✓</span><div class="flex-1"><b class="text-sm">Payout batch #PB-204 successfully processed</b><div class="text-xs text-slate-500 mt-1">₦428,500 paid to 7 sellers</div></div><span class="text-[11px] text-slate-400">8 min ago</span></div><div class="p-4 flex gap-3 items-center border-b"><span class="w-9 h-9 rounded-lg bg-red-50 grid place-items-center">⚠</span><div class="flex-1"><b class="text-sm">Dispute opened on invoice #PP-1048</b><div class="text-xs text-slate-500 mt-1">Buyer reports damaged screen on delivery</div></div><span class="text-[11px] text-slate-400">24 min ago</span></div><div class="p-4 flex gap-3 items-center border-b"><span class="w-9 h-9 rounded-lg bg-blue-50 grid place-items-center">👤</span><div class="flex-1"><b class="text-sm">New seller account registered</b><div class="text-xs text-slate-500 mt-1">Verification pending</div></div><span class="text-[11px] text-slate-400">41 min ago</span></div></div></section></main>
-<script>const groups=['market','users','tx','trust','community','logistics','finance','system'];function collapse(){side.classList.toggle('collapsed');main.style.marginLeft=side.classList.contains('collapsed')?'76px':'280px'}function mobile(){side.classList.toggle('mobile');shade.classList.toggle('hidden')}function openGroup(id){groups.forEach(x=>{if(x!==id)document.getElementById(x).classList.remove('open')});document.getElementById(id).classList.toggle('open')}</script></body></html>
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Parts & Parcel Admin Dashboard</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            pp: {
+                                50: "#f5f3ff",
+                                100: "#ebe7ff",
+                                200: "#d9d2ff",
+                                600: "#4634b7",
+                                700: "#38299b",
+                                900: "#20165f",
+                            },
+                        },
+                    },
+                },
+            };
+        </script>
+        <style>
+            body {
+                font-family: Inter, ui-sans-serif, system-ui;
+                background: #f8fafc;
+            }
+            .sidebar {
+                transition: 0.25s;
+                width: 280px;
+            }
+            .sidebar.collapsed {
+                width: 76px;
+            }
+            .sidebar.collapsed .label,
+            .sidebar.collapsed .section {
+                display: none;
+            }
+            .sidebar.collapsed .nav {
+                justify-content: center;
+            }
+            .main {
+                margin-left: 280px;
+                transition: 0.25s;
+            }
+            .sub {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.25s;
+            }
+            .sub.open {
+                max-height: 600px;
+            }
+            @media (max-width: 1023px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                    position: fixed !important;
+                }
+                .sidebar.mobile {
+                    transform: translateX(0);
+                }
+                .main {
+                    margin-left: 0 !important;
+                }
+            }
+        </style>
+    </head>
+    <body class="text-slate-900">
+        <div id="shade" class="fixed inset-0 bg-black/40 z-40 hidden lg:hidden" onclick="mobile()"></div>
+        
+        <aside id="side" class="sidebar fixed inset-y-0 left-0 z-50 bg-white border-r flex flex-col">
+            <div class="h-[72px] px-5 flex items-center justify-between border-b">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-pp-600 text-white grid place-items-center font-black text-xl">
+                        P
+                    </div>
+                    <div class="label">
+                        <b class="text-lg">Parts & Parcel</b>
+                        <div class="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Admin Console</div>
+                    </div>
+                </div>
+                <button class="hidden lg:block" onclick="collapse()">‹</button>
+            </div>
+            <div class="p-4 border-b">
+                <div class="flex gap-3 items-center p-3 rounded-xl bg-slate-50">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 text-white grid place-items-center font-bold">
+                        AD
+                    </div>
+                    <div class="label">
+                        <b class="text-sm">Admin User</b>
+                        <div class="text-[11px] text-emerald-600 font-semibold">Super Administrator</div>
+                    </div>
+                </div>
+            </div>
+            <nav class="flex-1 overflow-y-auto p-3 space-y-2">
+                <a
+                    class="nav flex items-center gap-3 p-3 rounded-xl bg-pp-50 text-pp-700 font-semibold text-sm"
+                    href="#"
+                    >⌂ <span class="label">Dashboard</span></a
+                >
+                <a class="nav flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-sm" href="#"
+                    >▣ <span class="label">Analytics & Reports</span></a
+                >
+                <div>
+                    <button
+                        class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        onclick="openGroup('market')"
+                    >
+                        MARKETPLACE　⌄
+                    </button>
+                    <div id="market" class="sub open pl-1">
+                        <a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >▤ <span class="label">Listings</span
+                            ><span class="label ml-auto text-[10px] bg-amber-100 text-amber-700 rounded-full px-2"
+                                >12</span
+                            ></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >◈ <span class="label">Categories</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >◆ <span class="label">Brands</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >◇ <span class="label">Models</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >▥ <span class="label">Items & Components</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >⚑ <span class="label">Listing Moderation</span
+                            ><span class="label ml-auto text-[10px] bg-red-100 text-red-600 rounded-full px-2"
+                                >7</span
+                            ></a
+                        >
+                    </div>
+                </div>
+                <div>
+                    <button
+                        class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        onclick="openGroup('users')"
+                    >
+                        USERS & ACCOUNTS　⌄
+                    </button>
+                    <div id="users" class="sub pl-1">
+                        <a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >👥 <span class="label">All Users</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >✓ <span class="label">Verification / KYC</span
+                            ><span class="label ml-auto text-[10px] bg-amber-100 text-amber-700 rounded-full px-2"
+                                >18</span
+                            ></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >⛔ <span class="label">Suspended / Restricted</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >♙ <span class="label">Admin Users & Roles</span></a
+                        >
+                    </div>
+                </div>
+                <div>
+                    <button
+                        class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        onclick="openGroup('tx')"
+                    >
+                        TRANSACTIONS　⌄
+                    </button>
+                    <div id="tx" class="sub pl-1">
+                        <a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >🧾 <span class="label">Invoices</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >◇ <span class="label">Offers</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >₦ <span class="label">Payments</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >↩ <span class="label">Refunds</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >◷ <span class="label">Settlements</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >⇢ <span class="label">Payout Batches</span></a
+                        >
+                    </div>
+                </div>
+                <div>
+                    <button
+                        class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        onclick="openGroup('trust')"
+                    >
+                        TRUST & RESOLUTION　⌄
+                    </button>
+                    <div id="trust" class="sub pl-1">
+                        <a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >⚠ <span class="label">Issues</span
+                            ><span class="label ml-auto text-[10px] bg-red-100 text-red-600 rounded-full px-2"
+                                >5</span
+                            ></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >↩ <span class="label">Returns</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >⇄ <span class="label">Replacements</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >⚖ <span class="label">Disputes</span
+                            ><span class="label ml-auto text-[10px] bg-red-100 text-red-600 rounded-full px-2"
+                                >3</span
+                            ></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >🛡 <span class="label">Fraud & Risk</span></a
+                        >
+                    </div>
+                </div>
+                <div>
+                    <button
+                        class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        onclick="openGroup('community')"
+                    >
+                        COMMUNITY　⌄
+                    </button>
+                    <div id="community" class="sub pl-1">
+                        <a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >💬 <span class="label">Discussions</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >✉ <span class="label">Forum Responses</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >▣ <span class="label">Services & Invoices</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >⚑ <span class="label">Moderation Queue</span></a
+                        >
+                    </div>
+                </div>
+                <div>
+                    <button
+                        class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        onclick="openGroup('logistics')"
+                    >
+                        LOGISTICS　⌄
+                    </button>
+                    <div id="logistics" class="sub pl-1">
+                        <a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >⇢ <span class="label">Shipments</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >🚚 <span class="label">Delivery Providers</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >📍 <span class="label">Locations</span></a
+                        >
+                    </div>
+                </div>
+                <div>
+                    <button
+                        class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        onclick="openGroup('finance')"
+                    >
+                        FINANCE & REVENUE　⌄
+                    </button>
+                    <div id="finance" class="sub pl-1">
+                        <a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >◈ <span class="label">Subscriptions</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >₦ <span class="label">Revenue</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >▤ <span class="label">Commission Rules</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >↗ <span class="label">Financial Reports</span></a
+                        >
+                    </div>
+                </div>
+                <div>
+                    <button
+                        class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500"
+                        onclick="openGroup('system')"
+                    >
+                        SYSTEM　⌄
+                    </button>
+                    <div id="system" class="sub pl-1">
+                        <a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >⚙ <span class="label">Platform Settings</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >🔔 <span class="label">Notifications</span></a
+                        ><a
+                            class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600"
+                            href="#"
+                            >▣ <span class="label">Audit Logs</span></a
+                        >
+                    </div>
+                </div>
+            </nav>
+            <div class="p-3 border-t">
+                <a class="nav flex gap-3 p-3 rounded-xl hover:bg-red-50 text-red-600 text-sm" href="#"
+                    >↪ <span class="label">Logout</span></a
+                >
+            </div>
+        </aside>
+        <main id="main" class="main min-h-screen">
+            <header class="sticky top-0 z-30 h-[72px] bg-white/95 backdrop-blur border-b">
+                <div class="h-full px-5 lg:px-8 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <button class="lg:hidden" onclick="mobile()">☰</button
+                        ><button class="hidden lg:block" onclick="collapse()">☰</button>
+                        <div>
+                            <div class="text-xs text-slate-400">Admin Console</div>
+                            <b class="text-sm">Platform Overview</b>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <a class="hidden md:block text-xs font-bold text-slate-600" href="#">View Marketplace ↗</a
+                        ><span class="text-lg">🔔</span>
+                        <div class="w-10 h-10 rounded-xl bg-slate-800 text-white grid place-items-center font-bold">
+                            AD
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <section class="p-5 sm:p-7 lg:p-8 max-w-[1550px] mx-auto">
+                <div class="rounded-2xl bg-gradient-to-br from-slate-900 to-pp-900 text-white p-7">
+                    <div class="text-xs uppercase tracking-widest text-pp-200 font-bold">Platform control center</div>
+                    <h1 class="text-3xl font-extrabold mt-2">Good morning, Admin 👋</h1>
+                    <p class="text-sm text-slate-300 mt-2 max-w-2xl">
+                        Monitor marketplace activity, transactions, community health, logistics and issues requiring
+                        administrative attention.
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                    <div class="bg-white border rounded-2xl p-5">
+                        <div class="text-xs text-slate-500">GMV this month</div>
+                        <div class="text-2xl font-extrabold mt-2">₦48.6m</div>
+                        <div class="text-xs text-emerald-600 mt-1">↑ 12.4% vs last month</div>
+                    </div>
+                    <div class="bg-white border rounded-2xl p-5">
+                        <div class="text-xs text-slate-500">Platform revenue</div>
+                        <div class="text-2xl font-extrabold mt-2">₦3.24m</div>
+                        <div class="text-xs text-emerald-600 mt-1">↑ 8.7% vs last month</div>
+                    </div>
+                    <div class="bg-white border rounded-2xl p-5">
+                        <div class="text-xs text-slate-500">Active users</div>
+                        <div class="text-2xl font-extrabold mt-2">12,842</div>
+                        <div class="text-xs text-slate-400 mt-1">+436 this week</div>
+                    </div>
+                    <div class="bg-white border rounded-2xl p-5">
+                        <div class="text-xs text-slate-500">Needs attention</div>
+                        <div class="text-2xl font-extrabold mt-2">27</div>
+                        <div class="text-xs text-red-600 mt-1">Disputes, moderation & KYC</div>
+                    </div>
+                </div>
+                <div class="grid xl:grid-cols-[1.35fr_1fr] gap-6 mt-6">
+                    <div class="bg-white border rounded-2xl p-5">
+                        <h2 class="font-extrabold">Platform activity</h2>
+                        <p class="text-xs text-slate-500">Transaction volume — last 7 days</p>
+                        <div class="h-48 flex items-end gap-3 mt-5">
+                            <div class="flex-1 bg-pp-100 rounded-t-lg" style="height: 42%"></div>
+                            <div class="flex-1 bg-pp-100 rounded-t-lg" style="height: 58%"></div>
+                            <div class="flex-1 bg-pp-200 rounded-t-lg" style="height: 51%"></div>
+                            <div class="flex-1 bg-pp-200 rounded-t-lg" style="height: 68%"></div>
+                            <div class="flex-1 bg-pp-200 rounded-t-lg" style="height: 74%"></div>
+                            <div class="flex-1 bg-pp-200 rounded-t-lg" style="height: 64%"></div>
+                            <div class="flex-1 bg-pp-600 rounded-t-lg" style="height: 88%"></div>
+                        </div>
+                    </div>
+                    <div class="bg-white border rounded-2xl p-5">
+                        <h2 class="font-extrabold">Action queue</h2>
+                        <p class="text-xs text-slate-500">Items requiring attention</p>
+                        <div class="space-y-2 mt-4">
+                            <a class="flex items-center gap-3 p-3 rounded-xl bg-red-50" href="#"
+                                ><span class="text-lg">⚖</span>
+                                <div class="flex-1">
+                                    <b class="text-xs">3 active disputes</b>
+                                    <div class="text-[11px] text-slate-500">Oldest opened 2 days ago</div>
+                                </div>
+                                ›</a
+                            ><a class="flex items-center gap-3 p-3 rounded-xl bg-amber-50" href="#"
+                                ><span class="text-lg">⚑</span>
+                                <div class="flex-1">
+                                    <b class="text-xs">12 listings awaiting moderation</b>
+                                    <div class="text-[11px] text-slate-500">7 reported by users</div>
+                                </div>
+                                ›</a
+                            ><a class="flex items-center gap-3 p-3 rounded-xl bg-blue-50" href="#"
+                                ><span class="text-lg">✓</span>
+                                <div class="flex-1">
+                                    <b class="text-xs">18 users awaiting verification</b>
+                                    <div class="text-[11px] text-slate-500">KYC / account review</div>
+                                </div>
+                                ›</a
+                            ><a class="flex items-center gap-3 p-3 rounded-xl bg-emerald-50" href="#"
+                                ><span class="text-lg">↗</span>
+                                <div class="flex-1">
+                                    <b class="text-xs">9 payout batches ready</b>
+                                    <div class="text-[11px] text-slate-500">₦1.82m pending settlement</div>
+                                </div>
+                                ›</a
+                            >
+                        </div>
+                    </div>
+                </div>
+                <div class="grid xl:grid-cols-3 gap-6 mt-6">
+                    <div class="bg-white border rounded-2xl p-5">
+                        <h2 class="font-extrabold">Marketplace</h2>
+                        <p class="text-xs text-slate-500 mt-1">Current ecosystem activity</p>
+                        <div class="space-y-3 mt-5">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-slate-500">Active listings</span><b>8,421</b>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-slate-500">New today</span><b>184</b>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-slate-500">Offers today</span><b>327</b>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span class="text-slate-500">Completed sales</span><b>96</b>
+                            </div>
+                            <button class="w-full mt-2 rounded-xl bg-pp-600 text-white py-3 text-xs font-bold">
+                                Manage Marketplace
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-white border rounded-2xl p-5">
+                        <h2 class="font-extrabold">Financial snapshot</h2>
+                        <p class="text-xs text-slate-500 mt-1">Money flowing through the platform</p>
+                        <div class="space-y-3 mt-5">
+                            <div>
+                                <div class="text-xs text-slate-500">Payments collected</div>
+                                <div class="text-xl font-extrabold mt-1">₦45.8m</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500">Seller settlements pending</div>
+                                <div class="text-xl font-extrabold mt-1">₦1.82m</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500">Refunds this month</div>
+                                <div class="text-xl font-extrabold mt-1">₦640k</div>
+                            </div>
+                            <button class="w-full mt-2 rounded-xl border py-3 text-xs font-bold">Open Finance</button>
+                        </div>
+                    </div>
+                    <div class="bg-white border rounded-2xl p-5">
+                        <h2 class="font-extrabold">Community health</h2>
+                        <p class="text-xs text-slate-500 mt-1">Forum and service activity</p>
+                        <div class="space-y-3 mt-5">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-500">Discussions today</span><b>74</b>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-500">Responses today</span><b>421</b>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-500">Reports awaiting review</span><b>7</b>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-500">Service invoices</span><b>31</b>
+                            </div>
+                            <button class="w-full mt-2 rounded-xl border py-3 text-xs font-bold">
+                                Moderate Community
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white border rounded-2xl mt-6">
+                    <div class="p-5 border-b">
+                        <b>Recent platform events</b>
+                        <p class="text-xs text-slate-500 mt-1">Latest important activity</p>
+                    </div>
+                    <div class="p-4 flex gap-3 items-center border-b">
+                        <span class="w-9 h-9 rounded-lg bg-emerald-50 grid place-items-center">✓</span>
+                        <div class="flex-1">
+                            <b class="text-sm">Payout batch #PB-204 successfully processed</b>
+                            <div class="text-xs text-slate-500 mt-1">₦428,500 paid to 7 sellers</div>
+                        </div>
+                        <span class="text-[11px] text-slate-400">8 min ago</span>
+                    </div>
+                    <div class="p-4 flex gap-3 items-center border-b">
+                        <span class="w-9 h-9 rounded-lg bg-red-50 grid place-items-center">⚠</span>
+                        <div class="flex-1">
+                            <b class="text-sm">Dispute opened on invoice #PP-1048</b>
+                            <div class="text-xs text-slate-500 mt-1">Buyer reports damaged screen on delivery</div>
+                        </div>
+                        <span class="text-[11px] text-slate-400">24 min ago</span>
+                    </div>
+                    <div class="p-4 flex gap-3 items-center border-b">
+                        <span class="w-9 h-9 rounded-lg bg-blue-50 grid place-items-center">👤</span>
+                        <div class="flex-1">
+                            <b class="text-sm">New seller account registered</b>
+                            <div class="text-xs text-slate-500 mt-1">Verification pending</div>
+                        </div>
+                        <span class="text-[11px] text-slate-400">41 min ago</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <script>
+            const groups = ["market", "users", "tx", "trust", "community", "logistics", "finance", "system"];
+            function collapse() {
+                side.classList.toggle("collapsed");
+                main.style.marginLeft = side.classList.contains("collapsed") ? "76px" : "280px";
+            }
+            function mobile() {
+                side.classList.toggle("mobile");
+                shade.classList.toggle("hidden");
+            }
+            function openGroup(id) {
+                groups.forEach((x) => {
+                    if (x !== id) document.getElementById(x).classList.remove("open");
+                });
+                document.getElementById(id).classList.toggle("open");
+            }
+        </script>
+    </body>
+</html>
