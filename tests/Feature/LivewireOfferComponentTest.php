@@ -8,7 +8,7 @@ use App\Models\DeviceModel;
 use App\Models\Item;
 use App\Models\Listing;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -23,7 +23,7 @@ use Tests\TestCase;
  */
 class LivewireOfferComponentTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected User $buyer;
     protected User $seller;

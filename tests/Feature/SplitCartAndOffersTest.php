@@ -13,12 +13,12 @@ use App\Models\Offer;
 use App\Models\User;
 use App\Services\Commercial\CartService;
 use App\Services\Commercial\NegotiationService;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class SplitCartAndOffersTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected User $buyer;
     protected User $seller1;

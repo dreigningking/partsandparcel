@@ -8,7 +8,7 @@ use App\Models\Listing;
 use App\Models\Payout;
 use App\Models\Settlement;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
@@ -23,7 +23,7 @@ use Tests\TestCase;
  */
 class PaystackWebhookMockTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected string $secret;
 

@@ -9,12 +9,12 @@ use App\Models\Offer;
 use App\Models\Response;
 use App\Models\User;
 use App\Services\Commercial\NegotiationService;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class CommunityRequestsTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected User $requester;
     protected User $vendor;

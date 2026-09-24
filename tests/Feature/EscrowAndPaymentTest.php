@@ -16,12 +16,12 @@ use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Services\Payment\EscrowService;
 use App\Services\PostSale\IssueResolutionService;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class EscrowAndPaymentTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected User $buyer;
     protected User $seller;
