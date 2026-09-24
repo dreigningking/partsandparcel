@@ -16,6 +16,8 @@ use Tests\TestCase;
 
 class LocationAndLocalizationTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
