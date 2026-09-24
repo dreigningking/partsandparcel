@@ -31,7 +31,7 @@ jobs:
           coverage: none
 
       - name: Install Dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: composer install --prefer-dist --no-interaction --no-progress --ignore-platform-reqs
 
       - name: Execute Fast Tests
         env:
@@ -104,9 +104,11 @@ jobs:
           script: |
             cd /var/www/partsandparcel
             echo "Pulling latest Docker image from Docker Hub..."
-            docker compose pull app
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/partsandparcel:latest
+            sudo docker tag ${{ secrets.DOCKERHUB_USERNAME }}/partsandparcel:latest partsandparcel:latest
             echo "Restarting application container with zero-downtime..."
-            docker compose up -d --no-deps app
+            sudo docker compose up -d --no-deps app
+            sudo docker compose exec -T app php artisan optimize
             echo "Pruning dangling images to reclaim disk space..."
-            docker image prune -f
+            sudo docker image prune -f
             echo "Deployment successfully finished!"

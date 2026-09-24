@@ -43,7 +43,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: 4. Cache Composer Vendor Directory
         uses: actions/cache@v4
@@ -54,7 +53,7 @@ jobs:
             ${{ runner.os }}-composer-
 
       - name: 5. Install Composer Dependencies
-        run: composer install --prefer-dist --no-interaction --no-progress
+        run: composer install --prefer-dist --no-interaction --no-progress --ignore-platform-reqs
 
       - name: 6. Install NPM Dependencies & Compile Vite Assets
         run: |
