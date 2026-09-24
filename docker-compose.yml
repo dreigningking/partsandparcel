@@ -32,6 +32,10 @@ services:
       MAIL_HOST: mailpit
       MAIL_PORT: 1025
       MAIL_ENCRYPTION: null
+    env_file:
+      - .env
+    volumes:
+      - ./.env:/var/www/html/.env:ro
     depends_on:
       mysql:
         condition: service_healthy
