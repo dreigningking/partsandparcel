@@ -1,7 +1,7 @@
 <div class="grid lg:grid-cols-12 gap-8 items-start">
     <!-- LEFT SIDEBAR FILTER (DESKTOP) -->
     <aside class="hidden lg:block lg:col-span-3 sticky top-24">
-        <livewire:components.filters.category-parts-filter :isMobile="false" key="desktop-parts-filter" />
+        @include('livewire.marketplace.listings.partials.category-parts-filter-content', ['isMobile' => false])
     </aside>
 
     <!-- MAIN CONTENT PANEL -->
@@ -13,86 +13,63 @@
 
         <!-- RESULTS BAR & SORT -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white px-5 py-3.5 rounded-2xl border border-slate-200 text-xs shadow-xs gap-3">
-            <div class="text-center">
-                <span class="font-bold text-slate-900">Showing 1-12 of 380 Replacement Spare Parts</span>
+            <div class="text-center sm:text-left">
+                <span class="font-bold text-slate-900">Showing 1-{{ $listings->count() }} of {{ $totalCount }} Replacement Spare Parts{{ $activeCategory ? ' in ' . $activeCategory->name : '' }}</span>
             </div>
             
             <div class="flex justify-center items-center gap-2">
                 <span class="text-slate-400 font-medium">Sort by:</span>
-                <select class="border border-slate-200 rounded-lg p-1.5 font-semibold text-slate-800 outline-none bg-slate-50">
-                    <option>Relevance</option>
-                    <option>Newest First</option>
-                    <option>Price: Low to High</option>
-                    <option>Price: High to Low</option>
+                <select wire:model.live="sortBy" class="border border-slate-200 rounded-lg p-1.5 font-semibold text-slate-800 outline-none bg-slate-50 cursor-pointer">
+                    <option value="relevance">Relevance</option>
+                    <option value="newest">Newest First</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
                 </select>
             </div>
         </div>
 
         <!-- PARTS GRID -->
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <!-- PART 1 -->
-            <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card transition duration-200">
-                <div class="relative product-img h-48 grid place-items-center p-4">
-                    <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">SPARE PART</span>
-                    <span class="text-6xl group-hover:scale-105 transition">🔋</span>
+        @if($listings->isNotEmpty())
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                @foreach($listings as $listing)
+                    <a href="{{ route('listing-details', ['id' => $listing->id]) }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card transition duration-200">
+                        <div class="relative product-img h-48 grid place-items-center p-4">
+                            <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">SPARE PART</span>
+                            @if($listing->firstMediaUrl('images'))
+                                <img src="{{ $listing->firstMediaUrl('images') }}" alt="{{ $listing->assetable->name ?? '' }}" class="h-full w-full object-contain group-hover:scale-105 transition" />
+                            @elseif($listing->assetable && $listing->assetable->firstMediaUrl('images'))
+                                <img src="{{ $listing->assetable->firstMediaUrl('images') }}" alt="{{ $listing->assetable->name ?? '' }}" class="h-full w-full object-contain group-hover:scale-105 transition" />
+                            @else
+                                <span class="text-6xl group-hover:scale-105 transition">⚙️</span>
+                            @endif
+                        </div>
+                        <div class="p-5">
+                            <span class="text-xs font-bold text-pp-600">{{ $listing->seller->store_name ?? ($listing->seller->name ?? 'Verified Seller') }}</span>
+                            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">{{ $listing->assetable->name ?? ($listing->assetable->deviceModel->name ?? 'Spare Part') }}</h3>
+                            <p class="text-xs text-slate-500 mt-1 line-clamp-1">{{ $listing->assetable->description ?? ($listing->description ?? 'Replacement component tested and ready for installation.') }}</p>
+                            <div class="mt-4 flex items-baseline justify-between">
+                                <span class="text-xl font-extrabold text-slate-900">₦{{ number_format($listing->price) }}</span>
+                                <span class="text-xs font-bold text-emerald-600">{{ $listing->availableQuantity() }} available</span>
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                                <span>📍 {{ $listing->location->city ?? ($listing->location->state ?? 'Nigeria') }}</span>
+                                <span class="font-bold text-emerald-600 capitalize">{{ str_replace('_', ' ', $listing->assetable->condition_status ?? 'Tested Working') }}</span>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @else
+            <!-- EMPTY STATE -->
+            <div class="rounded-2xl border border-slate-200 bg-white p-12 text-center space-y-3">
+                <span class="text-5xl block">⚙️</span>
+                <h3 class="text-base font-bold text-slate-900">No spare parts found matching your criteria</h3>
+                <p class="text-xs text-slate-500 max-w-md mx-auto">Try clearing your filters or search query to find replacement parts.</p>
+                <div class="pt-2">
+                    <button type="button" wire:click="resetFilters" class="px-4 py-2 rounded-xl bg-pp-50 text-pp-700 font-bold text-xs hover:bg-pp-100 transition cursor-pointer">Reset Filters</button>
                 </div>
-                <div class="p-5">
-                    <span class="text-xs font-bold text-pp-600">Seth Electronics</span>
-                    <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">HP EliteBook 840 G5 Battery</h3>
-                    <p class="text-xs text-slate-500 mt-1">Part #TT03XL · Fits 840 G5 &amp; G6</p>
-                    <div class="mt-4 flex items-baseline justify-between">
-                        <span class="text-xl font-extrabold text-slate-900">₦25,000</span>
-                        <span class="text-xs font-bold text-emerald-600">7 available</span>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                        <span>📍 Ikeja, Lagos</span>
-                        <span class="font-bold text-emerald-600">Tested Working</span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- PART 2 -->
-            <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card transition duration-200">
-                <div class="relative product-img h-48 grid place-items-center p-4">
-                    <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">SPARE PART</span>
-                    <span class="text-6xl group-hover:scale-105 transition">🖥️</span>
-                </div>
-                <div class="p-5">
-                    <span class="text-xs font-bold text-pp-600">Computer Village Screens</span>
-                    <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">HP 14" FHD IPS Display LCD</h3>
-                    <p class="text-xs text-slate-500 mt-1">30-Pin EDP Connector · Matte Anti-glare</p>
-                    <div class="mt-4 flex items-baseline justify-between">
-                        <span class="text-xl font-extrabold text-slate-900">₦45,000</span>
-                        <span class="text-xs font-bold text-emerald-600">12 available</span>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                        <span>📍 Ikeja, Lagos</span>
-                        <span class="font-bold text-slate-700">Tested Grade A</span>
-                    </div>
-                </div>
-            </a>
-
-            <!-- PART 3 -->
-            <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card transition duration-200">
-                <div class="relative product-img h-48 grid place-items-center p-4">
-                    <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">SPARE PART</span>
-                    <span class="text-6xl group-hover:scale-105 transition">⚙️</span>
-                </div>
-                <div class="p-5">
-                    <span class="text-xs font-bold text-pp-600">Abel Tech Parts</span>
-                    <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">Dell Latitude 5420 Motherboard</h3>
-                    <p class="text-xs text-slate-500 mt-1">Intel i5 11th Gen · Onboard Graphics · Clean</p>
-                    <div class="mt-4 flex items-baseline justify-between">
-                        <span class="text-xl font-extrabold text-slate-900">₦110,000</span>
-                        <span class="text-xs font-bold text-emerald-600">2 available</span>
-                    </div>
-                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                        <span>📍 Ikeja, Lagos</span>
-                        <span class="font-bold text-emerald-600">100% Tested</span>
-                    </div>
-                </div>
-            </a>
-        </div>
+            </div>
+        @endif
     </main>
 
     <!-- MOBILE FILTER DRAWER (SLIDES FROM RIGHT INSTANTLY) -->
@@ -105,7 +82,7 @@
             <button onclick="closeCategoryFilterDrawer('parts')" class="w-8 h-8 rounded-lg hover:bg-slate-100 grid place-items-center text-slate-500 text-lg font-bold transition cursor-pointer" aria-label="Close filters">×</button>
         </div>
         <div class="flex-1">
-            <livewire:components.filters.category-parts-filter :isMobile="true" key="mobile-parts-filter" />
+            @include('livewire.marketplace.listings.partials.category-parts-filter-content', ['isMobile' => true])
         </div>
     </aside>
 </div>

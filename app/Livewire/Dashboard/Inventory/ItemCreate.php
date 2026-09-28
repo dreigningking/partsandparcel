@@ -156,6 +156,9 @@ class ItemCreate extends Component
     public function skipStep2ToStep3()
     {
         $this->validateStep1();
+        if ($this->item_type === 'scrap') {
+            $this->include_whole_listing = true;
+        }
         $this->step = 3;
     }
 
@@ -164,6 +167,12 @@ class ItemCreate extends Component
         if ($this->step === 1) {
             $this->validateStep1();
         }
+
+        $validComponents = array_filter($this->harvested_components, fn($c) => !empty(trim($c['name'] ?? '')));
+        if ($this->item_type === 'scrap' && ($this->as_is_scrap || !$this->disassemble_mode || empty($validComponents))) {
+            $this->include_whole_listing = true;
+        }
+
         $this->step = 3;
     }
 
@@ -220,7 +229,7 @@ class ItemCreate extends Component
     {
         $this->harvested_components[] = [
             'name' => $componentName,
-            'condition_status' => 'TESTED WORKING',
+            'condition_status' => 'Testing working',
             'notes' => '',
             'price' => 0,
             'list_for_sale' => true,
@@ -245,7 +254,7 @@ class ItemCreate extends Component
     {
         $this->harvested_components[] = [
             'name' => '',
-            'condition_status' => 'TESTED WORKING',
+            'condition_status' => 'Testing working',
             'notes' => '',
             'price' => 0,
             'list_for_sale' => true,
@@ -350,7 +359,7 @@ class ItemCreate extends Component
                         'model_id' => $item->model_id,
                         'item_type' => 'part',
                         'name' => $compData['name'],
-                        'condition_status' => strtolower($compData['condition_status'] ?? 'used') === 'faulty / repair' ? 'faulty' : 'used',
+                        'condition_status' => $compData['condition_status'] ?? 'Testing working',
                         'condition_notes' => $compData['notes'] ?? null,
                         'status' => 'available',
                         'acquired_at' => now(),
@@ -366,6 +375,12 @@ class ItemCreate extends Component
     public function submitListing()
     {
         $this->validateStep1();
+
+        $validComponents = array_filter($this->harvested_components, fn($c) => !empty(trim($c['name'] ?? '')));
+        $hasComponents = $this->item_type === 'scrap' && !$this->as_is_scrap && $this->disassemble_mode && !empty($validComponents);
+        if (!$hasComponents && $this->item_type === 'scrap') {
+            $this->include_whole_listing = true;
+        }
 
         if ($this->item_type === 'scrap') {
             $this->quantity = 1;
@@ -429,7 +444,7 @@ class ItemCreate extends Component
                         'model_id' => $item->model_id,
                         'item_type' => 'part',
                         'name' => $compData['name'],
-                        'condition_status' => strtolower($compData['condition_status'] ?? 'used') === 'faulty / repair' ? 'faulty' : 'used',
+                        'condition_status' => $compData['condition_status'] ?? 'Testing working',
                         'condition_notes' => $compData['notes'] ?? null,
                         'status' => 'available',
                         'acquired_at' => now(),

@@ -45,16 +45,25 @@
         <i class="fas fa-filter text-pp-600"></i> Filter Inventory
       </h3>
 
-      @if($search || $selectedCategory || $selectedCondition || $selectedStatus)
+      @if($search || $selectedCategory || $selectedBrand || $selectedCondition || $selectedLocation || $selectedStatus)
         <button type="button" wire:click="resetFilters" class="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1 cursor-pointer">
           <i class="fas fa-undo text-[10px]"></i> Reset Filters
         </button>
       @endif
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
       
-      <!-- 1. CATEGORY FILTER -->
+      <!-- 1. SEARCH INPUT (TITLE / MODEL / ANYTHING) -->
+      <div>
+        <label class="block font-bold text-slate-700 mb-1">Search</label>
+        <div class="relative">
+          <i class="fas fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
+          <input type="text" wire:model.live.debounce.300ms="search" placeholder="Title, model, brand..." class="w-full pl-8 p-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 outline-none focus:border-pp-500 bg-slate-50/50 transition" />
+        </div>
+      </div>
+
+      <!-- 2. CATEGORY FILTER -->
       <div>
         <label class="block font-bold text-slate-700 mb-1">Category</label>
         <select wire:model.live="selectedCategory" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
@@ -65,34 +74,37 @@
         </select>
       </div>
 
-      <!-- 2. SEARCH INPUT (TITLE / MODEL / LOCATION) -->
+      <!-- 3. BRAND FILTER -->
       <div>
-        <label class="block font-bold text-slate-700 mb-1">Search Title / Model / Location</label>
-        <div class="relative">
-          <i class="fas fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
-          <input type="text" wire:model.live.debounce.300ms="search" placeholder="Type title, model or location..." class="w-full pl-8 p-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 outline-none focus:border-pp-500 bg-slate-50/50 transition" />
-        </div>
-      </div>
-
-      <!-- 3. CONDITION FILTER -->
-      <div>
-        <label class="block font-bold text-slate-700 mb-1">Condition</label>
-        <select wire:model.live="selectedCondition" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
-          <option value="">All Conditions</option>
-          <option value="new">🌟 Brand New</option>
-          <option value="working">✅ Used - Working</option>
-          <option value="refurbished">🛠 Refurbished</option>
-          <option value="scrap">♻️ Scrap / For Parts</option>
+        <label class="block font-bold text-slate-700 mb-1">Brand</label>
+        <select wire:model.live="selectedBrand" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
+          <option value="">All Brands</option>
+          @foreach($brands as $brand)
+            <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+          @endforeach
         </select>
       </div>
 
-      <!-- 4. STATUS FILTER -->
+      <!-- 4. CONDITION STATUS FILTER -->
       <div>
-        <label class="block font-bold text-slate-700 mb-1">Status</label>
-        <select wire:model.live="selectedStatus" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
-          <option value="">All Statuses</option>
-          <option value="listed">Marketplace Listed</option>
-          <option value="unlisted">Unlisted Inventory</option>
+        <label class="block font-bold text-slate-700 mb-1">Condition Status</label>
+        <select wire:model.live="selectedCondition" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
+          <option value="">All Conditions</option>
+          <option value="new">🌟 Brand New</option>
+          <option value="used">✅ Used - Working</option>
+          <option value="refurbished">🛠 Refurbished</option>
+          <option value="faulty">🛠️ Scrap / For Parts</option>
+        </select>
+      </div>
+
+      <!-- 5. LOCATION FILTER -->
+      <div>
+        <label class="block font-bold text-slate-700 mb-1">Location</label>
+        <select wire:model.live="selectedLocation" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
+          <option value="">All Locations</option>
+          @foreach($locations as $loc)
+            <option value="{{ $loc->id }}">{{ $loc->label }} ({{ $loc->city }})</option>
+          @endforeach
         </select>
       </div>
 
@@ -115,8 +127,8 @@
         <thead>
           <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 font-extrabold uppercase text-[10px] tracking-wider">
             <th class="p-3.5 min-w-[200px]">Item Name / Title</th>
-            <th class="p-3.5 min-w-[110px]">Category</th>
-            <th class="p-3.5 min-w-[110px]">Model</th>
+            <th class="p-3.5 min-w-[120px]">Category</th>
+            <th class="p-3.5 min-w-[150px]">Brand &amp; Model</th>
             <th class="p-3.5 min-w-[140px]">Condition</th>
             <th class="p-3.5 min-w-[130px]">Location</th>
             <th class="p-3.5 min-w-[120px]">Status</th>
@@ -144,9 +156,14 @@
                 </span>
               </td>
 
-              <!-- 3. MODEL -->
-              <td class="p-3.5 text-slate-800 font-semibold">
-                {{ $item->deviceModel?->name ?? '—' }}
+              <!-- 3. BRAND & MODEL (COMBINED IN ONE COLUMN) -->
+              <td class="p-3.5">
+                <span class="font-extrabold text-slate-900 block text-xs">
+                  {{ $item->deviceModel?->brand?->name ?? '—' }}
+                </span>
+                <span class="text-[11px] text-slate-500 font-medium block">
+                  {{ $item->deviceModel?->name ?? 'Unspecified Model' }}
+                </span>
               </td>
 
               <!-- 4. CONDITION -->
@@ -155,7 +172,7 @@
                   <span class="px-2.5 py-1 rounded-full bg-pp-100 text-pp-800 font-extrabold text-[10px] inline-flex items-center gap-1">
                     🌟 Brand New
                   </span>
-                @elseif($item->condition_status === 'working')
+                @elseif($item->condition_status === 'used' || $item->condition_status === 'working')
                   <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] inline-flex items-center gap-1">
                     ✅ Used - Working
                   </span>
@@ -163,10 +180,10 @@
                   <span class="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[10px] inline-flex items-center gap-1">
                     🛠 Refurbished
                   </span>
-                @elseif($item->condition_status === 'scrap')
+                @elseif($item->condition_status === 'faulty' || $item->condition_status === 'scrap')
                   <div class="flex flex-col gap-0.5">
                     <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-extrabold text-[10px] inline-flex items-center gap-1 w-fit">
-                      ♻️ Scrap / For Parts
+                      🛠️ Scrap / For Parts
                     </span>
                     @if($item->components->count() > 0)
                       <span class="text-[10px] text-amber-700 font-bold">({{ $item->components->count() }} parts harvested)</span>
@@ -234,7 +251,7 @@
                   @endif
 
                   <!-- DISASSEMBLY (ABEL / SCRAP ONLY) -->
-                  @if($item->condition_status === 'scrap')
+                  @if($item->condition_status === 'scrap' || $item->condition_status === 'faulty')
                     <a href="{{ route('item.view', ['id' => $item->id]) }}" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[10px] transition shadow-2xs" title="Disassembly Matrix">
                       <i class="fas fa-microchip mr-0.5"></i> Disassembly
                     </a>
@@ -249,10 +266,8 @@
                   <button type="button" wire:click="deleteItem({{ $item->id }})" wire:confirm="Are you sure you want to delete this inventory item and all associated listings?" class="px-2.5 py-1 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold text-[10px] transition cursor-pointer" title="Delete Item">
                     <i class="fas fa-trash-alt mr-0.5"></i> Delete
                   </button>
-
                 </div>
               </td>
-
             </tr>
           @empty
             <tr>

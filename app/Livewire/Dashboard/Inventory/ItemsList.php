@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dashboard\Inventory;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\Listing;
@@ -18,7 +19,9 @@ class ItemsList extends Component
 
     public string $search = '';
     public string $selectedCategory = '';
+    public string $selectedBrand = '';
     public string $selectedCondition = '';
+    public string $selectedLocation = '';
     public string $selectedStatus = '';
 
     // Create Listing Modal Properties
@@ -41,7 +44,17 @@ class ItemsList extends Component
         $this->resetPage();
     }
 
+    public function updatingSelectedBrand()
+    {
+        $this->resetPage();
+    }
+
     public function updatingSelectedCondition()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSelectedLocation()
     {
         $this->resetPage();
     }
@@ -53,7 +66,7 @@ class ItemsList extends Component
 
     public function resetFilters()
     {
-        $this->reset(['search', 'selectedCategory', 'selectedCondition', 'selectedStatus']);
+        $this->reset(['search', 'selectedCategory', 'selectedBrand', 'selectedCondition', 'selectedLocation', 'selectedStatus']);
         $this->resetPage();
     }
 
@@ -214,9 +227,30 @@ class ItemsList extends Component
             });
         }
 
-        // Condition Filter
+        // Brand Filter
+        if ($this->selectedBrand) {
+            $query->whereHas('deviceModel', function ($q) {
+                $q->where('brand_id', $this->selectedBrand);
+            });
+        }
+
+        // Condition Filter (new, used, refurbished, faulty)
         if ($this->selectedCondition) {
-            $query->where('condition_status', $this->selectedCondition);
+            if ($this->selectedCondition === 'used') {
+                $query->whereIn('condition_status', ['used', 'working']);
+            } elseif ($this->selectedCondition === 'faulty') {
+                $query->whereIn('condition_status', ['faulty', 'scrap']);
+            } else {
+                $query->where('condition_status', $this->selectedCondition);
+            }
+        }
+
+        // Location Filter (dropdown of user's locations)
+        if ($this->selectedLocation) {
+            $query->where(function ($q) {
+                $q->where('location_id', $this->selectedLocation)
+                  ->orWhereHas('listing', fn($lq) => $lq->where('location_id', $this->selectedLocation));
+            });
         }
 
         // Status Filter (Listed vs Unlisted)
@@ -234,13 +268,18 @@ class ItemsList extends Component
                   });
         }
 
-        // Search Input Filter (Title / Model / Location)
+        // Search Input Filter (Title, Model, anything)
         if (!empty(trim($this->search))) {
             $term = '%' . trim($this->search) . '%';
             $query->where(function ($q) use ($term) {
                 $q->where('name', 'like', $term)
                   ->orWhere('condition_notes', 'like', $term)
-                  ->orWhereHas('deviceModel', fn($mq) => $mq->where('name', 'like', $term))
+                  ->orWhere('description', 'like', $term)
+                  ->orWhereHas('deviceModel', function ($mq) use ($term) {
+                      $mq->where('name', 'like', $term)
+                         ->orWhereHas('brand', fn($bq) => $bq->where('name', 'like', $term))
+                         ->orWhereHas('category', fn($cq) => $cq->where('name', 'like', $term));
+                  })
                   ->orWhereHas('location', function ($lq) use ($term) {
                       $lq->where('label', 'like', $term)
                          ->orWhere('city', 'like', $term)
@@ -251,11 +290,13 @@ class ItemsList extends Component
 
         $items = $query->latest()->paginate(10);
         $categories = Category::whereNull('parent_id')->orderBy('name')->get();
+        $brands = Brand::orderBy('name')->get();
         $locations = $user?->locations ?? collect();
 
         return view('livewire.dashboard.inventory.items-list', [
             'items' => $items,
             'categories' => $categories,
+            'brands' => $brands,
             'locations' => $locations,
             'unlistedAssets' => $this->unlistedAssets,
         ]);

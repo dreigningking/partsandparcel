@@ -2,34 +2,83 @@
 // PARTS & PARCEL — SHARED CUSTOM JS UTILITIES
 // ==========================================
 
-// 1. MEGA MENU TRIGGER LOGIC (GLOBAL EVENT DELEGATION)
-document.addEventListener('click', (e) => {
+// 1. MEGA MENU TRIGGER LOGIC (GLOBAL EVENT DELEGATION & HOVER SUPPORT)
+let megaMenuCloseTimeout = null;
+
+function openMegaMenuForTrigger(trigger) {
+    if (!trigger) return;
+    let targetId = trigger.getAttribute('data-target') || trigger.getAttribute('data-menu');
+    if (targetId && !targetId.startsWith('mega-')) {
+        targetId = 'mega-' + targetId;
+    }
+    const targetMenu = document.getElementById(targetId);
+    document.querySelectorAll('.mega-menu').forEach(m => {
+        if (m !== targetMenu) m.classList.remove('open');
+    });
+    document.querySelectorAll('.nav-trigger').forEach(t => {
+        if (t !== trigger) t.classList.remove('open');
+    });
+    if (targetMenu) {
+        targetMenu.classList.add('open');
+        trigger.classList.add('open');
+    }
+}
+
+function closeAllMegaMenus() {
+    document.querySelectorAll('.mega-menu').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.nav-trigger').forEach(t => t.classList.remove('open'));
+}
+
+// Hover support on desktop
+document.addEventListener('mouseover', (e) => {
     const trigger = e.target.closest('.nav-trigger');
-    const megaMenus = document.querySelectorAll('.mega-menu');
-    const navTriggers = document.querySelectorAll('.nav-trigger');
-
+    const menu = e.target.closest('.mega-menu');
     if (trigger) {
+        if (megaMenuCloseTimeout) clearTimeout(megaMenuCloseTimeout);
+        openMegaMenuForTrigger(trigger);
+    } else if (menu) {
+        if (megaMenuCloseTimeout) clearTimeout(megaMenuCloseTimeout);
+    }
+});
+
+document.addEventListener('mouseout', (e) => {
+    const trigger = e.target.closest('.nav-trigger');
+    const menu = e.target.closest('.mega-menu');
+    if (trigger || menu) {
+        if (megaMenuCloseTimeout) clearTimeout(megaMenuCloseTimeout);
+        megaMenuCloseTimeout = setTimeout(() => {
+            const hoveredTrigger = document.querySelector('.nav-trigger:hover');
+            const hoveredMenu = document.querySelector('.mega-menu:hover');
+            if (!hoveredTrigger && !hoveredMenu) {
+                closeAllMegaMenus();
+            }
+        }, 200);
+    }
+});
+
+// Click support
+document.addEventListener('click', (e) => {
+    const chevron = e.target.closest('.nav-chevron');
+    if (chevron) {
+        e.preventDefault();
         e.stopPropagation();
-        let targetId = trigger.getAttribute('data-target') || trigger.getAttribute('data-menu');
-        if (targetId && !targetId.startsWith('mega-')) {
-            targetId = 'mega-' + targetId;
-        }
-        const targetMenu = document.getElementById(targetId);
-        const isOpen = targetMenu ? targetMenu.classList.contains('open') : false;
-
-        megaMenus.forEach(m => m.classList.remove('open'));
-        navTriggers.forEach(t => t.classList.remove('open'));
-
-        if (!isOpen && targetMenu) {
-            targetMenu.classList.add('open');
-            trigger.classList.add('open');
+        const trigger = chevron.closest('.nav-trigger');
+        if (trigger) {
+            let targetId = trigger.getAttribute('data-target') || trigger.getAttribute('data-menu');
+            if (targetId && !targetId.startsWith('mega-')) targetId = 'mega-' + targetId;
+            const targetMenu = document.getElementById(targetId);
+            const isOpen = targetMenu ? targetMenu.classList.contains('open') : false;
+            closeAllMegaMenus();
+            if (!isOpen && targetMenu) {
+                targetMenu.classList.add('open');
+                trigger.classList.add('open');
+            }
         }
         return;
     }
 
-    if (!e.target.closest('.mega-menu')) {
-        megaMenus.forEach(m => m.classList.remove('open'));
-        navTriggers.forEach(t => t.classList.remove('open'));
+    if (!e.target.closest('.mega-menu') && !e.target.closest('.nav-trigger')) {
+        closeAllMegaMenus();
     }
 });
 

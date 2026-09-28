@@ -1,55 +1,4 @@
-<div class="max-w-5xl mx-auto flex flex-col gap-6" x-data="{
-  cameraModalOpen: false,
-  stream: null,
-  cameraError: '',
-  async openCamera() {
-    this.cameraError = '';
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      try {
-        this.stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }, 
-          audio: false 
-        });
-        this.cameraModalOpen = true;
-        this.$nextTick(() => {
-          if (this.$refs.webcamVideo) {
-            this.$refs.webcamVideo.srcObject = this.stream;
-            this.$refs.webcamVideo.play().catch(e => console.warn(e));
-          }
-        });
-        return;
-      } catch (err) {
-        console.warn('WebRTC camera unavailable or permission denied:', err);
-      }
-    }
-    // Fall back seamlessly to native camera/file picker without error popup
-    const camInput = document.getElementById('cameraUploadInput');
-    if (camInput) camInput.click();
-  },
-  closeCamera() {
-    if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
-      this.stream = null;
-    }
-    this.cameraModalOpen = false;
-  },
-  takeSnapshot() {
-    const video = this.$refs.webcamVideo;
-    if (!video) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const file = new File([blob], 'camera-capture-' + Date.now() + '.jpg', { type: 'image/jpeg' });
-        @this.upload('photos', file);
-      }
-      this.closeCamera();
-    }, 'image/jpeg', 0.92);
-  }
-}">
+<div class="max-w-5xl mx-auto flex flex-col gap-6" x-data="webcamCapture()">
 
   <!-- TOP HEADER & BACK LINK -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
@@ -318,7 +267,7 @@
             <input type="file" wire:model="photos" id="fileUploadInput" multiple accept="image/*,video/*" class="hidden" />
 
             <!-- HIDDEN FILE INPUT FOR FALLBACK CAMERA CAPTURE -->
-            <input type="file" wire:model="photos" id="cameraUploadInput" capture="environment" accept="image/*" class="hidden" />
+            <input type="file" wire:model="photos" id="cameraUploadInput" capture="environment" accept="image/*,video/*" class="hidden" />
 
             <button type="button" onclick="document.getElementById('fileUploadInput').click()" class="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-pp-50 hover:border-pp-300 text-slate-700 hover:text-pp-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
               <i class="fas fa-folder-open text-xs"></i> Upload Media
@@ -457,10 +406,9 @@
                     <!-- CONDITION STATUS -->
                     <td class="p-3">
                       <select wire:model="harvested_components.{{ $index }}.condition_status" class="w-full p-2.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 transition">
-                        <option value="TESTED WORKING">TESTED WORKING</option>
-                        <option value="UNTESTED">UNTESTED</option>
-                        <option value="FAULTY / REPAIR">FAULTY / REPAIR</option>
-                        <option value="USED">USED</option>
+                        <option value="Testing working">Testing working</option>
+                        <option value="Untested">Untested</option>
+                        <option value="Repaired">Repaired</option>
                       </select>
                     </td>
 
@@ -518,19 +466,29 @@
 
       <!-- FOR SCRAP ITEMS: LISTING TOGGLES -->
       @if($item_type === 'scrap')
+        @php
+          $validComponentsCount = collect($harvested_components)->filter(fn($c) => !empty(trim($c['name'] ?? '')))->count();
+          $hasComponents = !$as_is_scrap && $disassemble_mode && $validComponentsCount > 0;
+        @endphp
         <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
           <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider">Salvage Unit Marketplace Options</h3>
           
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <label class="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer transition hover:border-pp-300">
-              <input type="checkbox" wire:model.live="include_whole_listing" class="w-4 h-4 text-pp-600 rounded border-slate-300 focus:ring-pp-500" />
+            <label class="flex items-center gap-3 p-3 rounded-xl border transition {{ !$hasComponents ? 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed select-none' : 'bg-white border-slate-200 cursor-pointer hover:border-pp-300' }}">
+              <input type="checkbox" wire:model.live="include_whole_listing" {{ !$hasComponents ? 'disabled checked' : '' }} class="w-4 h-4 text-pp-600 rounded border-slate-300 focus:ring-pp-500 {{ !$hasComponents ? 'cursor-not-allowed' : '' }}" />
               <div>
                 <span class="text-xs font-bold text-slate-900 block">Publish Whole Scrap Unit Listing</span>
-                <span class="text-[10px] text-slate-500">List entire device unit as a single scrap item</span>
+                <span class="text-[10px] text-slate-500">
+                  @if(!$hasComponents)
+                    Whole unit listing is required when no components are harvested
+                  @else
+                    List entire device unit as a single scrap item
+                  @endif
+                </span>
               </div>
             </label>
 
-            @if(!$as_is_scrap && $disassemble_mode && !empty($harvested_components))
+            @if($hasComponents)
               <label class="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 cursor-pointer transition hover:border-pp-300">
                 <input type="checkbox" wire:model.live="include_component_listings" class="w-4 h-4 text-pp-600 rounded border-slate-300 focus:ring-pp-500" />
                 <div>
@@ -543,22 +501,32 @@
         </div>
       @endif
 
-      <!-- SECTION 1: MARKETPLACE PRICING -->
+      <!-- SECTION 1: MARKETPLACE PRICING & STOCK QUANTITY -->
       <div class="space-y-4">
         <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-2">
           <span class="w-5 h-5 rounded-full bg-pp-100 text-pp-700 text-[10px] grid place-items-center font-black">1</span>
-          <span>Marketplace Pricing</span>
+          <span>Marketplace Pricing &amp; Stock Quantity</span>
         </h3>
 
         @if($item_type === 'scrap')
           @if($include_whole_listing)
-            <div class="max-w-md">
-              <label class="block text-xs font-bold text-slate-700 mb-1.5">Whole Scrap Unit Listing Price (₦) <span class="text-rose-500">*</span></label>
-              <div class="relative">
-                <span class="absolute left-3 top-3 text-slate-400 font-bold text-xs">₦</span>
-                <input type="number" wire:model="price" placeholder="150000" class="w-full pl-8 p-3 rounded-xl border border-slate-200 text-sm font-extrabold text-slate-950 outline-none focus:border-pp-500 transition" />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Whole Scrap Unit Listing Price (₦) <span class="text-rose-500">*</span></label>
+                <div class="relative">
+                  <span class="absolute left-3 top-3 text-slate-400 font-bold text-xs">₦</span>
+                  <input type="number" wire:model="price" placeholder="150000" class="w-full pl-8 p-3 rounded-xl border border-slate-200 text-sm font-extrabold text-slate-950 outline-none focus:border-pp-500 transition" />
+                </div>
+                @error('price') <span class="text-[11px] text-rose-600 font-bold mt-1 block">{{ $message }}</span> @enderror
               </div>
-              @error('price') <span class="text-[11px] text-rose-600 font-bold mt-1 block">{{ $message }}</span> @enderror
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Stock Quantity <span class="text-rose-500">*</span></label>
+                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 flex items-center justify-between h-[46px]">
+                  <span>1 Unit (Unique Salvage Asset)</span>
+                  <span class="text-[10px] font-normal text-slate-500">(Scrap Unit)</span>
+                </div>
+              </div>
             </div>
           @endif
 
@@ -579,7 +547,7 @@
                     @foreach($harvested_components as $index => $comp)
                       <tr class="hover:bg-slate-50/50 transition">
                         <td class="p-3 font-bold text-slate-900">{{ $comp['name'] ?: 'Unnamed Component' }}</td>
-                        <td class="p-3 text-slate-600 font-semibold">{{ $comp['condition_status'] ?? 'TESTED WORKING' }}</td>
+                        <td class="p-3 text-slate-600 font-semibold">{{ $comp['condition_status'] ?? 'Testing working' }}</td>
                         <td class="p-3">
                           <div class="relative">
                             <span class="absolute left-2.5 top-2.5 text-slate-400 font-bold text-xs">₦</span>
@@ -599,13 +567,21 @@
             </div>
           @endif
         @else
-          <div class="max-w-md">
-            <label class="block text-xs font-bold text-slate-700 mb-1.5">Unit Listing Price (₦) <span class="text-rose-500">*</span></label>
-            <div class="relative">
-              <span class="absolute left-3 top-3 text-slate-400 font-bold text-xs">₦</span>
-              <input type="number" wire:model="price" placeholder="150000" class="w-full pl-8 p-3 rounded-xl border border-slate-200 text-sm font-extrabold text-slate-950 outline-none focus:border-pp-500 transition" />
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">Unit Listing Price (₦) <span class="text-rose-500">*</span></label>
+              <div class="relative">
+                <span class="absolute left-3 top-3 text-slate-400 font-bold text-xs">₦</span>
+                <input type="number" wire:model="price" placeholder="150000" class="w-full pl-8 p-3 rounded-xl border border-slate-200 text-sm font-extrabold text-slate-950 outline-none focus:border-pp-500 transition" />
+              </div>
+              @error('price') <span class="text-[11px] text-rose-600 font-bold mt-1 block">{{ $message }}</span> @enderror
             </div>
-            @error('price') <span class="text-[11px] text-rose-600 font-bold mt-1 block">{{ $message }}</span> @enderror
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1.5">Stock Quantity <span class="text-rose-500">*</span></label>
+              <input type="number" wire:model="quantity" min="1" placeholder="1" class="w-full p-3 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-950 outline-none focus:border-pp-500 transition" />
+              @error('quantity') <span class="text-[11px] text-rose-600 font-bold mt-1 block">{{ $message }}</span> @enderror
+            </div>
           </div>
         @endif
       </div>
@@ -634,7 +610,7 @@
                   @foreach($harvested_components as $index => $comp)
                     <tr class="hover:bg-slate-50/50 transition">
                       <td class="p-3 font-bold text-slate-900">{{ $comp['name'] ?: 'Unnamed Component' }}</td>
-                      <td class="p-3 text-slate-600 font-semibold">{{ $comp['condition_status'] ?? 'TESTED WORKING' }}</td>
+                      <td class="p-3 text-slate-600 font-semibold">{{ $comp['condition_status'] ?? 'Testing working' }}</td>
                       <td class="p-3">
                         <input type="number" wire:model="harvested_components.{{ $index }}.warranty_period_days" placeholder="0" class="w-full p-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-900 outline-none focus:border-pp-500 transition" />
                       </td>
@@ -662,27 +638,6 @@
         @endif
       </div>
 
-      <!-- SECTION 3: STOCK QUANTITY -->
-      <div class="space-y-4">
-        <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-2">
-          <span class="w-5 h-5 rounded-full bg-pp-100 text-pp-700 text-[10px] grid place-items-center font-black">3</span>
-          <span>Stock Quantity &amp; Availability</span>
-        </h3>
-
-        <div class="max-w-md">
-          <label class="block text-xs font-bold text-slate-700 mb-1.5">Stock Quantity <span class="text-rose-500">*</span></label>
-          @if($item_type === 'scrap')
-            <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 flex items-center justify-between">
-              <span>1 Unit (Unique Salvage Asset)</span>
-              <span class="text-[10px] font-normal text-slate-500">(Defaulted for scrap)</span>
-            </div>
-          @else
-            <input type="number" wire:model="quantity" min="1" placeholder="1" class="w-full p-3 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-900 outline-none focus:border-pp-500 transition" />
-            @error('quantity') <span class="text-[11px] text-rose-600 font-bold mt-1 block">{{ $message }}</span> @enderror
-          @endif
-        </div>
-      </div>
-
       <!-- STEP 3 FOOTER BUTTONS -->
       <div class="border-t border-slate-100 pt-5 flex items-center justify-between gap-3">
         <button type="button" wire:click="backStep" class="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold text-slate-700 transition cursor-pointer">
@@ -701,32 +656,66 @@
   <!-- WEBRTC CAMERA CAPTURE MODAL DIALOG -->
   <div x-show="cameraModalOpen" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-xs p-4">
     <div class="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl max-w-xl w-full p-5 space-y-4 text-white relative">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <!-- HEADER & MODE TOGGLE TABS -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-3 gap-3">
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 rounded-xl bg-pp-600 text-white grid place-items-center text-sm font-black">
-            <i class="fas fa-camera"></i>
+            <i class="fas" :class="captureMode === 'video' ? 'fa-video' : 'fa-camera'"></i>
           </div>
           <div>
-            <h3 class="text-sm font-extrabold">Camera Capture</h3>
-            <p class="text-[11px] text-slate-400">Capture photo directly using your browser camera</p>
+            <h3 class="text-sm font-extrabold" x-text="captureMode === 'video' ? 'Video Recording' : 'Camera Snapshot'"></h3>
+            <p class="text-[11px] text-slate-400" x-text="captureMode === 'video' ? 'Record short video clips of your item' : 'Capture photo directly using browser camera'"></p>
           </div>
         </div>
+
+        <!-- MODE SWITCHER -->
+        <div class="flex items-center bg-slate-800 p-1 rounded-xl shrink-0" x-show="!isRecording">
+          <button type="button" @click="switchMode('photo')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer" :class="captureMode === 'photo' ? 'bg-pp-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'">
+            <i class="fas fa-camera text-[10px] mr-1"></i> Photo
+          </button>
+          <button type="button" @click="switchMode('video')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer" :class="captureMode === 'video' ? 'bg-pp-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'">
+            <i class="fas fa-video text-[10px] mr-1"></i> Video
+          </button>
+        </div>
+
         <button type="button" @click="closeCamera" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 grid place-items-center transition cursor-pointer">
           <i class="fas fa-times text-xs"></i>
         </button>
       </div>
 
       <div class="relative bg-black rounded-2xl overflow-hidden aspect-video grid place-items-center border border-slate-800">
-        <video x-ref="webcamVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+        <video x-ref="webcamVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+
+        <!-- RECORDING OVERLAY BADGE -->
+        <div x-show="isRecording" x-cloak class="absolute top-3 left-3 bg-rose-600/90 text-white text-xs font-extrabold px-3 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-xs shadow-md animate-pulse">
+          <span class="w-2.5 h-2.5 rounded-full bg-white animate-ping"></span>
+          <span>REC <span x-text="formatTime(recordingSeconds)"></span></span>
+        </div>
       </div>
 
       <div class="flex items-center justify-between pt-2">
         <button type="button" @click="closeCamera" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition cursor-pointer">
           Cancel
         </button>
-        <button type="button" @click="takeSnapshot" class="px-6 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white text-xs font-extrabold shadow-sm transition flex items-center gap-2 cursor-pointer">
-          <i class="fas fa-camera text-sm"></i> Snap Photo
-        </button>
+
+        <!-- PHOTO MODE ACTION -->
+        <template x-if="captureMode === 'photo'">
+          <button type="button" @click="takeSnapshot" class="px-6 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white text-xs font-extrabold shadow-sm transition flex items-center gap-2 cursor-pointer">
+            <i class="fas fa-camera text-sm"></i> Snap Photo
+          </button>
+        </template>
+
+        <!-- VIDEO MODE ACTIONS -->
+        <template x-if="captureMode === 'video'">
+          <div>
+            <button x-show="!isRecording" type="button" @click="startRecording" class="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-sm transition flex items-center gap-2 cursor-pointer">
+              <i class="fas fa-circle text-xs text-white"></i> Start Recording
+            </button>
+            <button x-show="isRecording" type="button" @click="stopRecording(true)" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-sm transition flex items-center gap-2 cursor-pointer">
+              <i class="fas fa-square text-xs"></i> Stop &amp; Save Video
+            </button>
+          </div>
+        </template>
       </div>
     </div>
   </div>

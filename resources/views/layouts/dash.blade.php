@@ -111,6 +111,7 @@
 
     <!-- SHARED CUSTOM JS -->
     <script src="{{ asset('js/app-custom.js') }}"></script>
+    <script src="{{ asset('js/webcam-capture.js') }}"></script>
 </body>
 
 </html>

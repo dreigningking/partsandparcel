@@ -1,7 +1,7 @@
 <div class="grid lg:grid-cols-12 gap-8 items-start">
     <!-- LEFT SIDEBAR FILTER (DESKTOP) -->
     <aside class="hidden lg:block lg:col-span-3 sticky top-24">
-        <livewire:components.filters.category-requests-filter :isMobile="false" key="desktop-requests-filter" />
+        @include('livewire.marketplace.listings.partials.category-requests-filter-content', ['isMobile' => false])
     </aside>
 
     <!-- MAIN CONTENT PANEL -->
@@ -13,8 +13,8 @@
 
         <!-- RESULTS BAR & SORT -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-white px-5 py-3.5 rounded-2xl border border-slate-200 text-xs shadow-xs gap-3">
-            <div class="text-center">
-                <span class="font-bold text-slate-900">Showing 1-8 of 48 Open Community Requests</span>
+            <div class="text-center sm:text-left">
+                <span class="font-bold text-slate-900">Showing 1-{{ $discussions->count() }} of {{ $totalCount }} Open Community Requests{{ $activeCategory ? ' in ' . $activeCategory->name : '' }}</span>
             </div>
             
             <div class="flex flex-col sm:flex-row items-center gap-3">
@@ -24,43 +24,49 @@
 
                 <div class="flex items-center gap-2">
                     <span class="text-slate-400 font-medium">Sort by:</span>
-                    <select class="border border-slate-200 rounded-lg p-1.5 font-semibold text-slate-800 outline-none bg-slate-50">
-                        <option>Relevance</option>
-                        <option>Newest First</option>
-                        <option>Most Offers Received</option>
+                    <select wire:model.live="sortBy" class="border border-slate-200 rounded-lg p-1.5 font-semibold text-slate-800 outline-none bg-slate-50 cursor-pointer">
+                        <option value="relevance">Relevance</option>
+                        <option value="newest">Newest First</option>
+                        <option value="offers">Most Offers Received</option>
                     </select>
                 </div>
             </div>
         </div>
 
         <!-- COMMUNITY REQUESTS LIST -->
-        <div class="space-y-4">
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 hover:border-pp-300 transition duration-200 shadow-xs space-y-3">
-                <div class="flex items-center justify-between text-xs text-slate-500">
-                    <span>Posted by TechSam · Computer Village, Ikeja</span>
-                    <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-extrabold border border-emerald-200">3 Offers Received</span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900 hover:text-pp-600">Looking for HP EliteBook 840 G5 motherboard in Lagos</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">Need a clean tested board without GPU issues. Willing to pick up at Computer Village today. Instant payment guaranteed.</p>
-                <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-full">Budget: ₦70,000 – ₦90,000</span>
-                    <a href="{{ route('community') }}" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs transition">View &amp; Submit Offer</a>
+        @if($discussions->isNotEmpty())
+            <div class="space-y-4">
+                @foreach($discussions as $discussion)
+                    <div class="rounded-2xl border border-slate-200 bg-white p-6 hover:border-pp-300 transition duration-200 shadow-xs space-y-3">
+                        <div class="flex items-center justify-between text-xs text-slate-500">
+                            <span>Posted by {{ $discussion->user->name ?? 'Community Member' }} · {{ $discussion->location->city ?? ($discussion->location->state ?? 'Nigeria') }}</span>
+                            <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-extrabold border border-emerald-200">
+                                {{ $discussion->responses_count }} {{ Str::plural('Offer', $discussion->responses_count) }} Received
+                            </span>
+                        </div>
+                        <h3 class="text-base font-extrabold text-slate-900 hover:text-pp-600">
+                            <a href="{{ route('community.request', ['id' => $discussion->id]) }}">{{ $discussion->title }}</a>
+                        </h3>
+                        <p class="text-xs text-slate-600 leading-relaxed">{{ $discussion->body }}</p>
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-full">Budget: {{ $discussion->budget ? '₦' . $discussion->budget : 'Open Budget' }}</span>
+                            <a href="{{ route('community.request', ['id' => $discussion->id]) }}" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs transition">View &amp; Submit Offer</a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <!-- EMPTY STATE -->
+            <div class="rounded-2xl border border-slate-200 bg-white p-12 text-center space-y-3">
+                <span class="text-5xl block">💬</span>
+                <h3 class="text-base font-bold text-slate-900">No community requests found</h3>
+                <p class="text-xs text-slate-500 max-w-md mx-auto">Can't find what you are looking for? Post a request and verified sellers will submit offers to you directly.</p>
+                <div class="pt-2 flex justify-center gap-3">
+                    <button type="button" wire:click="resetFilters" class="px-4 py-2 rounded-xl bg-pp-50 text-pp-700 font-bold text-xs hover:bg-pp-100 transition cursor-pointer">Reset Filters</button>
+                    <a href="{{ route('community') }}" class="px-4 py-2 rounded-xl bg-pp-600 text-white font-bold text-xs hover:bg-pp-700 transition">+ Post Request</a>
                 </div>
             </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-6 hover:border-pp-300 transition duration-200 shadow-xs space-y-3">
-                <div class="flex items-center justify-between text-xs text-slate-500">
-                    <span>Posted by AbelTech · Wuse Zone 4, Abuja</span>
-                    <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-extrabold border border-emerald-200">7 Offers Received</span>
-                </div>
-                <h3 class="text-base font-extrabold text-slate-900 hover:text-pp-600">Dell Latitude 5400 screen replacement needed</h3>
-                <p class="text-xs text-slate-600 leading-relaxed">Cracked my LCD display. Looking for an original FHD matte replacement screen with installation in Abuja.</p>
-                <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <span class="text-xs font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-full">Budget: ₦45,000</span>
-                    <a href="{{ route('community') }}" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs transition">View &amp; Submit Offer</a>
-                </div>
-            </div>
-        </div>
+        @endif
     </main>
 
     <!-- MOBILE FILTER DRAWER (SLIDES FROM RIGHT INSTANTLY) -->
@@ -73,7 +79,7 @@
             <button onclick="closeCategoryFilterDrawer('requests')" class="w-8 h-8 rounded-lg hover:bg-slate-100 grid place-items-center text-slate-500 text-lg font-bold transition cursor-pointer" aria-label="Close filters">×</button>
         </div>
         <div class="flex-1">
-            <livewire:components.filters.category-requests-filter :isMobile="true" key="mobile-requests-filter" />
+            @include('livewire.marketplace.listings.partials.category-requests-filter-content', ['isMobile' => true])
         </div>
     </aside>
 </div>

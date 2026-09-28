@@ -21,9 +21,28 @@
         <div class="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-2">
           <a href="{{ route('welcome') }}" class="hover:text-slate-700">Home</a>
           <span>/</span>
-          <a href="{{ route('listing-details') }}" class="hover:text-slate-700">Electronics</a>
-          <span>/</span>
-          <span class="text-slate-900 font-bold">Laptops &amp; Computer Parts</span>
+          @if($activeCategory && $activeCategory->parent)
+            <a href="{{ route('category', ['cat' => $activeCategory->parent->slug]) }}" class="hover:text-slate-700">{{ $activeCategory->parent->name }}</a>
+            <span>/</span>
+          @endif
+          @if($activeCategory)
+            <span class="text-slate-900 font-bold">{{ $activeCategory->name }}</span>
+          @elseif($activeBrand)
+            <span class="text-slate-900 font-bold">{{ $activeBrand->name }}</span>
+          @else
+            <span class="text-slate-900 font-bold">Marketplace</span>
+          @endif
+
+          @if($tab === 'parts')
+            <span>/</span>
+            <span class="text-pp-600 font-bold">Parts &amp; Components</span>
+          @elseif($tab === 'scraps' || $tab === 'scrap')
+            <span>/</span>
+            <span class="text-amber-700 font-bold">Scrap &amp; Salvage</span>
+          @elseif($tab === 'requests' || $tab === 'community')
+            <span>/</span>
+            <span class="text-pp-600 font-bold">Community Requests</span>
+          @endif
         </div>
 
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -37,12 +56,12 @@
                 {{ $activeBrand->name }} Products
               @elseif($tab === 'parts')
                 Parts &amp; Components Marketplace
-              @elseif($tab === 'scrap')
+              @elseif($tab === 'scraps' || $tab === 'scrap')
                 Scrap &amp; Salvage Marketplace
               @elseif($tab === 'requests' || $tab === 'community')
                 Community Requests &amp; Sourcing
               @else
-                Laptops &amp; Complete Devices Marketplace
+                Complete Devices Marketplace
               @endif
             </h1>
             <p class="text-xs text-slate-500 mt-1">Browse working devices, replacement components, scrap units for salvage, or community requests.</p>
@@ -101,7 +120,7 @@
 
           <div class="flex items-center gap-2 text-xs">
             <span class="text-slate-500 font-medium">Verified Sellers:</span>
-            <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">1,240 Sellers Active</span>
+            <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">{{ number_format($activeSellersCount) }} Active {{ Str::plural('Seller', $activeSellersCount) }}</span>
           </div>
         </div>
 
@@ -110,31 +129,31 @@
           <nav class="-mb-px flex space-x-2 sm:space-x-4 overflow-x-auto no-scrollbar" aria-label="Tabs">
             
             <!-- TAB 1: COMPLETE DEVICES -->
-            <button wire:click="switchTab('complete')" class="tab-item {{ $tab === 'complete' ? 'active' : '' }} group relative inline-flex items-center gap-2 py-3.5 px-4 sm:px-6 font-bold text-xs sm:text-sm border-b-2 rounded-t-xl transition cursor-pointer {{ $tab === 'complete' ? 'border-pp-600 text-pp-600 bg-pp-50/60' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">
+            <button wire:click="switchTab('devices')" class="tab-item {{ ($tab === 'devices' || $tab === 'complete') ? 'active' : '' }} group relative inline-flex items-center gap-2 py-3.5 px-4 sm:px-6 font-bold text-xs sm:text-sm border-b-2 rounded-t-xl transition cursor-pointer {{ ($tab === 'devices' || $tab === 'complete') ? 'border-pp-600 text-pp-600 bg-pp-50/60' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">
               <span class="text-base sm:text-lg">💻</span>
-              <span>Complete Laptops</span>
-              <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full text-[11px] font-extrabold {{ $tab === 'complete' ? 'bg-pp-600 text-white shadow-xs' : 'bg-slate-200 text-slate-700' }}">142</span>
+              <span>Complete Devices</span>
+              <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full text-[11px] font-extrabold {{ ($tab === 'devices' || $tab === 'complete') ? 'bg-pp-600 text-white shadow-xs' : 'bg-slate-200 text-slate-700' }}">{{ $devicesCount }}</span>
             </button>
 
             <!-- TAB 2: SPARE PARTS -->
             <button wire:click="switchTab('parts')" class="tab-item {{ $tab === 'parts' ? 'active' : '' }} group relative inline-flex items-center gap-2 py-3.5 px-4 sm:px-6 font-bold text-xs sm:text-sm border-b-2 rounded-t-xl transition cursor-pointer {{ $tab === 'parts' ? 'border-pp-600 text-pp-600 bg-pp-50/60' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">
               <span class="text-base sm:text-lg">⚙️</span>
               <span>Parts &amp; Components</span>
-              <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold {{ $tab === 'parts' ? 'bg-pp-600 text-white shadow-xs' : 'bg-slate-200 text-slate-700' }}">380</span>
+              <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold {{ $tab === 'parts' ? 'bg-pp-600 text-white shadow-xs' : 'bg-slate-200 text-slate-700' }}">{{ $partsCount }}</span>
             </button>
 
             <!-- TAB 3: SCRAP & SALVAGE -->
-            <button wire:click="switchTab('scrap')" class="tab-item {{ $tab === 'scrap' ? 'active' : '' }} group relative inline-flex items-center gap-2 py-3.5 px-4 sm:px-6 font-bold text-xs sm:text-sm border-b-2 rounded-t-xl transition cursor-pointer {{ $tab === 'scrap' ? 'border-amber-600 text-amber-800 bg-amber-50/60' : 'border-transparent text-slate-500 hover:text-amber-800 hover:border-amber-400' }}">
+            <button wire:click="switchTab('scraps')" class="tab-item {{ ($tab === 'scraps' || $tab === 'scrap') ? 'active' : '' }} group relative inline-flex items-center gap-2 py-3.5 px-4 sm:px-6 font-bold text-xs sm:text-sm border-b-2 rounded-t-xl transition cursor-pointer {{ ($tab === 'scraps' || $tab === 'scrap') ? 'border-amber-600 text-amber-800 bg-amber-50/60' : 'border-transparent text-slate-500 hover:text-amber-800 hover:border-amber-400' }}">
               <span class="text-base sm:text-lg">🛠️</span>
               <span>Scrap &amp; Salvage</span>
-              <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold {{ $tab === 'scrap' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-100 text-amber-900' }}">95</span>
+              <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold {{ ($tab === 'scraps' || $tab === 'scrap') ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-100 text-amber-900' }}">{{ $scrapsCount }}</span>
             </button>
 
             <!-- TAB 4: COMMUNITY REQUESTS -->
             <button wire:click="switchTab('requests')" class="tab-item {{ ($tab === 'requests' || $tab === 'community') ? 'active' : '' }} group relative inline-flex items-center gap-2 py-3.5 px-4 sm:px-6 font-bold text-xs sm:text-sm border-b-2 rounded-t-xl transition cursor-pointer {{ ($tab === 'requests' || $tab === 'community') ? 'border-pp-600 text-pp-600 bg-pp-50/60' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">
               <span class="text-base sm:text-lg">💬</span>
               <span>Community Requests</span>
-              <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold {{ ($tab === 'requests' || $tab === 'community') ? 'bg-pp-600 text-white shadow-xs' : 'bg-purple-100 text-purple-800' }}">48</span>
+              <span class="tab-badge ml-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold {{ ($tab === 'requests' || $tab === 'community') ? 'bg-pp-600 text-white shadow-xs' : 'bg-purple-100 text-purple-800' }}">{{ $requestsCount }}</span>
             </button>
 
           </nav>
@@ -146,13 +165,13 @@
     <!-- MAIN CONTENT AREA WITH SIDEBAR FILTERS & TAB COMPONENTS -->
     <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
       @if($tab === 'parts')
-        <livewire:marketplace.listings.category-parts key="tab-parts" />
-      @elseif($tab === 'scrap')
-        <livewire:marketplace.listings.category-scraps key="tab-scraps" />
+        <livewire:marketplace.listings.category-parts :cat="$cat" :brand="$brand" :model="$model" :q="$q" key="tab-parts-{{ $cat }}-{{ $brand }}-{{ $model }}-{{ $q }}" />
+      @elseif($tab === 'scraps' || $tab === 'scrap')
+        <livewire:marketplace.listings.category-scraps :cat="$cat" :brand="$brand" :model="$model" :q="$q" key="tab-scraps-{{ $cat }}-{{ $brand }}-{{ $model }}-{{ $q }}" />
       @elseif($tab === 'requests' || $tab === 'community')
-        <livewire:marketplace.listings.category-requests key="tab-requests" />
+        <livewire:marketplace.listings.category-requests :cat="$cat" :brand="$brand" :model="$model" :q="$q" key="tab-requests-{{ $cat }}-{{ $brand }}-{{ $model }}-{{ $q }}" />
       @else
-        <livewire:marketplace.listings.category-devices key="tab-devices" />
+        <livewire:marketplace.listings.category-devices :cat="$cat" :brand="$brand" :model="$model" :q="$q" key="tab-devices-{{ $cat }}-{{ $brand }}-{{ $model }}-{{ $q }}" />
       @endif
     </div>
 </div>
@@ -162,6 +181,7 @@
     function toggleCategoryFilterDrawer(type) {
         const idMap = {
             'devices': ['categoryDevicesFilterDrawer', 'categoryDevicesFilterOverlay'],
+            'complete': ['categoryDevicesFilterDrawer', 'categoryDevicesFilterOverlay'],
             'parts': ['categoryPartsFilterDrawer', 'categoryPartsFilterOverlay'],
             'scraps': ['categoryScrapsFilterDrawer', 'categoryScrapsFilterOverlay'],
             'scrap': ['categoryScrapsFilterDrawer', 'categoryScrapsFilterOverlay'],
@@ -180,6 +200,7 @@
     function closeCategoryFilterDrawer(type) {
         const idMap = {
             'devices': ['categoryDevicesFilterDrawer', 'categoryDevicesFilterOverlay'],
+            'complete': ['categoryDevicesFilterDrawer', 'categoryDevicesFilterOverlay'],
             'parts': ['categoryPartsFilterDrawer', 'categoryPartsFilterOverlay'],
             'scraps': ['categoryScrapsFilterDrawer', 'categoryScrapsFilterOverlay'],
             'scrap': ['categoryScrapsFilterDrawer', 'categoryScrapsFilterOverlay'],
