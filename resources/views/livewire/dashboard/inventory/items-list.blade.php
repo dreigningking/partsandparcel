@@ -45,67 +45,95 @@
         <i class="fas fa-filter text-pp-600"></i> Filter Inventory
       </h3>
 
-      @if($search || $selectedCategory || $selectedBrand || $selectedCondition || $selectedLocation || $selectedStatus)
+      @if($search || $selectedCategory || $selectedBrand || $selectedCondition || $selectedLocation || $selectedStatus || $sortBy !== 'date_desc')
         <button type="button" wire:click="resetFilters" class="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1 cursor-pointer">
           <i class="fas fa-undo text-[10px]"></i> Reset Filters
         </button>
       @endif
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
+    <!-- 2-LINE FILTER MATRIX (LINE 1: SEARCH, CATEGORY, BRAND | LINE 2: CONDITION, LOCATION, SORT BY) -->
+    <div class="space-y-3">
       
-      <!-- 1. SEARCH INPUT (TITLE / MODEL / ANYTHING) -->
-      <div>
-        <label class="block font-bold text-slate-700 mb-1">Search</label>
-        <div class="relative">
-          <i class="fas fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
-          <input type="text" wire:model.live.debounce.300ms="search" placeholder="Title, model, brand..." class="w-full pl-8 p-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 outline-none focus:border-pp-500 bg-slate-50/50 transition" />
+      <!-- LINE 1 (DESKTOP): SEARCH, CATEGORY, BRAND -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        
+        <!-- 1. SEARCH INPUT (TITLE / MODEL / ANYTHING) -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Search</label>
+          <div class="relative">
+            <i class="fas fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
+            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Title, model, brand, description..." class="w-full pl-8 p-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 outline-none focus:border-pp-500 bg-slate-50/50 transition" />
+          </div>
         </div>
+
+        <!-- 2. CATEGORY FILTER (WITH SUBCATEGORIES) -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Category</label>
+          <select wire:model.live="selectedCategory" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
+            <option value="">All Categories</option>
+            @foreach($categories as $cat)
+              <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+              @if($cat->children && $cat->children->isNotEmpty())
+                @foreach($cat->children as $child)
+                  <option value="{{ $child->id }}">&nbsp;&nbsp;↳ {{ $child->name }}</option>
+                @endforeach
+              @endif
+            @endforeach
+          </select>
+        </div>
+
+        <!-- 3. BRAND FILTER -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Brand</label>
+          <select wire:model.live="selectedBrand" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
+            <option value="">All Brands</option>
+            @foreach($brands as $brand)
+              <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+            @endforeach
+          </select>
+        </div>
+
       </div>
 
-      <!-- 2. CATEGORY FILTER -->
-      <div>
-        <label class="block font-bold text-slate-700 mb-1">Category</label>
-        <select wire:model.live="selectedCategory" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
-          <option value="">All Categories</option>
-          @foreach($categories as $cat)
-            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-          @endforeach
-        </select>
-      </div>
+      <!-- LINE 2 (DESKTOP): CONDITION STATUS, LOCATION, SORT BY -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+        
+        <!-- 4. CONDITION STATUS FILTER -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Condition Status</label>
+          <select wire:model.live="selectedCondition" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
+            <option value="">All Conditions</option>
+            @foreach($conditions as $cond)
+              <option value="{{ $cond }}">{{ ucwords(str_replace(['_', '-'], ' ', $cond)) }}</option>
+            @endforeach
+          </select>
+        </div>
 
-      <!-- 3. BRAND FILTER -->
-      <div>
-        <label class="block font-bold text-slate-700 mb-1">Brand</label>
-        <select wire:model.live="selectedBrand" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
-          <option value="">All Brands</option>
-          @foreach($brands as $brand)
-            <option value="{{ $brand->id }}">{{ $brand->name }}</option>
-          @endforeach
-        </select>
-      </div>
+        <!-- 5. LOCATION FILTER -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Location</label>
+          <select wire:model.live="selectedLocation" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
+            <option value="">All Locations</option>
+            @foreach($locations as $loc)
+              <option value="{{ $loc->id }}">{{ $loc->label }} ({{ $loc->city }})</option>
+            @endforeach
+          </select>
+        </div>
 
-      <!-- 4. CONDITION STATUS FILTER -->
-      <div>
-        <label class="block font-bold text-slate-700 mb-1">Condition Status</label>
-        <select wire:model.live="selectedCondition" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
-          <option value="">All Conditions</option>
-          <option value="new">🌟 Brand New</option>
-          <option value="used">✅ Used - Working</option>
-          <option value="refurbished">🛠 Refurbished</option>
-          <option value="faulty">🛠️ Scrap / For Parts</option>
-        </select>
-      </div>
+        <!-- 6. SORT BY (NAME, DATE ADDED, LISTED) -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Sort By</label>
+          <select wire:model.live="sortBy" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
+            <option value="date_desc">📅 Date Added (Newest)</option>
+            <option value="date_asc">📅 Date Added (Oldest)</option>
+            <option value="name_asc">🔤 Name (A - Z)</option>
+            <option value="name_desc">🔤 Name (Z - A)</option>
+            <option value="listed">🏷️ Listed First</option>
+            <option value="unlisted">📦 Unlisted First</option>
+          </select>
+        </div>
 
-      <!-- 5. LOCATION FILTER -->
-      <div>
-        <label class="block font-bold text-slate-700 mb-1">Location</label>
-        <select wire:model.live="selectedLocation" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
-          <option value="">All Locations</option>
-          @foreach($locations as $loc)
-            <option value="{{ $loc->id }}">{{ $loc->label }} ({{ $loc->city }})</option>
-          @endforeach
-        </select>
       </div>
 
     </div>
@@ -126,120 +154,160 @@
       <table class="w-full text-left text-xs border-collapse min-w-[750px]">
         <thead>
           <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 font-extrabold uppercase text-[10px] tracking-wider">
-            <th class="p-3.5 min-w-[200px]">Item Name / Title</th>
-            <th class="p-3.5 min-w-[120px]">Category</th>
-            <th class="p-3.5 min-w-[150px]">Brand &amp; Model</th>
+            <th class="p-3.5 min-w-[200px]">Title</th>
+            <th class="p-3.5 min-w-[150px] whitespace-nowrap">Brand &amp; Model</th>
+            <th class="p-3.5 min-w-[130px] whitespace-nowrap">Category</th>
             <th class="p-3.5 min-w-[140px]">Condition</th>
-            <th class="p-3.5 min-w-[130px]">Location</th>
-            <th class="p-3.5 min-w-[120px]">Status</th>
+            <th class="p-3.5 min-w-[140px] whitespace-nowrap">Location</th>
+            <th class="p-3.5 min-w-[120px] whitespace-nowrap">Date Added</th>
+            <th class="p-3.5 min-w-[140px] whitespace-nowrap">Status</th>
             <th class="p-3.5 text-center min-w-[140px]">Action</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
           @forelse($items as $item)
+            @php
+              $brandName = $item->deviceModel?->brand?->name ?? $item->parent?->deviceModel?->brand?->name ?? '—';
+              $modelName = $item->deviceModel?->name ?? $item->parent?->deviceModel?->name ?? '—';
+              $cat = $item->deviceModel?->category ?? $item->parent?->deviceModel?->category;
+              $loc = $item->location ?? $item->listing?->location ?? $item->parent?->location ?? $item->components->first()?->listing?->location;
+              $hasWholeListing = (bool) $item->listing;
+              $listedCompCount = $item->components->filter(fn($c) => $c->listing)->count();
+              $isListed = $hasWholeListing || $listedCompCount > 0;
+              $searchQuery = $item->name ?: ($item->deviceModel?->name ?? '');
+              $cond = strtolower($item->condition_status ?? '');
+              $condLabel = ucwords(str_replace(['_', '-'], ' ', $cond));
+            @endphp
             <tr class="hover:bg-slate-50/80 transition">
               
-              <!-- 1. ITEM NAME / TITLE -->
+              <!-- 1. TITLE -->
               <td class="p-3.5">
                 <a href="{{ route('item.view', ['id' => $item->id]) }}" class="font-extrabold text-slate-900 hover:text-pp-600 transition block text-xs">
                   {{ $item->name ?: ($item->deviceModel?->name ?? 'Inventory Asset #' . $item->id) }}
                 </a>
+                @if($item->parent_id && $item->parent)
+                  <span class="text-[10px] text-slate-500 block mt-0.5">
+                    <i class="fas fa-level-up-alt fa-rotate-90 text-slate-400 mr-1"></i>Part of: <strong class="text-slate-700">{{ $item->parent->name ?: ($item->parent->deviceModel?->name ?? 'Asset #' . $item->parent_id) }}</strong>
+                  </span>
+                @endif
                 @if($item->condition_notes)
                   <span class="text-[10px] text-slate-400 line-clamp-1 mt-0.5">{{ $item->condition_notes }}</span>
                 @endif
               </td>
 
-              <!-- 2. CATEGORY -->
-              <td class="p-3.5">
-                <span class="px-2.5 py-1 rounded-md bg-slate-100 font-bold text-slate-700 text-[10px] inline-block">
-                  {{ $item->deviceModel?->category?->name ?? 'General' }}
+              <!-- 2. BRAND & MODEL -->
+              <td class="p-3.5 whitespace-nowrap">
+                <span class="font-extrabold text-slate-900 text-xs whitespace-nowrap">
+                  {{ $brandName }}
+                </span>
+                <span class="text-[11px] text-slate-500 font-medium whitespace-nowrap">
+                  {{ $modelName }}
                 </span>
               </td>
 
-              <!-- 3. BRAND & MODEL (COMBINED IN ONE COLUMN) -->
-              <td class="p-3.5">
-                <span class="font-extrabold text-slate-900 block text-xs">
-                  {{ $item->deviceModel?->brand?->name ?? '—' }}
-                </span>
-                <span class="text-[11px] text-slate-500 font-medium block">
-                  {{ $item->deviceModel?->name ?? 'Unspecified Model' }}
-                </span>
+              <!-- 3. CATEGORY -->
+              <td class="p-3.5 whitespace-nowrap">
+                @if($cat)
+                  <span class="px-2.5 py-1 rounded-md bg-slate-100 font-bold text-slate-700 text-[10px] inline-block whitespace-nowrap">
+                    {{ $cat->name }}
+                  </span>
+                  @if($cat->parent)
+                    <span class="text-[10px] text-slate-400 block mt-0.5 whitespace-nowrap">
+                      {{ $cat->parent->name }}
+                    </span>
+                  @endif
+                @else
+                  <span class="text-slate-400 text-[10px] italic whitespace-nowrap">General</span>
+                @endif
               </td>
 
               <!-- 4. CONDITION -->
               <td class="p-3.5">
-                @if($item->condition_status === 'new')
-                  <span class="px-2.5 py-1 rounded-full bg-pp-100 text-pp-800 font-extrabold text-[10px] inline-flex items-center gap-1">
-                    🌟 Brand New
+                @if(in_array($cond, ['new', 'brand_new']))
+                  <span class="px-2.5 py-1 rounded-full bg-pp-100 text-pp-800 font-extrabold text-[10px] inline-flex items-center gap-1 whitespace-nowrap">
+                    🌟 {{ $condLabel }}
                   </span>
-                @elseif($item->condition_status === 'used' || $item->condition_status === 'working')
-                  <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] inline-flex items-center gap-1">
-                    ✅ Used - Working
+                @elseif(in_array($cond, ['used', 'working', 'tested_used', 'tested_working', 'tested_grade_a', 'used_clean', 'used_excellent', 'clean', 'tokunbo']))
+                  <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] inline-flex items-center gap-1 whitespace-nowrap">
+                    ✅ {{ $condLabel }}
                   </span>
-                @elseif($item->condition_status === 'refurbished')
-                  <span class="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[10px] inline-flex items-center gap-1">
-                    🛠 Refurbished
+                @elseif(in_array($cond, ['refurbished', 'repaired']))
+                  <span class="px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-800 font-extrabold text-[10px] inline-flex items-center gap-1 whitespace-nowrap">
+                    🛠 {{ $condLabel }}
                   </span>
-                @elseif($item->condition_status === 'faulty' || $item->condition_status === 'scrap')
+                @elseif(in_array($cond, ['faulty', 'scrap', 'donor_unit', 'damaged', 'water_damaged', 'cracked', 'untested']))
                   <div class="flex flex-col gap-0.5">
-                    <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-extrabold text-[10px] inline-flex items-center gap-1 w-fit">
-                      🛠️ Scrap / For Parts
+                    <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-extrabold text-[10px] inline-flex items-center gap-1 w-fit whitespace-nowrap">
+                      🛠️ {{ $condLabel }}
                     </span>
                     @if($item->components->count() > 0)
-                      <span class="text-[10px] text-amber-700 font-bold">({{ $item->components->count() }} parts harvested)</span>
+                      <span class="text-[10px] text-amber-700 font-bold whitespace-nowrap">({{ $item->components->count() }} parts harvested)</span>
                     @endif
                   </div>
                 @else
-                  <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px]">
-                    {{ ucfirst($item->condition_status) }}
+                  <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px] whitespace-nowrap">
+                    {{ $condLabel ?: 'Unspecified' }}
                   </span>
                 @endif
               </td>
 
               <!-- 5. LOCATION -->
-              <td class="p-3.5">
-                @php
-                  $loc = $item->listing?->location;
-                  if (!$loc && $item->components->isNotEmpty()) {
-                      $loc = $item->components->first()?->listing?->location;
-                  }
-                @endphp
-
+              <td class="p-3.5 whitespace-nowrap">
                 @if($loc)
-                  <span class="text-xs font-bold text-slate-800 block">{{ $loc->label }}</span>
-                  <span class="text-[10px] text-slate-500 block">{{ $loc->city }}, {{ $loc->state }}</span>
+                  <span class="text-xs font-bold text-slate-800 whitespace-nowrap block">{{ $loc->label }}</span>
+                  @php
+                    $locAddress = collect([$loc->address_line_1, $loc->city, $loc->state])->filter()->implode(', ');
+                  @endphp
+                  @if($locAddress)
+                    <span class="text-[10px] text-slate-500 block whitespace-nowrap">{{ $locAddress }}</span>
+                  @endif
                 @else
-                  <span class="text-slate-400 text-xs italic">Unassigned</span>
+                  <span class="text-slate-400 text-xs italic whitespace-nowrap">Unassigned</span>
                 @endif
               </td>
 
-              <!-- 6. STATUS -->
-              <td class="p-3.5">
-                @php
-                  $hasWholeListing = (bool) $item->listing;
-                  $listedCompCount = $item->components->filter(fn($c) => $c->listing)->count();
-                @endphp
+              <!-- 6. DATE ADDED -->
+              <td class="p-3.5 whitespace-nowrap">
+                <span class="text-xs font-bold text-slate-800 whitespace-nowrap block">
+                  {{ $item->created_at ? $item->created_at->format('M d, Y') : '—' }}
+                </span>
+                @if($item->created_at)
+                  <span class="text-[10px] text-slate-500 whitespace-nowrap block mt-0.5">
+                    {{ $item->created_at->diffForHumans() }}
+                  </span>
+                @endif
+              </td>
 
+              <!-- 7. STATUS -->
+              <td class="p-3.5 whitespace-nowrap">
                 @if($hasWholeListing && $listedCompCount > 0)
-                  <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-black text-[10px] inline-block">
+                  <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-black text-[10px] inline-block whitespace-nowrap">
                     Listed (Whole + Parts)
                   </span>
                 @elseif($hasWholeListing)
-                  <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-black text-[10px] inline-block">
+                  <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-black text-[10px] inline-block whitespace-nowrap">
                     Listed (Whole Unit)
                   </span>
                 @elseif($listedCompCount > 0)
-                  <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-black text-[10px] inline-block">
+                  <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-black text-[10px] inline-block whitespace-nowrap">
                     Listed ({{ $listedCompCount }} Parts)
                   </span>
                 @else
-                  <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px] inline-block">
+                  <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px] inline-block whitespace-nowrap">
                     Unlisted Asset
                   </span>
                 @endif
+
+                @if($isListed)
+                  <div class="mt-1.5">
+                    <a href="{{ route('mylistings', ['search' => $searchQuery]) }}" class="px-2 py-0.5 rounded-md bg-pp-50 hover:bg-pp-100 text-pp-700 font-extrabold text-[10px] inline-flex items-center gap-1 border border-pp-200 transition shadow-2xs whitespace-nowrap">
+                      <i class="fas fa-external-link-alt text-[9px]"></i> View Listing(s)
+                    </a>
+                  </div>
+                @endif
               </td>
 
-              <!-- 7. ACTION BUTTONS -->
+              <!-- 8. ACTION BUTTONS -->
               <td class="p-3.5 text-center">
                 <div class="flex items-center justify-center gap-1.5 flex-wrap">
                   
@@ -271,7 +339,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="7" class="p-8 text-center text-slate-400 font-semibold">
+              <td colspan="8" class="p-8 text-center text-slate-400 font-semibold">
                 <div class="max-w-xs mx-auto space-y-2">
                   <i class="fas fa-inbox text-3xl text-slate-300 block"></i>
                   <p class="text-xs font-bold text-slate-600">No inventory items match your search filters.</p>
@@ -339,9 +407,9 @@
             @error('selectedAssetKey') <span class="text-[10px] text-rose-600 font-bold block mt-1">{{ $message }}</span> @enderror
           </div>
 
-          <!-- 2. PRICE & QUANTITY -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
+          <!-- 2. PRICE, NEGOTIABLE & QUANTITY (SAME ROW) -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <div class="sm:col-span-5">
               <label class="block font-bold text-slate-700 mb-1">Listing Price (₦) <span class="text-rose-500">*</span></label>
               <div class="relative">
                 <span class="absolute left-3 top-2.5 text-slate-400 font-bold text-xs">₦</span>
@@ -350,27 +418,49 @@
               @error('price') <span class="text-[10px] text-rose-600 font-bold block mt-1">{{ $message }}</span> @enderror
             </div>
 
-            <div>
+            <div class="sm:col-span-3 pb-2.5">
+              <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                <input type="checkbox" wire:model="is_negotiable" class="w-4 h-4 text-pp-600 rounded border-slate-300 focus:ring-pp-500 cursor-pointer" />
+                <span class="text-xs font-bold text-slate-700 whitespace-nowrap">Negotiable?</span>
+              </label>
+            </div>
+
+            <div class="sm:col-span-4">
               <label class="block font-bold text-slate-700 mb-1">Quantity <span class="text-rose-500">*</span></label>
               <input type="number" wire:model="quantity" min="1" {{ $isQuantityDisabled ? 'disabled' : '' }} class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-extrabold outline-none focus:border-pp-500 transition {{ $isQuantityDisabled ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'bg-white text-slate-900' }}" />
-              @if($isQuantityDisabled)
-                <span class="text-[9px] text-slate-500 font-semibold block mt-0.5">Quantity defaults to 1 for components.</span>
-              @endif
               @error('quantity') <span class="text-[10px] text-rose-600 font-bold block mt-1">{{ $message }}</span> @enderror
             </div>
           </div>
 
-          <!-- 3. WARRANTY PERIOD & TERMS -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Warranty Period (Days)</label>
+          <!-- 3. WARRANTY PERIOD, NEGOTIABLE & TERMS (SAME ROW) -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <div class="sm:col-span-4">
+              <label class="block font-bold text-slate-700 mb-1">Warranty (Days)</label>
               <input type="number" wire:model="warranty_period_days" placeholder="0" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 outline-none focus:border-pp-500 transition" />
             </div>
 
-            <div>
+            <div class="sm:col-span-3 pb-2.5">
+              <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
+                <input type="checkbox" wire:model="is_warranty_negotiable" class="w-4 h-4 text-pp-600 rounded border-slate-300 focus:ring-pp-500 cursor-pointer" />
+                <span class="text-xs font-bold text-slate-700 whitespace-nowrap">Negotiable?</span>
+              </label>
+            </div>
+
+            <div class="sm:col-span-5">
               <label class="block font-bold text-slate-700 mb-1">Warranty Terms</label>
               <input type="text" wire:model="warranty_terms" placeholder="e.g. 7-day inspection warranty" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs text-slate-900 outline-none focus:border-pp-500 transition" />
             </div>
+          </div>
+
+          <!-- 4. DELIVERY & SHIPMENT -->
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+            <label class="flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" wire:model="allow_shipping" class="w-4 h-4 mt-0.5 text-pp-600 rounded border-slate-300 focus:ring-pp-500 cursor-pointer" />
+              <div>
+                <span class="text-xs font-bold text-slate-900 block">Allow sellers to request shipment/delivery</span>
+                <p class="text-[10px] text-slate-500">Enable delivery and dispatch options for this listing in addition to local seller pickup.</p>
+              </div>
+            </label>
           </div>
 
         </div>

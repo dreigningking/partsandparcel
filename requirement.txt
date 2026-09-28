@@ -83,4 +83,6 @@ test making requests and responding to request
 test creating items, listings, parts
 
 
-
+to listing, add :
+Shipping Available vs. Local Pickup Only
+Allow warranty negotiation

@@ -32,26 +32,26 @@
         @if($listings->isNotEmpty())
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 @foreach($listings as $listing)
-                    <a href="{{ route('listing-details', ['id' => $listing->id]) }}" class="group rounded-2xl border border-amber-300 bg-amber-50/20 overflow-hidden hover:shadow-card transition duration-200">
+                    <a href="{{ route('listing-details', $listing) }}" class="group rounded-2xl border border-amber-300 bg-amber-50/20 overflow-hidden hover:shadow-card transition duration-200">
                         <div class="relative product-img h-48 grid place-items-center p-4">
                             <span class="absolute top-3 left-3 text-[10px] font-extrabold px-2.5 py-0.5 rounded bg-amber-600 text-white uppercase tracking-wider">SCRAP / SALVAGE</span>
                             @if($listing->firstMediaUrl('images'))
-                                <img src="{{ $listing->firstMediaUrl('images') }}" alt="{{ $listing->assetable->name ?? '' }}" class="h-full w-full object-contain group-hover:scale-105 transition" />
-                            @elseif($listing->assetable && $listing->assetable->firstMediaUrl('images'))
-                                <img src="{{ $listing->assetable->firstMediaUrl('images') }}" alt="{{ $listing->assetable->name ?? '' }}" class="h-full w-full object-contain group-hover:scale-105 transition" />
+                                <img src="{{ $listing->firstMediaUrl('images') }}" alt="{{ $listing->item->name ?? '' }}" class="h-full w-full object-contain group-hover:scale-105 transition" />
+                            @elseif($listing->item && $listing->item->firstMediaUrl('images'))
+                                <img src="{{ $listing->item->firstMediaUrl('images') }}" alt="{{ $listing->item->name ?? '' }}" class="h-full w-full object-contain group-hover:scale-105 transition" />
                             @else
                                 <span class="text-6xl group-hover:scale-105 transition">🛠️</span>
                             @endif
                         </div>
                         <div class="p-5">
                             <span class="text-xs font-bold text-amber-800">{{ $listing->seller->store_name ?? ($listing->seller->name ?? 'Salvage Dealer') }}</span>
-                            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-amber-700 mt-0.5">{{ $listing->assetable->name ?? ($listing->assetable->deviceModel->name ?? 'Salvage Unit') }}</h3>
+                            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-amber-700 mt-0.5">{{ $listing->item->name ?? ($listing->item->deviceModel->name ?? 'Salvage Unit') }}</h3>
                             
                             <!-- COMPONENT STATUS MATRIX -->
-                            @if($listing->assetable && $listing->assetable->components && $listing->assetable->components->count())
+                            @if($listing->item && $listing->item->components && $listing->item->components->count())
                                 <div class="mt-3 bg-amber-100/50 p-2.5 rounded-xl text-xs space-y-1 text-amber-900 border border-amber-200/60">
                                     <div class="font-bold text-[11px] uppercase tracking-wide text-amber-800 border-b border-amber-200 pb-1 mb-1">Component Matrix:</div>
-                                    @foreach($listing->assetable->components->take(4) as $comp)
+                                    @foreach($listing->item->components->take(4) as $comp)
                                         <div class="flex items-center justify-between">
                                             <span class="truncate pr-2">{{ $comp->name }}</span>
                                             <span class="font-extrabold {{ in_array($comp->condition_status, ['tested_working', 'tested_grade_a', 'working', 'clean']) ? 'text-emerald-700' : 'text-rose-600' }}">
@@ -60,10 +60,10 @@
                                         </div>
                                     @endforeach
                                 </div>
-                            @elseif($listing->assetable && $listing->assetable->condition_notes)
+                            @elseif($listing->item && $listing->item->condition_notes)
                                 <div class="mt-3 bg-amber-100/50 p-2.5 rounded-xl text-xs space-y-1 text-amber-900 border border-amber-200/60">
                                     <div class="font-bold text-[11px] uppercase tracking-wide text-amber-800 border-b border-amber-200 pb-1 mb-1">Damage / Condition Notes:</div>
-                                    <p class="text-xs text-amber-900 line-clamp-2 leading-relaxed">{{ $listing->assetable->condition_notes }}</p>
+                                    <p class="text-xs text-amber-900 line-clamp-2 leading-relaxed">{{ $listing->item->condition_notes }}</p>
                                 </div>
                             @endif
 

@@ -72,8 +72,7 @@ class ItemTypeClassificationTest extends TestCase
         $item = Item::where('name', 'Adam HP EliteBook 840 G5')->first();
         $this->assertDatabaseHas('listings', [
             'user_id' => $this->user->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $item->id,
+            'item_id' => $item->id,
             'price' => 250000,
             'quantity' => 2,
         ]);
@@ -103,8 +102,7 @@ class ItemTypeClassificationTest extends TestCase
         $item = Item::where('name', 'Seth 14-inch LCD Screen')->first();
         $this->assertDatabaseHas('listings', [
             'user_id' => $this->user->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $item->id,
+            'item_id' => $item->id,
             'price' => 45000,
             'quantity' => 5,
         ]);
@@ -181,8 +179,7 @@ class ItemTypeClassificationTest extends TestCase
 
         $this->assertDatabaseHas('listings', [
             'user_id' => $this->user->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $parentItem->id,
+            'item_id' => $parentItem->id,
             'price' => 50000,
         ]);
     }
@@ -208,7 +205,7 @@ class ItemTypeClassificationTest extends TestCase
         $this->assertNotNull($item);
         $this->assertEquals(2, $item->media()->count());
 
-        $listing = Listing::where('assetable_type', Item::class)->where('assetable_id', $item->id)->first();
+        $listing = Listing::where('item_id', $item->id)->first();
         $this->assertNotNull($listing);
         $this->assertEquals(2, $listing->media()->count());
     }

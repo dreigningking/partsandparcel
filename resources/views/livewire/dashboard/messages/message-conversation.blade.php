@@ -26,7 +26,7 @@
       </div>
 
       <div class="flex items-center gap-2 shrink-0">
-        <a href="{{ route('listing-details') }}" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-pp-300 text-slate-700 font-bold text-xs transition">
+        <a href="{{ route('listing-details', $conversation->listing_id ?? 1) }}" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-pp-300 text-slate-700 font-bold text-xs transition">
           <i class="fas fa-laptop text-pp-600"></i> View Listing
         </a>
         <button class="p-2 rounded-xl hover:bg-slate-100 text-slate-500 text-sm cursor-pointer" title="More options">

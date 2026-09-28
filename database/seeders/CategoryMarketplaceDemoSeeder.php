@@ -96,7 +96,7 @@ class CategoryMarketplaceDemoSeeder extends Seeder
             );
 
             Listing::updateOrCreate(
-                ['user_id' => $seller->id, 'assetable_type' => Item::class, 'assetable_id' => $item->id],
+                ['user_id' => $seller->id, 'item_id' => $item->id],
                 [
                     'location_id' => $location?->id,
                     'quantity' => $dev['quantity'],
@@ -166,7 +166,7 @@ class CategoryMarketplaceDemoSeeder extends Seeder
             );
 
             Listing::updateOrCreate(
-                ['user_id' => $seller->id, 'assetable_type' => Item::class, 'assetable_id' => $item->id],
+                ['user_id' => $seller->id, 'item_id' => $item->id],
                 [
                     'location_id' => $location?->id,
                     'quantity' => $p['quantity'],
@@ -250,7 +250,7 @@ class CategoryMarketplaceDemoSeeder extends Seeder
             }
 
             Listing::updateOrCreate(
-                ['user_id' => $seller->id, 'assetable_type' => Item::class, 'assetable_id' => $parentItem->id],
+                ['user_id' => $seller->id, 'item_id' => $parentItem->id],
                 [
                     'location_id' => $location?->id,
                     'quantity' => 1,

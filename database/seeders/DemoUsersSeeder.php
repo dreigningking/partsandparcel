@@ -168,7 +168,7 @@ class DemoUsersSeeder extends Seeder
             );
 
             Listing::updateOrCreate(
-                ['user_id' => $emeka->id, 'assetable_type' => Item::class, 'assetable_id' => $camryItem->id],
+                ['user_id' => $emeka->id, 'item_id' => $camryItem->id],
                 [
                     'location_id' => $emekaLocation->id,
                     'quantity' => 1,
@@ -202,7 +202,7 @@ class DemoUsersSeeder extends Seeder
             );
 
             $screenListing = Listing::updateOrCreate(
-                ['user_id' => $emeka->id, 'assetable_type' => Component::class, 'assetable_id' => $screenComponent->id],
+                ['user_id' => $emeka->id, 'item_id' => $screenComponent->id],
                 [
                     'location_id' => $emekaLocation->id,
                     'quantity' => 1,

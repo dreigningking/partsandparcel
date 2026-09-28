@@ -40,6 +40,11 @@ class Cart extends Model
         return $this->hasMany(CartItem::class);
     }
 
+    public function invoice(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
     public function totalAmount(): float
     {
         return (float) $this->items->sum(fn ($item) => $item->subtotal());

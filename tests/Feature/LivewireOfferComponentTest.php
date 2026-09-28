@@ -57,13 +57,20 @@ class LivewireOfferComponentTest extends TestCase
 
         $this->listing = Listing::firstOrCreate(['slug' => 'original-16gb-ram-livewire'], [
             'user_id' => $this->seller->id,
-            'assetable_id' => $item->id,
-            'assetable_type' => Item::class,
+            'item_id' => $item->id,
             'description' => 'Original 16GB DDR4 RAM Module',
             'price' => 50000.00,
             'currency' => 'NGN',
             'quantity' => 2,
             'status' => 'active',
+            'is_negotiable' => true,
+            'is_warranty_negotiable' => true,
+            'allow_shipping' => true,
+        ]);
+        $this->listing->update([
+            'is_negotiable' => true,
+            'is_warranty_negotiable' => true,
+            'allow_shipping' => true,
         ]);
     }
 
@@ -127,5 +134,72 @@ class LivewireOfferComponentTest extends TestCase
             'recipient_id' => $this->seller->id,
             'status' => 'pending',
         ]);
+    }
+
+    /**
+     * Test 5: Non-negotiable listing locks proposed price and sets discount to 0 on submit.
+     */
+    public function test_non_negotiable_listing_locks_price_and_discount(): void
+    {
+        $this->listing->update(['is_negotiable' => false]);
+
+        Livewire::actingAs($this->buyer)
+            ->test(MakeOffer::class)
+            ->dispatch('open-make-offer', ['listing_id' => $this->listing->id])
+            ->assertSet('isNegotiable', false)
+            ->assertSee('Fixed Price')
+            ->set('proposedPrice', '30000') // attempt to discount
+            ->call('submitPackageOffer')
+            ->assertRedirect(route('offers'));
+
+        $this->assertDatabaseHas('offers', [
+            'sender_id' => $this->buyer->id,
+            'recipient_id' => $this->seller->id,
+            'discount' => 0,
+        ]);
+    }
+
+    /**
+     * Test 6: Disallowed shipping forces pickup mode.
+     */
+    public function test_disallowed_shipping_forces_pickup_mode(): void
+    {
+        $this->listing->update(['allow_shipping' => false]);
+
+        Livewire::actingAs($this->buyer)
+            ->test(MakeOffer::class)
+            ->dispatch('open-make-offer', ['listing_id' => $this->listing->id])
+            ->assertSet('allowShipping', false)
+            ->assertSet('deliveryMode', 'pickup')
+            ->assertSee('Local Pickup Only')
+            ->set('deliveryMode', 'seller_delivery')
+            ->call('submitPackageOffer');
+
+        $this->assertDatabaseHas('offers', [
+            'sender_id' => $this->buyer->id,
+            'recipient_id' => $this->seller->id,
+            'delivery_method' => 'buyer_responsible',
+        ]);
+    }
+
+    /**
+     * Test 7: Fixed warranty terms prevent changing warranty days.
+     */
+    public function test_fixed_warranty_prevents_warranty_changes(): void
+    {
+        $this->listing->update([
+            'is_warranty_negotiable' => false,
+            'warranty_period_days' => 10,
+            'warranty_terms' => '10 days seller testing warranty',
+        ]);
+
+        Livewire::actingAs($this->buyer)
+            ->test(MakeOffer::class)
+            ->dispatch('open-make-offer', ['listing_id' => $this->listing->id])
+            ->assertSet('isWarrantyNegotiable', false)
+            ->assertSet('warrantyDays', 10)
+            ->call('setWarrantyDays', 30) // should be ignored
+            ->assertSet('warrantyDays', 10)
+            ->assertSee('Warranty terms are fixed by seller');
     }
 }

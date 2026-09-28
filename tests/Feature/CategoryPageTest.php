@@ -65,8 +65,7 @@ class CategoryPageTest extends TestCase
         ]);
         Listing::create([
             'user_id' => $this->user->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $wholeItem->id,
+            'item_id' => $wholeItem->id,
             'location_id' => $this->location->id,
             'price' => 280000,
             'quantity' => 2,
@@ -84,8 +83,7 @@ class CategoryPageTest extends TestCase
         ]);
         Listing::create([
             'user_id' => $this->user->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $partItem->id,
+            'item_id' => $partItem->id,
             'location_id' => $this->location->id,
             'price' => 25000,
             'quantity' => 5,
@@ -103,8 +101,7 @@ class CategoryPageTest extends TestCase
         ]);
         Listing::create([
             'user_id' => $this->user->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $scrapItem->id,
+            'item_id' => $scrapItem->id,
             'location_id' => $this->location->id,
             'price' => 90000,
             'quantity' => 1,

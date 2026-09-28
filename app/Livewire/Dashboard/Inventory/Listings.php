@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Dashboard\Inventory;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\Listing;
 use App\Models\Location;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -16,8 +18,10 @@ class Listings extends Component
 {
     use WithPagination;
 
+    #[Url]
     public string $search = '';
     public string $selectedCategory = '';
+    public string $selectedBrand = '';
     public string $selectedStatus = '';
     public string $priceSort = ''; // 'high_low', 'low_high', ''
 
@@ -25,18 +29,33 @@ class Listings extends Component
     public bool $showEditModal = false;
     public ?int $editingListingId = null;
     public float $editPrice = 0.0;
+    public bool $editIsNegotiable = false;
     public int $editQuantity = 1;
     public string $editStatus = 'active';
+    public int $editWarrantyPeriodDays = 0;
+    public bool $editIsWarrantyNegotiable = false;
+    public string $editWarrantyTerms = '';
+    public bool $editAllowShipping = false;
 
     // Create New Listing Modal Properties
     public bool $showCreateListingModal = false;
     public string $selectedAssetKey = '';
     public float $price = 0.00;
+    public bool $is_negotiable = false;
     public int $quantity = 1;
     public bool $isQuantityDisabled = false;
     public int $warranty_period_days = 0;
+    public bool $is_warranty_negotiable = false;
     public string $warranty_terms = '';
+    public bool $allow_shipping = false;
     public ?int $location_id = null;
+
+    public function mount()
+    {
+        if (request()->has('search')) {
+            $this->search = (string) request()->query('search');
+        }
+    }
 
     public function updatingSearch()
     {
@@ -44,6 +63,11 @@ class Listings extends Component
     }
 
     public function updatingSelectedCategory()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingSelectedBrand()
     {
         $this->resetPage();
     }
@@ -60,7 +84,7 @@ class Listings extends Component
 
     public function resetFilters()
     {
-        $this->reset(['search', 'selectedCategory', 'selectedStatus', 'priceSort']);
+        $this->reset(['search', 'selectedCategory', 'selectedBrand', 'selectedStatus', 'priceSort']);
         $this->resetPage();
     }
 
@@ -80,9 +104,12 @@ class Listings extends Component
         }
 
         $this->price = 0.00;
+        $this->is_negotiable = false;
         $this->quantity = 1;
         $this->warranty_period_days = 0;
+        $this->is_warranty_negotiable = false;
         $this->warranty_terms = '';
+        $this->allow_shipping = false;
         $this->showCreateListingModal = true;
     }
 
@@ -126,20 +153,22 @@ class Listings extends Component
 
         Listing::create([
             'user_id' => Auth::id(),
-            'assetable_type' => Item::class,
-            'assetable_id' => $asset->id,
+            'item_id' => $asset->id,
             'location_id' => $asset->location_id,
             'quantity' => $this->quantity,
             'price' => $this->price,
+            'is_negotiable' => $this->is_negotiable,
             'status' => 'active',
             'warranty_period_days' => $this->warranty_period_days ?: 0,
+            'is_warranty_negotiable' => $this->is_warranty_negotiable,
             'warranty_terms' => $this->warranty_terms ?: '',
+            'allow_shipping' => $this->allow_shipping,
             'description' => $asset->name ?? '',
         ]);
 
         session()->flash('message', 'Marketplace listing published successfully!');
         $this->showCreateListingModal = false;
-        $this->reset(['selectedAssetKey', 'price', 'quantity', 'warranty_period_days', 'warranty_terms', 'isQuantityDisabled']);
+        $this->reset(['selectedAssetKey', 'price', 'is_negotiable', 'quantity', 'warranty_period_days', 'is_warranty_negotiable', 'warranty_terms', 'allow_shipping', 'isQuantityDisabled']);
     }
 
     // --- EDIT LISTING MODAL METHODS ---
@@ -154,8 +183,13 @@ class Listings extends Component
 
         $this->editingListingId = $listing->id;
         $this->editPrice = (float) $listing->price;
+        $this->editIsNegotiable = (bool) $listing->is_negotiable;
         $this->editQuantity = (int) $listing->quantity;
         $this->editStatus = $listing->status;
+        $this->editWarrantyPeriodDays = (int) $listing->warranty_period_days;
+        $this->editIsWarrantyNegotiable = (bool) $listing->is_warranty_negotiable;
+        $this->editWarrantyTerms = (string) $listing->warranty_terms;
+        $this->editAllowShipping = (bool) $listing->allow_shipping;
         $this->showEditModal = true;
     }
 
@@ -183,8 +217,13 @@ class Listings extends Component
 
             $listing->update([
                 'price' => $this->editPrice,
+                'is_negotiable' => $this->editIsNegotiable,
                 'quantity' => $this->editQuantity,
                 'status' => $status,
+                'warranty_period_days' => $this->editWarrantyPeriodDays ?: 0,
+                'is_warranty_negotiable' => $this->editIsWarrantyNegotiable,
+                'warranty_terms' => $this->editWarrantyTerms ?: '',
+                'allow_shipping' => $this->editAllowShipping,
             ]);
 
             session()->flash('message', 'Listing updated successfully!');
@@ -245,17 +284,30 @@ class Listings extends Component
     {
         $user = Auth::user();
 
-        $query = Listing::with(['location', 'assetable'])
-            ->where('user_id', $user?->id);
+        $query = Listing::with([
+            'location',
+            'item.deviceModel.category.parent',
+            'item.deviceModel.brand',
+            'item.parent.deviceModel.brand',
+            'item.parent.deviceModel.category',
+        ])
+        ->where('user_id', $user?->id);
 
         // Search Filter
         if (!empty(trim($this->search))) {
             $term = '%' . trim($this->search) . '%';
             $query->where(function ($q) use ($term) {
                 $q->where('description', 'like', $term)
-                  ->orWhereHasMorph('assetable', [Item::class], function ($aq) use ($term) {
+                  ->orWhereHas('item', function ($aq) use ($term) {
                       $aq->where('name', 'like', $term)
-                         ->orWhereHas('deviceModel', fn($mq) => $mq->where('name', 'like', $term));
+                         ->orWhereHas('deviceModel', function ($mq) use ($term) {
+                             $mq->where('name', 'like', $term)
+                                ->orWhereHas('brand', fn($bq) => $bq->where('name', 'like', $term));
+                         })
+                         ->orWhereHas('parent', function ($pq) use ($term) {
+                             $pq->where('name', 'like', $term)
+                                ->orWhereHas('deviceModel', fn($pmq) => $pmq->where('name', 'like', $term));
+                         });
                   });
             });
         }
@@ -263,9 +315,26 @@ class Listings extends Component
         // Category Filter
         if ($this->selectedCategory) {
             $catId = $this->selectedCategory;
-            $query->where(function ($q) use ($catId) {
-                $q->whereHasMorph('assetable', [Item::class], function ($iq) use ($catId) {
-                    $iq->whereHas('deviceModel', fn($mq) => $mq->where('category_id', $catId));
+            $catIds = Category::where('id', $catId)->orWhere('parent_id', $catId)->pluck('id');
+            $query->where(function ($q) use ($catIds) {
+                $q->whereHas('item', function ($iq) use ($catIds) {
+                    $iq->where(function ($ciq) use ($catIds) {
+                        $ciq->whereHas('deviceModel', fn($mq) => $mq->whereIn('category_id', $catIds))
+                            ->orWhereHas('parent.deviceModel', fn($mq) => $mq->whereIn('category_id', $catIds));
+                    });
+                });
+            });
+        }
+
+        // Brand Filter
+        if ($this->selectedBrand) {
+            $brandId = $this->selectedBrand;
+            $query->where(function ($q) use ($brandId) {
+                $q->whereHas('item', function ($iq) use ($brandId) {
+                    $iq->where(function ($biq) use ($brandId) {
+                        $biq->whereHas('deviceModel', fn($mq) => $mq->where('brand_id', $brandId))
+                            ->orWhereHas('parent.deviceModel', fn($mq) => $mq->where('brand_id', $brandId));
+                    });
                 });
             });
         }
@@ -295,11 +364,13 @@ class Listings extends Component
 
         $listings = $query->paginate(10);
         $categories = Category::whereNull('parent_id')->orderBy('name')->get();
+        $brands = Brand::orderBy('name')->get();
         $locations = $user?->locations ?? collect();
 
         return view('livewire.dashboard.inventory.listings', [
             'listings' => $listings,
             'categories' => $categories,
+            'brands' => $brands,
             'locations' => $locations,
             'unlistedAssets' => $this->unlistedAssets,
         ]);

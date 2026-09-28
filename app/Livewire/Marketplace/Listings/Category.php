@@ -102,7 +102,7 @@ class Category extends Component
 
         // Calculate count for devices (item_type = whole)
         $devicesCount = Listing::where('status', 'active')
-            ->whereHasMorph('assetable', [Item::class], function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
+            ->whereHas('item', function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
                 $q->where('item_type', 'whole');
                 if ($catIds->isNotEmpty()) {
                     $q->whereHas('deviceModel', fn($m) => $m->whereIn('category_id', $catIds));
@@ -120,7 +120,7 @@ class Category extends Component
 
         // Calculate count for parts (item_type = part or parts)
         $partsCount = Listing::where('status', 'active')
-            ->whereHasMorph('assetable', [Item::class], function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
+            ->whereHas('item', function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
                 $q->whereIn('item_type', ['part', 'parts']);
                 if ($catIds->isNotEmpty()) {
                     $q->whereHas('deviceModel', fn($m) => $m->whereIn('category_id', $catIds));
@@ -138,7 +138,7 @@ class Category extends Component
 
         // Calculate count for scraps (item_type = scrap)
         $scrapsCount = Listing::where('status', 'active')
-            ->whereHasMorph('assetable', [Item::class], function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
+            ->whereHas('item', function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
                 $q->where('item_type', 'scrap');
                 if ($catIds->isNotEmpty()) {
                     $q->whereHas('deviceModel', fn($m) => $m->whereIn('category_id', $catIds));

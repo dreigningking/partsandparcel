@@ -60,9 +60,9 @@ class CategoryDevices extends Component
         $modelId = $activeModel?->id;
         $searchTerm = trim($this->search !== '' ? $this->search : $this->q);
 
-        $query = Listing::with(['assetable.deviceModel.category', 'assetable.deviceModel.brand', 'location', 'seller', 'media', 'assetable.media'])
+        $query = Listing::with(['item.deviceModel.category', 'item.deviceModel.brand', 'location', 'seller', 'media', 'item.media'])
             ->where('status', 'active')
-            ->whereHasMorph('assetable', [Item::class], function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
+            ->whereHas('item', function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
                 $q->where('item_type', 'whole');
 
                 if ($catIds->isNotEmpty()) {

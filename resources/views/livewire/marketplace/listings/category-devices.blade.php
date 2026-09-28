@@ -32,28 +32,28 @@
         @if($listings->isNotEmpty())
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 @foreach($listings as $listing)
-                    <a href="{{ route('listing-details', ['id' => $listing->id]) }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+                    <a href="{{ route('listing-details', $listing) }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
                         <div class="relative product-img h-48 grid place-items-center p-4">
                             <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white">COMPLETE DEVICE</span>
                             @if($listing->firstMediaUrl('images'))
-                                <img src="{{ $listing->firstMediaUrl('images') }}" alt="{{ $listing->assetable->name ?? '' }}" class="h-full w-full object-contain group-hover:scale-105 transition" />
-                            @elseif($listing->assetable && $listing->assetable->firstMediaUrl('images'))
-                                <img src="{{ $listing->assetable->firstMediaUrl('images') }}" alt="{{ $listing->assetable->name ?? '' }}" class="h-full w-full object-contain group-hover:scale-105 transition" />
+                                <img src="{{ $listing->firstMediaUrl('images') }}" alt="{{ $listing->item->name ?? '' }}" class="h-full w-full object-contain group-hover:scale-105 transition" />
+                            @elseif($listing->item && $listing->item->firstMediaUrl('images'))
+                                <img src="{{ $listing->item->firstMediaUrl('images') }}" alt="{{ $listing->item->name ?? '' }}" class="h-full w-full object-contain group-hover:scale-105 transition" />
                             @else
                                 <span class="text-6xl group-hover:scale-105 transition">💻</span>
                             @endif
                         </div>
                         <div class="p-5">
                             <span class="text-xs font-bold text-pp-600">{{ $listing->seller->store_name ?? ($listing->seller->name ?? 'Verified Seller') }}</span>
-                            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">{{ $listing->assetable->name ?? ($listing->assetable->deviceModel->name ?? 'Complete Device') }}</h3>
-                            <p class="text-xs text-slate-500 mt-1 line-clamp-1">{{ $listing->assetable->description ?? ($listing->description ?? 'Fully functional complete device ready for use.') }}</p>
+                            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-pp-600 mt-0.5">{{ $listing->item->name ?? ($listing->item->deviceModel->name ?? 'Complete Device') }}</h3>
+                            <p class="text-xs text-slate-500 mt-1 line-clamp-1">{{ $listing->item->description ?? ($listing->description ?? 'Fully functional complete device ready for use.') }}</p>
                             <div class="mt-4 flex items-baseline justify-between">
                                 <span class="text-xl font-extrabold text-slate-900">₦{{ number_format($listing->price) }}</span>
                                 <span class="text-xs font-bold text-emerald-600">{{ $listing->availableQuantity() }} available</span>
                             </div>
                             <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                                 <span>📍 {{ $listing->location->city ?? ($listing->location->state ?? 'Nigeria') }}</span>
-                                <span class="font-semibold text-slate-700 capitalize">{{ str_replace('_', ' ', $listing->assetable->condition_status ?? 'Used') }}</span>
+                                <span class="font-semibold text-slate-700 capitalize">{{ str_replace('_', ' ', $listing->item->condition_status ?? 'Used') }}</span>
                             </div>
                         </div>
                     </a>

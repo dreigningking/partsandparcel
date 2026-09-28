@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Str;
 
 class Listing extends Model
 {
@@ -15,16 +15,19 @@ class Listing extends Model
 
     protected $fillable = [
         'user_id',
-        'assetable_type',
-        'assetable_id',
+        'item_id',
+        'slug',
         'location_id',
         'quantity',
         'reserved_quantity',
         'sold_quantity',
         'price',
+        'is_negotiable',
         'status',
         'warranty_period_days',
+        'is_warranty_negotiable',
         'warranty_terms',
+        'allow_shipping',
         'description',
     ];
 
@@ -35,8 +38,42 @@ class Listing extends Model
             'reserved_quantity' => 'integer',
             'sold_quantity' => 'integer',
             'price' => 'decimal:2',
+            'is_negotiable' => 'boolean',
             'warranty_period_days' => 'integer',
+            'is_warranty_negotiable' => 'boolean',
+            'allow_shipping' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (Listing $listing) {
+            if (empty($listing->slug)) {
+                $itemName = $listing->item?->name;
+                if (!$itemName && $listing->item_id) {
+                    $itemName = Item::where('id', $listing->item_id)->value('name');
+                }
+                $listing->slug = static::generateUniqueSlug($itemName ?: 'listing');
+            }
+        });
+    }
+
+    public static function generateUniqueSlug(?string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name ?: 'listing');
+        if (empty($base)) {
+            $base = 'listing';
+        }
+
+        $slug = $base;
+        $counter = 1;
+
+        while (static::where('slug', $slug)->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))->exists()) {
+            $slug = "{$base}-{$counter}";
+            $counter++;
+        }
+
+        return $slug;
     }
 
     public function user(): BelongsTo
@@ -49,9 +86,14 @@ class Listing extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function assetable(): MorphTo
+    public function item(): BelongsTo
     {
-        return $this->morphTo();
+        return $this->belongsTo(Item::class, 'item_id');
+    }
+
+    public function assetable(): BelongsTo
+    {
+        return $this->item();
     }
 
     public function location(): BelongsTo
@@ -67,6 +109,51 @@ class Listing extends Model
     public function wishlists(): HasMany
     {
         return $this->hasMany(Wishlist::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(ListingReview::class);
+    }
+
+    public function averageRating(): float
+    {
+        $avg = $this->reviews()->avg('rating');
+        return $avg ? round((float) $avg, 1) : 5.0;
+    }
+
+    public function reviewsCount(): int
+    {
+        return $this->reviews()->count();
+    }
+
+    public function starDistribution(): array
+    {
+        $total = $this->reviewsCount();
+        $distribution = [
+            5 => ['count' => 0, 'percentage' => 0],
+            4 => ['count' => 0, 'percentage' => 0],
+            3 => ['count' => 0, 'percentage' => 0],
+            2 => ['count' => 0, 'percentage' => 0],
+            1 => ['count' => 0, 'percentage' => 0],
+        ];
+
+        if ($total > 0) {
+            $grouped = $this->reviews()
+                ->selectRaw('rating, count(*) as cnt')
+                ->groupBy('rating')
+                ->pluck('cnt', 'rating');
+
+            foreach ($distribution as $star => $data) {
+                $count = (int) $grouped->get($star, 0);
+                $distribution[$star] = [
+                    'count' => $count,
+                    'percentage' => round(($count / $total) * 100),
+                ];
+            }
+        }
+
+        return $distribution;
     }
 
     public function availableQuantity(): int

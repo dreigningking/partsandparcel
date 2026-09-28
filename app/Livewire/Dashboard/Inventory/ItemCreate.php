@@ -38,10 +38,13 @@ class ItemCreate extends Component
 
     // Step 3 Fields (Listing & Location & Warranty)
     public float $price = 0.00;
+    public bool $is_negotiable = false;
     public int $quantity = 1;
     public ?int $location_id = null;
     public int $warranty_period_days = 0;
+    public bool $is_warranty_negotiable = false;
     public string $warranty_terms = '';
+    public bool $allow_shipping = false;
     public bool $include_whole_listing = true;
     public bool $include_component_listings = true;
 
@@ -232,8 +235,10 @@ class ItemCreate extends Component
             'condition_status' => 'Testing working',
             'notes' => '',
             'price' => 0,
+            'is_negotiable' => false,
             'list_for_sale' => true,
             'warranty_period_days' => 7,
+            'is_warranty_negotiable' => false,
             'warranty_terms' => '7 days testing warranty',
         ];
     }
@@ -257,8 +262,10 @@ class ItemCreate extends Component
             'condition_status' => 'Testing working',
             'notes' => '',
             'price' => 0,
+            'is_negotiable' => false,
             'list_for_sale' => true,
             'warranty_period_days' => 0,
+            'is_warranty_negotiable' => false,
             'warranty_terms' => '',
         ];
     }
@@ -412,14 +419,16 @@ class ItemCreate extends Component
         if ($this->include_whole_listing) {
             $listing = Listing::create([
                 'user_id' => Auth::id(),
-                'assetable_type' => Item::class,
-                'assetable_id' => $item->id,
+                'item_id' => $item->id,
                 'location_id' => $this->location_id,
                 'quantity' => $this->quantity,
                 'price' => $this->price,
+                'is_negotiable' => $this->is_negotiable,
                 'status' => 'active',
                 'warranty_period_days' => $this->warranty_period_days,
+                'is_warranty_negotiable' => $this->is_warranty_negotiable,
                 'warranty_terms' => $this->warranty_terms,
+                'allow_shipping' => $this->allow_shipping,
                 'description' => $this->description ?: $this->condition_notes,
             ]);
 
@@ -454,14 +463,16 @@ class ItemCreate extends Component
                     if ($listThisComp && isset($compData['price']) && $compData['price'] > 0) {
                         Listing::create([
                             'user_id' => Auth::id(),
-                            'assetable_type' => Item::class,
-                            'assetable_id' => $childItem->id,
+                            'item_id' => $childItem->id,
                             'location_id' => $this->location_id,
                             'quantity' => 1,
                             'price' => $compData['price'],
+                            'is_negotiable' => !empty($compData['is_negotiable']),
                             'status' => 'active',
                             'warranty_period_days' => $compData['warranty_period_days'] ?? $this->warranty_period_days,
+                            'is_warranty_negotiable' => !empty($compData['is_warranty_negotiable']),
                             'warranty_terms' => $compData['warranty_terms'] ?? $this->warranty_terms,
+                            'allow_shipping' => $this->allow_shipping,
                             'description' => $compData['notes'] ?? '',
                         ]);
                     }

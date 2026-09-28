@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Item extends Model
 {
@@ -64,9 +64,14 @@ class Item extends Model
         return $this->children();
     }
 
-    public function listing(): MorphOne
+    public function listing(): HasOne
     {
-        return $this->morphOne(Listing::class, 'assetable');
+        return $this->hasOne(Listing::class, 'item_id');
+    }
+
+    public function listings(): HasMany
+    {
+        return $this->hasMany(Listing::class, 'item_id');
     }
 
     public function scopeWhole($query)

@@ -40,6 +40,11 @@ class MakeOffer extends Component
     public int $warrantyDays = 14;
     public string $warrantyTerms = '14-day replacement and inspection warranty';
 
+    // Negotiation & Shipping Capability Flags
+    public bool $isNegotiable = true;
+    public bool $isWarrantyNegotiable = true;
+    public bool $allowShipping = true;
+
     // Optional repair / services
     public bool $requestRepair = false;
     public string $repairServiceType = 'Installation & Testing';
@@ -113,11 +118,24 @@ class MakeOffer extends Component
             if ($listing) {
                 $this->sellerId = (string) $listing->user_id;
                 $this->sellerName = $listing->user?->business_name ?: $listing->user?->name ?: $this->sellerName;
+                $this->isNegotiable = (bool) $listing->is_negotiable;
+                $this->isWarrantyNegotiable = (bool) $listing->is_warranty_negotiable;
+                $this->allowShipping = (bool) $listing->allow_shipping;
+
+                if (! $this->allowShipping) {
+                    $this->deliveryMode = 'pickup';
+                }
+
+                if (! $this->isWarrantyNegotiable && $listing->warranty_period_days !== null) {
+                    $this->warrantyDays = (int) $listing->warranty_period_days;
+                    $this->warrantyTerms = $listing->warranty_terms ?: "{$listing->warranty_period_days}-day replacement and inspection warranty";
+                }
+
                 $this->cartItems = [
                     [
                         'id' => 1,
                         'listing_id' => $listing->id,
-                        'title' => $listing->title ?? $listing->description ?? ($listing->assetable?->name ?? 'Listing #' . $listing->id),
+                        'title' => $listing->title ?? $listing->description ?? ($listing->item?->name ?? 'Listing #' . $listing->id),
                         'specs' => $listing->condition ? ucfirst($listing->condition) : 'Tested',
                         'price' => (float) $listing->price,
                         'quantity' => 1,
@@ -139,6 +157,15 @@ class MakeOffer extends Component
                 ->first();
 
             if ($cart && $cart->items->isNotEmpty()) {
+                $listings = $cart->items->map->listing->filter();
+                $this->isNegotiable = $listings->isEmpty() ? true : $listings->contains(fn ($l) => (bool) $l->is_negotiable);
+                $this->isWarrantyNegotiable = $listings->isEmpty() ? true : $listings->contains(fn ($l) => (bool) $l->is_warranty_negotiable);
+                $this->allowShipping = $listings->isEmpty() ? true : $listings->every(fn ($l) => (bool) $l->allow_shipping);
+
+                if (! $this->allowShipping) {
+                    $this->deliveryMode = 'pickup';
+                }
+
                 $this->cartItems = $cart->items->map(fn ($item) => [
                     'id' => $item->id,
                     'listing_id' => $item->listing_id,
@@ -157,6 +184,9 @@ class MakeOffer extends Component
         }
 
         // Fallback demo item if guest / no DB cart
+        $this->isNegotiable = true;
+        $this->isWarrantyNegotiable = true;
+        $this->allowShipping = true;
         $this->cartItems = [
             [
                 'id' => 101,
@@ -224,6 +254,10 @@ class MakeOffer extends Component
 
     public function setWarrantyDays(int $days)
     {
+        if (! $this->isWarrantyNegotiable) {
+            return;
+        }
+
         $this->warrantyDays = $days;
         $this->warrantyTerms = "{$days}-day inspection and replacement warranty";
     }
@@ -247,8 +281,18 @@ class MakeOffer extends Component
             ->values();
 
         $originalSubtotal = $selectedItems->sum(fn ($i) => $i['price'] * $i['quantity']);
-        $proposedNum = (float) str_replace(',', '', $this->proposedPrice);
-        $discount = max(0, $originalSubtotal - $proposedNum);
+        if (! $this->isNegotiable) {
+            $proposedNum = $originalSubtotal;
+            $discount = 0;
+            $this->proposedPrice = (string) $originalSubtotal;
+        } else {
+            $proposedNum = (float) str_replace(',', '', $this->proposedPrice);
+            $discount = max(0, $originalSubtotal - $proposedNum);
+        }
+
+        if (! $this->allowShipping) {
+            $this->deliveryMode = 'pickup';
+        }
 
         $customItems = [];
         foreach ($selectedItems as $sItem) {

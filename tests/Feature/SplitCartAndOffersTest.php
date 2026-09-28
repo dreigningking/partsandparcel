@@ -68,19 +68,25 @@ class SplitCartAndOffersTest extends TestCase
 
         $this->listing1 = Listing::firstOrCreate(['slug' => 'hp-elitebook-840-g5-test'], [
             'user_id' => $this->seller1->id,
-            'assetable_id' => $item1->id,
-            'assetable_type' => Item::class,
+            'item_id' => $item1->id,
             'title' => 'HP EliteBook 840 G5 Test',
             'price' => 250000.00,
             'quantity' => 1,
             'condition' => 'used',
             'status' => 'active',
+            'is_negotiable' => true,
+            'is_warranty_negotiable' => true,
+            'allow_shipping' => true,
+        ]);
+        $this->listing1->update([
+            'is_negotiable' => true,
+            'is_warranty_negotiable' => true,
+            'allow_shipping' => true,
         ]);
 
         $this->listing2 = Listing::firstOrCreate(['slug' => 'hp-battery-840-test'], [
             'user_id' => $this->seller2->id,
-            'assetable_id' => $item2->id,
-            'assetable_type' => Item::class,
+            'item_id' => $item2->id,
             'title' => 'HP Battery 840 Test',
             'price' => 25000.00,
             'quantity' => 2,

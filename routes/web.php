@@ -36,7 +36,7 @@ use App\Livewire\Marketplace\CheckoutPage;
 use App\Livewire\Marketplace\Community\CommunityHome;
 use App\Livewire\Marketplace\Community\CommunityRequest;
 use App\Livewire\Marketplace\Listings\Category;
-use App\Livewire\Marketplace\Listings\ItemDetails;
+use App\Livewire\Marketplace\Listings\ListingDetails;
 use App\Livewire\Marketplace\Listings\SearchPage;
 use App\Livewire\Marketplace\Welcome;
 use Illuminate\Support\Facades\Auth;
@@ -68,7 +68,7 @@ Route::post('logout', function () {
 Route::get('/', Welcome::class)->name('welcome');
 Route::get('category', Category::class)->name('category');
 Route::get('search', SearchPage::class)->name('search');
-Route::get('listing-details', ItemDetails::class)->name('listing-details');
+Route::get('listing-details/{listing}', ListingDetails::class)->name('listing-details');
 Route::get('community', CommunityHome::class)->name('community');
 Route::get('community/request/{id}', CommunityRequest::class)->name('community.request');
 Route::get('cart', CartPage::class)->name('cart');

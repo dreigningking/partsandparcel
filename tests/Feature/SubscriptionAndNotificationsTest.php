@@ -129,8 +129,7 @@ class SubscriptionAndNotificationsTest extends TestCase
         for ($i = 0; $i < 10; $i++) {
             Listing::create([
                 'user_id' => $user->id,
-                'assetable_type' => Item::class,
-                'assetable_id' => $this->item->id,
+                'item_id' => $this->item->id,
                 'price' => 5000 + ($i * 100),
                 'quantity' => 1,
                 'status' => 'active',
@@ -304,8 +303,7 @@ class SubscriptionAndNotificationsTest extends TestCase
 
         $listing = Listing::create([
             'user_id' => $seller->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $this->item->id,
+            'item_id' => $this->item->id,
             'price' => 12000,
             'quantity' => 2,
             'status' => 'active',

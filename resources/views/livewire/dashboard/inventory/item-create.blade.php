@@ -510,8 +510,8 @@
 
         @if($item_type === 'scrap')
           @if($include_whole_listing)
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-              <div>
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end max-w-3xl">
+              <div class="sm:col-span-5">
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Whole Scrap Unit Listing Price (₦) <span class="text-rose-500">*</span></label>
                 <div class="relative">
                   <span class="absolute left-3 top-3 text-slate-400 font-bold text-xs">₦</span>
@@ -520,11 +520,18 @@
                 @error('price') <span class="text-[11px] text-rose-600 font-bold mt-1 block">{{ $message }}</span> @enderror
               </div>
 
-              <div>
+              <div class="sm:col-span-3 pb-3">
+                <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" wire:model="is_negotiable" class="w-4 h-4 text-pp-600 rounded border-slate-300 focus:ring-pp-500 cursor-pointer" />
+                  <span class="text-xs font-bold text-slate-700 whitespace-nowrap">Negotiable?</span>
+                </label>
+              </div>
+
+              <div class="sm:col-span-4">
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Stock Quantity <span class="text-rose-500">*</span></label>
                 <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 flex items-center justify-between h-[46px]">
-                  <span>1 Unit (Unique Salvage Asset)</span>
-                  <span class="text-[10px] font-normal text-slate-500">(Scrap Unit)</span>
+                  <span>1 Unit</span>
+                  <span class="text-[10px] font-normal text-slate-500">(Scrap)</span>
                 </div>
               </div>
             </div>
@@ -539,7 +546,8 @@
                     <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 font-extrabold uppercase text-[10px] tracking-wider">
                       <th class="p-3">Component Name</th>
                       <th class="p-3 w-36">Condition</th>
-                      <th class="p-3 w-44">Listing Price (₦)</th>
+                      <th class="p-3 w-40">Listing Price (₦)</th>
+                      <th class="p-3 text-center w-24">Negotiable?</th>
                       <th class="p-3 text-center w-28">List for Sale?</th>
                     </tr>
                   </thead>
@@ -556,6 +564,11 @@
                         </td>
                         <td class="p-3 text-center">
                           <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" wire:model="harvested_components.{{ $index }}.is_negotiable" class="w-4 h-4 text-pp-600 rounded border-slate-300 focus:ring-pp-500" />
+                          </label>
+                        </td>
+                        <td class="p-3 text-center">
+                          <label class="inline-flex items-center cursor-pointer">
                             <input type="checkbox" wire:model="harvested_components.{{ $index }}.list_for_sale" class="w-4 h-4 text-pp-600 rounded border-slate-300 focus:ring-pp-500" />
                           </label>
                         </td>
@@ -567,8 +580,8 @@
             </div>
           @endif
         @else
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-            <div>
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end max-w-3xl">
+            <div class="sm:col-span-5">
               <label class="block text-xs font-bold text-slate-700 mb-1.5">Unit Listing Price (₦) <span class="text-rose-500">*</span></label>
               <div class="relative">
                 <span class="absolute left-3 top-3 text-slate-400 font-bold text-xs">₦</span>
@@ -577,7 +590,14 @@
               @error('price') <span class="text-[11px] text-rose-600 font-bold mt-1 block">{{ $message }}</span> @enderror
             </div>
 
-            <div>
+            <div class="sm:col-span-3 pb-3">
+              <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" wire:model="is_negotiable" class="w-4 h-4 text-pp-600 rounded border-slate-300 focus:ring-pp-500 cursor-pointer" />
+                <span class="text-xs font-bold text-slate-700 whitespace-nowrap">Negotiable?</span>
+              </label>
+            </div>
+
+            <div class="sm:col-span-4">
               <label class="block text-xs font-bold text-slate-700 mb-1.5">Stock Quantity <span class="text-rose-500">*</span></label>
               <input type="number" wire:model="quantity" min="1" placeholder="1" class="w-full p-3 rounded-xl border border-slate-200 text-xs font-extrabold text-slate-950 outline-none focus:border-pp-500 transition" />
               @error('quantity') <span class="text-[11px] text-rose-600 font-bold mt-1 block">{{ $message }}</span> @enderror
@@ -603,6 +623,7 @@
                     <th class="p-3">Component Name</th>
                     <th class="p-3 w-32">Condition</th>
                     <th class="p-3 w-36">Warranty (Days)</th>
+                    <th class="p-3 text-center w-24">Negotiable?</th>
                     <th class="p-3">Warranty Terms &amp; Conditions</th>
                   </tr>
                 </thead>
@@ -614,6 +635,11 @@
                       <td class="p-3">
                         <input type="number" wire:model="harvested_components.{{ $index }}.warranty_period_days" placeholder="0" class="w-full p-2 rounded-lg border border-slate-200 text-xs font-bold text-slate-900 outline-none focus:border-pp-500 transition" />
                       </td>
+                      <td class="p-3 text-center">
+                        <label class="inline-flex items-center cursor-pointer">
+                          <input type="checkbox" wire:model="harvested_components.{{ $index }}.is_warranty_negotiable" class="w-4 h-4 text-pp-600 rounded border-slate-300 focus:ring-pp-500" />
+                        </label>
+                      </td>
                       <td class="p-3">
                         <input type="text" wire:model="harvested_components.{{ $index }}.warranty_terms" placeholder="e.g. 7-day testing warranty" class="w-full p-2 rounded-lg border border-slate-200 text-xs text-slate-800 outline-none focus:border-pp-500 transition" />
                       </td>
@@ -624,18 +650,43 @@
             </div>
           </div>
         @else
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end max-w-3xl">
+            <div class="sm:col-span-4">
               <label class="block text-xs font-bold text-slate-700 mb-1.5">Warranty Period (Days)</label>
               <input type="number" wire:model="warranty_period_days" placeholder="0" class="w-full p-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 outline-none focus:border-pp-500 transition" />
             </div>
 
-            <div>
+            <div class="sm:col-span-3 pb-3">
+              <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" wire:model="is_warranty_negotiable" class="w-4 h-4 text-pp-600 rounded border-slate-300 focus:ring-pp-500 cursor-pointer" />
+                <span class="text-xs font-bold text-slate-700 whitespace-nowrap">Negotiable?</span>
+              </label>
+            </div>
+
+            <div class="sm:col-span-5">
               <label class="block text-xs font-bold text-slate-700 mb-1.5">Warranty Terms &amp; Conditions</label>
               <input type="text" wire:model="warranty_terms" placeholder="e.g. 7-day money back if unworked" class="w-full p-3 rounded-xl border border-slate-200 text-xs font-medium text-slate-900 outline-none focus:border-pp-500 transition" />
             </div>
           </div>
         @endif
+      </div>
+
+      <!-- SECTION 3: DELIVERY & FULFILLMENT -->
+      <div class="space-y-4">
+        <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-2">
+          <span class="w-5 h-5 rounded-full bg-pp-100 text-pp-700 text-[10px] grid place-items-center font-black">3</span>
+          <span>Delivery &amp; Fulfillment</span>
+        </h3>
+
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input type="checkbox" wire:model="allow_shipping" class="w-4 h-4 mt-0.5 text-pp-600 rounded border-slate-300 focus:ring-pp-500 cursor-pointer" />
+            <div>
+              <span class="text-xs font-bold text-slate-900 block">Allow sellers to request shipment/delivery</span>
+              <p class="text-[11px] text-slate-500 mt-0.5">Enable delivery and dispatch options for this listing in addition to local seller pickup.</p>
+            </div>
+          </label>
+        </div>
       </div>
 
       <!-- STEP 3 FOOTER BUTTONS -->

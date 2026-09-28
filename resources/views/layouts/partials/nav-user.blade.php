@@ -22,12 +22,7 @@
                 <span class="text-base shrink-0">📊</span>
                 <span class="label">Overview</span>
             </a>
-            <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl {{ Route::is('subscriptions') ? 'bg-pp-50 text-pp-700 font-extrabold shadow-2xs' : 'hover:bg-slate-50 text-slate-600 hover:text-slate-900 font-semibold' }} text-xs transition"
-                href="{{ route('subscriptions') }}">
-                <span class="text-base shrink-0">⚡</span>
-                <span class="label">Subscription</span>
-                <span class="label ml-auto text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/60">Free</span>
-            </a>
+            
             <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl {{ Route::is('messages*') ? 'bg-pp-50 text-pp-700 font-extrabold shadow-2xs' : 'hover:bg-slate-50 text-slate-600 hover:text-slate-900 font-semibold' }} text-xs transition"
                 href="{{ route('messages') }}">
                 <span class="text-base shrink-0">💬</span>
@@ -122,6 +117,12 @@
             <div class="section-label px-3 pt-2 pb-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
                 Account
             </div>
+            <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl {{ Route::is('subscriptions') ? 'bg-pp-50 text-pp-700 font-extrabold shadow-2xs' : 'hover:bg-slate-50 text-slate-600 hover:text-slate-900 font-semibold' }} text-xs transition"
+                href="{{ route('subscriptions') }}">
+                <span class="text-base shrink-0">⚡</span>
+                <span class="label">Subscription</span>
+                <span class="label ml-auto text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/60">Free</span>
+            </a>
             <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl {{ Route::is('locations') ? 'bg-pp-50 text-pp-700 font-extrabold shadow-2xs' : 'hover:bg-slate-50 text-slate-600 hover:text-slate-900 font-semibold' }} text-xs transition"
                 href="{{ route('locations') }}">
                 <span class="text-base shrink-0">📍</span>

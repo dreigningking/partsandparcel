@@ -129,7 +129,7 @@
                   $categoryName = $item->deviceModel?->category?->name ?? 'Electronics';
                   $locationName = $item->location?->city ?? 'Nigeria';
                 @endphp
-                <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
+                <a href="{{ $item->listing ? route('listing-details', $item->listing) : '#' }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200 flex flex-col justify-between">
                   <div>
                     <div class="relative product-img h-44 grid place-items-center p-4 bg-slate-50">
                       <span class="absolute top-3 left-3 text-[10px] font-extrabold px-2 py-0.5 rounded {{ $item->condition_status === 'scrap' ? 'bg-amber-600 text-white' : 'bg-slate-900 text-white' }}">

@@ -74,16 +74,23 @@
                             "I'll collect this from the seller." Collect directly from {{ $sellerName }}. No shipping charge.
                         </p>
 
-                        <label class="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-900 pt-1">
-                            <input type="radio" wire:model.live="deliveryMode" value="seller_delivery" class="accent-pp-600" />
-                            <span>Seller Delivery</span>
-                        </label>
-                        <p class="text-[11px] text-slate-600 pl-5 leading-relaxed">
-                            "The seller will deliver this to me." {{ $sellerName }} dispatches shipment to your destination.
-                        </p>
+                        @if ($allowShipping)
+                            <label class="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-900 pt-1">
+                                <input type="radio" wire:model.live="deliveryMode" value="seller_delivery" class="accent-pp-600" />
+                                <span>Seller Delivery</span>
+                            </label>
+                            <p class="text-[11px] text-slate-600 pl-5 leading-relaxed">
+                                "The seller will deliver this to me." {{ $sellerName }} dispatches shipment to your destination.
+                            </p>
+                        @else
+                            <div class="mt-2 p-2.5 rounded-xl bg-amber-50/90 border border-amber-200 text-[11px] text-amber-800 flex items-start gap-2">
+                                <i class="fas fa-info-circle text-amber-600 mt-0.5 shrink-0"></i>
+                                <span><strong>Local Pickup Only:</strong> Shipping is not offered for this listing; buyer pickup is required.</span>
+                            </div>
+                        @endif
                     </div>
 
-                    @if ($deliveryMode === 'seller_delivery')
+                    @if ($deliveryMode === 'seller_delivery' && $allowShipping)
                         <div class="space-y-3 pt-3 border-t border-pp-200/60">
                             <div>
                                 <div class="flex items-center justify-between mb-1">
@@ -122,19 +129,32 @@
                 <!-- STEP 3: PROPOSED PRICE & SAVINGS PREVIEW -->
                 <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
                     <div class="flex items-center justify-between">
-                        <label class="text-xs font-extrabold text-slate-900">Your Proposed Price (₦) <span class="text-rose-500">*</span></label>
+                        <label class="text-xs font-extrabold text-slate-900">
+                            {{ $isNegotiable ? 'Your Proposed Price (₦)' : 'Listing Price (₦)' }}
+                            <span class="text-rose-500">*</span>
+                        </label>
                         <span class="text-[11px] text-slate-500">Original Subtotal: <strong>₦{{ number_format($selectedSubtotal) }}</strong></span>
                     </div>
                     
-                    <div class="relative">
-                        <span class="absolute left-3.5 top-3 text-sm font-bold text-slate-400">₦</span>
-                        <input type="number" wire:model.live="proposedPrice" placeholder="e.g. 260000" class="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white text-base font-black text-pp-700 outline-none focus:border-pp-600" />
-                    </div>
+                    @if ($isNegotiable)
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-sm font-bold text-slate-400">₦</span>
+                            <input type="number" wire:model.live="proposedPrice" placeholder="e.g. 260000" class="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white text-base font-black text-pp-700 outline-none focus:border-pp-600" />
+                        </div>
 
-                    @if ($savings > 0)
-                        <div class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100 flex items-center justify-between">
-                            <span>Requested Discount:</span>
-                            <span>-₦{{ number_format($savings) }} ({{ round(($savings / max(1, $selectedSubtotal)) * 100) }}% off)</span>
+                        @if ($savings > 0)
+                            <div class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100 flex items-center justify-between">
+                                <span>Requested Discount:</span>
+                                <span>-₦{{ number_format($savings) }} ({{ round(($savings / max(1, $selectedSubtotal)) * 100) }}% off)</span>
+                            </div>
+                        @endif
+                    @else
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                            <div>
+                                <div class="text-base font-black text-slate-900">₦{{ number_format($selectedSubtotal) }}</div>
+                                <div class="text-[10px] text-slate-500 font-medium">Fixed Price Listing · Price cannot be negotiated</div>
+                            </div>
+                            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-slate-200 text-slate-700 rounded-md">Fixed Price</span>
                         </div>
                     @endif
                 </div>
@@ -142,11 +162,21 @@
                 <!-- STEP 4: WARRANTY TERM SELECTION -->
                 <div class="space-y-2">
                     <label class="text-xs font-extrabold text-slate-900 block">Requested Warranty Term</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button type="button" wire:click="setWarrantyDays(7)" class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ $warrantyDays === 7 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">7 Days</button>
-                        <button type="button" wire:click="setWarrantyDays(14)" class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ $warrantyDays === 14 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">14 Days</button>
-                        <button type="button" wire:click="setWarrantyDays(30)" class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ $warrantyDays === 30 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">30 Days</button>
-                    </div>
+                    @if ($isWarrantyNegotiable)
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" wire:click="setWarrantyDays(7)" class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ $warrantyDays === 7 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">7 Days</button>
+                            <button type="button" wire:click="setWarrantyDays(14)" class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ $warrantyDays === 14 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">14 Days</button>
+                            <button type="button" wire:click="setWarrantyDays(30)" class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ $warrantyDays === 30 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">30 Days</button>
+                        </div>
+                    @else
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                                <i class="fas fa-shield-alt text-pp-600"></i>
+                                <span>{{ $warrantyDays }} Days ({{ $warrantyTerms }})</span>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-1">Warranty terms are fixed by seller and cannot be negotiated.</p>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- STEP 5: OPTIONAL REPAIR / WORKMANSHIP SERVICE -->

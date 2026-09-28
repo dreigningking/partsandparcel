@@ -135,7 +135,7 @@
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
       
       <!-- CARD 1 -->
-      <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <a href="{{ route('listing-details', 1) }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
         <div class="relative product-img h-44 grid place-items-center p-4">
           <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white">DEVICE</span>
           <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
@@ -179,7 +179,7 @@
       </a>
 
       <!-- CARD 3 (PART) -->
-      <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <a href="{{ route('listing-details', 1) }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
         <div class="relative product-img h-44 grid place-items-center p-4">
           <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">PART</span>
           <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
@@ -201,7 +201,7 @@
       </a>
 
       <!-- CARD 4 (VEHICLE) -->
-      <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <a href="{{ route('listing-details', 1) }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
         <div class="relative product-img h-44 grid place-items-center p-4">
           <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-slate-900 text-white">VEHICLE</span>
           <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
@@ -223,7 +223,7 @@
       </a>
 
       <!-- CARD 5 (EQUIPMENT PART) -->
-      <a href="{{ route('listing-details') }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
+      <a href="{{ route('listing-details', 1) }}" class="group rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-card hover:-translate-y-1 transition duration-200">
         <div class="relative product-img h-44 grid place-items-center p-4">
           <span class="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-600 text-white">PART</span>
           <button class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white border border-slate-200 grid place-items-center text-slate-400 hover:text-rose-500">♡</button>
