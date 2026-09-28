@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Discussion;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -26,5 +27,10 @@ class Brand extends Model
     public function deviceModels(): HasMany
     {
         return $this->hasMany(DeviceModel::class, 'brand_id');
+    }
+
+    public function discussions(): HasMany
+    {
+        return $this->hasMany(Discussion::class, 'brand_id');
     }
 }

@@ -190,81 +190,120 @@
                 <button wire:click="closePostModal" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center text-sm font-bold transition cursor-pointer" aria-label="Close modal">
                     <i class="fas fa-times"></i>
                 </button>
+                
                 <h2 class="text-xl font-extrabold text-slate-900 mb-1 flex items-center gap-2">
                     <i class="fas fa-pen-square text-pp-600"></i> Post a Request
                 </h2>
                 <p class="text-xs text-slate-500 mb-6">Tell the community what you need — products, parts, repairs, or advice.</p>
 
-                @if($postSuccessMessage)
-                    <div class="p-4 mb-5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
-                        <span>✅</span> Your request has been posted successfully! The community will start responding shortly.
-                    </div>
-                @endif
-
-                <form wire:submit="submitRequest" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">What do you need? <span class="text-rose-500">*</span></label>
-                        <select wire:model="formType" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                            <option value="">Select request type</option>
-                            <option value="Product / Part">Product / Part</option>
-                            <option value="Repair / Service">Repair / Service</option>
-                            <option value="Question / Advice">Question / Advice</option>
-                        </select>
-                        @error('formType') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Category <span class="text-rose-500">*</span></label>
-                        <select wire:model="formCategory" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                            <option value="">Select category</option>
-                            <option value="Electronics">Electronics</option>
-                            <option value="Vehicles">Vehicles</option>
-                            <option value="Appliances">Appliances</option>
-                            <option value="Equipment">Equipment</option>
-                            <option value="Construction">Construction</option>
-                            <option value="Industrial">Industrial</option>
-                            <option value="Agricultural">Agricultural</option>
-                        </select>
-                        @error('formCategory') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Request title <span class="text-rose-500">*</span></label>
-                        <input type="text" wire:model="formTitle" required placeholder="e.g. Looking for HP EliteBook motherboard" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                        @error('formTitle') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Description <span class="text-rose-500">*</span></label>
-                        <textarea wire:model="formDesc" required placeholder="Describe what you need in detail…" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition"></textarea>
-                        @error('formDesc') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Location <span class="text-rose-500">*</span></label>
-                            <input type="text" wire:model="formLocation" required placeholder="e.g. Computer Village, Ikeja" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                            @error('formLocation') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                @guest
+                    <!-- UNAUTHENTICATED STATE WARNING -->
+                    <div class="text-center py-6 space-y-4">
+                        <div class="w-16 h-16 rounded-2xl bg-pp-50 text-pp-600 grid place-items-center mx-auto text-2xl font-bold border border-pp-100 shadow-2xs">
+                            <i class="fas fa-lock"></i>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Budget (₦)</label>
-                            <input type="text" wire:model="formBudget" placeholder="e.g. 70,000 – 90,000" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                        <h3 class="text-lg font-extrabold text-slate-900">Sign in to Post a Request</h3>
+                        <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                            You need to log in or create an account to post sourcing requests and receive offers from verified sellers and technicians.
+                        </p>
+                        <div class="pt-2 flex items-center justify-center gap-3">
+                            <a href="{{ route('login') }}" class="px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs transition shadow-xs">
+                                Log In
+                            </a>
+                            <a href="{{ route('register') }}" class="px-5 py-2.5 rounded-xl border border-slate-200 hover:border-pp-300 text-slate-700 font-extrabold text-xs transition">
+                                Create Account
+                            </a>
                         </div>
                     </div>
+                @else
+                    @if($postSuccessMessage)
+                        <div class="p-4 mb-5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
+                            <span>✅</span> Your request has been posted successfully! The community will start responding shortly.
+                        </div>
+                    @endif
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Preferred response</label>
-                        <select wire:model="formResponse" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                            <option value="Any">Any response</option>
-                            <option value="Commercial offers">Commercial offers</option>
-                            <option value="Community advice">Community advice</option>
-                        </select>
-                    </div>
+                    <form wire:submit="submitRequest" class="space-y-4">
+                        <!-- TYPE -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Request Type <span class="text-rose-500">*</span></label>
+                            <select wire:model="formType" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                <option value="item">Product / Part</option>
+                                <option value="service">Repair / Service</option>
+                                <option value="advice">Question / Advice</option>
+                                <option value="delivery">Delivery / Logistics</option>
+                            </select>
+                            @error('formType') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                        </div>
 
-                    <button type="submit" class="w-full py-3 mt-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fas fa-paper-plane"></i> Submit Request
-                    </button>
-                </form>
+                        <!-- CATEGORY & BRAND ROW -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                                <select wire:model.live="formCategory" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                    <option value="">Select Category</option>
+                                    @foreach($allCategories as $cat)
+                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Brand</label>
+                                <select wire:model="formBrand" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                    <option value="">Select Brand</option>
+                                    @foreach($allBrands as $brand)
+                                        <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- MODEL & LOCATION ROW -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Device Model</label>
+                                <select wire:model="formModel" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                    <option value="">Select Model</option>
+                                    @foreach($allModels as $mod)
+                                        <option value="{{ $mod->id }}">{{ $mod->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Store / Target Location</label>
+                                <select wire:model="formLocation" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                    <option value="">Select Location</option>
+                                    @foreach($allLocations as $loc)
+                                        <option value="{{ $loc->id }}">{{ $loc->name ?? $loc->city }} ({{ $loc->city }}, {{ $loc->state }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- BUDGET & TITLE ROW -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Budget (₦)</label>
+                                <input type="text" wire:model="formBudget" placeholder="e.g. 70,000 – 90,000" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Request Title <span class="text-rose-500">*</span></label>
+                                <input type="text" wire:model="formTitle" required placeholder="e.g. Looking for HP EliteBook motherboard" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                @error('formTitle') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+
+                        <!-- DESCRIPTION -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Description <span class="text-rose-500">*</span></label>
+                            <textarea wire:model="formDesc" required placeholder="Describe what you need in detail…" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition"></textarea>
+                            @error('formDesc') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <button type="submit" class="w-full py-3 mt-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fas fa-paper-plane"></i> Submit Request
+                        </button>
+                    </form>
+                @endguest
             </div>
         </div>
     @endif

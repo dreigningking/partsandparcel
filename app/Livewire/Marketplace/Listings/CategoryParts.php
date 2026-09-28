@@ -2,12 +2,22 @@
 
 namespace App\Livewire\Marketplace\Listings;
 
+use App\Models\Item;
+use App\Models\Listing;
 use Livewire\Component;
 
 class CategoryParts extends Component
 {
     public function render()
     {
-        return view('livewire.marketplace.listings.category-parts');
+        $listings = Listing::with(['assetable.deviceModel.category', 'assetable.deviceModel.brand', 'location'])
+            ->where('status', 'active')
+            ->whereHasMorph('assetable', [Item::class], fn($q) => $q->where('item_type', 'part'))
+            ->latest()
+            ->get();
+
+        return view('livewire.marketplace.listings.category-parts', [
+            'listings' => $listings,
+        ]);
     }
 }

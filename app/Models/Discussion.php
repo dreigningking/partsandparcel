@@ -16,7 +16,10 @@ class Discussion extends Model
         'user_id',
         'type',
         'category_id',
+        'brand_id',
         'model_id',
+        'location_id',
+        'budget',
         'title',
         'body',
         'attachments',
@@ -45,9 +48,19 @@ class Discussion extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
     public function deviceModel(): BelongsTo
     {
         return $this->belongsTo(DeviceModel::class, 'model_id');
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
     }
 
     public function responses(): HasMany

@@ -29,7 +29,13 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950" id="category-heading">
-              @if($tab === 'parts')
+              @if($activeModel)
+                {{ $activeModel->name }}
+              @elseif($activeCategory)
+                {{ $activeCategory->name }}
+              @elseif($activeBrand)
+                {{ $activeBrand->name }} Products
+              @elseif($tab === 'parts')
                 Parts &amp; Components Marketplace
               @elseif($tab === 'scrap')
                 Scrap &amp; Salvage Marketplace
@@ -39,7 +45,58 @@
                 Laptops &amp; Complete Devices Marketplace
               @endif
             </h1>
-            <p class="text-xs text-slate-500 mt-1">Browse working laptops, replacement components, scrap units for salvage, or community requests.</p>
+            <p class="text-xs text-slate-500 mt-1">Browse working devices, replacement components, scrap units for salvage, or community requests.</p>
+
+            @if($cat || $brand || $model || $q)
+              <!-- ACTIVE FILTERS PILLS BAR -->
+              <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <span class="text-slate-500 font-semibold">Active Filters:</span>
+                @if($activeCategory)
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-pp-50 text-pp-700 font-bold border border-pp-200">
+                    Category: {{ $activeCategory->name }}
+                    <button wire:click="clearFilter('cat')" class="hover:text-pp-900 font-extrabold ml-1 cursor-pointer">✕</button>
+                  </span>
+                @elseif($cat)
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-pp-50 text-pp-700 font-bold border border-pp-200">
+                    Category: {{ $cat }}
+                    <button wire:click="clearFilter('cat')" class="hover:text-pp-900 font-extrabold ml-1 cursor-pointer">✕</button>
+                  </span>
+                @endif
+
+                @if($activeBrand)
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 font-bold border border-purple-200">
+                    Brand: {{ $activeBrand->name }}
+                    <button wire:click="clearFilter('brand')" class="hover:text-purple-900 font-extrabold ml-1 cursor-pointer">✕</button>
+                  </span>
+                @elseif($brand)
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 font-bold border border-purple-200">
+                    Brand: {{ $brand }}
+                    <button wire:click="clearFilter('brand')" class="hover:text-purple-900 font-extrabold ml-1 cursor-pointer">✕</button>
+                  </span>
+                @endif
+
+                @if($activeModel)
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
+                    Model: {{ $activeModel->name }}
+                    <button wire:click="clearFilter('model')" class="hover:text-indigo-900 font-extrabold ml-1 cursor-pointer">✕</button>
+                  </span>
+                @elseif($model)
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
+                    Model: {{ $model }}
+                    <button wire:click="clearFilter('model')" class="hover:text-indigo-900 font-extrabold ml-1 cursor-pointer">✕</button>
+                  </span>
+                @endif
+
+                @if($q)
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 font-bold border border-amber-200">
+                    Search: "{{ $q }}"
+                    <button wire:click="clearFilter('q')" class="hover:text-amber-950 font-extrabold ml-1 cursor-pointer">✕</button>
+                  </span>
+                @endif
+
+                <button wire:click="clearAllFilters" class="text-xs text-rose-600 hover:underline font-bold ml-1 cursor-pointer">Clear All</button>
+              </div>
+            @endif
           </div>
 
           <div class="flex items-center gap-2 text-xs">

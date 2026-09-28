@@ -10,9 +10,12 @@ return new class extends Migration {
         Schema::create('discussions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('type',['item','service','delivery','advice'])->default('item');
+            $table->enum('type',['item','service','advice'])->default('item');
             $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('model_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('brand_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('model_id')->nullable()->constrained()->nullOnDelete();   
+            $table->foreignId('location_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('budget')->nullable();
             $table->string('title');
             $table->text('body');
             $table->text('attachments')->nullable();
@@ -20,6 +23,8 @@ return new class extends Migration {
             $table->timestamps();
             $table->index(['category_id', 'status']);
             $table->index(['model_id', 'status']);
+            $table->index(['brand_id', 'status']);
+            $table->index(['location_id', 'status']);
         });
 
         Schema::create('responses', function (Blueprint $table) {

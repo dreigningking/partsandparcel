@@ -216,6 +216,13 @@ function setThemeMode(mode, event) {
     applyThemeMode(mode);
 }
 
+function toggleThemeMode(event) {
+    if (event) event.stopPropagation();
+    const isDark = document.documentElement.classList.contains('dark');
+    const newMode = isDark ? 'light' : 'dark';
+    setThemeMode(newMode, event);
+}
+
 // Initial theme apply
 (function initTheme() {
     const saved = localStorage.getItem('pp_theme_mode') || 'light';

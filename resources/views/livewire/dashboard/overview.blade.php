@@ -8,7 +8,7 @@
             <p class="mt-3 text-sm text-pp-100 leading-6">Buy devices and parts, make offers, follow purchases
                 — or switch to selling and manage devices, listings, offers and payouts.</p>
             <div class="mt-6 flex flex-wrap gap-3"><button
-                    class="px-4 py-2.5 rounded-xl bg-white text-pp-800 text-sm font-bold">Browse
+                    class="px-4 py-2.5 rounded-xl bg-white text-pp-800 dark:text-white text-sm font-bold">Browse
                     Marketplace</button><button onclick="openSection('seller')"
                     class="px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-bold">Go
                     to Selling</button></div>

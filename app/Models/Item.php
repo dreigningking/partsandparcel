@@ -15,9 +15,14 @@ class Item extends Model
 
     protected $fillable = [
         'user_id',
+        'parent_id',
+        'location_id',
         'model_id',
-        'serial_number',
+        'item_type',
+        'name',
         'condition_status',
+        'condition_notes',
+        'description',
         'status',
         'acquired_at',
     ];
@@ -34,19 +39,49 @@ class Item extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
+
     public function deviceModel(): BelongsTo
     {
         return $this->belongsTo(DeviceModel::class, 'model_id');
     }
 
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Item::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(Item::class, 'parent_id');
+    }
+
     public function components(): HasMany
     {
-        return $this->hasMany(Component::class);
+        return $this->children();
     }
 
     public function listing(): MorphOne
     {
         return $this->morphOne(Listing::class, 'assetable');
+    }
+
+    public function scopeWhole($query)
+    {
+        return $query->where('item_type', 'whole');
+    }
+
+    public function scopeParts($query)
+    {
+        return $query->where('item_type', 'part');
+    }
+
+    public function scopeScrap($query)
+    {
+        return $query->where('item_type', 'scrap');
     }
 
     public function mediaDimensionRequirements(): array
