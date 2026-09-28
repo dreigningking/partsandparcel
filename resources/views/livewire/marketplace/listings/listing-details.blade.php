@@ -6,7 +6,7 @@
 @endpush
 
 @php
-  $item = $listing->assetable;
+  $item = $listing->item ?? $listing->assetable;
   $model = $item?->deviceModel;
   $brand = $model?->brand;
   $category = $model?->category;

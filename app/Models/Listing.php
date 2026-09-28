@@ -31,6 +31,11 @@ class Listing extends Model
         'description',
     ];
 
+    public function setAssetableIdAttribute($value): void
+    {
+        $this->attributes['item_id'] = $value;
+    }
+
     protected function casts(): array
     {
         return [
@@ -89,11 +94,6 @@ class Listing extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class, 'item_id');
-    }
-
-    public function assetable(): BelongsTo
-    {
-        return $this->item();
     }
 
     public function location(): BelongsTo

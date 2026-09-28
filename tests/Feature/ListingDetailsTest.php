@@ -90,8 +90,7 @@ class ListingDetailsTest extends TestCase
 
         $listing = Listing::create([
             'user_id' => $this->seller->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $item->id,
+            'item_id' => $item->id,
             'location_id' => $this->location->id,
             'price' => 250000,
             'quantity' => 2,
@@ -151,8 +150,7 @@ class ListingDetailsTest extends TestCase
 
         $listing = Listing::create([
             'user_id' => $this->seller->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $scrapItem->id,
+            'item_id' => $scrapItem->id,
             'location_id' => $this->location->id,
             'price' => 120000,
             'quantity' => 1,
@@ -181,8 +179,7 @@ class ListingDetailsTest extends TestCase
 
         $listing = Listing::create([
             'user_id' => $this->seller->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $item->id,
+            'item_id' => $item->id,
             'location_id' => $this->location->id,
             'price' => 30000,
             'quantity' => 10,
@@ -242,8 +239,7 @@ class ListingDetailsTest extends TestCase
 
         $listingNegotiable = Listing::create([
             'user_id' => $this->seller->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $item->id,
+            'item_id' => $item->id,
             'location_id' => $this->location->id,
             'price' => 200000,
             'quantity' => 1,
@@ -256,8 +252,7 @@ class ListingDetailsTest extends TestCase
 
         $listingFixed = Listing::create([
             'user_id' => $this->seller->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $item->id,
+            'item_id' => $item->id,
             'location_id' => $this->location->id,
             'price' => 200000,
             'quantity' => 1,
@@ -283,8 +278,7 @@ class ListingDetailsTest extends TestCase
 
         $listingWithShipping = Listing::create([
             'user_id' => $this->seller->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $item->id,
+            'item_id' => $item->id,
             'location_id' => $this->location->id,
             'price' => 200000,
             'quantity' => 1,
@@ -298,8 +292,7 @@ class ListingDetailsTest extends TestCase
 
         $listingPickupOnly = Listing::create([
             'user_id' => $this->seller->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $item->id,
+            'item_id' => $item->id,
             'location_id' => $this->location->id,
             'price' => 200000,
             'quantity' => 1,
@@ -327,8 +320,7 @@ class ListingDetailsTest extends TestCase
         // All false
         $listingLocked = Listing::create([
             'user_id' => $this->seller->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $item->id,
+            'item_id' => $item->id,
             'location_id' => $this->location->id,
             'price' => 200000,
             'quantity' => 1,
@@ -344,8 +336,7 @@ class ListingDetailsTest extends TestCase
         // At least one true (e.g. is_negotiable = true)
         $listingNegotiable = Listing::create([
             'user_id' => $this->seller->id,
-            'assetable_type' => Item::class,
-            'assetable_id' => $item->id,
+            'item_id' => $item->id,
             'location_id' => $this->location->id,
             'price' => 200000,
             'quantity' => 1,

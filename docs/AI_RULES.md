@@ -22,6 +22,6 @@
 21. Before modifying a relationship, trace all affected workflows.
 22. For every feature identify: domain, models, relationships, records created, records updated, lifecycle, visibility and completion/cancellation behavior.
 23. Avoid speculative abstractions and unrelated scope creep.
-24. Do not expose `assetable`, `polymorphic`, `inventory item` or similar implementation terms in customer-facing UI.
+
 25. Prefer explicit, understandable Laravel migrations/models over clever abstractions.
 26. Check foreign keys, nullability, delete behavior, indexes, uniqueness, state transitions, authorization and race conditions before finalizing database changes.

@@ -309,7 +309,7 @@ number 4 is confusing.
 can we instead use category->brand->model->item(Device: 16gb ram Laptop for sale | Part: Laptop battery for sale)->component (if device, then components are screen, motherboard)
 items (id, user_id, model_id, serial_number_condition_status, acquired_at, created & updated_at.). 
 components (item_id, name, condition_status)
-Then listing table has->assetable_id (item_id or component_id), assetable_type (item or component), listing_type (item_only | component_only | item_with_components) ,quantity, reserved_quantity, sold_quantity, price, status
+Then listing table has item_id listing_type (item_only | component_only | item_with_components) ,quantity, reserved_quantity, sold_quantity, price, status
 
 So a user could list a whole device (whether new/used or damaged for parts) or list the individual components. 
 I'm not sure we need assets, component_types, model_components, inventory_items. It looks like we are just repeating the same things.

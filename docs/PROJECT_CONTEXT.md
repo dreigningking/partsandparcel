@@ -55,8 +55,8 @@ graph TD
     Model --> Item["Item (Physical Asset held by User)"]
     Item --> Component["Component (Physical sub-part e.g. Motherboard, Battery)"]
     
-    Item -.->|Polymorphic assetable| Listing["Listing (What buyers browse & purchase)"]
-    Component -.->|Polymorphic assetable| Listing
+    Item -Listing["Listing (What buyers browse & purchase)"]
+  
 ```
 
 ### Models & Definitions:
@@ -66,13 +66,11 @@ graph TD
 - **`Item`**: A specific physical asset in the possession of a user. It records physical condition, serial number, condition notes, and ownership.
 - **`Component`**: A physical constituent of an `Item` (e.g., screen, engine block, logic board, compressor).
 - **`Listing`**: The commercial presentation of an asset on the marketplace.
-  - Linked via polymorphic relationship:
-    - `assetable_type`: `App\Models\Item` or `App\Models\Component`.
-    - `assetable_id`: ID of the item or component.
+  - Linked to item via item_id
   - Carries pricing, currency, stock quantity, condition (`new`, `used`, `refurbished`, `for_parts`), warranty period, and location.
 
 > [!CAUTION]
-> **Prohibited Abstractions**: Never create redundant tables like `inventory_items`, `model_components`, or `asset_types`. Never expose technical terms like `assetable` or `polymorphic` in the user interface.
+> **Prohibited Abstractions**: Never create redundant tables like `inventory_items`, `model_components`, or `asset_types`. 
 
 ---
 

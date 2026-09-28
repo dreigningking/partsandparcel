@@ -16302,7 +16302,7 @@ number 4 is confusing.
 can we instead use category->brand->model->item(Device: 16gb ram Laptop for sale | Part: Laptop battery for sale)->component (if device, then components are screen, motherboard)
 items (id, user_id, model_id, serial_number_condition_status, acquired_at, created & updated_at.). 
 components (item_id, name, condition_status)
-Then listing table has->assetable_id (item_id or component_id), assetable_type (item or component), listing_type (item_only | component_only | item_with_components) ,quantity, reserved_quantity, sold_quantity, price, status
+Then listing table item_id ,listing_type (item_only | component_only | item_with_components) ,quantity, reserved_quantity, sold_quantity, price, status
 
 So a user could list a whole device (whether new/used or damaged for parts) or list the individual components. 
 I'm not sure we need assets, component_types, model_components, inventory_items. It looks like we are just repeating the same things.
@@ -16636,8 +16636,7 @@ You proposed:
 listings
 
 id
-assetable_id
-assetable_type
+item_id
 listing_type
 quantity
 reserved_quantity
@@ -16651,7 +16650,6 @@ I agree with the fundamental idea.
 I'd simply rename:
 
 ```text
-assetable
 ```
 
 to:
@@ -24195,7 +24193,6 @@ It includes:
 - all 37 new tables
 - foreign keys
 - indexes
-- polymorphic `assetable`
 - carts/cart items
 - direct wishlist design
 - product and service offers
@@ -31774,37 +31771,68 @@ This is consistent with the dashboard philosophy we've already established: **th
 ### Message 114: **USER**
 
 do you remember from our database design that our offers have offer items like this:
-Schema::create('offers', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('discussion_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('offer_type')->default('product'); // product|service
-            $table->decimal('amount', 15, 2)->default(0);
-            $table->enum('delivery_method', ['buyer_responsible','seller_responsible','platform_responsible'])->nullable();
-            $table->decimal('delivery_fee', 15, 2)->nullable();
-            $table->text('delivery_terms')->nullable();
-            $table->text('terms')->nullable();
-            $table->string('status')->default('pending');
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamps();
-            $table->index(['discussion_id', 'status']);
-            $table->index(['buyer_id', 'seller_id', 'status']);
-        });
-
-        Schema::create('offer_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('offer_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('listing_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('description')->nullable();
-            $table->unsignedInteger('quantity')->default(1);
-            $table->decimal('unit_price', 15, 2)->default(0);
-            $table->unsignedInteger('warranty_period_days')->nullable();
-            $table->text('warranty_terms')->nullable();
-            $table->timestamp('warranty_starts_at')->nullable();
-            $table->timestamp('warranty_ends_at')->nullable();
-            $table->timestamps();
-            $table->index(['offer_id', 'listing_id']);
+Schema::create('offers', function (Blueprint $table) {
+
+            $table->id();
+
+            $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
+
+            $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete();
+
+            $table->foreignId('discussion_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->string('offer_type')->default('product'); // product|service
+
+            $table->decimal('amount', 15, 2)->default(0);
+
+            $table->enum('delivery_method', ['buyer_responsible','seller_responsible','platform_responsible'])->nullable();
+
+            $table->decimal('delivery_fee', 15, 2)->nullable();
+
+            $table->text('delivery_terms')->nullable();
+
+            $table->text('terms')->nullable();
+
+            $table->string('status')->default('pending');
+
+            $table->timestamp('expires_at')->nullable();
+
+            $table->timestamps();
+
+            $table->index(['discussion_id', 'status']);
+
+            $table->index(['buyer_id', 'seller_id', 'status']);
+
+        });
+
+
+
+        Schema::create('offer_items', function (Blueprint $table) {
+
+            $table->id();
+
+            $table->foreignId('offer_id')->constrained()->cascadeOnDelete();
+
+            $table->foreignId('listing_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->string('description')->nullable();
+
+            $table->unsignedInteger('quantity')->default(1);
+
+            $table->decimal('unit_price', 15, 2)->default(0);
+
+            $table->unsignedInteger('warranty_period_days')->nullable();
+
+            $table->text('warranty_terms')->nullable();
+
+            $table->timestamp('warranty_starts_at')->nullable();
+
+            $table->timestamp('warranty_ends_at')->nullable();
+
+            $table->timestamps();
+
+            $table->index(['offer_id', 'listing_id']);
+
         });
 
 Our UI is not following this logic. The design we have done assumes that the offer is one item. 
@@ -34615,103 +34643,199 @@ I would **make these schema changes before we generate the final migrations**. T
 
 The delivery and the repair themselves are not database records in tables, so they cannot fit into the itemable in offer_items. I suggest we leave the listing_id there with nullable attribute. Concerning the discount, let's keep it at the offer level only, since on the invoice, its also at the invoice level only.. I also thinking sender_id and recipient_id is sufficient. We don't need buyer_id and seller_id on the offer. offer_type may not be necessary because the offer_items will let us know. we may need to make description on offer_items required since listing_id is optional. 
 With this now, let me give you these 6 schema, and then you give me the updated versions:
-Schema::create('discussions', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('type',['item','service','delivery','advice'])->default('item');
-            $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('model_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('title');
-            $table->text('body');
-            $table->string('status')->default('open');
-            $table->timestamps();
-            $table->index(['category_id', 'status']);
-            $table->index(['model_id', 'status']);
-        });
-
-        Schema::create('responses', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('discussion_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->text('body')->nullable();
-            $table->string('status')->default('visible');
-            $table->timestamps();
-            $table->index(['discussion_id', 'created_at']);
-            $table->index(['user_id', 'created_at']);
-        });
-
-
-        Schema::create('offers', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('recipient_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('cart_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('response_id')->nullable()->constrained()->nullOnDelete();
-            $table->enum('offer_type',['product','service','mixed'])->default('product'); // product|service
-            $table->decimal('amount', 15, 2)->default(0);
-            $table->enum('delivery_method', ['buyer_responsible','seller_responsible','platform_responsible'])->nullable();
-            $table->decimal('delivery_fee', 15, 2)->nullable();
-            $table->text('delivery_terms')->nullable();
-            $table->text('terms')->nullable();
-            $table->string('status')->default('pending');
-            $table->timestamp('expires_at')->nullable();
-            $table->timestamps();
-            $table->index(['discussion_id', 'status']);
-            $table->index(['sender_id', 'recipient_id', 'status']);
-        });
-
-        Schema::create('offer_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('offer_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('listing_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('description')->nullable();
-            $table->unsignedInteger('quantity')->default(1);
-            $table->decimal('unit_price', 15, 2)->default(0);
-            $table->unsignedInteger('warranty_period_days')->nullable();
-            $table->text('warranty_terms')->nullable();
-            $table->timestamp('warranty_starts_at')->nullable();
-            $table->timestamp('warranty_ends_at')->nullable();
-            $table->timestamps();
-            $table->index(['offer_id', 'listing_id']);
+Schema::create('discussions', function (Blueprint $table) {
+
+            $table->id();
+
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+
+            $table->enum('type',['item','service','delivery','advice'])->default('item');
+
+            $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->foreignId('model_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->string('title');
+
+            $table->text('body');
+
+            $table->string('status')->default('open');
+
+            $table->timestamps();
+
+            $table->index(['category_id', 'status']);
+
+            $table->index(['model_id', 'status']);
+
         });
-Schema::create('invoice_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
-            $table->morphs('itemable'); //listing, shipment
-            $table->string('description'); //listing name, shipping description, service description, platform fee description, others
-            $table->unsignedInteger('quantity')->default(1);
-            $table->decimal('unit_price', 15, 2);
-            $table->decimal('amount', 15, 2);
-            $table->unsignedInteger('warranty_period_days')->nullable();
-            $table->text('warranty_terms')->nullable();
-            $table->timestamp('warranty_starts_at')->nullable();
-            $table->timestamp('warranty_ends_at')->nullable();
-            $table->timestamps();
-        });
-
-        Schema::create('invoices', function (Blueprint $table) {
-            $table->id();
-            $table->string('invoice_number')->unique();
-            $table->foreignId('buyer_id')->constrained('users');
-            $table->foreignId('seller_id')->constrained('users');
-            $table->foreignId('cart_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('offer_id')->nullable()->constrained()->nullOnDelete();
-            $table->enum('delivery_method', ['buyer_responsible','seller_responsible','platform_responsible',])->nullable();
-            $table->decimal('subtotal', 15, 2);
-            $table->decimal('discount', 15, 2)->default(0);
-            $table->decimal('tax', 15, 2)->default(0);
-            $table->decimal('total', 15, 2);
-            $table->enum('payment_method', ['direct','platform',])->default('platform');
-            $table->decimal('commission', 15, 2)->default(0);
-            $table->enum('status', ['draft','issued','accepted','paid','partially_paid','cancelled','expired'])->default('draft');
-            $table->timestamp('issued_at')->nullable();
-            $table->timestamp('accepted_at')->nullable();
-            $table->timestamp('paid_at')->nullable();
-            $table->timestamp('completed_at')->nullable();
-            $table->timestamp('due_at')->nullable();
-            $table->timestamps();
-            $table->index(['buyer_id', 'status']);
-            $table->index(['seller_id', 'status']);
+
+
+
+        Schema::create('responses', function (Blueprint $table) {
+
+            $table->id();
+
+            $table->foreignId('discussion_id')->constrained()->cascadeOnDelete();
+
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+
+            $table->text('body')->nullable();
+
+            $table->string('status')->default('visible');
+
+            $table->timestamps();
+
+            $table->index(['discussion_id', 'created_at']);
+
+            $table->index(['user_id', 'created_at']);
+
+        });
+
+
+
+
+
+        Schema::create('offers', function (Blueprint $table) {
+
+            $table->id();
+
+            $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
+
+            $table->foreignId('recipient_id')->constrained('users')->cascadeOnDelete();
+
+            $table->foreignId('cart_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->foreignId('response_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->enum('offer_type',['product','service','mixed'])->default('product'); // product|service
+
+            $table->decimal('amount', 15, 2)->default(0);
+
+            $table->enum('delivery_method', ['buyer_responsible','seller_responsible','platform_responsible'])->nullable();
+
+            $table->decimal('delivery_fee', 15, 2)->nullable();
+
+            $table->text('delivery_terms')->nullable();
+
+            $table->text('terms')->nullable();
+
+            $table->string('status')->default('pending');
+
+            $table->timestamp('expires_at')->nullable();
+
+            $table->timestamps();
+
+            $table->index(['discussion_id', 'status']);
+
+            $table->index(['sender_id', 'recipient_id', 'status']);
+
+        });
+
+
+
+        Schema::create('offer_items', function (Blueprint $table) {
+
+            $table->id();
+
+            $table->foreignId('offer_id')->constrained()->cascadeOnDelete();
+
+            $table->foreignId('listing_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->string('description')->nullable();
+
+            $table->unsignedInteger('quantity')->default(1);
+
+            $table->decimal('unit_price', 15, 2)->default(0);
+
+            $table->unsignedInteger('warranty_period_days')->nullable();
+
+            $table->text('warranty_terms')->nullable();
+
+            $table->timestamp('warranty_starts_at')->nullable();
+
+            $table->timestamp('warranty_ends_at')->nullable();
+
+            $table->timestamps();
+
+            $table->index(['offer_id', 'listing_id']);
+
+        });
+Schema::create('invoice_items', function (Blueprint $table) {
+
+            $table->id();
+
+            $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
+
+            $table->morphs('itemable'); //listing, shipment
+
+            $table->string('description'); //listing name, shipping description, service description, platform fee description, others
+
+            $table->unsignedInteger('quantity')->default(1);
+
+            $table->decimal('unit_price', 15, 2);
+
+            $table->decimal('amount', 15, 2);
+
+            $table->unsignedInteger('warranty_period_days')->nullable();
+
+            $table->text('warranty_terms')->nullable();
+
+            $table->timestamp('warranty_starts_at')->nullable();
+
+            $table->timestamp('warranty_ends_at')->nullable();
+
+            $table->timestamps();
+
+        });
+
+
+
+        Schema::create('invoices', function (Blueprint $table) {
+
+            $table->id();
+
+            $table->string('invoice_number')->unique();
+
+            $table->foreignId('buyer_id')->constrained('users');
+
+            $table->foreignId('seller_id')->constrained('users');
+
+            $table->foreignId('cart_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->foreignId('offer_id')->nullable()->constrained()->nullOnDelete();
+
+            $table->enum('delivery_method', ['buyer_responsible','seller_responsible','platform_responsible',])->nullable();
+
+            $table->decimal('subtotal', 15, 2);
+
+            $table->decimal('discount', 15, 2)->default(0);
+
+            $table->decimal('tax', 15, 2)->default(0);
+
+            $table->decimal('total', 15, 2);
+
+            $table->enum('payment_method', ['direct','platform',])->default('platform');
+
+            $table->decimal('commission', 15, 2)->default(0);
+
+            $table->enum('status', ['draft','issued','accepted','paid','partially_paid','cancelled','expired'])->default('draft');
+
+            $table->timestamp('issued_at')->nullable();
+
+            $table->timestamp('accepted_at')->nullable();
+
+            $table->timestamp('paid_at')->nullable();
+
+            $table->timestamp('completed_at')->nullable();
+
+            $table->timestamp('due_at')->nullable();
+
+            $table->timestamps();
+
+            $table->index(['buyer_id', 'status']);
+
+            $table->index(['seller_id', 'status']);
+
         });
 
 ---
@@ -35303,51 +35427,96 @@ One small thing remains to decide later: whether `delivery_terms` belongs on the
 ### Message 123: **USER**
 
 I removed delivery_terms. I don't know if i should remove delivery_method but you can advise after seeing what I did on shipments: 
-Schema::create('shipments', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('consignor_id')->constrained('users')->nullOnDelete();
-            $table->foreignId('consignee_id')->constrained('users')->nullOnDelete();
-            $table->string('provider_name')->nullable();
-            $table->string('tracking_number')->nullable();
-            $table->string('status')->default('pending');
-            $table->foreignId('sender_location_id')->nullable()->constrained('locations')->nullOnDelete();
-            $table->string('sender_contact_name')->nullable();
-            $table->string('sender_phone')->nullable();
-            $table->string('sender_address_line_1');
-            $table->string('sender_address_line_2')->nullable();
-            $table->string('sender_city');
-            $table->string('sender_state')->nullable();
-            $table->string('sender_country')->default('Nigeria');
-            $table->string('sender_postal_code')->nullable();
-            $table->decimal('sender_latitude', 10, 7)->nullable();
-            $table->decimal('sender_longitude', 10, 7)->nullable();
-            $table->foreignId('recipient_location_id')->nullable()->constrained('locations')->nullOnDelete();
-            $table->string('recipient_contact_name')->nullable();
-            $table->string('recipient_phone')->nullable();
-            $table->string('recipient_address_line_1');
-            $table->string('recipient_address_line_2')->nullable();
-            $table->string('recipient_city');
-            $table->string('recipient_state')->nullable();
-            $table->string('recipient_country')->default('Nigeria');
-            $table->string('recipient_postal_code')->nullable();
-            $table->decimal('recipient_latitude', 10, 7)->nullable();
-            $table->decimal('recipient_longitude', 10, 7)->nullable();
-            $table->decimal('fee', 15, 2)->default(0);
-            $table->timestamp('dispatched_at')->nullable();
-            $table->timestamp('delivered_at')->nullable();
-            $table->text('notes')->nullable();
-            $table->timestamps();
-            $table->index('tracking_number');
-        });
-
-        Schema::create('shipment_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('shipment_id')->constrained()->cascadeOnDelete();
-            $table->nullableMorphs('itemable');
-            $table->string('description'); //listing name or item description 
-            $table->unsignedInteger('quantity')->default(1);
-            $table->string('instruction')->nullable();
-            $table->timestamps();
+Schema::create('shipments', function (Blueprint $table) {
+
+            $table->id();
+
+            $table->foreignId('consignor_id')->constrained('users')->nullOnDelete();
+
+            $table->foreignId('consignee_id')->constrained('users')->nullOnDelete();
+
+            $table->string('provider_name')->nullable();
+
+            $table->string('tracking_number')->nullable();
+
+            $table->string('status')->default('pending');
+
+            $table->foreignId('sender_location_id')->nullable()->constrained('locations')->nullOnDelete();
+
+            $table->string('sender_contact_name')->nullable();
+
+            $table->string('sender_phone')->nullable();
+
+            $table->string('sender_address_line_1');
+
+            $table->string('sender_address_line_2')->nullable();
+
+            $table->string('sender_city');
+
+            $table->string('sender_state')->nullable();
+
+            $table->string('sender_country')->default('Nigeria');
+
+            $table->string('sender_postal_code')->nullable();
+
+            $table->decimal('sender_latitude', 10, 7)->nullable();
+
+            $table->decimal('sender_longitude', 10, 7)->nullable();
+
+            $table->foreignId('recipient_location_id')->nullable()->constrained('locations')->nullOnDelete();
+
+            $table->string('recipient_contact_name')->nullable();
+
+            $table->string('recipient_phone')->nullable();
+
+            $table->string('recipient_address_line_1');
+
+            $table->string('recipient_address_line_2')->nullable();
+
+            $table->string('recipient_city');
+
+            $table->string('recipient_state')->nullable();
+
+            $table->string('recipient_country')->default('Nigeria');
+
+            $table->string('recipient_postal_code')->nullable();
+
+            $table->decimal('recipient_latitude', 10, 7)->nullable();
+
+            $table->decimal('recipient_longitude', 10, 7)->nullable();
+
+            $table->decimal('fee', 15, 2)->default(0);
+
+            $table->timestamp('dispatched_at')->nullable();
+
+            $table->timestamp('delivered_at')->nullable();
+
+            $table->text('notes')->nullable();
+
+            $table->timestamps();
+
+            $table->index('tracking_number');
+
+        });
+
+
+
+        Schema::create('shipment_items', function (Blueprint $table) {
+
+            $table->id();
+
+            $table->foreignId('shipment_id')->constrained()->cascadeOnDelete();
+
+            $table->nullableMorphs('itemable');
+
+            $table->string('description'); //listing name or item description 
+
+            $table->unsignedInteger('quantity')->default(1);
+
+            $table->string('instruction')->nullable();
+
+            $table->timestamps();
+
         });
 I am thinking that when delivery is added to an offer, we might as well maintain the shipment record regardless of whether the service is being offered by the platform or by users on the platform. This is useful to maintain record of locations and actual items that were shipped. 
 So, since we have consignor_id (the user handling the shipment or later the integrated shipper) and consignee_id (the owner of goods), do we still need delivery method on the invoice table since we will have shipment_id on the invoice_items_itemable. And do we still need delivery_method on the offers ?
@@ -38477,74 +38646,133 @@ And more importantly, it preserves the prototype you already liked instead of th
 ### Message 133: **USER**
 
 I first of all did this process to figure out how data is moving:
-1. As user adds items to cart, we create records on cart table & cart_items table. 
-a. To pay without shipment, we create records on invoice table & invoice_items table, and lastly payments
-b. To negotiate first, offer & offer_items are first created. Later invoice table & invoice_items records, and lastly payments
-c. To add shipment by buyer, request is created, then responses with offers, then the shipment, then invoice and invoice_items  and lastly payments
-d. To add shipment by seller, no request or response is created. offer is created if it doesn't exist, offer_item with shipment is added, then shipment is created, eventually invoice & invoice_items are created and lasty payment.
-
-2. User requests for something in the community (item, service, delivery)
-a. request is created, then responses + offers are received, counter offers are made. When offer is accepted, shipment is created if required, then invoice & invoice_items and lastly payments.
-============================
-A cart can have many cart_item
-A cart can have many offers
-A cart can have many invoices
-A cart can have many shipments through invoices
--------------------------
-A request can have many responses
-A response can have many offers
--------------------------
-An offer can have many offer_items
-An offer can have many invoices
-------------------------
-An invoice can have invoice_items
-invoices are created either when there's no need for offers or when an offer has been accepted
-An invoice_item relates to listings, shipment, or a service
--------------------------------
+1. As user adds items to cart, we create records on cart table & cart_items table. 
+
+a. To pay without shipment, we create records on invoice table & invoice_items table, and lastly payments
+
+b. To negotiate first, offer & offer_items are first created. Later invoice table & invoice_items records, and lastly payments
+
+c. To add shipment by buyer, request is created, then responses with offers, then the shipment, then invoice and invoice_items  and lastly payments
+
+d. To add shipment by seller, no request or response is created. offer is created if it doesn't exist, offer_item with shipment is added, then shipment is created, eventually invoice & invoice_items are created and lasty payment.
+
+
+
+2. User requests for something in the community (item, service, delivery)
+
+a. request is created, then responses + offers are received, counter offers are made. When offer is accepted, shipment is created if required, then invoice & invoice_items and lastly payments.
+
+============================
+
+A cart can have many cart_item
+
+A cart can have many offers
+
+A cart can have many invoices
+
+A cart can have many shipments through invoices
+
+-------------------------
+
+A request can have many responses
+
+A response can have many offers
+
+-------------------------
+
+An offer can have many offer_items
+
+An offer can have many invoices
+
+------------------------
+
+An invoice can have invoice_items
+
+invoices are created either when there's no need for offers or when an offer has been accepted
+
+An invoice_item relates to listings, shipment, or a service
+
+-------------------------------
+
 
 Then I created two ui options
 
 1. vertical + horizontal
 
-Vertical: Overview | Subscription | Buying | Selling | Messages | Notifications | Shipments | Profile | Help | Logout.&#x20;
-
-Buying Horizontal Menus: [Dashboard | Favorites | Shopping | Requests | Invoices | Addresses ] -
-Favourites shows wishlists. Clicking on one takes me to the listing page
-Shopping {shows carts list. Clicking on one cart -> cart (with items) + view offers button + view invoices + view shipments}
-Requests {shows my requests in the community. Clicking on one request -> request details (with responses) + view offers button + view invoices + view shipments}
-Invoices {show list of invoices i have paid or pending my payment, each with their status. Clicking on one invoice -> invoice details with items + link to listing | shipment when itemable is not null}
-Addresses {show list of my saved addresses. Clicking on one opens modal to edit. I can add new via modal}
-
-Selling Horizontal Menus: Dashboard | Items | Listings | Orders | Responses | Invoices | Locations
-Items {shows my physical assets list. Clicking on one opens an item page where i can manage item, manage item listings}
-Listing {shows my listings. I can filter by location & other things. Clicking on one shows manage listing}
-Orders {shows sales I have made on listings. Clicking on one order shows the order details, with listings + view offers button + view invoices + view shipments}
-Responses {shows my responses to requests in the community. Click on one shows response details + view offers button + view invoices + view shipments }
-Invoices {show list of invoices i have received payments for or waiting for payments, each with their status. Clicking on one invoice -> invoice details with items + link to listing | shipment when itemable is not null}
+Vertical: Overview | Subscription | Buying | Selling | Messages | Notifications | Shipments | Profile | Help | Logout.&#x20;
+
+
+
+Buying Horizontal Menus: [Dashboard | Favorites | Shopping | Requests | Invoices | Addresses ] -
+
+Favourites shows wishlists. Clicking on one takes me to the listing page
+
+Shopping {shows carts list. Clicking on one cart -> cart (with items) + view offers button + view invoices + view shipments}
+
+Requests {shows my requests in the community. Clicking on one request -> request details (with responses) + view offers button + view invoices + view shipments}
+
+Invoices {show list of invoices i have paid or pending my payment, each with their status. Clicking on one invoice -> invoice details with items + link to listing | shipment when itemable is not null}
+
+Addresses {show list of my saved addresses. Clicking on one opens modal to edit. I can add new via modal}
+
+
+
+Selling Horizontal Menus: Dashboard | Items | Listings | Orders | Responses | Invoices | Locations
+
+Items {shows my physical assets list. Clicking on one opens an item page where i can manage item, manage item listings}
+
+Listing {shows my listings. I can filter by location & other things. Clicking on one shows manage listing}
+
+Orders {shows sales I have made on listings. Clicking on one order shows the order details, with listings + view offers button + view invoices + view shipments}
+
+Responses {shows my responses to requests in the community. Click on one shows response details + view offers button + view invoices + view shipments }
+
+Invoices {show list of invoices i have received payments for or waiting for payments, each with their status. Clicking on one invoice -> invoice details with items + link to listing | shipment when itemable is not null}
+
 Locations {show list of my saved locations. Clicking on one opens modal to edit. I can add new via modal}
 
 2. Horizontal
 
-I finally realized why you wanted us to have parent\_id on the offers earlier. If we do that, we can simply have vertical menus without needing horizontal like this:
-
-\-------------General menus
-Overview
-Subscription
-Messages
-Notifications
-Offers: parent offer shows the origin of the offer, then show the rest of the offers underneath it and the one that was accepted. Accepted offer is connected to cart, invoice,&#x20;
-Invoices: shows the list of items (listings, shipment, service) and other details. invoice->buyer\_id pays the invoice
-Shipments: buyer\_id is the owner, seller\_id is the delivery person, provider\_name is the name of the delivery person
-Locations: all addresses with or without listings (i.e for shipment or for listings)
-Profile
-Help
-Logout
-\-------------buyer accordion
-Favorites
-My Requests
-\-------------seller accordion
-Items
-Listings
+I finally realized why you wanted us to have parent\_id on the offers earlier. If we do that, we can simply have vertical menus without needing horizontal like this:
+
+
+
+\-------------General menus
+
+Overview
+
+Subscription
+
+Messages
+
+Notifications
+
+Offers: parent offer shows the origin of the offer, then show the rest of the offers underneath it and the one that was accepted. Accepted offer is connected to cart, invoice,&#x20;
+
+Invoices: shows the list of items (listings, shipment, service) and other details. invoice->buyer\_id pays the invoice
+
+Shipments: buyer\_id is the owner, seller\_id is the delivery person, provider\_name is the name of the delivery person
+
+Locations: all addresses with or without listings (i.e for shipment or for listings)
+
+Profile
+
+Help
+
+Logout
+
+\-------------buyer accordion
+
+Favorites
+
+My Requests
+
+\-------------seller accordion
+
+Items
+
+Listings
+
 Responses
 \-------------
 
@@ -39334,13 +39562,19 @@ Shipments: Shows a list of all the shipments. A single shipment has buyer_id as 
 
 Locations: Shows all my addresses including the ones I used for listings and those for shipment. I can manage all from here
 
-Profile
-Help
-Logout
--------------buyer accordion
-Favorites
+Profile
+
+Help
+
+Logout
+
+-------------buyer accordion
+
+Favorites
+
 My Requests: I can still browse through my request -> responses -> single response -> offers 
--------------seller accordion
+-------------seller accordion
+
 Items - list and manage my physical assets 
 Listings - manage my listings 
 Responses -  I can easily find my responses -> single response -> offers 
@@ -40290,11 +40524,14 @@ Shipments: [domain/shipments, domain/shipments/{shipment\_slug}]
 Locations: [domain/locations] 
 Profile: [domain/profile] 
 Help: [domain/help, domain/help/article/{slug]  
-
-
+
+
+
+
 Favorites: [domain/favourites]  
 My Requests: [domain/requests, domain/requests/{request\_slug}]  
-
+
+
 Items: [domain/items] 
 Listings: [domain/items]  
 Responses: [domain/responses, domain/response/{response\_slug}]  

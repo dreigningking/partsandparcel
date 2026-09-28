@@ -27,17 +27,17 @@ class ListingDetails extends Component
     public function mount(Listing $listing)
     {
         $this->listing = $listing->load([
-            'assetable.deviceModel.category.parent',
-            'assetable.deviceModel.brand',
-            'assetable.children',
+            'item.deviceModel.category.parent',
+            'item.deviceModel.brand',
+            'item.children',
             'location',
             'seller.primaryLocation',
             'media',
-            'assetable.media',
+            'item.media',
             'reviews.user',
         ]);
 
-        $this->title = ($this->listing->assetable?->name ?? 'Listing Details') . ' — Parts & Parcel';
+        $this->title = (($this->listing->item?->name ?? $this->listing->item?->name) ?? 'Listing Details') . ' — Parts & Parcel';
 
         // 1. Sold Count: calculate from cart_items where cart has paid invoice, fallback to listing.sold_quantity
         $paidCount = CartItem::where('listing_id', $this->listing->id)
@@ -46,7 +46,8 @@ class ListingDetails extends Component
         $this->soldCount = (int) ($paidCount > 0 ? $paidCount : ($this->listing->sold_quantity ?? 0));
 
         // 2. All Media (Listing media + Item media)
-        $mediaColl = $this->listing->media->concat($this->listing->assetable?->media ?? collect())->unique('id')->values();
+        $itemMedia = $this->listing->item?->media ?? collect();
+        $mediaColl = $this->listing->media->concat($itemMedia)->unique('id')->values();
         $this->allMedia = $mediaColl->all();
 
         // 3. Wishlist State
@@ -57,9 +58,10 @@ class ListingDetails extends Component
         }
 
         // 4. Related Discussions (up to 6)
-        $catId = $this->listing->assetable?->deviceModel?->category_id;
-        $brandId = $this->listing->assetable?->deviceModel?->brand_id;
-        $modelId = $this->listing->assetable?->model_id;
+        $item = $this->listing->item;
+        $catId = $item?->deviceModel?->category_id;
+        $brandId = $item?->deviceModel?->brand_id;
+        $modelId = $item?->model_id;
 
         $this->relatedDiscussions = Discussion::with(['user', 'category', 'brand', 'deviceModel', 'responses'])
             ->withCount('responses')
@@ -81,19 +83,17 @@ class ListingDetails extends Component
             ->get();
 
         // 5. Similar Listings (up to 5)
-        $this->similarListings = Listing::with(['assetable.deviceModel.brand', 'location', 'media', 'assetable.media'])
+        $this->similarListings = Listing::with(['item.deviceModel.brand', 'location', 'media', 'item.media'])
             ->where('id', '!=', $this->listing->id)
             ->where('status', 'active')
             ->when($catId || $brandId, function ($q) use ($catId, $brandId) {
-                $q->whereHasMorph('assetable', [Item::class], function ($m) use ($catId, $brandId) {
-                    $m->whereHas('deviceModel', function ($dm) use ($catId, $brandId) {
-                        if ($catId) {
-                            $dm->where('category_id', $catId);
-                        }
-                        if ($brandId) {
-                            $dm->orWhere('brand_id', $brandId);
-                        }
-                    });
+                $q->whereHas('item.deviceModel', function ($dm) use ($catId, $brandId) {
+                    if ($catId) {
+                        $dm->where('category_id', $catId);
+                    }
+                    if ($brandId) {
+                        $dm->orWhere('brand_id', $brandId);
+                    }
                 });
             })
             ->latest()
