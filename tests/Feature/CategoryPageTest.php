@@ -164,7 +164,7 @@ class CategoryPageTest extends TestCase
 
         $this->assertNotEmpty($listings);
         foreach ($listings as $listing) {
-            $this->assertEquals('whole', $listing->assetable->item_type);
+            $this->assertEquals('whole', $listing->item->item_type);
         }
     }
 
@@ -175,7 +175,7 @@ class CategoryPageTest extends TestCase
 
         $this->assertNotEmpty($listings);
         foreach ($listings as $listing) {
-            $this->assertContains($listing->assetable->item_type, ['part', 'parts']);
+            $this->assertContains($listing->item->item_type, ['part', 'parts']);
         }
     }
 
@@ -186,7 +186,7 @@ class CategoryPageTest extends TestCase
 
         $this->assertNotEmpty($listings);
         foreach ($listings as $listing) {
-            $this->assertEquals('scrap', $listing->assetable->item_type);
+            $this->assertEquals('scrap', $listing->item->item_type);
         }
     }
 

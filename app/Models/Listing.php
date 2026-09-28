@@ -96,6 +96,16 @@ class Listing extends Model
         return $this->belongsTo(Item::class, 'item_id');
     }
 
+    public function assetable(): BelongsTo
+    {
+        return $this->belongsTo(Item::class, 'item_id');
+    }
+
+    public function getAssetableAttribute(): ?Item
+    {
+        return $this->item;
+    }
+
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);

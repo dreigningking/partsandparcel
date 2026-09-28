@@ -6,7 +6,7 @@
 @endpush
 
 @php
-  $item = $listing->item ?? $listing->assetable;
+  $item = $listing->item;
   $model = $item?->deviceModel;
   $brand = $model?->brand;
   $category = $model?->category;
@@ -595,7 +595,7 @@
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       @forelse($similarListings as $similar)
         @php
-          $simItem = $similar->assetable;
+          $simItem = $similar->item;
           $simType = $simItem?->item_type ?? 'whole';
         @endphp
         <a href="{{ route('listing-details', $similar) }}" class="border border-slate-200 rounded-xl overflow-hidden bg-white hover:shadow-card hover:-translate-y-0.5 transition block">
