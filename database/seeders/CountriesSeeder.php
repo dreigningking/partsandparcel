@@ -22,6 +22,7 @@ class CountriesSeeder extends Seeder
                 'timezone' => 'Africa/Lagos',
                 'is_default' => true,
                 'is_active' => true,
+                'payment_gateway' => json_encode(['paystack', 'flutterwave', 'opay']),
             ]
         );
 

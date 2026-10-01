@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Location;
 
 use App\Models\Country;
 use App\Models\State;
@@ -69,29 +69,14 @@ class GeographyService
                 continue;
             }
 
-            $stateSlug = Str::slug($stateName);
-
             State::query()->updateOrCreate(
-                ['country_id' => $country->id, 'slug' => $stateSlug],
+                ['country_id' => $country->id, 'name' => $stateName],
                 [
-                    'name'      => $stateName,
-                    'code'      => $stateData['iso2'] ?? strtoupper(substr($stateSlug, 0, 4)),
-                    'latitude'  => $stateData['latitude'] ?? null,
-                    'longitude' => $stateData['longitude'] ?? null,
-                    'timezone'  => null, // state-level timezone not in this API
+                    'code'      => $stateData['iso2'] ?? strtoupper(substr(Str::slug($stateName), 0, 4)),
                     'is_active' => true,
                 ]
             );
         }
     }
 
-    /**
-     * Fetch all cities for a country and save them, linking to the matching state.
-     * GET https://api.countrystatecity.in/v1/countries/{country_code}/cities
-     */
-    protected function fetchCities(Country $country): void
-    {
-        // Cities are now captured as freeform input on properties; we no longer persist city rows.
-        return;
-    }
 }

@@ -1,187 +1,157 @@
 BankAccount{
   in checkout page, buyers are presented with two payment options
-  1. escrow- payment happens via payment gateway and money is held by platform. invoice table should note payment_method = 'escrow'
+  1. escrow- payment happens via payment gateway and money is held by platform. invoice table should note payment_method = 'platform'
   2. direct- payment happens directly between buyer and seller (in this case, buyer will see seller's bank account). payment table should note payment_method = 'direct'
   we must therefore have a section in the profile page to update bank account details.
   if payment_method is direct, after invoice warranty period is over, ask seller whether the buyer paid so we can mark invoice paid. Inform seller that this is good so others see the count of sales on listing or jobs done on service
   after seller responds, ask buyer to review listing or service. 
 }
 
-Brand{
-  used in items.
-  listings can also be filtered by brands but the filtering
-  actually happens on the item level
+Brand, Category, Device Models{
+  I want us to repurpose the admin-category page to manage Brands, Categories, and Device Models. 
+  Creat a section first for brands. we list all brands and have a model to add new brand. each brand can be updated too using modal.
+  Then we have another section for categories. we list all categories, each can be updated using modal. 
+  Then we have another section for models. we list all models. each model has a brand and a category. we will modal to add new model and to update existing model 
 }
 
-Cart{
-  items in my cart are separated by seller_id. on cart page
-  users see cart grouped by seller_id
+Country, State{
+  update the admin-countries livewire page to add country. All the country fields we have in the model must have available in the view and the livewire class. Other field not in our country table should be removed. Upon creation of a country, the the GeographyService will run to get states.
 }
-
-CartItem{
-  each cart contains list of listings (not items)
+Setting{
+  Role
 }
-
-
-Category{
-  all the categories required have been defined already defined in seeder
+Promotion{
+  PromotionPlan
 }
+=====================================
 
 
-Conversation
-
-
-ConversationParticipant
-
-
-Country
-
-
-DeviceModel
-
-
-DeviceToken
-
-
-Discussion
-
-
-Dispute
-
-
-DisputeItem
-
-
-Invoice
-
-
-InvoiceItem
-
-
-Issue
-
-
-IssueItem
-
-
-Item
-
-
-Listing
-
-
-ListingReport
-
-
-ListingReview
-
-
-Location
-
-
-Media
-
-
-Message
-
-
-Moderation
-
-
-Offer
-
-
-OfferItem
-
-
-Payment
-
-
-Payout
-
-
-PayoutSettlement
-
-
-Post
-
-
-PostComment
-
+Post{
+  PostComment
+  ViewedEntity
+  Watchlist
+  Media
+}
 
 PromoCode
 
 
-Promotion
+Subscription{
+  SubscriptionPlan
+  SubscriptionPlanPrice
+}
 
+Moderation
 
-PromotionPlan
-
-
-Refund
-
-
-RefundItem
-
-
-Replacement
-
-
-ReplacementItem
-
-
-Response
-
-
-ReturnItem
-
-
-ReturnRecord
-
-
+Payment{
+Payout
+PayoutSettlement
 Revenue
-
-
-Role
-
-
-ServiceJob
-
-
-ServiceReview
-
-
-Setting
-
-
 Settlement
+BankAccount
+}
+
+Dispute{
+  DisputeItem
+  Refund
+  RefundItem
+  Replacement
+  ReplacementItem
+  ReturnItem
+  ReturnRecord
+
+}
 
 
-Shipment
+Cart{
+  items in my cart are separated by seller_id. on cart page
+  users see cart grouped by seller_id
+  CartItem
+  each cart contains list of listings (not items)
+  Offer
+  OfferItem
+  Conversation{
+    ConversationMessage
+    ConversationParticipant
+  }
+  Shipment{
+    ShipmentItem
+  }
+  Invoice{
+    InvoiceItem
+  }
+}
+
+Conversation{
+  ConversationMessage
+  ConversationParticipant
+}
 
 
-ShipmentItem
+Discussion{
+  Response
+  Watchlist
+  Offer
+  OfferItem
+    Conversation{
+      ConversationMessage
+      ConversationParticipant
+    }
+  
+  ServiceJob
+  ServiceReview
+}
+
+Invoice{
+  InvoiceItem
+  Issue
+  IssueItem
+  Dispute
+  DisputeItem
+}
 
 
-State
+Item{
+  Location
+  Listing
+  ListingReport
+  ListingReview
+  ViewedEntity
+  Watchlist
+  Wishlist
+  Media
+  Offer
+  OfferItem
+  Conversation{
+    ConversationMessage
+    ConversationParticipant
+  }
+}
 
 
-Subscription
+Offer
+OfferItem
+
+User{
+  Notification settings: in-app (notification table & reverb), push (firebase), email
+  DeviceToken{
+    Firebase Cloud Messaging push notification token
+  }
+  Profile{
+    
+  }
+  Password Reset{
+    
+  }
+  
+  Public Profile{
+    ServiceJob
+    ServiceReview
+  }
+}
+
+Location{
+
+}
 
 
-SubscriptionPlan
-
-
-SubscriptionPlanPrice
-
-
-User
-
-
-ViewedEntity
-
-
-Watchlist
-
-
-Wishlist

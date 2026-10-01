@@ -1,4 +1,26 @@
 <div>
+    @if(auth()->check() && !auth()->user()->bankAccounts()->exists())
+        <div class="mb-6 p-4 sm:p-5 rounded-2xl bg-amber-50 border-2 border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-soft">
+            <div class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <i class="fas fa-university text-base"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">
+                        Add Bank Account to Receive Payments
+                        <span class="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-extrabold uppercase">Required for Sales</span>
+                    </h4>
+                    <p class="text-xs text-slate-600 mt-0.5">
+                        You have not connected a bank account yet. Connect your bank account to receive direct transfer payments from buyers and platform payouts.
+                    </p>
+                </div>
+            </div>
+            <a href="{{ route('profile') }}" class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-xs transition shrink-0 text-center flex items-center justify-center gap-1.5 cursor-pointer">
+                <i class="fas fa-plus-circle"></i> Add Bank Account
+            </a>
+        </div>
+    @endif
+
     <section
         class="rounded-2xl bg-gradient-to-br from-pp-900 via-pp-800 to-pp-600 text-white p-6 sm:p-8 shadow-soft overflow-hidden">
         <div class="max-w-3xl">

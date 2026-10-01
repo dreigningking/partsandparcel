@@ -27,6 +27,7 @@ class User extends Authenticatable
         'bio',
         'is_verified',
         'theme_preference',
+        'notification_preferences',
         'country_id'
     ];
 
@@ -56,8 +57,7 @@ class User extends Authenticatable
             return false;
         }
 
-        // If super admin has '*' or explicit permission
-        return ! empty($this->role->permissions['*']) || ! empty($this->role->permissions[$permission]);
+        return $this->role->hasPermission($permission);
     }
 
     // Relationships

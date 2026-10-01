@@ -12,7 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->longText('value')->nullable();
-            $table->string('data_type')->nullable();
+            $table->string('type')->nullable();
+            $table->string('segment')->nullable();
             $table->timestamps();
         });
     }

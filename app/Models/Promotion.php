@@ -4,22 +4,30 @@ namespace App\Models;
 
 use App\Observers\PromotionObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
-// Register observers
 #[ObservedBy([PromotionObserver::class])]
 class Promotion extends Model
 {
+    use HasFactory;
 
     protected $fillable = [
         'user_id',
         'listing_id',
         'type',
         'achieved_count',
-        'status'
+        'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'achieved_count' => 'integer',
+        ];
+    }
 
     public function listing(): BelongsTo
     {
@@ -46,63 +54,23 @@ class Promotion extends Model
         return $this->payments()->where('status', 'pending')->latest()->first();
     }
 
-    public function isPendingPayment(): bool
+    public function isActive(): bool
     {
-        return $this->status === 'pending_payment';
+        return $this->status === 'active';
     }
 
-    public function isEditable(): bool
+    public function isPending(): bool
     {
-        return $this->isPendingPayment() && ! $this->hasPaidPayment();
-    }
-
-    public function isLocked(): bool
-    {
-        return $this->hasPaidPayment();
-    }
-
-    public function currentProgress(): int
-    {
-        if (! $this->target_type) {
-            return 0;
-        }
-
-        return (int) ($this->usage[$this->target_type] ?? 0);
+        return $this->status === 'pending';
     }
 
     public function isCompleted(): bool
     {
-        if ($this->status === 'completed') {
-            return true;
-        }
-
-        if ((int) $this->target_count <= 0) {
-            return false;
-        }
-
-        return $this->currentProgress() >= (int) $this->target_count;
+        return $this->status === 'completed';
     }
 
-    public function progressPercent(): int
+    public function isInactive(): bool
     {
-        if ((int) $this->target_count <= 0) {
-            return 0;
-        }
-
-        return (int) min(100, round(($this->currentProgress() / (int) $this->target_count) * 100));
-    }
-
-    public function isActive(): bool
-    {
-        return $this->status === 'active'
-            && $this->hasPaidPayment()
-            && ! $this->isCompleted();
-    }
-
-    public function isInProgress(): bool
-    {
-        return in_array($this->status, ['active', 'pending_content'], true)
-            && $this->hasPaidPayment()
-            && ! $this->isCompleted();
+        return $this->status === 'inactive';
     }
 }

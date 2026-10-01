@@ -2,54 +2,57 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable([
-    'name',
-    'value',
-    'data_type',
-])]
 class Setting extends Model
 {
+
+    protected $fillable = [
+        'name','value','type','segment'
+    ];
     public static function getValue(string $name, mixed $default = null): mixed
     {
         $row = static::query()->where('name', $name)->first();
 
-        return $row ? static::castStoredValue($row->value, $row->data_type) : $default;
+        return $row ? static::castStoredValue($row->value, $row->type) : $default;
     }
 
-    public static function setValue(string $name, mixed $value, ?string $dataType = null): void
+    public static function setValue(string $name, mixed $value, ?string $type = null, ?string $segment = null): void
     {
-        $type = $dataType ?? match (true) {
+        $type = $type ?? match (true) {
             is_bool($value) => 'boolean',
             is_int($value) => 'integer',
-            is_array($value) => 'json',
+            is_array($value) => 'array',
             default => 'string',
         };
 
         $stored = match ($type) {
-            'boolean' => $value ? '1' : '0',
-            'json' => json_encode($value, JSON_THROW_ON_ERROR),
+            'boolean' => ($value === true || $value === 1 || $value === '1' || $value === 'true') ? '1' : '0',
+            'array', 'json' => is_string($value) ? $value : json_encode(array_values((array) $value), JSON_THROW_ON_ERROR),
             default => (string) $value,
         };
 
+        $attributes = ['value' => $stored, 'type' => $type];
+        if ($segment !== null) {
+            $attributes['segment'] = $segment;
+        }
+
         static::query()->updateOrCreate(
             ['name' => $name],
-            ['value' => $stored, 'data_type' => $type]
+            $attributes
         );
     }
 
-    protected static function castStoredValue(?string $raw, ?string $dataType): mixed
+    protected static function castStoredValue(?string $raw, ?string $type): mixed
     {
         if ($raw === null) {
             return null;
         }
 
-        return match ($dataType) {
+        return match ($type) {
             'boolean' => $raw === '1' || $raw === 'true',
             'integer' => (int) $raw,
-            'json' => json_decode($raw, true) ?? [],
+            'array', 'json' => is_array($raw) ? $raw : (json_decode($raw, true) ?? (array) $raw),
             default => $raw,
         };
     }

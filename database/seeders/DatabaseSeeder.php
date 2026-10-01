@@ -11,9 +11,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        \App\Observers\ListingObserver::$seeding = true;
+
         $this->call([
             CountriesSeeder::class,
             RolesAndPermissionsSeeder::class,
+            SettingsSeeder::class,
             CategoriesAndBrandsSeeder::class,
             SubscriptionPlansSeeder::class,
             DemoUsersSeeder::class,

@@ -3,330 +3,340 @@
 namespace App\Livewire\Admin\Settings;
 
 use App\Models\Setting;
-use App\Services\Ai\AiProviderRegistry;
+use Database\Seeders\SettingsSeeder;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
-use App\Models\CategoryField;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
+#[Layout('layouts.dash')]
+#[Title('Platform General Settings — Admin Control Center')]
 class AdminGeneral extends Component
 {
-    public bool $ai_enabled = true;
+    // Active Segment filter ('marketplace', 'media', 'promotions', 'timelines', or 'all')
+    public string $activeSegment = 'marketplace';
 
-    public string $generation_mode = 'manual';
+    // Search query for settings
+    public string $search = '';
 
-    public int $manual_timeframe_hours = 24;
+    /**
+     * Stored values bound to the input elements:
+     * Keyed by setting name => value
+     * - boolean: '1' or '0'
+     * - integer: int
+     * - array: array of strings
+     * - string: string
+     *
+     * @var array<string, mixed>
+     */
+    public array $settings = [];
 
-    public int $min_word_count = 400;
+    /**
+     * Buffer for new tag input keyed by setting name:
+     * $newTag[$name] = 'string'
+     *
+     * @var array<string, string>
+     */
+    public array $newTag = [];
 
-    public int $max_word_count = 1200;
-
-    /** @var array<int, array{id: string, provider: string, model: string, label: string, is_default: bool}> */
-    public array $contentProviders = [];
-
-    public string $ai_temperature = '0.7';
-
-    public int $ai_max_tokens = 1200;
-
-    public int $ai_timeout_seconds = 30;
-
-    public int $ai_rate_limit_per_user_per_day = 20;
-
-    // Tab state for the admin page: 'content' or 'fields'
-    public string $activeTab = 'content';
-
-    // Category fields management (moved from AdminCategoryFields)
-    public bool $showAddModal = false;
-    public bool $showEditModal = false;
-
-    public ?int $editingFieldId = null;
-
-    public string $field_key = '';
-    public string $field_label = '';
-    public string $field_data_type = CategoryField::TYPE_TEXT;
-    public bool $field_is_required = false;
-    public string $field_optionsLines = '';
-    public string $field_validationJson = '';
-
-    public function mount(AiProviderRegistry $registry): void
+    public function mount(): void
     {
-        $this->generation_mode = (string) Setting::getValue('content.generation_mode', 'manual');
-        if (! in_array($this->generation_mode, ['manual', 'ai'], true)) {
-            $this->generation_mode = 'manual';
-        }
-        $this->ai_enabled = (bool) Setting::getValue('ai.enabled', true);
-        $this->manual_timeframe_hours = (int) Setting::getValue('content.manual_timeframe_hours', 24);
-        $this->min_word_count = (int) Setting::getValue('content.min_word_count', 400);
-        $this->max_word_count = (int) Setting::getValue('content.max_word_count', 1200);
-        $this->contentProviders = $registry->contentProviders();
-        if ($this->contentProviders === []) {
-            $this->contentProviders = [$this->blankProviderRow('openai')];
-        }
-        $this->ai_temperature = (string) Setting::getValue('ai.temperature', '0.7');
-        $this->ai_max_tokens = (int) Setting::getValue('ai.max_tokens', 1200);
-        $this->ai_timeout_seconds = (int) Setting::getValue('ai.timeout_seconds', 30);
-        $this->ai_rate_limit_per_user_per_day = (int) Setting::getValue('ai.rate_limit_per_user_per_day', 20);
-    }
-
-    public function openFieldsTab(): void
-    {
-        $this->activeTab = 'fields';
-    }
-
-    public function openAddField(): void
-    {
-        $this->reset(['field_key','field_label','field_data_type','field_is_required','field_optionsLines','field_validationJson','editingFieldId']);
-        $this->showAddModal = true;
-        $this->activeTab = 'fields';
-    }
-
-    public function saveNewField(): void
-    {
-        $this->validate([
-            'field_key' => ['required','string','max:120','regex:/^[a-z][a-z0-9_\-]*$/', Rule::unique('category_fields','key')],
-            'field_label' => ['required','string','max:255'],
-            'field_data_type' => ['required', Rule::in($this->dataTypeOptions())],
-        ]);
-
-        $options = $this->parseOptionsLines($this->field_optionsLines);
-
-        CategoryField::query()->create([
-            'key' => $this->field_key,
-            'label' => $this->field_label,
-            'data_type' => $this->field_data_type,
-            'is_required' => $this->field_is_required,
-            'options' => $options,
-            'validation' => null,
-        ]);
-
-        $this->showAddModal = false;
-        session()->flash('status', 'Field created.');
-    }
-
-    public function openEditField(int $fieldId): void
-    {
-        $field = CategoryField::query()->findOrFail($fieldId);
-        $this->editingFieldId = $field->id;
-        $this->field_key = $field->key;
-        $this->field_label = $field->label;
-        $this->field_data_type = $field->data_type;
-        $this->field_is_required = (bool) $field->is_required;
-        $this->field_optionsLines = $field->options ? implode("\n", $field->options) : '';
-        $this->field_validationJson = $field->validation ? json_encode($field->validation, JSON_PRETTY_PRINT) : '';
-        $this->showEditModal = true;
-        $this->activeTab = 'fields';
-    }
-
-    public function saveEditField(): void
-    {
-        $this->validate([
-            'editingFieldId' => ['required','integer'],
-            'field_label' => ['required','string','max:255'],
-            'field_data_type' => ['required', Rule::in($this->dataTypeOptions())],
-        ]);
-
-        $field = CategoryField::query()->findOrFail($this->editingFieldId);
-        $options = $this->parseOptionsLines($this->field_optionsLines);
-
-        $field->update([
-            'label' => $this->field_label,
-            'data_type' => $this->field_data_type,
-            'is_required' => $this->field_is_required,
-            'options' => $options,
-            'validation' => null,
-        ]);
-
-        $this->showEditModal = false;
-        session()->flash('status', 'Field updated.');
-    }
-
-    public function deleteField(int $fieldId): void
-    {
-        $field = CategoryField::query()->findOrFail($fieldId);
-        $field->delete();
-        session()->flash('status', 'Field deleted.');
-    }
-
-    protected function dataTypeOptions(): array
-    {
-        return [
-            CategoryField::TYPE_SINGLE_SELECT,
-            CategoryField::TYPE_MULTI_SELECT,
-            CategoryField::TYPE_NUMBER,
-            CategoryField::TYPE_TEXT,
-            CategoryField::TYPE_TEXTAREA,
-            CategoryField::TYPE_BOOLEAN,
-            CategoryField::TYPE_DATE,
-        ];
-    }
-
-    protected function parseOptionsLines(string $raw): ?array
-    {
-        $lines = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', $raw) ?: [])));
-        return $lines === [] ? null : $lines;
-    }
-
-    #[Computed]
-    public function fields()
-    {
-        return CategoryField::query()->orderBy('key')->get();
-    }
-
-    #[Computed]
-    public function providerRegistry(): array
-    {
-        return app(AiProviderRegistry::class)->all();
-    }
-
-    protected function rules(): array
-    {
-        $providerKeys = implode(',', array_keys(config('ai.providers', [])));
-
-        return [
-            'ai_enabled' => ['required', 'boolean'],
-            'generation_mode' => ['required', 'in:manual,ai'],
-            'manual_timeframe_hours' => ['required', 'integer', 'min:1', 'max:8760'],
-            'min_word_count' => ['required', 'integer', 'min:50', 'max:50000'],
-            'max_word_count' => ['required', 'integer', 'min:50', 'max:50000', 'gte:min_word_count'],
-            'contentProviders' => ['array'],
-            'contentProviders.*.provider' => ['required', 'string', "in:{$providerKeys}"],
-            'contentProviders.*.model' => ['required', 'string', 'max:150'],
-            'contentProviders.*.label' => ['nullable', 'string', 'max:120'],
-            'contentProviders.*.is_default' => ['boolean'],
-            'ai_temperature' => ['required', 'numeric', 'between:0,2'],
-            'ai_max_tokens' => ['required', 'integer', 'min:50', 'max:16000'],
-            'ai_timeout_seconds' => ['required', 'integer', 'min:5', 'max:180'],
-            'ai_rate_limit_per_user_per_day' => ['required', 'integer', 'min:1', 'max:10000'],
-        ];
-    }
-
-    public function addContentProvider(): void
-    {
-        $firstConfigured = collect($this->providerRegistry)
-            ->filter(fn (array $provider) => $provider['configured'])
-            ->keys()
-            ->first() ?? array_key_first($this->providerRegistry) ?? 'openai';
-
-        $this->contentProviders[] = $this->blankProviderRow($firstConfigured);
-    }
-
-    public function removeContentProvider(int $index): void
-    {
-        if (! isset($this->contentProviders[$index])) {
-            return;
+        if (Setting::count() === 0) {
+            (new SettingsSeeder())->run();
         }
 
-        $wasDefault = (bool) ($this->contentProviders[$index]['is_default'] ?? false);
-        unset($this->contentProviders[$index]);
-        $this->contentProviders = array_values($this->contentProviders);
-
-        if ($this->contentProviders === []) {
-            $this->contentProviders = [$this->blankProviderRow('openai')];
-
-            return;
-        }
-
-        if ($wasDefault) {
-            $this->contentProviders[0]['is_default'] = true;
-        }
+        $this->loadSettings();
     }
 
-    public function setDefaultContentProvider(int $index): void
+    public function loadSettings(): void
     {
-        foreach ($this->contentProviders as $i => $row) {
-            $this->contentProviders[$i]['is_default'] = $i === $index;
-        }
-    }
+        $allSettings = Setting::orderBy('segment')->orderBy('id')->get();
 
-    public function updatedContentProviders($value, string $name): void
-    {
-        if (! str_ends_with($name, '.provider')) {
-            return;
-        }
+        foreach ($allSettings as $setting) {
+            $val = Setting::getValue($setting->name);
 
-        preg_match('/contentProviders\.(\d+)\.provider/', $name, $matches);
-        $index = (int) ($matches[1] ?? -1);
-
-        if (! isset($this->contentProviders[$index])) {
-            return;
-        }
-
-        $provider = $this->contentProviders[$index]['provider'];
-        $suggested = app(AiProviderRegistry::class)->suggestedModels($provider);
-
-        if ($suggested !== [] && ($this->contentProviders[$index]['model'] ?? '') === '') {
-            $this->contentProviders[$index]['model'] = $suggested[0];
-        }
-    }
-
-    public function save(AiProviderRegistry $registry): void
-    {
-        $this->validate();
-        $normalized = $registry->normalizeContentProviders($this->contentProviders);
-
-        if ($this->ai_enabled && $this->generation_mode === 'ai') {
-            if ($normalized === []) {
-                $this->addError('contentProviders', __('Add at least one AI provider and model.'));
-
-                return;
-            }
-
-            $defaultCount = collect($normalized)->where('is_default', true)->count();
-            if ($defaultCount !== 1) {
-                $this->addError('contentProviders', __('Select exactly one default provider.'));
-
-                return;
-            }
-
-            $default = collect($normalized)->firstWhere('is_default', true);
-            if (! $registry->isConfigured((string) $default['provider'])) {
-                $this->addError('contentProviders', __('The default provider must have an API key in .env.'));
-
-                return;
+            if ($setting->type === 'boolean') {
+                $this->settings[$setting->name] = ($val === true || $val === '1' || $val === 1) ? '1' : '0';
+            } elseif ($setting->type === 'array') {
+                $this->settings[$setting->name] = is_array($val) ? array_values($val) : [];
+                $this->newTag[$setting->name] = '';
+            } elseif ($setting->type === 'integer') {
+                $this->settings[$setting->name] = (int) ($val ?? 0);
+            } else {
+                $this->settings[$setting->name] = (string) ($val ?? '');
             }
         }
+    }
 
-        Setting::setValue('ai.enabled', $this->ai_enabled, 'boolean');
-        Setting::setValue('content.generation_mode', $this->generation_mode, 'string');
-        Setting::setValue('content.manual_timeframe_hours', $this->manual_timeframe_hours, 'integer');
-        Setting::setValue('content.min_word_count', $this->min_word_count, 'integer');
-        Setting::setValue('content.max_word_count', $this->max_word_count, 'integer');
-        Setting::setValue('ai.content_providers', $normalized, 'json');
-        Setting::setValue('ai.temperature', $this->ai_temperature, 'string');
-        Setting::setValue('ai.max_tokens', $this->ai_max_tokens, 'integer');
-        Setting::setValue('ai.timeout_seconds', $this->ai_timeout_seconds, 'integer');
-        Setting::setValue('ai.rate_limit_per_user_per_day', $this->ai_rate_limit_per_user_per_day, 'integer');
-
-        $defaultRow = collect($normalized)->firstWhere('is_default', true);
-        if ($defaultRow) {
-            Setting::setValue('ai.provider', $defaultRow['provider'], 'string');
-            Setting::setValue('ai.model', $defaultRow['model'], 'string');
-        }
-
-        $this->contentProviders = $normalized;
-
-        session()->flash('status', __('Content settings saved.'));
+    public function setSegment(string $segment): void
+    {
+        $this->activeSegment = $segment;
     }
 
     /**
-     * @return array{id: string, provider: string, model: string, label: string, is_default: bool}
+     * Add a tag to an array setting
      */
-    protected function blankProviderRow(string $provider): array
+    public function addTag(string $name): void
     {
-        $suggested = app(AiProviderRegistry::class)->suggestedModels($provider);
+        $tag = trim($this->newTag[$name] ?? '');
+        if ($tag === '') {
+            return;
+        }
 
+        $current = (array) ($this->settings[$name] ?? []);
+
+        // Avoid duplicate tags
+        if (! in_array($tag, $current, true)) {
+            $current[] = $tag;
+            $this->settings[$name] = array_values($current);
+        }
+
+        $this->newTag[$name] = '';
+    }
+
+    /**
+     * Remove a tag from an array setting by index
+     */
+    public function removeTag(string $name, int $index): void
+    {
+        if (isset($this->settings[$name][$index])) {
+            unset($this->settings[$name][$index]);
+            $this->settings[$name] = array_values($this->settings[$name]);
+        }
+    }
+
+    /**
+     * Save all settings to the Setting model in the database
+     */
+    public function saveSettings(): void
+    {
+        $allDefinitions = Setting::all();
+
+        foreach ($allDefinitions as $settingModel) {
+            $name = $settingModel->name;
+            if (! array_key_exists($name, $this->settings)) {
+                continue;
+            }
+
+            $rawVal = $this->settings[$name];
+            $type = $settingModel->type;
+            $segment = $settingModel->segment;
+
+            $storedValue = match ($type) {
+                'boolean' => ($rawVal === '1' || $rawVal === 1 || $rawVal === true || $rawVal === 'true') ? '1' : '0',
+                'array', 'json' => json_encode(array_values((array) $rawVal), JSON_UNESCAPED_SLASHES),
+                'integer' => (string) (int) $rawVal,
+                default => (string) $rawVal,
+            };
+
+            $settingModel->update([
+                'value' => $storedValue,
+            ]);
+        }
+
+        session()->flash('status', 'Platform settings saved successfully.');
+    }
+
+    /**
+     * Reset settings back to default seed values
+     */
+    public function resetToDefaults(): void
+    {
+        (new SettingsSeeder())->run();
+        $this->loadSettings();
+        session()->flash('status', 'Platform settings restored to system defaults.');
+    }
+
+    /**
+     * Metadata definitions for known platform settings
+     *
+     * @return array<string, array{label: string, description: string, unit?: string, icon?: string}>
+     */
+    public function allSettingMetadata(): array
+    {
         return [
-            'id' => (string) Str::uuid(),
-            'provider' => $provider,
-            'model' => $suggested[0] ?? '',
-            'label' => '',
-            'is_default' => $this->contentProviders === [],
+            // Marketplace
+            'auto_approve_listings' => [
+                'label' => 'Auto-Approve Listings',
+                'description' => 'When enabled, newly created items and listings are published immediately without requiring admin moderation.',
+                'icon' => 'fas fa-check-double',
+            ],
+            'abandoned_cart_reaction_hours' => [
+                'label' => 'Abandoned Cart Reaction Time',
+                'description' => 'Hours of cart inactivity before the platform triggers automated notifications or reminder actions.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-shopping-cart',
+            ],
+            'prohibited_words' => [
+                'label' => 'Prohibited Content Words',
+                'description' => 'Comma-separated keywords or phrases that trigger automatic moderation flags in titles and descriptions.',
+                'icon' => 'fas fa-ban',
+            ],
+            'gateways' => [
+                'label' => 'Supported Payment Gateways',
+                'description' => 'Active payment providers enabled for direct checkout, platform escrow, and wallet operations.',
+                'icon' => 'fas fa-credit-card',
+            ],
+
+            // Media
+            'max_media_image_size' => [
+                'label' => 'Max Image Upload Size',
+                'description' => 'Maximum file size allowed for listing photos, component gallery images, and profile avatars.',
+                'unit' => 'MB',
+                'icon' => 'fas fa-image',
+            ],
+            'max_media_image_width' => [
+                'label' => 'Max Image Resolution Width',
+                'description' => 'Maximum width (in pixels) for uploaded images before server-side optimization.',
+                'unit' => 'px',
+                'icon' => 'fas fa-arrows-alt-h',
+            ],
+            'max_media_image_height' => [
+                'label' => 'Max Image Resolution Height',
+                'description' => 'Maximum height (in pixels) for uploaded images before server-side optimization.',
+                'unit' => 'px',
+                'icon' => 'fas fa-arrows-alt-v',
+            ],
+            'max_media_video_size' => [
+                'label' => 'Max Video Upload Size',
+                'description' => 'Maximum allowable file size for video demonstrations and inspection footage.',
+                'unit' => 'MB',
+                'icon' => 'fas fa-video',
+            ],
+            'max_media_document_size' => [
+                'label' => 'Max Document Upload Size',
+                'description' => 'Maximum allowable file size for PDF manuals, diagnostic reports, and invoices.',
+                'unit' => 'MB',
+                'icon' => 'fas fa-file-pdf',
+            ],
+
+            // Promotions
+            'auto_approve_promotions' => [
+                'label' => 'Auto-Approve Promotions',
+                'description' => 'When enabled, promotional campaigns are automatically approved and launched once payment succeeds.',
+                'icon' => 'fas fa-bullhorn',
+            ],
+            'minimum_promotion_clicks' => [
+                'label' => 'Minimum Promotion Clicks',
+                'description' => 'Minimum number of clicks required when ordering a Pay-Per-Click promotion plan.',
+                'unit' => 'clicks',
+                'icon' => 'fas fa-mouse-pointer',
+            ],
+            'minimum_promotion_views' => [
+                'label' => 'Minimum Promotion Views',
+                'description' => 'Minimum number of impressions required when purchasing a Pay-Per-View promotion campaign.',
+                'unit' => 'views',
+                'icon' => 'fas fa-eye',
+            ],
+
+            // Timelines
+            'order_processing_to_cancel_hours' => [
+                'label' => 'Buyer Cancellation Grace Period',
+                'description' => 'Hours after checkout during which a buyer can cancel an order before vendor dispatch commences.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-times-circle',
+            ],
+            'order_processing_to_idle_cancel_hours' => [
+                'label' => 'Vendor Inactivity Auto-Cancel Window',
+                'description' => 'Hours allowed for a vendor to acknowledge/process an order before the platform auto-cancels and refunds.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-user-clock',
+            ],
+            'order_pickup_allowance_hours' => [
+                'label' => 'Local Pickup Allowance Window',
+                'description' => 'Hours permitted for local pickup orders to be collected before auto-expiry.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-box-open',
+            ],
+            'order_processing_to_delivery_hours' => [
+                'label' => 'Fulfillment to Delivery Window',
+                'description' => 'Estimated total hours allocated from vendor dispatch until order delivery completion.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-shipping-fast',
+            ],
+            'order_delivered_to_auto_reception_hours' => [
+                'label' => 'Delivered to Auto-Reception Window',
+                'description' => 'Hours after delivery confirmation before the system automatically marks the package as received.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-receipt',
+            ],
+            'order_received_to_auto_acceptance_hours' => [
+                'label' => 'Inspection & Auto-Acceptance Window',
+                'description' => 'Inspection window after package receipt before order is auto-accepted and payout is queued.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-handshake',
+            ],
+            'order_rejected_to_returned_hours' => [
+                'label' => 'Return Transit Allowance Window',
+                'description' => 'Hours allocated for returning a rejected item back to the seller upon dispute resolution.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-undo-alt',
+            ],
+            'order_returned_to_auto_acceptance_hours' => [
+                'label' => 'Returned Package Auto-Acceptance Window',
+                'description' => 'Hours allowed for a vendor to inspect returned items before the return is finalized.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-clipboard-check',
+            ],
         ];
     }
 
-    public function render()
+    public function getSettingMeta(string $name): array
     {
-        return view('livewire.admin.settings.admin-general');
+        $all = $this->allSettingMetadata();
+
+        return $all[$name] ?? [
+            'label' => Str::headline($name),
+            'description' => 'Configure platform setting value for ' . Str::headline($name) . '.',
+            'icon' => 'fas fa-cog',
+        ];
+    }
+
+    #[Computed]
+    public function segmentCounts(): array
+    {
+        $counts = Setting::selectRaw('segment, count(*) as count')
+            ->groupBy('segment')
+            ->pluck('count', 'segment')
+            ->toArray();
+
+        $counts['all'] = Setting::count();
+
+        return $counts;
+    }
+
+    #[Computed]
+    public function filteredSettings()
+    {
+        $query = Setting::query();
+
+        if ($this->activeSegment !== 'all') {
+            $query->where('segment', $this->activeSegment);
+        }
+
+        if (trim($this->search) !== '') {
+            $searchTerm = '%' . trim($this->search) . '%';
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', $searchTerm)
+                  ->orWhere('segment', 'like', $searchTerm);
+            });
+        }
+
+        return $query->orderBy('segment')->orderBy('id')->get();
+    }
+
+    public function render(): View
+    {
+        return view('livewire.admin.settings.admin-general', [
+            'settingsList' => $this->filteredSettings(),
+            'counts' => $this->segmentCounts(),
+            'activeSegment' => $this->activeSegment,
+            'search' => $this->search,
+            'settings' => $this->settings,
+            'newTag' => $this->newTag,
+            'metadata' => $this->allSettingMetadata(),
+        ]);
     }
 }

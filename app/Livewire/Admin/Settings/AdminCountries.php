@@ -3,49 +3,47 @@
 namespace App\Livewire\Admin\Settings;
 
 use App\Models\Country;
-use App\Models\CountrySetting;
-use App\Models\Currency;
-use App\Services\GeographyService;
-use Illuminate\Support\Str;
+use App\Services\Location\GeographyService;
+use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
+#[Layout('layouts.dash')]
+#[Title('Countries & Regions — Admin Control Center')]
 class AdminCountries extends Component
 {
     public bool $showModal = false;
 
     public ?int $editingId = null;
 
+    // Model Fields
     public string $name = '';
-
     public string $code = '';
-
-    public string $slug = '';
-
-    public string $flag = '';
-
     public string $phone_code = '';
-
-    public string $language_code = '';
-
+    public string $currency = 'NGN';
+    public string $currency_symbol = '₦';
+    public string $timezone = 'Africa/Lagos';
     public bool $is_default = false;
-
     public bool $is_active = true;
+    public array $payment_gateway = ['paystack', 'flutterwave'];
 
-    public ?int $currency_id = null;
+    // Search query
+    public string $search = '';
 
     public function openCreate(): void
     {
         $this->editingId = null;
         $this->name = '';
         $this->code = '';
-        $this->slug = '';
-        $this->flag = '';
         $this->phone_code = '';
-        $this->language_code = '';
+        $this->currency = 'NGN';
+        $this->currency_symbol = '₦';
+        $this->timezone = 'Africa/Lagos';
         $this->is_default = false;
         $this->is_active = true;
-        $this->currency_id = Currency::query()->where('is_active', true)->orderByDesc('is_default')->value('id');
+        $this->payment_gateway = ['paystack', 'flutterwave'];
         $this->resetErrorBag();
         $this->showModal = true;
     }
@@ -55,14 +53,14 @@ class AdminCountries extends Component
         $country = Country::query()->findOrFail($id);
         $this->editingId = $country->id;
         $this->name = $country->name;
-        $this->code = (string) ($country->code ?? '');
-        $this->slug = (string) ($country->slug ?? '');
-        $this->flag = (string) ($country->flag ?? '');
+        $this->code = (string) $country->code;
         $this->phone_code = (string) ($country->phone_code ?? '');
-        $this->language_code = (string) ($country->language_code ?? '');
+        $this->currency = (string) ($country->currency ?? 'NGN');
+        $this->currency_symbol = (string) ($country->currency_symbol ?? '₦');
+        $this->timezone = (string) ($country->timezone ?? 'Africa/Lagos');
         $this->is_default = (bool) $country->is_default;
         $this->is_active = (bool) $country->is_active;
-        $this->currency_id = $country->currency_id;
+        $this->payment_gateway = is_array($country->payment_gateway) ? $country->payment_gateway : [];
         $this->resetErrorBag();
         $this->showModal = true;
     }
@@ -71,38 +69,40 @@ class AdminCountries extends Component
     {
         $this->showModal = false;
         $this->editingId = null;
+        $this->resetErrorBag();
     }
 
-    public function saveCountry(): void
+    public function saveCountry(GeographyService $geographyService): void
     {
-        $codeRules = ['nullable', 'string', 'max:8'];
-        if ($this->code !== '') {
-            $codeRules[] = $this->editingId
-                ? Rule::unique('countries', 'code')->ignore($this->editingId)
-                : Rule::unique('countries', 'code');
-        }
+        $codeRule = ['required', 'string', 'size:2'];
+        $codeRule[] = $this->editingId
+            ? Rule::unique('countries', 'code')->ignore($this->editingId)
+            : Rule::unique('countries', 'code');
 
         $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'code' => $codeRules,
-            'slug' => ['nullable', 'string', 'max:255'],
-            'flag' => ['nullable', 'string', 'max:32'],
-            'phone_code' => ['nullable', 'string', 'max:32'],
-            'language_code' => ['nullable', 'string', 'max:16'],
-            'is_default' => ['boolean'],
-            'is_active' => ['boolean'],
-            'currency_id' => ['nullable', 'integer', 'exists:currencies,id'],
+            'name'            => ['required', 'string', 'max:255'],
+            'code'            => $codeRule,
+            'phone_code'      => ['nullable', 'string', 'max:10'],
+            'currency'        => ['required', 'string', 'size:3'],
+            'currency_symbol' => ['required', 'string', 'max:10'],
+            'timezone'        => ['required', 'string', 'max:100'],
+            'is_default'      => ['boolean'],
+            'is_active'       => ['boolean'],
+            'payment_gateway' => ['nullable', 'array'],
+        ], [
+            'code.size'     => 'Country code must be exactly 2 characters (ISO-2 code, e.g. NG, US, GB).',
+            'currency.size' => 'Currency code must be exactly 3 characters (e.g. NGN, USD, GBP).',
         ]);
 
         $payload = [
-            'name'          => $this->name,
-            'code'          => $this->code !== '' ? strtoupper($this->code) : null,
-            'slug'          => $this->slug !== '' ? Str::slug($this->slug) : null,
-            'flag'          => $this->flag !== '' ? $this->flag : null,
-            'phone_code'    => $this->phone_code !== '' ? $this->phone_code : null,
-            'language_code' => $this->language_code !== '' ? $this->language_code : null,
-            'is_active'     => $this->is_active,
-            'currency_id'   => $this->currency_id,
+            'name'            => trim($this->name),
+            'code'            => strtoupper(trim($this->code)),
+            'phone_code'      => $this->phone_code ? trim($this->phone_code) : null,
+            'currency'        => strtoupper(trim($this->currency)),
+            'currency_symbol' => trim($this->currency_symbol),
+            'timezone'        => trim($this->timezone),
+            'is_active'       => $this->is_active,
+            'payment_gateway' => array_values($this->payment_gateway),
         ];
 
         if ($this->is_default) {
@@ -114,18 +114,18 @@ class AdminCountries extends Component
 
         if ($this->editingId) {
             Country::query()->whereKey($this->editingId)->update($payload);
+            session()->flash('status', "Country “{$this->name}” updated successfully.");
         } else {
             $country = Country::query()->create($payload);
 
-            // Fetch states & cities for the newly created country in background
-            if ($country && ! $country->states()->exists()) {
-                dispatch(function () use ($country) {
-                    app(GeographyService::class)->fetchAndSave($country);
-                })->afterResponse();
-            }
+            // Upon creation of a country, run GeographyService to fetch and persist states
+            $geographyService->fetchAndSave($country);
+
+            $statesCount = $country->states()->count();
+            $stateMessage = $statesCount > 0 ? " and synchronized {$statesCount} states" : "";
+            session()->flash('status', "Country “{$country->name}” created successfully{$stateMessage}.");
         }
 
-        session()->flash('status', __('Country saved.'));
         $this->closeModal();
     }
 
@@ -133,35 +133,55 @@ class AdminCountries extends Component
     {
         Country::query()->update(['is_default' => false]);
         Country::query()->whereKey($id)->update(['is_default' => true]);
-        session()->flash('status', __('Default country updated.'));
+        session()->flash('status', 'Default country updated.');
+    }
+
+    public function toggleActive(int $id): void
+    {
+        $country = Country::query()->findOrFail($id);
+        $country->is_active = ! $country->is_active;
+        $country->save();
+        session()->flash('status', "Country “{$country->name}” is now " . ($country->is_active ? 'Active' : 'Inactive') . '.');
+    }
+
+    public function syncStates(int $id, GeographyService $geographyService): void
+    {
+        $country = Country::query()->findOrFail($id);
+        $geographyService->fetchAndSave($country);
+        $statesCount = $country->states()->count();
+        session()->flash('status', "Synced {$statesCount} states for {$country->name}.");
     }
 
     public function deleteCountry(int $id): void
     {
-        $country = Country::query()->findOrFail($id);
-        if ($country->users()->exists() || $country->properties()->exists()) {
-            session()->flash('error', __('Cannot delete a country that has users or properties.'));
+        $country = Country::query()->withCount('states')->findOrFail($id);
 
-            return;
-        }
         if ($country->is_default) {
-            session()->flash('error', __('Unset default before deleting.'));
-
+            session()->flash('error', 'Cannot delete the default country. Please set another country as default first.');
             return;
         }
-        CountrySetting::query()->where('country_id', $country->id)->delete();
+
+        $country->states()->delete();
         $country->delete();
-        session()->flash('status', __('Country deleted.'));
+        session()->flash('status', "Country “{$country->name}” and its states deleted.");
     }
 
-    public function render()
+    public function render(): View
     {
-        $countries = Country::query()->with('currency')->orderByDesc('is_default')->orderBy('name', 'asc')->get();
-        $currencies = Currency::query()->where('is_active', true)->orderBy('code')->get();
+        $countries = Country::query()
+            ->withCount('states')
+            ->when($this->search, function ($q) {
+                $q->where('name', 'like', '%' . $this->search . '%')
+                  ->orWhere('code', 'like', '%' . $this->search . '%')
+                  ->orWhere('currency', 'like', '%' . $this->search . '%')
+                  ->orWhere('phone_code', 'like', '%' . $this->search . '%');
+            })
+            ->orderByDesc('is_default')
+            ->orderBy('name', 'asc')
+            ->get();
 
         return view('livewire.admin.settings.admin-countries', [
             'countries' => $countries,
-            'currencies' => $currencies,
         ]);
     }
 }

@@ -70,6 +70,7 @@ class SubscriptionPlan extends Model
         return $priceRecord ? (float) $priceRecord->price_monthly : (float) $this->price;
     }
 
+
     public function getMonthlyPriceAttribute(): float
     {
         return $this->getMonthlyPrice();

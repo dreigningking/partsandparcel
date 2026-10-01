@@ -41,16 +41,16 @@
                 </span>
             </a>
             <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"
-                href="{{ route('category') }}"
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.categories*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.settings.categories') }}"
             >
-                ◈ <span class="label">Categories</span>
+                ◈ <span class="label">Brands &amp; Categories</span>
             </a>
             <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"
-                href="{{ route('welcome') }}"
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.categories*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.settings.categories') }}"
             >
-                ◆ <span class="label">Brands &amp; Models</span>
+                ◆ <span class="label">Device Models</span>
             </a>
             <a
                 class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"
@@ -66,6 +66,16 @@
                 @php $pendingCount = \App\Models\Listing::where('status', 'pending')->count(); @endphp
                 @if($pendingCount > 0)
                     <span class="label ml-auto text-[10px] bg-rose-100 text-rose-600 rounded-full px-2 font-bold">{{ $pendingCount }}</span>
+                @endif
+            </a>
+            <a
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.promotions*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.promotions') }}"
+            >
+                🚀 <span class="label">Promotions</span>
+                @php $activePromos = \App\Models\Promotion::where('status', 'active')->count(); @endphp
+                @if($activePromos > 0)
+                    <span class="label ml-auto text-[10px] bg-indigo-100 text-indigo-700 rounded-full px-2 font-bold">{{ $activePromos }}</span>
                 @endif
             </a>
         </div>
@@ -99,10 +109,16 @@
                 @endif
             </a>
             <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"
-                href="{{ route('profile') }}"
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.staff*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.settings.staff') }}"
             >
-                ♙ <span class="label">Admin Users &amp; Roles</span>
+                ♙ <span class="label">Staff Accounts</span>
+            </a>
+            <a
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.roles*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.settings.roles') }}"
+            >
+                🛡 <span class="label">Roles &amp; Permissions</span>
             </a>
         </div>
     </div>
@@ -265,10 +281,22 @@
         </button>
         <div id="system" class="sub pl-1 space-y-1 mt-1">
             <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"
-                href="{{ route('profile') }}"
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.general*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.settings.general') }}"
             >
                 ⚙ <span class="label">Platform Settings</span>
+            </a>
+            <a
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.promotion-plans*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.settings.promotion-plans') }}"
+            >
+                ⚡ <span class="label">Promotion Plans</span>
+            </a>
+            <a
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.countries*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.settings.countries') }}"
+            >
+                🌍 <span class="label">Countries &amp; States</span>
             </a>
             <a
                 class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"

@@ -37,8 +37,8 @@ class CheckoutPage extends Component
     // Delivery Handling Method selection ('pickup' vs 'seller_delivery')
     public $deliveryMethod = 'pickup';
 
-    // Payment Option selection ('escrow' vs 'direct_seller')
-    public $paymentMethod = 'escrow';
+    // Payment Option selection ('platform' vs 'direct')
+    public $paymentMethod = 'platform';
 
     // Fee Configuration
     public $escrowFee = 1500;
@@ -177,7 +177,7 @@ class CheckoutPage extends Component
 
     public function setPaymentMethod($method)
     {
-        $this->paymentMethod = $method;
+        $this->paymentMethod = in_array($method, ['platform', 'direct']) ? $method : 'platform';
     }
 
     public function placeOrder()
@@ -191,8 +191,8 @@ class CheckoutPage extends Component
         $sellerId = (int) $this->sellerId;
         $deliveryMethodMapped = ($this->deliveryMethod === 'seller_delivery') ? 'seller_responsible' : 'buyer_responsible';
         $itemSubtotal = collect($this->cartItems)->sum(fn ($i) => $i['price'] * $i['quantity']);
-        $isEscrow = ($this->paymentMethod === 'escrow');
-        $activeEscrowFee = $isEscrow ? $this->escrowFee : 0;
+        $isPlatform = ($this->paymentMethod === 'platform');
+        $activeEscrowFee = $isPlatform ? $this->escrowFee : 0;
         $totalPayable = $itemSubtotal + $activeEscrowFee;
         $commission = round($itemSubtotal * 0.05, 2);
 
@@ -209,7 +209,7 @@ class CheckoutPage extends Component
             'discount' => 0.00,
             'tax' => 0.00,
             'total' => $totalPayable,
-            'payment_method' => $isEscrow ? 'platform' : 'direct',
+            'payment_method' => $isPlatform ? 'platform' : 'direct',
             'commission' => $commission,
             'status' => 'issued',
             'issued_at' => now(),
@@ -246,11 +246,12 @@ class CheckoutPage extends Component
             ? 'Seller delivery shipment recorded.' 
             : 'Buyer pickup selected (no shipment necessary).';
 
-        if ($isEscrow) {
-            // Create pending payment
+        if ($isPlatform) {
+            // Only platform payments are recorded in the payments table
             Payment::create([
                 'user_id' => $user->id,
-                'invoice_id' => $invoice->id,
+                'paymentable_id' => $invoice->id,
+                'paymentable_type' => Invoice::class,
                 'reference' => 'PAY-' . strtoupper(Str::random(12)),
                 'provider' => 'paystack',
                 'status' => 'pending',
@@ -260,7 +261,8 @@ class CheckoutPage extends Component
 
             session()->flash('message', "Invoice {$invoice->invoice_number} created with Parts & Parcel Escrow protection! {$deliveryText}");
         } else {
-            session()->flash('message', "Invoice {$invoice->invoice_number} generated for direct transfer. {$deliveryText} Please transfer directly to seller.");
+            // Direct payments happen directly between buyer and seller; not recorded in payments table
+            session()->flash('message', "Invoice {$invoice->invoice_number} generated for direct transfer. {$deliveryText} Please transfer directly to seller's bank account.");
         }
 
         return redirect()->route('invoices');
@@ -270,7 +272,7 @@ class CheckoutPage extends Component
     {
         $itemSubtotal = collect($this->cartItems)->sum(fn($i) => $i['price'] * $i['quantity']);
         $deliveryFee = 0;
-        $activeEscrowFee = ($this->paymentMethod === 'escrow') ? $this->escrowFee : 0;
+        $activeEscrowFee = ($this->paymentMethod === 'platform') ? $this->escrowFee : 0;
         $totalPayable = $itemSubtotal + $deliveryFee + $activeEscrowFee;
 
         return view('livewire.marketplace.checkout-page', [

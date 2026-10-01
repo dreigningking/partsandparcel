@@ -69,7 +69,7 @@ class CartsAndOffersSeeder extends Seeder
                         ],
                         [
                             'quantity' => 1,
-                            'unit_price' => $listing->price,
+                            'unit_price' => $listing->price ?? 15000.00,
                         ]
                     );
                 }
@@ -105,15 +105,15 @@ class CartsAndOffersSeeder extends Seeder
             $status = $offerStatuses[$index % count($offerStatuses)];
             $itemName = $listing->item?->name ?? 'Auto/Tech Spare Part';
 
-            // Calculate offered terms based on what is negotiable
-            $negotiatedPrice = $listing->price;
+            $listingPrice = (float) ($listing->price ?: 15000.00);
+            $negotiatedPrice = $listingPrice;
             $discountAmount = 0.00;
             $termsNotes = [];
 
             if ($listing->is_negotiable) {
                 // Propose a reasonable discount (5% - 10%)
-                $discountAmount = round($listing->price * 0.08, 2);
-                $negotiatedPrice = max(1000, $listing->price - $discountAmount);
+                $discountAmount = round($listingPrice * 0.08, 2);
+                $negotiatedPrice = max(1000, $listingPrice - $discountAmount);
                 $termsNotes[] = 'Proposing ₦' . number_format($negotiatedPrice, 2) . ' for direct escrow checkout.';
             }
 
@@ -169,7 +169,7 @@ class CartsAndOffersSeeder extends Seeder
             // If the offer was countered, create the seller's counter-offer child record
             if ($status === 'countered') {
                 $counterDiscount = round($discountAmount / 2, 2);
-                $counterPrice = $listing->price - $counterDiscount;
+                $counterPrice = max(1000, $listingPrice - $counterDiscount);
                 $counterTerms = "Seller counter-offer: Can accept ₦" . number_format($counterPrice, 2) . " with {$offeredWarrantyDays} days testing warranty.";
 
                 $counterOffer = Offer::updateOrCreate(

@@ -2,13 +2,17 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\FeaturedListing;
 use App\Models\Promotion;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+#[Layout('layouts.dash')]
+#[Title('Promotions & Sponsored Campaigns — Admin Control Center')]
 class AdminPromotions extends Component
 {
     use WithPagination;
@@ -28,56 +32,177 @@ class AdminPromotions extends Component
     #[Url(as: 'to')]
     public string $dateTo = '';
 
-    public ?int $analyticsPromotionId = null;
+    public ?int $selectedPromotionId = null;
 
-    public function openAnalytics(int $promotionId): void
+    public bool $showDetailsModal = false;
+
+    public bool $showEditModal = false;
+
+    public string $editStatus = 'active';
+
+    public string $editType = 'clicks';
+
+    public int $editAchievedCount = 0;
+
+    public function updatingSearch(): void
     {
-        $this->analyticsPromotionId = $promotionId;
+        $this->resetPage();
     }
 
-    public function closeAnalytics(): void
+    public function updatingStatus(): void
     {
-        $this->analyticsPromotionId = null;
+        $this->resetPage();
+    }
+
+    public function updatingType(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateFrom(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateTo(): void
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->status = '';
+        $this->type = '';
+        $this->dateFrom = '';
+        $this->dateTo = '';
+        $this->resetPage();
+    }
+
+    public function openDetails(int $id): void
+    {
+        $this->selectedPromotionId = $id;
+        $this->showDetailsModal = true;
+    }
+
+    public function closeDetails(): void
+    {
+        $this->showDetailsModal = false;
+        $this->selectedPromotionId = null;
+    }
+
+    public function openEdit(int $id): void
+    {
+        $promotion = Promotion::query()->findOrFail($id);
+
+        $this->selectedPromotionId = $promotion->id;
+        $this->editStatus = $promotion->status;
+        $this->editType = $promotion->type;
+        $this->editAchievedCount = (int) $promotion->achieved_count;
+
+        $this->resetValidation();
+        $this->showEditModal = true;
+    }
+
+    public function closeEdit(): void
+    {
+        $this->showEditModal = false;
+        $this->selectedPromotionId = null;
+        $this->resetValidation();
+    }
+
+    public function saveEdit(): void
+    {
+        $this->validate([
+            'editStatus' => ['required', Rule::in(['pending', 'active', 'inactive', 'completed'])],
+            'editType' => ['required', Rule::in(['clicks', 'views'])],
+            'editAchievedCount' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $promotion = Promotion::query()->findOrFail($this->selectedPromotionId);
+        $promotion->update([
+            'status' => $this->editStatus,
+            'type' => $this->editType,
+            'achieved_count' => $this->editAchievedCount,
+        ]);
+
+        session()->flash('status', __('Promotion campaign updated successfully.'));
+        $this->closeEdit();
+    }
+
+    public function updateStatus(int $id, string $newStatus): void
+    {
+        if (! in_array($newStatus, ['pending', 'active', 'inactive', 'completed'], true)) {
+            return;
+        }
+
+        $promotion = Promotion::query()->findOrFail($id);
+        $promotion->update(['status' => $newStatus]);
+
+        session()->flash('status', __('Promotion status changed to :status.', ['status' => ucfirst($newStatus)]));
+    }
+
+    public function deletePromotion(int $id): void
+    {
+        $promotion = Promotion::query()->findOrFail($id);
+        $promotion->delete();
+
+        if ($this->selectedPromotionId === $id) {
+            $this->closeDetails();
+            $this->closeEdit();
+        }
+
+        session()->flash('status', __('Promotion deleted successfully.'));
     }
 
     public function render()
     {
         $promotions = Promotion::query()
-            ->with(['user', 'listing', 'plan'])
+            ->with(['user', 'listing.item', 'listing.media'])
             ->when($this->search !== '', function (Builder $query) {
-                $query->whereHas('user', fn (Builder $userQuery) => $userQuery->where('name', 'like', '%'.$this->search.'%'));
+                $query->where(function (Builder $sub) {
+                    $sub->whereHas('user', function (Builder $uq) {
+                        $uq->where('name', 'like', '%'.$this->search.'%')
+                            ->orWhere('email', 'like', '%'.$this->search.'%');
+                    })->orWhereHas('listing', function (Builder $lq) {
+                        $lq->where('slug', 'like', '%'.$this->search.'%')
+                            ->orWhereHas('item', fn (Builder $iq) => $iq->where('name', 'like', '%'.$this->search.'%'));
+                    });
+                });
             })
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
-            ->when($this->type !== '', fn (Builder $query) => $query->where('promotable_type', $this->type))
-            ->when($this->dateFrom !== '', fn (Builder $query) => $query->whereDate('start_at', '>=', $this->dateFrom))
-            ->when($this->dateTo !== '', fn (Builder $query) => $query->whereDate('start_at', '<=', $this->dateTo))
-            ->latest('start_at')
-            ->paginate(10);
+            ->when($this->type !== '', fn (Builder $query) => $query->where('type', $this->type))
+            ->when($this->dateFrom !== '', fn (Builder $query) => $query->whereDate('created_at', '>=', $this->dateFrom))
+            ->when($this->dateTo !== '', fn (Builder $query) => $query->whereDate('created_at', '<=', $this->dateTo))
+            ->latest('created_at')
+            ->paginate(12);
 
-        $analytics = null;
-        if ($this->analyticsPromotionId) {
-            $promotion = Promotion::query()->with('listing')->find($this->analyticsPromotionId);
-            if ($promotion) {
-                $featured = FeaturedListing::query()
-                    ->where('listing_id', $promotion->listing_id)
-                    ->latest('id')
-                    ->first();
-                $analytics = [
-                    'promotion' => $promotion,
-                    'views' => (int) ($featured->views_count ?? 0),
-                    'clicks' => (int) ($featured->click_count ?? 0),
-                    'action_counts' => $featured->action_counts ?? [],
-                    'target_type' => $featured->target_type,
-                    'target_count' => $featured->target_count,
-                ];
-            }
-        }
+        $totalPromotions = Promotion::query()->count();
+        $activePromotions = Promotion::query()->where('status', 'active')->count();
+        $totalClicksAchieved = (int) Promotion::query()->where('type', 'clicks')->sum('achieved_count');
+        $totalViewsAchieved = (int) Promotion::query()->where('type', 'views')->sum('achieved_count');
+
+        $selectedPromotion = $this->selectedPromotionId
+            ? Promotion::query()->with(['user', 'listing.item', 'listing.media', 'payments'])->find($this->selectedPromotionId)
+            : null;
 
         return view('livewire.admin.admin-promotions', [
             'promotions' => $promotions,
-            'statuses' => Promotion::query()->distinct()->pluck('status')->filter()->values(),
-            'types' => Promotion::query()->distinct()->pluck('promotable_type')->filter()->values(),
-            'analytics' => $analytics,
+            'totalPromotions' => $totalPromotions,
+            'activePromotions' => $activePromotions,
+            'totalClicksAchieved' => $totalClicksAchieved,
+            'totalViewsAchieved' => $totalViewsAchieved,
+            'selectedPromotion' => $selectedPromotion,
+            'search' => $this->search,
+            'status' => $this->status,
+            'type' => $this->type,
+            'dateFrom' => $this->dateFrom,
+            'dateTo' => $this->dateTo,
+            'showDetailsModal' => $this->showDetailsModal,
+            'showEditModal' => $this->showEditModal,
+            'editStatus' => $this->editStatus,
+            'editType' => $this->editType,
+            'editAchievedCount' => $this->editAchievedCount,
         ]);
     }
 }

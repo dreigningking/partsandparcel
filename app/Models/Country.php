@@ -18,6 +18,8 @@ class Country extends Model
         'currency_symbol',
         'timezone',
         'is_active',
+        'is_default',
+        'payment_gateway',
     ];
     
 
@@ -25,6 +27,8 @@ class Country extends Model
     {
         return [
             'is_active' => 'boolean',
+            'is_default' => 'boolean',
+            'payment_gateway' => 'array',
         ];
     }
 

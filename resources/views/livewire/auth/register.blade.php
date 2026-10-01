@@ -15,13 +15,13 @@
                     <label for="country_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Country</label>
                     <div class="input-group">
                         <i class="ri-map-pin-line input-icon"></i>
-                        <select id="country_id" class="form-input form-select" wire:model="country_id" required
-                            style="appearance: none; padding-right: 2.5rem;">
+                        <select wire:model.live="country_id" id="country_id" class="w-full p-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 bg-slate-50 focus:bg-white focus:border-pp-600 outline-none transition">
                             <option value="">Select your country</option>
                             @foreach ($countries as $country)
                                 <option value="{{ $country->id }}">{{ $country->flag }} {{ $country->name }}</option>
                             @endforeach
                         </select>
+                       
                     </div>
                     @error('country_id')
                         <p style="color:red;" class="text-sm text-red-600 mt-1">{{ $message }}</p>

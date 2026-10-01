@@ -2,13 +2,19 @@
 
 namespace App\Livewire\Admin\Settings;
 
+use App\Models\Country;
 use App\Models\Role;
 use App\Models\User;
 use App\Notifications\StaffInviteNotification;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
+#[Layout('layouts.dash')]
+#[Title('Staff Management — Admin Control Center')]
 class AdminStaff extends Component
 {
     public bool $showModal = false;
@@ -23,23 +29,25 @@ class AdminStaff extends Component
 
     public ?int $role_id = null;
 
+    public string $search = '';
+
+    public ?int $roleFilter = null;
+
     public function openCreate(): void
     {
         $this->editingUserId = null;
         $this->name = '';
         $this->email = '';
         $this->password = '';
-        $this->role_id = Role::orderBy('name', 'asc')->value('id');
+        $this->role_id = Role::where('is_active', true)->orderBy('name', 'asc')->value('id');
         $this->resetErrorBag();
         $this->showModal = true;
     }
 
     public function openEdit(int $userId): void
     {
-        if ($userId === auth()->id()) {
-            return;
-        }
-        $user = User::query()->whereKey($userId)->whereHas('role')->firstOrFail();
+        $user = User::query()->whereKey($userId)->whereNotNull('role_id')->firstOrFail();
+
         $this->editingUserId = $user->id;
         $this->name = $user->name;
         $this->email = $user->email;
@@ -53,6 +61,7 @@ class AdminStaff extends Component
     {
         $this->showModal = false;
         $this->editingUserId = null;
+        $this->resetErrorBag();
     }
 
     public function saveStaff(): void
@@ -79,59 +88,88 @@ class AdminStaff extends Component
             'name' => $this->name,
             'email' => $this->email,
             'role_id' => $role->id,
-            'active_role' => 'admin',
         ];
 
-        if ($this->password !== '') {
-            $payload['password'] = Hash::make($this->password);
-        }
-
         if ($this->editingUserId) {
-            User::query()->whereKey($this->editingUserId)->update(
-                $this->password !== '' ? $payload : [
-                    'name' => $payload['name'],
-                    'email' => $payload['email'],
-                    'role_id' => $payload['role_id'],
-                    'active_role' => $payload['active_role'],
-                ]
-            );
+            if ($this->password !== '') {
+                $payload['password'] = Hash::make($this->password);
+            }
+
+            User::query()->whereKey($this->editingUserId)->update($payload);
+            session()->flash('status', __('Staff account ":name" updated successfully.', ['name' => $this->name]));
         } else {
-            $payload['password'] = Hash::make($this->password);
+            $plainPassword = $this->password;
+            $payload['password'] = Hash::make($plainPassword);
             $payload['email_verified_at'] = now();
-            $payload['country_id'] = auth()->user()?->country_id;
+            if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'country_code')) {
+                $payload['country_code'] = auth()->user()?->country_code ?? 'NG';
+            }
+
             $user = User::query()->create($payload);
-            $user->notify(new StaffInviteNotification($user, $this->password));
+
+            try {
+                $user->notify(new StaffInviteNotification($user, $plainPassword));
+            } catch (\Throwable $e) {
+                report($e);
+            }
+
+            session()->flash('status', __('Staff member ":name" created and invitation email queued.', ['name' => $this->name]));
         }
 
-        session()->flash('status', __('Staff member saved.'));
         $this->closeModal();
     }
 
     public function deleteStaff(int $userId): void
     {
-        $user = User::query()->whereKey($userId)->whereHas('role')->firstOrFail();
+        $user = User::query()->whereKey($userId)->whereNotNull('role_id')->firstOrFail();
+
         if (auth()->id() === $user->id) {
-            session()->flash('error', __('You cannot remove yourself from admin.'));
+            session()->flash('error', __('You cannot remove your own administrative privileges.'));
 
             return;
         }
-        $user->update(['role_id' => null,'active_role' => 'buyer']);
-        session()->flash('status', __('Staff member removed from admin.'));
+
+        $userName = $user->name;
+        // Revoke admin access by nullifying role_id
+        $user->update(['role_id' => null]);
+
+        session()->flash('status', __('Admin privileges revoked for ":name".', ['name' => $userName]));
     }
 
-    public function render()
+    public function render(): View
     {
-        $staff = User::query()
+        $staffQuery = User::query()
             ->with('role')
-            ->whereHas('role')
-            ->orderBy('name','asc')
-            ->get();
+            ->whereNotNull('role_id');
 
-        $adminRoles = Role::orderBy('name', 'asc')->get();
+        if (trim($this->search) !== '') {
+            $term = '%' . trim($this->search) . '%';
+            $staffQuery->where(function ($q) use ($term) {
+                $q->where('name', 'like', $term)
+                  ->orWhere('email', 'like', $term);
+            });
+        }
+
+        if ($this->roleFilter) {
+            $staffQuery->where('role_id', $this->roleFilter);
+        }
+
+        $staff = $staffQuery->orderBy('name', 'asc')->get();
+        $adminRoles = Role::query()->where('is_active', true)->orderBy('name', 'asc')->get();
 
         return view('livewire.admin.settings.admin-staff', [
             'staff' => $staff,
             'adminRoles' => $adminRoles,
+            'totalStaffCount' => User::whereNotNull('role_id')->count(),
+            'totalRolesCount' => Role::where('is_active', true)->count(),
+            'search' => $this->search,
+            'roleFilter' => $this->roleFilter,
+            'showModal' => $this->showModal,
+            'editingUserId' => $this->editingUserId,
+            'name' => $this->name,
+            'email' => $this->email,
+            'password' => $this->password,
+            'role_id' => $this->role_id,
         ]);
     }
 }

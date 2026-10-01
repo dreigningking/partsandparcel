@@ -1,5 +1,30 @@
 <?php
 
+// use App\Livewire\Admin\AdminAdvertisements;
+use App\Livewire\Admin\AdminBlog;
+use App\Livewire\Admin\AdminBlogPostCreate;
+use App\Livewire\Admin\AdminBlogPostEdit;
+use App\Livewire\Admin\AdminBlogPostShow;
+use App\Livewire\Admin\AdminCouponCreate;
+use App\Livewire\Admin\AdminCouponEdit;
+use App\Livewire\Admin\AdminCoupons;
+use App\Livewire\Admin\AdminDashboard;
+use App\Livewire\Admin\AdminFaqs;
+use App\Livewire\Admin\AdminListingDetails;
+use App\Livewire\Admin\AdminListings;
+use App\Livewire\Admin\AdminModerations;
+use App\Livewire\Admin\AdminPayments;
+use App\Livewire\Admin\AdminPromotions;
+use App\Livewire\Admin\AdminSubscriptions;
+use App\Livewire\Admin\AdminUserDetails;
+use App\Livewire\Admin\AdminUsers;
+use App\Livewire\Admin\Settings\AdminCategories;
+use App\Livewire\Admin\Settings\AdminCountries;
+use App\Livewire\Admin\Settings\AdminGeneral;
+use App\Livewire\Admin\Settings\AdminPromotionPlans;
+use App\Livewire\Admin\Settings\AdminRolesPermissions;
+use App\Livewire\Admin\Settings\AdminStaff;
+use App\Livewire\Admin\Settings\AdminSubscriptionPlans;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -123,40 +148,39 @@ Route::middleware('auth')->group(function () {
 
 // Admin Control Center (Protected by EnsureUserIsAdmin)
 Route::middleware(['auth', 'admin'])->prefix('admin')->as('admin.')->group(function () {
-    Route::get('/', \App\Livewire\Admin\AdminDashboard::class)->name('index');
-    Route::get('dashboard', \App\Livewire\Admin\AdminDashboard::class)->name('dashboard');
+    Route::get('/', AdminDashboard::class)->name('index');
+    Route::get('dashboard', AdminDashboard::class)->name('dashboard');
+    Route::get('profile', Profile::class)->name('profile');
+    Route::get('moderations', AdminModerations::class)->name('moderations');
+    Route::get('users', AdminUsers::class)->name('users');
+    Route::get('users/{user}', AdminUserDetails::class)->whereNumber('user')->name('users.show');
+    Route::get('subscriptions', AdminSubscriptions::class)->name('subscriptions');
+    Route::get('promotions', AdminPromotions::class)->name('promotions');
+    Route::get('properties', AdminListings::class)->name('properties');
+    Route::get('properties/{property}', AdminListingDetails::class)->whereNumber('property')->name('properties.show');
+    Route::get('blog', AdminBlog::class)->name('blog');
+    Route::get('blog/create', AdminBlogPostCreate::class)->name('blog.create');
+    Route::get('blog/{post}', AdminBlogPostShow::class)->whereNumber('post')->name('blog.show');
+    Route::get('blog/{post}/edit', AdminBlogPostEdit::class)->whereNumber('post')->name('blog.edit');
+    Route::get('payments', AdminPayments::class)->name('payments');
+    // Route::get('coupons', AdminCoupons::class)->name('coupons');
+    // Route::get('coupons/create', AdminCouponCreate::class)->name('coupons.create');
+    // Route::get('coupons/{coupon}/edit', AdminCouponEdit::class)->whereNumber('coupon')->name('coupons.edit');
+    Route::get('faqs', AdminFaqs::class)->name('faqs');
+    // Route::get('advertisements', AdminAdvertisements::class)->name('advertisements');
+    Route::prefix('settings')->name('settings.')->group(function () {
+        Route::get('general', AdminGeneral::class)->name('general');
+        Route::get('categories', AdminCategories::class)->name('categories');
+        Route::get('countries', AdminCountries::class)->name('countries');
+        Route::get('staff', AdminStaff::class)->name('staff');
+        Route::get('roles', AdminRolesPermissions::class)->name('roles');
+        Route::get('promotion-plans', AdminPromotionPlans::class)->name('promotion-plans');
+        Route::get('subscription-plans', AdminSubscriptionPlans::class)->name('subscription-plans');
+    });
 });
     // Route::middleware(['admin', 'role.selected'])->prefix('admin')->name('admin.')->group(function () {
     //     Route::get('dashboard', AdminDashboard::class)->name('dashboard');
-    //     Route::get('profile', Profile::class)->name('profile');
-    //     Route::get('moderations', AdminModerations::class)->name('moderations');
-    //     Route::get('users', AdminUsers::class)->name('users');
-    //     Route::get('users/{user}', AdminUserDetails::class)->whereNumber('user')->name('users.show');
-    //     Route::get('subscriptions', AdminSubscriptions::class)->name('subscriptions');
-    //     Route::get('promotions', AdminPromotions::class)->name('promotions');
-    //     Route::get('properties', AdminListings::class)->name('properties');
-    //     Route::get('properties/{property}', AdminListingDetails::class)->whereNumber('property')->name('properties.show');
-    //     Route::get('blog', AdminBlog::class)->name('blog');
-    //     Route::get('blog/create', AdminBlogPostCreate::class)->name('blog.create');
-    //     Route::get('blog/{post}', AdminBlogPostShow::class)->whereNumber('post')->name('blog.show');
-    //     Route::get('blog/{post}/edit', AdminBlogPostEdit::class)->whereNumber('post')->name('blog.edit');
-    //     Route::get('payments', AdminPayments::class)->name('payments');
-    //     Route::get('coupons', AdminCoupons::class)->name('coupons');
-    //     Route::get('coupons/create', AdminCouponCreate::class)->name('coupons.create');
-    //     Route::get('coupons/{coupon}/edit', AdminCouponEdit::class)->whereNumber('coupon')->name('coupons.edit');
-    //     Route::get('faqs', AdminFaqs::class)->name('faqs');
-    //     Route::get('advertisements', AdminAdvertisements::class)->name('advertisements');
-    //     Route::prefix('settings')->name('settings.')->group(function () {
-    //         Route::get('general', AdminGeneral::class)->name('general');
-    //         Route::get('categories', AdminCategories::class)->name('categories');
-    //         Route::get('subscription-plans', AdminSubscriptionPlans::class)->name('subscription-plans');
-    //         Route::get('promotion-plans', AdminPromotionPlans::class)->name('promotion-plans');
-    //         Route::get('staff', AdminStaff::class)->name('staff');
-    //         Route::get('roles', AdminRolesPermissions::class)->name('roles');
-    //         Route::get('currencies', AdminCurrencies::class)->name('currencies');
-    //         Route::get('countries', AdminCountries::class)->name('countries');
-
-    //     });
+    //     
     // });
 
 Route::get('clear-cache', function () {

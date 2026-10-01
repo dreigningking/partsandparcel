@@ -31,7 +31,7 @@
                         <td class="px-4 py-3">{{ $plan->days }}</td>
                         <td class="px-4 py-3 text-xs text-gray-600">
                             @foreach ($plan->prices as $p)
-                                <div>{{ $p->currency?->code }} {{ $p->amount }}</div>
+                                <div>{{ $p->currency }} {{ $p->amount }}</div>
                             @endforeach
                             @if ($plan->prices->isEmpty()) — @endif
                         </td>
@@ -105,8 +105,8 @@
                         @foreach ($priceRows as $i => $row)
                             <div class="mt-2 flex flex-wrap gap-2" wire:key="pr-{{ $i }}">
                                 <select wire:model="priceRows.{{ $i }}.currency_id" class="rounded-lg border border-gray-200 px-2 py-1 text-sm">
-                                    @foreach ($currencies as $c)
-                                        <option value="{{ $c->id }}">{{ $c->code }}</option>
+                                    @foreach ($countries as $c)
+                                        <option value="{{ $c->id }}">{{ $c->name.'-'.$c->currency }}</option>
                                     @endforeach
                                 </select>
                                 <input type="text" wire:model="priceRows.{{ $i }}.amount" class="w-28 rounded-lg border border-gray-200 px-2 py-1 text-sm" />

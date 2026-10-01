@@ -28,8 +28,7 @@ class PromotionsSeeder extends Seeder
         // 2. Active Promotions for Published Listings
         $listings = Listing::where('is_published', true)->where('is_active', true)->get();
         if ($listings->isEmpty()) {
-            $this->call(DemoItemsAndListingsSeeder::class);
-            $listings = Listing::where('is_published', true)->where('is_active', true)->get();
+            $listings = Listing::all();
         }
 
         // Promote a healthy sample of listings (e.g. 8-12 listings across different sellers)

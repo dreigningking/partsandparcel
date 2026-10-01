@@ -7,31 +7,36 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('countries', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('code', 2)->unique(); // ISO-2 (NG, US)
-            $table->string('phone_code', 10)->nullable();
-            $table->string('currency', 3)->default('NGN');
-            $table->string('currency_symbol', 10)->default('₦');
-            $table->string('timezone')->default('Africa/Lagos');
-            $table->boolean('is_default')->default(false);
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('countries')) {
+            Schema::create('countries', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('code', 2)->unique(); // ISO-2 (NG, US)
+                $table->string('phone_code', 10)->nullable();
+                $table->string('currency', 3)->default('NGN');
+                $table->string('currency_symbol', 10)->default('₦');
+                $table->string('timezone')->default('Africa/Lagos');
+                $table->boolean('is_default')->default(false);
+                $table->boolean('is_active')->default(true);
+                $table->json('payment_gateway')->nullable(); // arranged in the order of preference for payment gateways
+                $table->timestamps();
+            });
+        }
 
-        Schema::create('states', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('country_id')->constrained()->cascadeOnDelete();
-            $table->string('name');
-            $table->string('code', 10)->nullable();
-            $table->decimal('latitude', 10, 8)->nullable();
-            $table->decimal('longitude', 11, 8)->nullable();
-            $table->string('timezone')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-            $table->unique(['country_id', 'name']);
-        });
+        if (! Schema::hasTable('states')) {
+            Schema::create('states', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('country_id')->constrained()->cascadeOnDelete();
+                $table->string('name');
+                $table->string('code', 10)->nullable();
+                $table->decimal('latitude', 10, 8)->nullable();
+                $table->decimal('longitude', 11, 8)->nullable();
+                $table->string('timezone')->nullable();
+                $table->boolean('is_active')->default(true);
+                $table->timestamps();
+                $table->unique(['country_id', 'name']);
+            });
+        }
     }
 
     public function down(): void

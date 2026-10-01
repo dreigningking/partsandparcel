@@ -18,19 +18,11 @@ class ListingObserver
 
     public function updated(Listing $listing): void
     {
-        if ($listing->wasChanged('is_published') && $listing->is_published && $this->hasSubscription($listing)) {
+        if (! self::$seeding && $listing->wasChanged('is_published') && $listing->is_published && $listing->latestModeration?->status == 'approved') {
             $this->createModerationRecord($listing, 'updated');
         }
     }
 
-    protected function hasSubscription(Listing $listing): bool
-    {
-        if ($listing->relationLoaded('activeSubscribedListingLink')) {
-            return $listing->activeSubscribedListingLink !== null;
-        }
-
-        return (bool) $listing->activeSubscribedListingLink()->exists();
-    }
 
     protected function createModerationRecord(Listing $listing, string $action): void
     {

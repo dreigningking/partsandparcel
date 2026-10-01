@@ -142,10 +142,10 @@
         <div class="space-y-4">
           
           <!-- OPTION A: PAY VIA PARTS & PARCEL (ESCROW PROTECTED) -->
-          <div wire:click="setPaymentMethod('escrow')" class="block p-4.5 rounded-2xl border transition cursor-pointer {{ $paymentMethod === 'escrow' ? 'border-2 border-pp-600 bg-pp-50/40 shadow-2xs' : 'border-slate-200 hover:border-pp-300 bg-white' }}">
+          <div wire:click="setPaymentMethod('platform')" class="block p-4.5 rounded-2xl border transition cursor-pointer {{ $paymentMethod === 'platform' ? 'border-2 border-pp-600 bg-pp-50/40 shadow-2xs' : 'border-slate-200 hover:border-pp-300 bg-white' }}">
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-3">
-                <input type="radio" name="payment_method_radio" value="escrow" {{ $paymentMethod === 'escrow' ? 'checked' : '' }} class="accent-pp-600" />
+                <input type="radio" name="payment_method_radio" value="platform" {{ $paymentMethod === 'platform' ? 'checked' : '' }} class="accent-pp-600" />
                 <span class="text-xs font-extrabold text-slate-900 uppercase flex items-center gap-2">
                   <i class="fas fa-shield-alt text-pp-600"></i> Pay via Parts &amp; Parcel (Escrow Protected)
                 </span>
@@ -153,7 +153,7 @@
               <span class="px-2.5 py-0.5 rounded-full bg-pp-100 text-pp-800 text-[10px] font-extrabold">+ ₦{{ number_format($escrowFee) }} ESCROW FEE</span>
             </div>
 
-            @if ($paymentMethod === 'escrow')
+            @if ($paymentMethod === 'platform')
               <div class="mt-3 pt-3 border-t border-slate-200/60 text-xs text-slate-700 space-y-2">
                 <p class="font-bold text-pp-800 flex items-center gap-1.5">
                   <i class="fas fa-check-circle text-pp-600"></i> Why Pay via Parts &amp; Parcel Escrow?
@@ -168,10 +168,10 @@
           </div>
 
           <!-- OPTION B: PAY DIRECTLY TO SELLER (OFF-PLATFORM DIRECT TRANSFER) -->
-          <div wire:click="setPaymentMethod('direct_seller')" class="block p-4.5 rounded-2xl border transition cursor-pointer {{ $paymentMethod === 'direct_seller' ? 'border-2 border-amber-600 bg-amber-50/40 shadow-2xs' : 'border-slate-200 hover:border-slate-300 bg-white' }}">
+          <div wire:click="setPaymentMethod('direct')" class="block p-4.5 rounded-2xl border transition cursor-pointer {{ $paymentMethod === 'direct' ? 'border-2 border-amber-600 bg-amber-50/40 shadow-2xs' : 'border-slate-200 hover:border-slate-300 bg-white' }}">
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-3">
-                <input type="radio" wire:model.live="paymentMethod" value="direct_seller" class="accent-amber-600" />
+                <input type="radio" wire:model.live="paymentMethod" value="direct" class="accent-amber-600" />
                 <span class="text-xs font-extrabold text-slate-900 uppercase flex items-center gap-2">
                   <i class="fas fa-university text-slate-600"></i> Pay Directly to Seller's Bank Account
                 </span>
@@ -179,7 +179,7 @@
               <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-extrabold">DIRECT TRANSFER</span>
             </div>
 
-            @if ($paymentMethod === 'direct_seller')
+            @if ($paymentMethod === 'direct')
               <div class="mt-3 pt-3 border-t border-amber-200/60 space-y-3">
                 <!-- SELLER BANK ACCOUNT DETAILS -->
                 <div class="p-4 rounded-xl bg-white border border-amber-300 text-xs space-y-1.5 shadow-2xs">
@@ -250,14 +250,14 @@
           <div class="flex justify-between">
             <span>Payment Mode</span>
             <span class="font-bold text-slate-900">
-              @if ($paymentMethod === 'escrow') Escrow Protected @else Direct Transfer @endif
+              @if ($paymentMethod === 'platform') Escrow Protected @else Direct Transfer @endif
             </span>
           </div>
 
           <div class="flex justify-between">
             <span>Escrow Protection Fee</span>
-            <span class="font-bold {{ $paymentMethod === 'escrow' ? 'text-pp-700' : 'text-slate-400' }}">
-              @if ($paymentMethod === 'escrow') ₦{{ number_format($activeEscrowFee) }} @else NO ESCROW (Direct) @endif
+            <span class="font-bold {{ $paymentMethod === 'platform' ? 'text-pp-700' : 'text-slate-400' }}">
+              @if ($paymentMethod === 'platform') ₦{{ number_format($activeEscrowFee) }} @else NO ESCROW (Direct) @endif
             </span>
           </div>
         </div>
@@ -268,7 +268,7 @@
         </div>
 
         <!-- DYNAMIC ACTION BUTTON BASED ON PAYMENT METHOD -->
-        @if ($paymentMethod === 'escrow')
+        @if ($paymentMethod === 'platform')
           <button wire:click="placeOrder" class="w-full py-3.5 px-4 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs text-center block shadow-xs transition cursor-pointer">
             Pay ₦{{ number_format($totalPayable) }} &amp; Place Order <i class="fas fa-arrow-right text-[10px] ml-1"></i>
           </button>
@@ -279,7 +279,7 @@
           </button>
         @endif
 
-        @if ($paymentMethod === 'escrow')
+        @if ($paymentMethod === 'platform')
           <div class="p-3 rounded-xl bg-pp-50 border border-pp-100 text-[11px] text-pp-800 space-y-1">
             <b class="font-bold text-pp-700 flex items-center gap-1.5">
               <i class="fas fa-shield-alt text-pp-600"></i> Escrow Protection Guaranteed

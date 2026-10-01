@@ -30,8 +30,8 @@ class PromotionObserver
     protected function createModerationRecord(Promotion $promotion, string $action): void
     {
         // Check if the promotion has a plan and the plan type is blog_post or newsletter
-        $plan = $promotion->plan;
-        if (! $plan || ! in_array($plan->type, ['blog_post', 'newsletter'], true)) {
+        $plan = method_exists($promotion, 'plan') ? $promotion->plan : null;
+        if (! $plan || ! in_array($plan->type ?? null, ['blog_post', 'newsletter'], true)) {
             return;
         }
 
