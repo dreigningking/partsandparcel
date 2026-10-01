@@ -2,8 +2,10 @@
 
 namespace App\Services\Commercial;
 
+use App\Models\Discussion;
 use App\Models\Listing;
 use App\Models\Payment;
+use App\Models\PromoCode;
 use App\Models\Response;
 use App\Models\Revenue;
 use App\Models\Subscription;
@@ -32,19 +34,27 @@ class SubscriptionService
         /** @var SubscriptionPlan|null $plan */
         $plan = $activeSub?->plan ?? SubscriptionPlan::where('name', 'like', '%Starter%')->first();
 
-        $dailyLimit = $plan?->features['daily_response_limit'] ?? ($plan?->response_limit ?? 1);
-        $listingLimit = $plan?->features['listing_limit'] ?? 10;
-        $hasDisassemblyTool = (bool) ($plan?->features['disassembly_tool'] ?? false);
+        // 1. Daily community requests limit and usage
+        $dailyRequestLimit = (int) ($plan?->request_limit ?: ($plan?->features['daily_request_limit'] ?? 1));
+        $todayRequestsUsed = Discussion::where('user_id', $user->id)
+            ->whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
+            ->count();
+        $dailyRequestsRemaining = max(0, $dailyRequestLimit - $todayRequestsUsed);
+        $canCreateRequest = $todayRequestsUsed < $dailyRequestLimit;
 
-        // Calculate responses used today dynamically on the fly
+        // 2. Daily community responses limit and usage
+        $dailyResponseLimit = (int) ($plan?->response_limit ?: ($plan?->features['daily_response_limit'] ?? 1));
         $todayResponsesUsed = Response::where('user_id', $user->id)
             ->whereBetween('created_at', [now()->startOfDay(), now()->endOfDay()])
             ->count();
+        $dailyResponsesRemaining = max(0, $dailyResponseLimit - $todayResponsesUsed);
+        $canRespond = $todayResponsesUsed < $dailyResponseLimit;
 
-        // Calculate active listings dynamically on the fly
-        $activeListingsCount = Listing::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->count();
+        // 3. Total listings altogether limit and usage
+        $listingLimit = (int) ($plan?->listing_limit ?: ($plan?->features['listing_limit'] ?? 10));
+        $totalListingsCount = Listing::where('user_id', $user->id)->count();
+        $listingsRemaining = max(0, $listingLimit - $totalListingsCount);
+        $canCreateListing = $totalListingsCount < $listingLimit;
 
         $daysLeft = null;
         if ($activeSub && $activeSub->ends_at) {
@@ -54,22 +64,40 @@ class SubscriptionService
         return [
             'plan_id' => $plan?->id,
             'plan_name' => $plan?->name ?? 'Starter Free',
-            'is_paid' => $activeSub !== null,
+            'is_paid' => $activeSub !== null && (float) ($plan?->price ?? 0) > 0,
             'is_active' => $activeSub !== null ? $activeSub->isActive() : true,
             'subscription' => $activeSub,
-            'daily_response_limit' => (int) $dailyLimit,
+            
+            // Community Requests
+            'daily_request_limit' => $dailyRequestLimit,
+            'daily_requests_used' => (int) $todayRequestsUsed,
+            'daily_requests_remaining' => $dailyRequestsRemaining,
+            'can_create_request' => $canCreateRequest,
+
+            // Community Responses
+            'daily_response_limit' => $dailyResponseLimit,
             'daily_responses_used' => (int) $todayResponsesUsed,
-            'daily_responses_remaining' => max(0, (int) $dailyLimit - $todayResponsesUsed),
-            'can_respond' => $todayResponsesUsed < $dailyLimit,
-            'listing_limit' => (int) $listingLimit,
-            'listings_used' => (int) $activeListingsCount,
-            'listings_remaining' => max(0, (int) $listingLimit - $activeListingsCount),
-            'can_create_listing' => $activeListingsCount < $listingLimit,
-            'has_disassembly_tool' => $hasDisassemblyTool,
+            'daily_responses_remaining' => $dailyResponsesRemaining,
+            'can_respond' => $canRespond,
+
+            // Total Listings Altogether
+            'listing_limit' => $listingLimit,
+            'listings_used' => (int) $totalListingsCount,
+            'listings_remaining' => $listingsRemaining,
+            'can_create_listing' => $canCreateListing,
+
             'starts_at' => $activeSub?->starts_at,
             'ends_at' => $activeSub?->ends_at,
             'days_left' => $daysLeft,
         ];
+    }
+
+    /**
+     * Check if a user can create a community request today.
+     */
+    public function canCreateRequest(User $user): bool
+    {
+        return $this->getUsageStats($user)['can_create_request'];
     }
 
     /**
@@ -89,11 +117,20 @@ class SubscriptionService
     }
 
     /**
-     * Initialize subscription checkout (Paystack or Flutterwave) or activate free tier directly.
+     * Initialize subscription checkout using admin-configured default gateway or activate free tier directly.
      */
-    public function initializeSubscriptionCheckout(User $user, int $planId, string $provider = 'paystack'): array
-    {
+    public function initializeSubscriptionCheckout(
+        User $user,
+        int $planId,
+        ?string $provider = null,
+        int $months = 1,
+        ?string $promoCode = null,
+        ?float $customAmount = null,
+        float $durationDiscount = 0.0,
+        float $promoDiscount = 0.0
+    ): array {
         $plan = SubscriptionPlan::findOrFail($planId);
+        $provider = $provider ?: config('services.payment.default_gateway', 'paystack');
 
         // If plan is Free, activate immediately without checkout gateway
         if ((float) $plan->price <= 0.0) {
@@ -106,6 +143,46 @@ class SubscriptionService
             ];
         }
 
+        // Calculate amount if not custom
+        if ($customAmount !== null) {
+            $payableAmount = max(0.0, $customAmount);
+        } else {
+            $baseTotal = (float) $plan->price * max(1, $months);
+            $payableAmount = max(0.0, $baseTotal - $durationDiscount - $promoDiscount);
+        }
+
+        // If discounts make it completely free (e.g. 100% promo)
+        if ($payableAmount <= 0.0) {
+            $reference = 'FREE-' . strtoupper(Str::random(10));
+            $payment = Payment::create([
+                'user_id' => $user->id,
+                'reference' => $reference,
+                'provider' => $provider,
+                'status' => 'successful',
+                'amount' => 0.00,
+                'currency' => 'NGN',
+                'paid_at' => now(),
+                'metadata' => [
+                    'payment_type' => 'subscription',
+                    'plan_id' => $plan->id,
+                    'user_id' => $user->id,
+                    'months' => $months,
+                    'promo_code' => $promoCode,
+                    'duration_discount' => $durationDiscount,
+                    'promo_discount' => $promoDiscount,
+                ],
+            ]);
+
+            $subscription = $this->activateSubscription($payment);
+
+            return [
+                'status' => 'success',
+                'is_free' => false,
+                'subscription' => $subscription,
+                'redirect_url' => route('dashboard'),
+            ];
+        }
+
         $reference = 'SUB-' . strtoupper(Str::random(10));
 
         $payment = Payment::create([
@@ -113,23 +190,38 @@ class SubscriptionService
             'reference' => $reference,
             'provider' => $provider,
             'status' => 'pending',
-            'amount' => $plan->price,
+            'amount' => $payableAmount,
             'currency' => 'NGN',
             'metadata' => [
                 'payment_type' => 'subscription',
                 'plan_id' => $plan->id,
+                'plan_name' => $plan->name,
                 'user_id' => $user->id,
+                'months' => $months,
+                'promo_code' => $promoCode,
+                'duration_discount' => $durationDiscount,
+                'promo_discount' => $promoDiscount,
             ],
         ]);
 
-        $callbackUrl = route('payment.callback', ['reference' => $reference]);
+        $callbackUrl = route('payment.callback', ['reference' => $reference, 'provider' => $provider]);
+        $authorizationUrl = null;
 
-        if ($provider === 'flutterwave') {
-            $response = $this->flutterwave->initialize($payment, $callbackUrl);
-            $authorizationUrl = $response['link'] ?? $response['authorization_url'] ?? $callbackUrl;
+        $gatewayKey = config("services.{$provider}.secret");
+        if (empty($gatewayKey) && app()->isLocal()) {
+            $authorizationUrl = route('payment.callback', [
+                'reference' => $reference,
+                'provider' => $provider,
+                'mock_success' => 1,
+            ]);
         } else {
-            $response = $this->paystack->initialize($payment, $callbackUrl);
-            $authorizationUrl = $response['authorization_url'] ?? $callbackUrl;
+            if ($provider === 'flutterwave') {
+                $response = $this->flutterwave->initialize($payment, $callbackUrl);
+                $authorizationUrl = $response['link'] ?? $response['authorization_url'] ?? null;
+            } else {
+                $response = $this->paystack->initialize($payment, $callbackUrl);
+                $authorizationUrl = $response['authorization_url'] ?? null;
+            }
         }
 
         return [
@@ -137,7 +229,7 @@ class SubscriptionService
             'is_free' => false,
             'payment' => $payment,
             'reference' => $reference,
-            'authorization_url' => $authorizationUrl,
+            'authorization_url' => $authorizationUrl ?? $callbackUrl,
         ];
     }
 
@@ -148,6 +240,7 @@ class SubscriptionService
     {
         $planId = $payment->metadata['plan_id'] ?? null;
         $plan = SubscriptionPlan::findOrFail($planId);
+        $months = max(1, (int) ($payment->metadata['months'] ?? 1));
 
         // Cancel previous active subscriptions
         Subscription::where('user_id', $payment->user_id)
@@ -155,7 +248,7 @@ class SubscriptionService
             ->update(['status' => 'cancelled']);
 
         $startsAt = now();
-        $endsAt = now()->addMonth();
+        $endsAt = now()->addMonths($months);
 
         $subscription = Subscription::create([
             'user_id' => $payment->user_id,
@@ -163,7 +256,9 @@ class SubscriptionService
             'status' => 'active',
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,
-            'response_limit' => $plan->response_limit,
+            'request_limit' => $plan->request_limit ?? ($plan->features['daily_request_limit'] ?? 1),
+            'response_limit' => $plan->response_limit ?? ($plan->features['daily_response_limit'] ?? 1),
+            'listing_limit' => $plan->listing_limit ?? ($plan->features['listing_limit'] ?? 10),
         ]);
 
         $payment->update([
@@ -171,6 +266,11 @@ class SubscriptionService
             'status' => 'successful',
             'paid_at' => now(),
         ]);
+
+        // Record promo code usage if applied
+        if (! empty($payment->metadata['promo_code'])) {
+            PromoCode::where('code', $payment->metadata['promo_code'])->first()?->recordUsage();
+        }
 
         // Record platform revenue
         Revenue::create([
@@ -199,7 +299,9 @@ class SubscriptionService
             'status' => 'active',
             'starts_at' => now(),
             'ends_at' => now()->addYears(10), // Permanent free tier
-            'response_limit' => $plan->response_limit,
+            'request_limit' => $plan->request_limit ?? 1,
+            'response_limit' => $plan->response_limit ?? 1,
+            'listing_limit' => $plan->listing_limit ?? 10,
         ]);
     }
 }

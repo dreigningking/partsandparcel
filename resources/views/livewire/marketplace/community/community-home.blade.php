@@ -34,19 +34,19 @@
             <!-- STATS COUNTER -->
             <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-3 bg-white p-4 rounded-xl border border-slate-200/80 shrink-0 shadow-2xs">
                 <div class="text-center px-3 py-1">
-                    <div class="text-lg sm:text-xl font-black text-slate-900">1,248</div>
+                    <div class="text-lg sm:text-xl font-black text-slate-900">{{ $stats['open_requests'] ?? '1,248' }}</div>
                     <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mt-0.5">Open Requests</div>
                 </div>
                 <div class="text-center px-3 py-1">
-                    <div class="text-lg sm:text-xl font-black text-slate-900">3,721</div>
+                    <div class="text-lg sm:text-xl font-black text-slate-900">{{ $stats['offers_received'] ?? '3,721' }}</div>
                     <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mt-0.5">Offers Received</div>
                 </div>
                 <div class="text-center px-3 py-1">
-                    <div class="text-lg sm:text-xl font-black text-slate-900">9,430</div>
+                    <div class="text-lg sm:text-xl font-black text-slate-900">{{ $stats['active_members'] ?? '9,430' }}</div>
                     <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mt-0.5">Active Members</div>
                 </div>
                 <div class="text-center px-3 py-1">
-                    <div class="text-lg sm:text-xl font-black text-slate-900">2,186</div>
+                    <div class="text-lg sm:text-xl font-black text-slate-900">{{ $stats['fulfilled'] ?? '2,186' }}</div>
                     <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mt-0.5">Fulfilled</div>
                 </div>
             </div>
@@ -109,33 +109,93 @@
                             <!-- META HEADER -->
                             <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
                                 <div class="flex flex-wrap items-center gap-3">
-                                    <span class="font-extrabold text-slate-900 flex items-center gap-1.5"><i class="fas fa-user-circle text-pp-600"></i> {{ $r['name'] }}</span>
+                                    <span class="font-extrabold text-slate-900 flex items-center gap-1.5">
+                                        <i class="fas fa-user-circle text-pp-600"></i> {{ $r['name'] }}
+                                        @if(!empty($r['verified']))
+                                            <span class="px-1.5 py-0.2 rounded-full bg-pp-50 text-pp-700 font-bold text-[9px] border border-pp-100" title="Verified Member">✓ Verified</span>
+                                        @endif
+                                    </span>
                                     <span class="flex items-center gap-1 text-slate-500"><i class="fas fa-map-pin text-slate-400 text-[10px]"></i> {{ $r['location'] }}</span>
                                     <span class="flex items-center gap-1 text-slate-400"><i class="far fa-clock text-[10px]"></i> {{ $r['time'] }}</span>
                                 </div>
-                                <span class="px-2.5 py-0.5 rounded-full bg-pp-50 text-pp-700 font-extrabold text-[10px] uppercase tracking-wider border border-pp-100">{{ $r['type'] }}</span>
+                                <div class="flex items-center gap-2">
+                                    @if(!empty($r['brand']))
+                                        <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-extrabold text-[10px] border border-slate-200">
+                                            <i class="fas fa-tag text-slate-400 mr-1"></i> {{ $r['brand'] }} @if(!empty($r['model'])) · {{ $r['model'] }} @endif
+                                        </span>
+                                    @endif
+                                    <span class="px-2.5 py-0.5 rounded-full bg-pp-50 text-pp-700 font-extrabold text-[10px] uppercase tracking-wider border border-pp-100">{{ $r['type'] }}</span>
+                                </div>
                             </div>
 
                             <!-- TITLE & DESCRIPTION -->
-                            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 leading-snug">{{ $r['title'] }}</h3>
-                            <p class="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2">{{ $r['desc'] }}</p>
+                            <div>
+                                <a href="{{ route('community.request', ['id' => $r['id']]) }}" class="hover:text-pp-600 transition inline-block">
+                                    <h3 class="text-base sm:text-lg font-extrabold text-slate-900 leading-snug">{{ $r['title'] }}</h3>
+                                </a>
+                                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-2 mt-1">{{ $r['desc'] }}</p>
+                            </div>
 
-                            <!-- CARD FOOTER -->
+                            <!-- ATTACHED MEDIA PREVIEW STRIP (PHOTO, VIDEO, PDF) -->
+                            @if(!empty($r['media']) && count($r['media']) > 0)
+                                <div class="pt-1">
+                                    <div class="flex items-center gap-2 overflow-x-auto pb-1">
+                                        @foreach(array_slice($r['media'], 0, 4) as $idx => $m)
+                                            <a href="{{ route('community.request', ['id' => $r['id']]) }}" class="relative w-14 h-14 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 shrink-0 group hover:border-pp-600 transition" title="{{ $m['name'] ?? 'Media Attachment' }}">
+                                                @if($m['type'] === 'image')
+                                                    <img src="{{ $m['url'] }}" alt="{{ $m['name'] ?? 'Media' }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" />
+                                                    <span class="absolute bottom-1 right-1 bg-slate-950/70 text-white text-[8px] font-bold px-1 rounded"><i class="fas fa-image"></i></span>
+                                                @elseif($m['type'] === 'video')
+                                                    <div class="w-full h-full bg-slate-900 flex items-center justify-center text-white">
+                                                        <i class="fas fa-play text-xs text-pp-400 group-hover:scale-110 transition"></i>
+                                                    </div>
+                                                    <span class="absolute bottom-1 right-1 bg-slate-950/80 text-amber-400 text-[8px] font-bold px-1 rounded">VID</span>
+                                                @else
+                                                    <div class="w-full h-full bg-rose-50 flex flex-col items-center justify-center p-1 text-center">
+                                                        <i class="fas fa-file-pdf text-rose-600 text-sm group-hover:scale-110 transition"></i>
+                                                        <span class="text-[8px] font-extrabold text-rose-700 truncate w-full mt-0.5">DOC</span>
+                                                    </div>
+                                                @endif
+
+                                                @if($idx === 3 && count($r['media']) > 4)
+                                                    <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-2xs flex items-center justify-center text-white font-extrabold text-xs">
+                                                        +{{ count($r['media']) - 3 }}
+                                                    </div>
+                                                @endif
+                                            </a>
+                                        @endforeach
+                                        <span class="text-[11px] text-slate-400 font-semibold pl-1">
+                                            {{ count($r['media']) }} {{ count($r['media']) === 1 ? 'file' : 'files' }} attached
+                                        </span>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- CARD FOOTER & SPECIFICATION PILLS -->
                             <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="px-3 py-1 rounded-full bg-pp-50 text-pp-700 font-extrabold text-xs border border-pp-100 flex items-center gap-1.5">
-                                        <i class="fas fa-handshake"></i> {{ $r['offers'] }} Offers Received
+                                        <i class="fas fa-handshake"></i> {{ $r['offers'] }} Offers
                                     </span>
                                     @if(!empty($r['budget']))
                                         <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-900 font-extrabold text-xs">
                                             {{ $r['budget'] }}
                                         </span>
                                     @endif
-                                    @if($r['status'] !== 'open')
-                                        <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 font-bold text-xs">
-                                            {{ $r['status'] === 'offers' ? 'Offers Received' : 'Recently Fulfilled' }}
+                                    @if(!empty($r['fulfillment']))
+                                        <span class="px-2.5 py-1 rounded-full bg-slate-50 text-slate-700 font-bold text-xs border border-slate-200/80 flex items-center gap-1.5">
+                                            <i class="fas fa-truck-pickup text-slate-400 text-[11px]"></i> {{ $r['fulfillment'] }}
                                         </span>
                                     @endif
+                                    @if(!empty($r['urgency']) && $r['urgency'] !== 'Flexible')
+                                        <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 font-bold text-xs border border-amber-200 flex items-center gap-1">
+                                            <i class="fas fa-bolt text-amber-500 text-[10px]"></i> {{ $r['urgency'] }}
+                                        </span>
+                                    @endif
+                                    <span class="text-xs text-slate-400 flex items-center gap-3 pl-1">
+                                        <span><i class="fas fa-comment-dots text-slate-400"></i> {{ $r['replies'] ?? 0 }}</span>
+                                        <span><i class="fas fa-eye text-slate-400"></i> {{ $r['views'] ?? 1 }}</span>
+                                    </span>
                                 </div>
                                 <div>
                                     @if($r['type'] === 'Question / Advice')
@@ -185,20 +245,25 @@
     POST REQUEST MODAL (MARKETPLACE STYLED)
     ============================================================ -->
     @if($showPostModal)
-        <div class="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-            <div class="bg-white rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-xl relative border border-slate-200 my-8">
+        <div class="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+            <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative border border-slate-200 my-8">
                 <button wire:click="closePostModal" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center text-sm font-bold transition cursor-pointer" aria-label="Close modal">
                     <i class="fas fa-times"></i>
                 </button>
                 
-                <h2 class="text-xl font-extrabold text-slate-900 mb-1 flex items-center gap-2">
-                    <i class="fas fa-pen-square text-pp-600"></i> Post a Request
-                </h2>
-                <p class="text-xs text-slate-500 mb-6">Tell the community what you need — products, parts, repairs, or advice.</p>
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-2xl bg-pp-50 text-pp-600 grid place-items-center text-lg border border-pp-100">
+                        <i class="fas fa-pen-square"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900 leading-tight">Post a Community Request</h2>
+                        <p class="text-xs text-slate-500">Reach verified sellers, technicians, and local experts for parts, repairs, or guidance.</p>
+                    </div>
+                </div>
 
                 @guest
                     <!-- UNAUTHENTICATED STATE WARNING -->
-                    <div class="text-center py-6 space-y-4">
+                    <div class="text-center py-8 space-y-4">
                         <div class="w-16 h-16 rounded-2xl bg-pp-50 text-pp-600 grid place-items-center mx-auto text-2xl font-bold border border-pp-100 shadow-2xs">
                             <i class="fas fa-lock"></i>
                         </div>
@@ -217,20 +282,20 @@
                     </div>
                 @else
                     @if($postSuccessMessage)
-                        <div class="p-4 mb-5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
+                        <div class="p-4 mb-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
                             <span>✅</span> Your request has been posted successfully! The community will start responding shortly.
                         </div>
                     @endif
 
-                    <form wire:submit="submitRequest" class="space-y-4">
+                    <form wire:submit="submitRequest" class="space-y-4 pt-2">
                         <!-- TYPE -->
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1">Request Type <span class="text-rose-500">*</span></label>
-                            <select wire:model="formType" required class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                                <option value="item">Product / Part</option>
-                                <option value="service">Repair / Service</option>
-                                <option value="advice">Question / Advice</option>
-                                <option value="delivery">Delivery / Logistics</option>
+                            <select wire:model="formType" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                <option value="item">Product / Part (Looking to buy)</option>
+                                <option value="service">Repair / Service (Looking for a technician)</option>
+                                <option value="advice">Question / Advice (Need technical troubleshooting)</option>
+                                <option value="delivery">Delivery / Logistics (Need item transported)</option>
                             </select>
                             @error('formType') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                         </div>
@@ -239,7 +304,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Category</label>
-                                <select wire:model.live="formCategory" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                <select wire:model.live="formCategory" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
                                     <option value="">Select Category</option>
                                     @foreach($allCategories as $cat)
                                         <option value="{{ $cat->id }}">{{ $cat->name }}</option>
@@ -248,7 +313,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Brand</label>
-                                <select wire:model="formBrand" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                <select wire:model="formBrand" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
                                     <option value="">Select Brand</option>
                                     @foreach($allBrands as $brand)
                                         <option value="{{ $brand->id }}">{{ $brand->name }}</option>
@@ -260,8 +325,8 @@
                         <!-- MODEL & LOCATION ROW -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Device Model</label>
-                                <select wire:model="formModel" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Device / Part Model</label>
+                                <select wire:model="formModel" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
                                     <option value="">Select Model</option>
                                     @foreach($allModels as $mod)
                                         <option value="{{ $mod->id }}">{{ $mod->name }}</option>
@@ -270,7 +335,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Store / Target Location</label>
-                                <select wire:model="formLocation" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                <select wire:model="formLocation" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
                                     <option value="">Select Location</option>
                                     @foreach($allLocations as $loc)
                                         <option value="{{ $loc->id }}">{{ $loc->name ?? $loc->city }} ({{ $loc->city }}, {{ $loc->state }})</option>
@@ -279,15 +344,37 @@
                             </div>
                         </div>
 
+                        <!-- PREFERRED FULFILMENT & URGENCY ROW -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Preferred Fulfilment</label>
+                                <select wire:model="formFulfillment" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                    <option value="flexible">Flexible / Any Method</option>
+                                    <option value="buyer_pickup">Buyer pickup ("I will pick up from shop")</option>
+                                    <option value="seller_delivery">Seller delivery ("Deliver to my address")</option>
+                                    <option value="shop_pickup">Pickup in Shop / On-site inspection</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Urgency / Timeline</label>
+                                <select wire:model="formUrgency" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                    <option value="standard">Flexible / Standard</option>
+                                    <option value="urgent">⚡ Urgent (Needed Today)</option>
+                                    <option value="within_48h">Within 24–48 Hours</option>
+                                    <option value="this_week">This Week</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <!-- BUDGET & TITLE ROW -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Budget (₦)</label>
-                                <input type="text" wire:model="formBudget" placeholder="e.g. 70,000 – 90,000" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                <input type="text" wire:model="formBudget" placeholder="e.g. 70,000 – 90,000 or Flexible" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Request Title <span class="text-rose-500">*</span></label>
-                                <input type="text" wire:model="formTitle" required placeholder="e.g. Looking for HP EliteBook motherboard" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                                <input type="text" wire:model="formTitle" required placeholder="e.g. Looking for HP EliteBook 840 G5 motherboard in Lagos" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
                                 @error('formTitle') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                             </div>
                         </div>
@@ -295,12 +382,85 @@
                         <!-- DESCRIPTION -->
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1">Description <span class="text-rose-500">*</span></label>
-                            <textarea wire:model="formDesc" required placeholder="Describe what you need in detail…" rows="3" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition"></textarea>
+                            <textarea wire:model="formDesc" required placeholder="Describe what you need in detail — include part numbers, symptoms, tested status requirements, etc." rows="3" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition"></textarea>
                             @error('formDesc') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
-                        <button type="submit" class="w-full py-3 mt-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                            <i class="fas fa-paper-plane"></i> Submit Request
+                        <!-- MULTI-MEDIA ATTACHMENTS (IMAGE, VIDEO, PDF/DOCUMENTS) -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">
+                                Attached Media &amp; Documents
+                                <span class="text-slate-400 font-normal">(Photos, Boot Test Videos, Diagnostic Specs — max 25MB each)</span>
+                            </label>
+
+                            <!-- DROPZONE -->
+                            <div class="border-2 border-dashed border-slate-200 hover:border-pp-500 rounded-2xl p-4 text-center transition bg-slate-50/60 hover:bg-white relative group">
+                                <input type="file" wire:model="formMedia" multiple accept="image/*,video/*,.pdf,.doc,.docx" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" id="mediaUploadInput">
+                                <div class="flex flex-col items-center justify-center space-y-1.5 pointer-events-none">
+                                    <div class="w-9 h-9 rounded-xl bg-pp-50 text-pp-600 grid place-items-center text-sm border border-pp-100 group-hover:scale-105 transition">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <div class="text-xs font-bold text-slate-700">
+                                        <span class="text-pp-600 underline">Click to upload</span> or drag and drop files
+                                    </div>
+                                    <p class="text-[11px] text-slate-400">Photos (JPG, PNG, WEBP), Videos (MP4, MOV), or Diagnostic PDFs</p>
+                                </div>
+                            </div>
+
+                            <!-- UPLOADING INDICATOR -->
+                            <div wire:loading wire:target="formMedia" class="mt-2 text-xs font-bold text-pp-600 flex items-center gap-2">
+                                <i class="fas fa-spinner fa-spin"></i> Uploading files to server... please wait
+                            </div>
+
+                            <!-- STAGED MEDIA TILES -->
+                            @if(!empty($formMedia) && count($formMedia) > 0)
+                                <div class="mt-3 space-y-2">
+                                    <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Staged Attachments ({{ count($formMedia) }}):</span>
+                                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                                        @foreach($formMedia as $index => $file)
+                                            @php
+                                                $ext = strtolower($file->getClientOriginalExtension());
+                                                $isImg = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                                $isVid = in_array($ext, ['mp4', 'mov', 'webm']);
+                                            @endphp
+                                            <div class="relative rounded-xl border border-slate-200 bg-white p-2 flex items-center gap-2 shadow-2xs">
+                                                @if($isImg)
+                                                    <img src="{{ $file->temporaryUrl() }}" alt="Preview" class="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-100">
+                                                @elseif($isVid)
+                                                    <div class="w-10 h-10 rounded-lg bg-slate-900 text-amber-400 grid place-items-center shrink-0 text-xs">
+                                                        <i class="fas fa-video"></i>
+                                                    </div>
+                                                @else
+                                                    <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 grid place-items-center shrink-0 text-sm">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </div>
+                                                @endif
+
+                                                <div class="min-w-0 flex-1">
+                                                    <p class="text-[11px] font-bold text-slate-800 truncate" title="{{ $file->getClientOriginalName() }}">
+                                                        {{ $file->getClientOriginalName() }}
+                                                    </p>
+                                                    <p class="text-[10px] text-slate-400">
+                                                        {{ number_format($file->getSize() / 1024, 0) }} KB
+                                                    </p>
+                                                </div>
+
+                                                <button type="button" wire:click="removeMedia({{ $index }})" class="w-5 h-5 rounded-full bg-slate-100 hover:bg-rose-100 text-slate-400 hover:text-rose-600 grid place-items-center text-[10px] transition cursor-pointer" title="Remove file">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                            @error('formMedia.*') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <button type="submit" wire:loading.attr="disabled" class="w-full py-3.5 mt-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50">
+                            <i class="fas fa-paper-plane" wire:loading.remove wire:target="submitRequest"></i>
+                            <i class="fas fa-spinner fa-spin" wire:loading wire:target="submitRequest"></i>
+                            <span wire:loading.remove wire:target="submitRequest">Publish Request to Community</span>
+                            <span wire:loading wire:target="submitRequest">Publishing...</span>
                         </button>
                     </form>
                 @endguest

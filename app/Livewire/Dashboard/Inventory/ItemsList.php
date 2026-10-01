@@ -154,7 +154,6 @@ class ItemsList extends Component
             'is_warranty_negotiable' => $this->is_warranty_negotiable,
             'warranty_terms' => $this->warranty_terms ?: '',
             'allow_shipping' => $this->allow_shipping,
-            'description' => $asset->name ?? '',
         ]);
 
         session()->flash('message', 'Marketplace listing published successfully!');

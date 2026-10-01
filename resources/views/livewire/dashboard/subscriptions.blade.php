@@ -35,14 +35,19 @@
       <div class="space-y-1">
         <div class="flex items-center gap-2">
           <span class="px-2.5 py-0.5 rounded-full bg-pp-600 text-white font-extrabold text-[10px] uppercase tracking-wider">CURRENT ACTIVE PLAN</span>
-          <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px] uppercase">
-            {{ $usage['is_paid'] ? 'Active' : 'Free Tier' }}
+          <span class="px-2.5 py-0.5 rounded-full {{ $usage['is_paid'] ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-700' }} font-bold text-[10px] uppercase">
+            {{ $usage['is_paid'] ? 'Active Subscription' : 'Free Tier' }}
           </span>
         </div>
         <h2 class="text-2xl font-extrabold text-slate-900">{{ $usage['plan_name'] }}</h2>
         <p class="text-xs text-slate-500">
-          @if($usage['is_paid'])
-            Billed monthly · <strong>{{ $usage['subscription']?->plan ? '@money(' . $usage['subscription']->plan->price . ')' : 'Paid' }}</strong>
+          @if($usage['is_paid'] && $usage['subscription']?->plan)
+            @php
+              $sub = $usage['subscription'];
+              $isAnnual = $sub->starts_at && $sub->ends_at && $sub->starts_at->diffInDays($sub->ends_at) >= 300;
+            @endphp
+            {{ $isAnnual ? 'Billed annually' : 'Billed monthly' }} · 
+            <strong>@money($isAnnual ? $sub->plan->annual_price : $sub->plan->price)</strong>
           @else
             No monthly subscription fees · <strong>₦0 / forever</strong>
           @endif
@@ -75,74 +80,89 @@
       </div>
     </div>
 
-    <!-- REMAINING SUBSCRIPTION RESOURCES (DYNAMICALLY COMPUTED ON THE FLY) -->
+    <!-- THE 3 DYNAMICALLY DETERMINED SUBSCRIPTION RESOURCES -->
     <div class="space-y-3">
       <div class="flex items-center justify-between">
         <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-          <i class="fas fa-chart-bar text-pp-600"></i> Dynamic Resource Allowances (On-the-Fly)
+          <i class="fas fa-chart-pie text-pp-600"></i> Plan Resource Allowances (Real-Time Dynamic Quotas)
         </h3>
-        <span class="text-[10px] text-slate-400 font-bold">Never stale · Real-time verification</span>
+        <span class="text-[10px] text-slate-400 font-bold">Live Verification · Resets Daily</span>
       </div>
 
       <div class="grid md:grid-cols-3 gap-4">
-        <!-- RESOURCE 1: COMMUNITY RESPONSES TODAY -->
+
+        <!-- RESOURCE 1: COMMUNITY REQUESTS TODAY -->
+        @php
+          $reqLimit = max(1, $usage['daily_request_limit']);
+          $reqLeft = $usage['daily_requests_remaining'];
+          $reqPct = min(100, round(($reqLeft / $reqLimit) * 100));
+        @endphp
+        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
+          <div class="flex justify-between items-center text-xs">
+            <span class="font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fas fa-bullhorn text-pp-600"></i> Community Requests Today
+            </span>
+            <span class="font-extrabold text-pp-700">{{ $reqLeft }} / {{ $reqLimit }} Left</span>
+          </div>
+          <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+            <div class="bg-pp-600 h-full rounded-full transition-all duration-300" style="width: {{ $reqPct }}%"></div>
+          </div>
+          <div class="flex justify-between items-center text-[10px] text-slate-400">
+            <span>{{ $usage['daily_requests_used'] }} used today</span>
+            <span>Resets at midnight</span>
+          </div>
+        </div>
+
+        <!-- RESOURCE 2: COMMUNITY RESPONSES TODAY -->
         @php
           $respLimit = max(1, $usage['daily_response_limit']);
           $respLeft = $usage['daily_responses_remaining'];
           $respPct = min(100, round(($respLeft / $respLimit) * 100));
         @endphp
-        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
           <div class="flex justify-between items-center text-xs">
-            <span class="font-bold text-slate-700 flex items-center gap-1.5"><i class="fas fa-comment-dots text-pp-600"></i> Responses Today</span>
-            <span class="font-extrabold text-pp-700">{{ $respLeft }} / {{ $respLimit }} Left</span>
+            <span class="font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fas fa-comment-dots text-emerald-600"></i> Quote Responses Today
+            </span>
+            <span class="font-extrabold text-emerald-700">{{ $respLeft }} / {{ $respLimit }} Left</span>
           </div>
           <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-            <div class="bg-pp-600 h-full rounded-full" style="width: {{ $respPct }}%"></div>
+            <div class="bg-emerald-600 h-full rounded-full transition-all duration-300" style="width: {{ $respPct }}%"></div>
           </div>
-          <p class="text-[10px] text-slate-400">{{ $usage['daily_responses_used'] }} used today · Resets automatically at midnight</p>
+          <div class="flex justify-between items-center text-[10px] text-slate-400">
+            <span>{{ $usage['daily_responses_used'] }} used today</span>
+            <span>Resets at midnight</span>
+          </div>
         </div>
 
-        <!-- RESOURCE 2: ACTIVE LISTINGS ALLOWANCE -->
+        <!-- RESOURCE 3: TOTAL LISTINGS ALLOWANCE ALTOGETHER -->
         @php
           $listLimit = max(1, $usage['listing_limit']);
           $listUsed = $usage['listings_used'];
           $listPct = min(100, round(($listUsed / $listLimit) * 100));
         @endphp
-        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
+        <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5">
           <div class="flex justify-between items-center text-xs">
-            <span class="font-bold text-slate-700 flex items-center gap-1.5"><i class="fas fa-boxes text-pp-600"></i> Active Listings</span>
+            <span class="font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fas fa-boxes text-indigo-600"></i> Total Listings Altogether
+            </span>
             <span class="font-extrabold text-slate-900">{{ $listUsed }} / {{ $listLimit }} Used</span>
           </div>
           <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-            <div class="bg-emerald-500 h-full rounded-full" style="width: {{ $listPct }}%"></div>
+            <div class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: {{ $listPct }}%"></div>
           </div>
-          <p class="text-[10px] text-slate-400">{{ $usage['listings_remaining'] }} slots remaining</p>
+          <div class="flex justify-between items-center text-[10px] text-slate-400">
+            <span>{{ $usage['listings_remaining'] }} slots available</span>
+            <span>All active inventory</span>
+          </div>
         </div>
 
-        <!-- RESOURCE 3: DISASSEMBLY MATRIX TOOL -->
-        <div class="p-4 rounded-2xl {{ $usage['has_disassembly_tool'] ? 'bg-pp-50/60 border-pp-200/80' : 'bg-slate-50 border-slate-200/80' }} border space-y-2">
-          <div class="flex justify-between items-center text-xs">
-            <span class="font-bold text-slate-900 flex items-center gap-1.5"><i class="fas fa-microchip text-pp-600"></i> Disassembly Matrix Tool</span>
-            @if($usage['has_disassembly_tool'])
-              <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">UNLOCKED</span>
-            @else
-              <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-extrabold">PRO ONLY</span>
-            @endif
-          </div>
-          <p class="text-[11px] text-slate-600 leading-snug">
-            @if($usage['has_disassembly_tool'])
-              Full access to inventory disassembly &amp; component lifecycle tracking tools.
-            @else
-              Upgrade to Pro Plan to unlock inventory component breakdown &amp; harvest matrix.
-            @endif
-          </p>
-        </div>
       </div>
     </div>
 
   </div>
 
-  <!-- SUBSCRIPTION HISTORY TABLE -->
+  <!-- SUBSCRIPTION BILLING HISTORY TABLE -->
   <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-soft">
     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
       <div>

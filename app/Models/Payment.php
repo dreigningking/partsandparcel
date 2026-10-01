@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Payment extends Model
 {
@@ -13,8 +14,8 @@ class Payment extends Model
 
     protected $fillable = [
         'user_id',
-        'invoice_id',
-        'subscription_id',
+        'paymentable_id',
+        'paymentable_type',
         'reference',
         'provider',
         'status',
@@ -38,19 +39,9 @@ class Payment extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function invoice(): BelongsTo
+    public function paymentable(): MorphTo
     {
-        return $this->belongsTo(Invoice::class);
-    }
-
-    public function subscription(): BelongsTo
-    {
-        return $this->belongsTo(Subscription::class);
-    }
-
-    public function revenues(): HasMany
-    {
-        return $this->hasMany(Revenue::class);
+        return $this->morphTo();
     }
 
     public function isHeldInEscrow(): bool

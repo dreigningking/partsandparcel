@@ -107,9 +107,6 @@ class ListingDetails extends Component
     public function addToCart(CartService $cartService)
     {
         $user = Auth::user();
-        if (! $user) {
-            return redirect()->route('login');
-        }
 
         $cartService->addToCart($user, $this->listing, 1);
         $this->dispatch('cart-updated');
@@ -120,6 +117,8 @@ class ListingDetails extends Component
     {
         $user = Auth::user();
         if (! $user) {
+            session()->put('url.intended', url()->current());
+            session()->flash('info', 'Please sign in to save items to your wishlist.');
             return redirect()->route('login');
         }
 
@@ -130,12 +129,14 @@ class ListingDetails extends Component
         if ($existing) {
             $existing->delete();
             $this->isWishlisted = false;
+            session()->flash('wishlist_message', 'Item removed from your wishlist.');
         } else {
             Wishlist::create([
                 'user_id' => $user->id,
                 'listing_id' => $this->listing->id,
             ]);
             $this->isWishlisted = true;
+            session()->flash('wishlist_message', 'Item saved to your wishlist!');
         }
     }
 

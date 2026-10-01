@@ -2,13 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\ListingReport;
+use App\Observers\ListingObserver;
 use App\Traits\HasMedia;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Str;
 
+#[ObservedBy([ListingObserver::class])]
 class Listing extends Model
 {
     use HasFactory, HasMedia;
@@ -17,24 +24,18 @@ class Listing extends Model
         'user_id',
         'item_id',
         'slug',
-        'location_id',
         'quantity',
         'reserved_quantity',
         'sold_quantity',
         'price',
         'is_negotiable',
-        'status',
+        'is_published',
+        'is_active',
         'warranty_period_days',
         'is_warranty_negotiable',
         'warranty_terms',
-        'allow_shipping',
-        'description',
+        'allow_shipping'
     ];
-
-    public function setAssetableIdAttribute($value): void
-    {
-        $this->attributes['item_id'] = $value;
-    }
 
     protected function casts(): array
     {
@@ -96,19 +97,15 @@ class Listing extends Model
         return $this->belongsTo(Item::class, 'item_id');
     }
 
-    public function assetable(): BelongsTo
-    {
-        return $this->belongsTo(Item::class, 'item_id');
-    }
 
     public function getAssetableAttribute(): ?Item
     {
         return $this->item;
     }
 
-    public function location(): BelongsTo
+    public function getTitleAttribute(): string
     {
-        return $this->belongsTo(Location::class);
+        return $this->attributes['title'] ?? ($this->item?->name ?? "Listing #{$this->id}");
     }
 
     public function cartItems(): HasMany
@@ -171,7 +168,7 @@ class Listing extends Model
         return max(0, $this->quantity - $this->reserved_quantity - $this->sold_quantity);
     }
 
-    public function scopeInCurrentCountry($query, ?string $countryCode = null)
+    public function scopeInCurrentCountry(Builder $query, ?string $countryCode = null)
     {
         $code = strtoupper($countryCode ?? session('current_location.country_code', 'NG'));
 
@@ -185,4 +182,159 @@ class Listing extends Model
             'images' => ['width' => 1000, 'height' => 1000, 'bg_color' => 'ffffff', 'quality' => 90],
         ];
     }
+
+    
+    public function reports(): HasMany
+    {
+        return $this->hasMany(ListingReport::class);
+    }
+
+
+    public function watchers(): MorphMany
+    {
+        return $this->morphMany(Watchlist::class, 'watchable');
+    }
+
+    public function views(): MorphMany
+    {
+        return $this->morphMany(ViewedEntity::class, 'viewable');
+    }
+
+    public function media(): MorphMany
+    {
+        return $this->morphMany(Media::class, 'mediable');
+    }
+
+
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(Promotion::class);
+    }
+
+    public function scopePublished(Builder $query)
+    {
+        return $query->where('is_published', true);
+    }
+
+
+    public function moderations(): MorphMany
+    {
+        return $this->morphMany(Moderation::class, 'moderatable');
+    }
+    
+    public function latestModeration(): MorphOne
+    {
+        return $this->morphOne(Moderation::class, 'moderatable')->latestOfMany();
+    }
+
+
+
+    public function scopeModerationStatus(Builder $query, string $status): Builder
+    {
+        return $query->whereHas('latestModeration', function (Builder $m) use ($status) {
+            $m->where('status', $status);
+        });
+    }
+
+    public function scopeApproved(Builder $query): Builder
+    {
+        return $this->scopeModerationStatus($query, 'approved');
+    }
+
+    public function scopePending(Builder $query): Builder
+    {
+        return $this->scopeModerationStatus($query, 'pending');
+    }
+
+    public function scopeRejected(Builder $query): Builder
+    {
+        return $this->scopeModerationStatus($query, 'rejected');
+    }
+
+    public function scopeWithOverviewStats(Builder $query): Builder
+    {
+        return $query->withCount([
+            'viewedByUsers',
+            'savedByUsers',
+            'alerts',
+            'reports',
+            'promotions',
+        ]);
+    }
+
+    
+    protected function getFullAddressAttribute()
+    {
+        return collect([
+            $this->address,
+            $this->neighborhood,
+            $this->city,
+            $this->state?->name,
+            $this->country?->name,
+        ])->filter()->implode(', ');
+        
+    }
+
+    protected function getStatusAttribute()
+    {
+        if (! $this->is_published) {
+            return 'draft';
+        }
+        if (! $this->is_active){
+            return 'inactive';
+        }
+        if (! $this->latestModeration || $this->latestModeration->status == 'pending'){
+            return 'pending';
+        }
+        if ($this->latestModeration->status == 'rejected'){
+            return 'rejected';
+        }
+        if ($this->availableQuantity() <= 0){
+            return 'sold out';
+        }
+        if ($this->latestModeration->status == 'approved'){
+            return 'live';
+        }
+    }
+
+    public function getCurrencyAttribute()
+    {
+        return $this->user->country->currency->symbol ?? '$';
+    }
+
+    public function featureValue(string $feature): ?string
+    {
+        return $this->features->firstWhere('feature', $feature)?->value;
+    }
+
+    public function getPriceAttribute()
+    {
+        if ($this->cost === null) {
+            return null;
+        }
+
+        $value = (float) $this->cost;
+
+        // Define thresholds and their suffixes
+        $thresholds = [
+            1_000_000_000 => 'B',
+            1_000_000 => 'M',
+            1_000 => 'K',
+        ];
+
+        foreach ($thresholds as $threshold => $suffix) {
+            if (abs($value) >= $threshold) {
+                $divided = $value / $threshold;
+
+                // Round to 1 decimal place and remove trailing zeros
+                $formatted = rtrim(rtrim(number_format($divided, 1), '0'), '.');
+
+                return $formatted . $suffix;
+            }
+        }
+
+        // For numbers less than 1000, return as is
+        return (string) $value;
+    }
 }
+

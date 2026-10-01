@@ -8,31 +8,25 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Item extends Model
 {
-    use HasFactory, HasMedia;
+    use HasFactory, HasMedia, SoftDeletes;
 
     protected $fillable = [
         'user_id',
         'parent_id',
         'location_id',
         'model_id',
-        'item_type',
+        'year',
         'name',
+        'item_type',
         'condition_status',
         'condition_notes',
-        'description',
-        'status',
-        'acquired_at',
+        'description'
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'acquired_at' => 'datetime',
-        ];
-    }
 
     public function user(): BelongsTo
     {

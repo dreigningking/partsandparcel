@@ -19,6 +19,7 @@ class Country extends Model
         'timezone',
         'is_active',
     ];
+    
 
     protected function casts(): array
     {

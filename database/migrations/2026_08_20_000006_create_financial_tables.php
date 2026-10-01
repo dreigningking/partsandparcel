@@ -10,12 +10,25 @@ return new class extends Migration {
         Schema::create('subscription_plans', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->decimal('price', 15, 2);
-            $table->string('billing_interval')->default('monthly');
-            $table->unsignedInteger('response_limit');
+            $table->string('slug')->nullable();
+            $table->unsignedInteger('response_limit')->default(1);
+            $table->unsignedInteger('request_limit')->default(1);
+            $table->unsignedInteger('listing_limit')->default(10);
             $table->json('features')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_default')->default(false);
             $table->timestamps();
+        });
+
+        Schema::create('subscription_plan_prices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('subscription_plan_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('country_id')->constrained('countries')->cascadeOnDelete();
+            $table->decimal('price_monthly', 15, 2)->default(0.00);
+            $table->decimal('price_annual', 15, 2)->default(0.00);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+            $table->unique(['subscription_plan_id', 'country_id'], 'plan_country_unique');
         });
 
         Schema::create('subscriptions', function (Blueprint $table) {
@@ -26,6 +39,8 @@ return new class extends Migration {
             $table->timestamp('starts_at');
             $table->timestamp('ends_at');
             $table->unsignedInteger('response_limit');
+            $table->unsignedInteger('request_limit')->default(1);
+            $table->unsignedInteger('listing_limit')->default(10);
             $table->timestamps();
             $table->index(['user_id', 'status', 'starts_at', 'ends_at']);
         });
@@ -33,8 +48,7 @@ return new class extends Migration {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('invoice_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('subscription_id')->nullable()->constrained()->nullOnDelete();
+            $table->morphs('paymentable');
             $table->string('reference')->unique();
             $table->string('provider')->nullable();
             $table->string('status')->default('pending');
@@ -128,5 +142,6 @@ return new class extends Migration {
         Schema::dropIfExists('payments');
         Schema::dropIfExists('subscriptions');
         Schema::dropIfExists('subscription_plans');
+        Schema::dropIfExists('subscription_plan_prices');
     }
 };

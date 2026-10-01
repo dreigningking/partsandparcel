@@ -56,40 +56,7 @@ class CartPage extends Component
     {
         $user = Auth::user();
         $cartService = app(CartService::class);
-
-        if ($user) {
-            $grouped = $cartService->getGroupedCarts($user);
-
-            // If user has database cart items, use them
-            if (! empty($grouped)) {
-                $this->cartGrouped = $grouped;
-                return;
-            }
-        }
-
-        // Fallback demo cart for browsing demonstration if no DB items
-        $this->cartGrouped = [
-            [
-                'id' => '2',
-                'name' => 'Adam Computers',
-                'avatar' => 'A',
-                'avatar_bg' => 'bg-pp-600',
-                'location' => 'Computer Village, Ikeja Lagos',
-                'badge' => 'Seller Escrow Protected',
-                'badge_bg' => 'bg-pp-50 text-pp-700',
-                'items' => [
-                    [
-                        'id' => 101,
-                        'listing_id' => 1,
-                        'title' => 'HP EliteBook 840 G5 Laptop',
-                        'specs' => 'Intel i5 · 8GB RAM · 256GB SSD',
-                        'price' => 280000,
-                        'quantity' => 1,
-                        'icon' => '💻'
-                    ]
-                ]
-            ]
-        ];
+        $this->cartGrouped = $cartService->getGroupedCarts($user);
     }
 
     public function loadAddresses()
@@ -237,46 +204,27 @@ class CartPage extends Component
         $user = Auth::user();
         $targetQty = max(1, (int) $newQuantity);
 
-        if ($user) {
-            $item = \App\Models\CartItem::find($itemId);
-            if ($item) {
-                app(CartService::class)->updateQuantity($itemId, $targetQty, $user);
-                $this->loadCart();
-                return;
-            }
-        }
-
-        // Memory array update
-        foreach ($this->cartGrouped as &$cart) {
-            if ((string)$cart['id'] === (string)$sellerId) {
-                foreach ($cart['items'] as &$item) {
-                    if ($item['id'] == $itemId) {
-                        $item['quantity'] = $targetQty;
-                    }
-                }
-            }
-        }
+        app(CartService::class)->updateQuantity($itemId, $targetQty, $user);
+        $this->loadCart();
     }
 
     public function removeItem($sellerId, $itemId)
     {
         $user = Auth::user();
-        if ($user) {
-            $item = \App\Models\CartItem::find($itemId);
-            if ($item) {
-                app(CartService::class)->removeItem($itemId, $user);
-                $this->loadCart();
-                return;
-            }
+
+        app(CartService::class)->removeItem($itemId, $user);
+        $this->loadCart();
+    }
+
+    public function proceedToCheckout($sellerId)
+    {
+        if (! Auth::check()) {
+            session()->put('url.intended', route('checkout', ['seller' => $sellerId]));
+            session()->flash('warning', 'Please sign in to proceed with checkout.');
+            return redirect()->route('login');
         }
 
-        // Memory array update
-        foreach ($this->cartGrouped as &$cart) {
-            if ((string)$cart['id'] === (string)$sellerId) {
-                $cart['items'] = array_values(array_filter($cart['items'], fn($i) => $i['id'] != $itemId));
-            }
-        }
-        $this->cartGrouped = array_values(array_filter($this->cartGrouped, fn($c) => count($c['items']) > 0));
+        return redirect()->route('checkout', ['seller' => $sellerId]);
     }
 
     public function render()

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Invoice extends Model
 {
@@ -74,14 +76,14 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
-    public function payments(): HasMany
+    public function payments(): MorphMany
     {
-        return $this->hasMany(Payment::class);
+        return $this->morphMany(Payment::class, 'paymentable');
     }
 
-    public function latestSuccessfulPayment(): HasOne
+    public function latestSuccessfulPayment(): MorphOne
     {
-        return $this->hasOne(Payment::class)->where('status', 'successful')->latestOfMany();
+        return $this->morphOne(Payment::class, 'paymentable')->where('status', 'successful')->latestOfMany();
     }
 
     public function settlement(): HasOne

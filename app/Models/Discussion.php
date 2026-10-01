@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Discussion extends Model
 {
-    use HasFactory;
+    use HasFactory, HasMedia;
 
     protected $fillable = [
         'user_id',
@@ -31,6 +32,27 @@ class Discussion extends Model
         return [
             'attachments' => 'array',
         ];
+    }
+
+    public function getFulfillmentAttribute(): string
+    {
+        return $this->attachments['fulfillment'] ?? 'Flexible';
+    }
+
+    public function getUrgencyAttribute(): string
+    {
+        return $this->attachments['urgency'] ?? 'Flexible';
+    }
+
+    public function getLocationTextAttribute(): string
+    {
+        if ($this->location) {
+            return "{$this->location->city}, {$this->location->state}";
+        }
+        if ($this->user?->primaryLocation?->city) {
+            return "{$this->user->primaryLocation->city}, {$this->user->primaryLocation->state}";
+        }
+        return $this->attachments['location'] ?? 'Nigeria';
     }
 
     public function user(): BelongsTo

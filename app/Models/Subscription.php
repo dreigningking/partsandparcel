@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Subscription extends Model
 {
@@ -18,6 +19,8 @@ class Subscription extends Model
         'starts_at',
         'ends_at',
         'response_limit',
+        'request_limit',
+        'listing_limit',
     ];
 
     protected function casts(): array
@@ -26,6 +29,8 @@ class Subscription extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'response_limit' => 'integer',
+            'request_limit' => 'integer',
+            'listing_limit' => 'integer',
         ];
     }
 
@@ -39,9 +44,9 @@ class Subscription extends Model
         return $this->belongsTo(SubscriptionPlan::class, 'subscription_plan_id');
     }
 
-    public function payments(): HasMany
+    public function payments(): MorphMany
     {
-        return $this->hasMany(Payment::class);
+        return $this->morphMany(Payment::class, 'paymentable');
     }
 
     public function isActive(): bool

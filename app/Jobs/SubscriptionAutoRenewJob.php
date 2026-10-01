@@ -22,8 +22,10 @@ class SubscriptionAutoRenewJob implements ShouldQueue
     {
         $dueSubscriptions = Subscription::where('status', 'active')
             ->whereBetween('ends_at', [now()->subHours(6), now()->addHours(6)])
-            ->with(['user', 'plan'])
+            ->with(['user', 'plan.prices'])
             ->get();
+
+        $defaultGateway = config('services.payment.default_gateway', 'paystack');
 
         foreach ($dueSubscriptions as $subscription) {
             $user = $subscription->user;
@@ -31,18 +33,20 @@ class SubscriptionAutoRenewJob implements ShouldQueue
 
             if (! $user || ! $plan) continue;
 
-            // In production, charge recurring token from gateway (e.g. Paystack authorization code).
-            // For now, record recurring renewal payment and extend validity
+            $currency = $user->currency ?? 'NGN';
+            $country = $user->country_code ?? 'NG';
+            $renewalAmount = $plan->getMonthlyPrice($currency, $country);
+
             $reference = 'RENEW-' . strtoupper(Str::random(10));
 
             $payment = Payment::create([
                 'user_id' => $user->id,
                 'subscription_id' => $subscription->id,
                 'reference' => $reference,
-                'provider' => 'paystack',
+                'provider' => $defaultGateway,
                 'status' => 'successful',
-                'amount' => $plan->price,
-                'currency' => 'NGN',
+                'amount' => $renewalAmount,
+                'currency' => $currency,
                 'paid_at' => now(),
                 'metadata' => [
                     'payment_type' => 'subscription_renewal',
@@ -51,11 +55,14 @@ class SubscriptionAutoRenewJob implements ShouldQueue
                 ],
             ]);
 
-            // Extend subscription by 1 month
+            // Extend subscription by 1 month and sync plan limits
             $subscription->update([
                 'starts_at' => now(),
                 'ends_at' => now()->addMonth(),
                 'status' => 'active',
+                'request_limit' => $plan->daily_request_limit,
+                'response_limit' => $plan->daily_response_limit,
+                'listing_limit' => $plan->total_listing_limit,
             ]);
 
             // Record platform revenue

@@ -55,6 +55,14 @@ class CheckoutPage extends Component
 
     public function mount($seller = null)
     {
+        if (! Auth::check()) {
+            session()->put('url.intended', request()->fullUrl());
+            session()->flash('warning', 'Please sign in to proceed with checkout.');
+            return redirect()->route('login');
+        }
+
+        app(CartService::class)->mergeGuestCart(Auth::user());
+
         $sellerParam = $seller ?? request()->query('seller');
         if ($sellerParam) {
             $this->sellerId = (string) $sellerParam;

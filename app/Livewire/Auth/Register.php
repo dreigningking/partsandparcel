@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Auth;
 
+use App\Models\Country;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -20,10 +21,12 @@ class Register extends Component
     public string $password = '';
     public string $password_confirmation = '';
     public bool $terms = false;
+    public ?int $country_id = null;
 
     protected function rules(): array
     {
         return [
+            'country_id' => 'required|integer|exists:countries,id',
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'phone' => 'nullable|string|max:30',
@@ -37,10 +40,6 @@ class Register extends Component
     {
         $this->validate();
 
-        $locationContext = session('current_location', []);
-        $countryCode = $locationContext['country_code'] ?? 'NG';
-        $currency = $locationContext['currency'] ?? 'NGN';
-
         $user = User::create([
             'name' => $this->name,
             'email' => $this->email,
@@ -48,8 +47,7 @@ class Register extends Component
             'business_name' => $this->business_name ?: null,
             'password' => Hash::make($this->password),
             'role_id' => null, // Standard user (can buy, sell, request, and offer services)
-            'country_code' => $countryCode,
-            'currency' => $currency,
+            'country_id' => $this->country_id,
             'theme_preference' => 'system',
         ]);
 
@@ -60,6 +58,11 @@ class Register extends Component
 
     public function render()
     {
-        return view('livewire.auth.register');
+        return view('livewire.auth.register',[
+            'countries' => Country::query()
+                ->where('is_active', true)
+                ->orderBy('name','asc')
+                ->get(['id', 'name', 'flag']),
+        ]);
     }
 }

@@ -14,8 +14,12 @@ class State extends Model
         'country_id',
         'name',
         'code',
+        'latitude',
+        'longitude',
+        'timezone',
         'is_active',
     ];
+
 
     protected function casts(): array
     {

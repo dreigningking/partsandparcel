@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Item;
+use App\Models\Listing;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Location extends Model
 {
@@ -18,9 +21,9 @@ class Location extends Model
         'phone',
         'address_line_1',
         'address_line_2',
+        'country_id',
+        'state_id',
         'city',
-        'state',
-        'country',
         'postal_code',
         'latitude',
         'longitude',
@@ -41,9 +44,14 @@ class Location extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function listings(): HasMany
+    public function items(): HasMany
     {
-        return $this->hasMany(Listing::class);
+        return $this->hasMany(Item::class);
+    }
+
+    public function listings(): HasManyThrough
+    {
+        return $this->hasManyThrough(Listing::class, Item::class);
     }
 
     public function fullAddress(): string
@@ -52,8 +60,8 @@ class Location extends Model
             $this->address_line_1,
             $this->address_line_2,
             $this->city,
-            $this->state,
-            $this->country,
+            $this->state->name,
+            $this->country->name,
         ])->filter()->implode(', ');
     }
 }

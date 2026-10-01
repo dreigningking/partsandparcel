@@ -21,19 +21,13 @@ class Subscriptions extends Component
         $usage = $subscriptionService->getUsageStats($user);
 
         $planId = $usage['plan_id'];
-        if (! $planId) {
+        if (! $planId || ! $usage['is_paid']) {
             $proPlan = SubscriptionPlan::where('name', 'like', '%Pro%')->first();
-            $planId = $proPlan?->id ?? 1;
+            $planId = $proPlan?->id ?? 2;
         }
 
-        $result = $subscriptionService->initializeSubscriptionCheckout($user, $planId, 'paystack');
-
-        if ($result['is_free']) {
-            session()->flash('message', 'Starter Free plan active.');
-            return redirect()->route('subscriptions');
-        }
-
-        return redirect()->away($result['authorization_url']);
+        // Redirect to payment confirmation for full renewal customization
+        return redirect()->route('subscription.confirm', ['plan' => $planId]);
     }
 
     public function render()
@@ -45,13 +39,18 @@ class Subscriptions extends Component
             'plan_name' => 'Starter Free',
             'is_paid' => false,
             'is_active' => true,
+            'daily_request_limit' => 1,
+            'daily_requests_used' => 0,
+            'daily_requests_remaining' => 1,
+            'can_create_request' => true,
             'daily_response_limit' => 1,
             'daily_responses_used' => 0,
             'daily_responses_remaining' => 1,
+            'can_respond' => true,
             'listing_limit' => 10,
             'listings_used' => 0,
             'listings_remaining' => 10,
-            'has_disassembly_tool' => false,
+            'can_create_listing' => true,
             'starts_at' => now(),
             'ends_at' => null,
             'days_left' => null,

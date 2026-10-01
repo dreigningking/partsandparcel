@@ -52,9 +52,16 @@ return [
         'platform_commission_percent' => (float) env('PLATFORM_COMMISSION_PERCENT', 5.0),
     ],
 
+    'payment' => [
+        'default_gateway' => env('DEFAULT_PAYMENT_GATEWAY', 'paystack'),
+    ],
+
     'fcm' => [
         'server_key' => env('FCM_SERVER_KEY'),
         'sender_id' => env('FCM_SENDER_ID'),
+    ],
+    'countrystatecity' => [
+        'key' => env('COUNTRYSTATECITY'),
     ],
 
 ];

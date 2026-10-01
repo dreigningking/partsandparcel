@@ -1,88 +1,187 @@
-1. Location awareness {
-   New visitor IP: get location via ip-api and store in redis cache
-   Existing IP: {
-    if user is logged in, get location from user profile
-    if user is not logged in, get location from redis cache
-   }
+BankAccount{
+  in checkout page, buyers are presented with two payment options
+  1. escrow- payment happens via payment gateway and money is held by platform. invoice table should note payment_method = 'escrow'
+  2. direct- payment happens directly between buyer and seller (in this case, buyer will see seller's bank account). payment table should note payment_method = 'direct'
+  we must therefore have a section in the profile page to update bank account details.
+  if payment_method is direct, after invoice warranty period is over, ask seller whether the buyer paid so we can mark invoice paid. Inform seller that this is good so others see the count of sales on listing or jobs done on service
+  after seller responds, ask buyer to review listing or service. 
 }
-2. Geography awareness (Content Localization to country & currency){
-  All content are displayed to user based on location, i.e currency, timezone, etc
-  Contents are localized based on country e.g Users in Nigeria see only contents in Nigeria
-  No currency conversion, users see prices in their local currency
-}
-3. Push Notification integration (FCM) to notify users of new messages, offers, orders, etc.{
-  Setup Pusher
-  Setup Reverb
-  Setup Broadcasting
-  Setup Notifications{
 
-  }
+Brand{
+  used in items.
+  listings can also be filtered by brands but the filtering
+  actually happens on the item level
 }
-4. Subscription plans, jobs, queues, redis cache{
-  Setup Job {
-    SubscriptionExpiringJob,
-    SubscriptionExpiredJob,
-    SubscriptionAutoRenewedJob
-  }
-  Setup Queues{
-    For Notifications
-    For Jobs
-    
-  }
-  Setup Redis Cache
-}
-5. Payment & escrow integrations, payouts, refunds, returns, replacements, disputes{
-  Setup Gateway{
-    Paystack
-    Flutterwave
-  }
-  Setup Jobs{
-    ConfirmPaymentJob,
-    RefundPaymentJob,
-    ReleasePaymentJob,
-    RetryPaymentJob
-  }
-  Setup Webhooks{
-    PaystackWebhookHandler,
-    FlutterwaveWebhookHandler
-  }
-}
-6. Database Schema Migrations & Models Definitions{
-  Setup Database Migrations
-  Setup Models
-  Setup Relationships
-}
-7. Seeding (Categories, Brands, Models, Items, Roles, Permissions, Users)
-8. UI/UX Completion, with Light, Dark and System mode
-9. Authentication (Registration, Login, Forgot Password, Reset Password)
-10. CICD/Deployment, Docker, Testing, etc
-11. AWS Setup, etc
-12. Application Logic Completion{
-  Setup Jobs{
-    AbandonedCartJob
-  }
-  Setup Exports{
-    Invoices
-  }
-}
-13. Admin Interfaces
 
-header-action: auth condition
-test Subscription
+Cart{
+  items in my cart are separated by seller_id. on cart page
+  users see cart grouped by seller_id
+}
 
-homepage: show featured
-
-search should work
-
-category pages: show seeded listings
-community: show seeded requests
-item pages: show seeded items
-test adding things to cart
-test making offers
-test making requests and responding to request
-test creating items, listings, parts
+CartItem{
+  each cart contains list of listings (not items)
+}
 
 
-to listing, add :
-Shipping Available vs. Local Pickup Only
-Allow warranty negotiation
+Category{
+  all the categories required have been defined already defined in seeder
+}
+
+
+Conversation
+
+
+ConversationParticipant
+
+
+Country
+
+
+DeviceModel
+
+
+DeviceToken
+
+
+Discussion
+
+
+Dispute
+
+
+DisputeItem
+
+
+Invoice
+
+
+InvoiceItem
+
+
+Issue
+
+
+IssueItem
+
+
+Item
+
+
+Listing
+
+
+ListingReport
+
+
+ListingReview
+
+
+Location
+
+
+Media
+
+
+Message
+
+
+Moderation
+
+
+Offer
+
+
+OfferItem
+
+
+Payment
+
+
+Payout
+
+
+PayoutSettlement
+
+
+Post
+
+
+PostComment
+
+
+PromoCode
+
+
+Promotion
+
+
+PromotionPlan
+
+
+Refund
+
+
+RefundItem
+
+
+Replacement
+
+
+ReplacementItem
+
+
+Response
+
+
+ReturnItem
+
+
+ReturnRecord
+
+
+Revenue
+
+
+Role
+
+
+ServiceJob
+
+
+ServiceReview
+
+
+Setting
+
+
+Settlement
+
+
+Shipment
+
+
+ShipmentItem
+
+
+State
+
+
+Subscription
+
+
+SubscriptionPlan
+
+
+SubscriptionPlanPrice
+
+
+User
+
+
+ViewedEntity
+
+
+Watchlist
+
+
+Wishlist

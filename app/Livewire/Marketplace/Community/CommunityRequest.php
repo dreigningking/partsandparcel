@@ -29,6 +29,7 @@ class CommunityRequest extends Component
     public $reportDetails = '';
 
     public $responses = [];
+    public $mediaItems = [];
 
     public function mount($id = null)
     {
@@ -41,12 +42,46 @@ class CommunityRequest extends Component
         $user = Auth::user();
 
         if ($this->discussionId && is_numeric($this->discussionId)) {
-            $dbDiscussion = Discussion::with(['user.primaryLocation', 'category', 'responses.user.primaryLocation', 'responses.offers.items'])
-                ->find($this->discussionId);
+            $dbDiscussion = Discussion::with([
+                'user.primaryLocation',
+                'category',
+                'brand',
+                'deviceModel',
+                'location',
+                'media',
+                'responses.user.primaryLocation',
+                'responses.offers.items'
+            ])->find($this->discussionId);
 
             if ($dbDiscussion) {
                 $this->discussion = $dbDiscussion;
                 $this->isOwner = $user && ($user->id === $dbDiscussion->user_id);
+
+                // Increment view counter in attachments
+                $views = ($dbDiscussion->attachments['views'] ?? 15) + 1;
+                $attachments = $dbDiscussion->attachments ?? [];
+                $attachments['views'] = $views;
+                $dbDiscussion->update(['attachments' => $attachments]);
+
+                // Map dynamic media items
+                $loadedMedia = [];
+                foreach ($dbDiscussion->media as $m) {
+                    $badge = match ($m->media_type) {
+                        'video' => 'Video',
+                        'document' => 'PDF Doc',
+                        default => 'Photo',
+                    };
+                    $sizeFormatted = $m->size ? number_format($m->size / (1024 * 1024), 1) . ' MB' : '';
+                    $loadedMedia[] = [
+                        'id' => $m->id,
+                        'type' => $m->media_type === 'document' ? 'pdf' : $m->media_type,
+                        'title' => $m->name ?: $m->file_name,
+                        'src' => $m->url,
+                        'size' => $sizeFormatted,
+                        'badge' => $badge,
+                    ];
+                }
+                $this->mediaItems = $loadedMedia;
 
                 $loadedResponses = [];
                 foreach ($dbDiscussion->responses as $r) {
@@ -74,7 +109,7 @@ class CommunityRequest extends Component
                     $loadedResponses[] = [
                         'id' => $r->id,
                         'author' => $r->user?->name ?? 'Vendor',
-                        'verified' => (bool) $r->user?->is_verified,
+                        'verified' => (bool) ($r->user?->is_verified ?? false),
                         'location' => $r->user?->primaryLocation?->city ? "{$r->user->primaryLocation->city}, {$r->user->primaryLocation->state}" : 'Lagos, Nigeria',
                         'time' => $r->created_at->diffForHumans(),
                         'text' => $r->body,
@@ -86,6 +121,14 @@ class CommunityRequest extends Component
                 return;
             }
         }
+
+        // Demo fallback media items for demonstration IDs
+        $this->mediaItems = [
+            ['type' => 'image', 'title' => 'Motherboard Front (Clean Pull)', 'src' => 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80', 'badge' => 'Photo'],
+            ['type' => 'image', 'title' => 'Motherboard Back & Serial Tag', 'src' => 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=800&q=80', 'badge' => 'Photo'],
+            ['type' => 'video', 'title' => 'Power Boot Test Video (0:15)', 'src' => 'https://www.w3schools.com/html/mov_bbb.mp4', 'badge' => 'Video'],
+            ['type' => 'pdf', 'title' => 'Diagnostic Report & Specs.pdf', 'src' => '#', 'size' => '1.4 MB', 'badge' => 'PDF Doc'],
+        ];
 
         // Demo sample responses fallback
         $this->responses = [
@@ -252,8 +295,42 @@ class CommunityRequest extends Component
         $this->dispatch('open-conversation', id: $id);
     }
 
+    public function getSimilarRequests()
+    {
+        if (! $this->discussion) {
+            return Discussion::with(['location', 'category', 'media'])->latest()->take(3)->get();
+        }
+
+        $similar = Discussion::where('id', '!=', $this->discussion->id)
+            ->where(function ($q) {
+                if ($this->discussion->category_id) {
+                    $q->where('category_id', $this->discussion->category_id);
+                }
+                if ($this->discussion->brand_id) {
+                    $q->orWhere('brand_id', $this->discussion->brand_id);
+                }
+            })
+            ->latest()
+            ->take(3)
+            ->get();
+
+        if ($similar->count() < 3) {
+            $more = Discussion::where('id', '!=', $this->discussion->id)
+                ->whereNotIn('id', $similar->pluck('id'))
+                ->latest()
+                ->take(3 - $similar->count())
+                ->get();
+            $similar = $similar->concat($more);
+        }
+
+        return $similar;
+    }
+
     public function render()
     {
-        return view('livewire.marketplace.community.community-request');
+        return view('livewire.marketplace.community.community-request', [
+            'similarRequests' => $this->getSimilarRequests(),
+            'mediaItems' => $this->mediaItems,
+        ]);
     }
 }

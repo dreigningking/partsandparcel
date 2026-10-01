@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
             CategoriesAndBrandsSeeder::class,
             SubscriptionPlansSeeder::class,
             DemoUsersSeeder::class,
+            DemoListingMarketplaceSeeder::class,
+            DemoPromoCodesSeeder::class,
+            DemoRequestAndResponseSeeder::class
         ]);
     }
 }

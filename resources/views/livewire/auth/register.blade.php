@@ -12,6 +12,22 @@
         <div class="bg-white py-8 px-6 shadow-xl shadow-slate-200/50 sm:rounded-3xl border border-slate-100 sm:px-10">
             <form wire:submit.prevent="submit" class="space-y-4">
                 <div>
+                    <label for="country_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Country</label>
+                    <div class="input-group">
+                        <i class="ri-map-pin-line input-icon"></i>
+                        <select id="country_id" class="form-input form-select" wire:model="country_id" required
+                            style="appearance: none; padding-right: 2.5rem;">
+                            <option value="">Select your country</option>
+                            @foreach ($countries as $country)
+                                <option value="{{ $country->id }}">{{ $country->flag }} {{ $country->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @error('country_id')
+                        <p style="color:red;" class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
                     <label for="name" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Full Name</label>
                     <input type="text" id="name" wire:model.defer="name" required placeholder="John Doe"
                            class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-hidden focus:border-pp-500 focus:ring-2 focus:ring-pp-100 text-sm transition font-medium text-slate-800 placeholder-slate-400">

@@ -2,12 +2,8 @@
   x-data="{
     activeMediaModal: false,
     currentIndex: 0,
-    mediaItems: [
-      { type: 'image', title: 'Motherboard Front (Clean Pull)', src: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80', badge: 'Photo' },
-      { type: 'image', title: 'Motherboard Back & Serial Tag', src: 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=800&q=80', badge: 'Photo' },
-      { type: 'video', title: 'Power Boot Test Video (0:15)', src: 'https://www.w3schools.com/html/mov_bbb.mp4', badge: 'Video' },
-      { type: 'pdf', title: 'Diagnostic Report & Specs.pdf', size: '1.4 MB', badge: 'PDF Doc' }
-    ],
+    mediaItems: @js($mediaItems),
+    copiedShare: false,
     openMedia(index) {
       this.currentIndex = index;
       this.activeMediaModal = true;
@@ -17,19 +13,26 @@
     },
     prevMedia() {
       if (this.currentIndex > 0) this.currentIndex--;
+    },
+    copyShareLink() {
+      navigator.clipboard.writeText(window.location.href);
+      this.copiedShare = true;
+      setTimeout(() => { this.copiedShare = false; }, 2500);
     }
   }"
   @keydown.escape.window="activeMediaModal = false">
 
   <!-- BREADCRUMB -->
   <div class="flex items-center gap-2 text-xs text-slate-500 font-medium">
-    <a href="/" class="hover:text-pp-600 transition">Home</a>
+    <a href="{{ route('welcome') }}" class="hover:text-pp-600 transition">Home</a>
     <span>/</span>
-    <a href="#" class="hover:text-pp-600 transition">Community Hub</a>
+    <a href="{{ route('community') }}" class="hover:text-pp-600 transition">Community Hub</a>
+    @if($discussion?->category)
+      <span>/</span>
+      <a href="{{ route('community') }}?category={{ urlencode($discussion->category->name) }}" class="hover:text-pp-600 transition">{{ $discussion->category->name }}</a>
+    @endif
     <span>/</span>
-    <a href="#" class="hover:text-pp-600 transition">Electronics</a>
-    <span>/</span>
-    <span class="text-slate-900 font-bold">Request #REQ-8402</span>
+    <span class="text-slate-900 font-bold">Request #REQ-{{ $discussion?->id ?? '8402' }}</span>
   </div>
 
   @if (session()->has('message'))
@@ -66,9 +69,11 @@
           @php
             $authorName = $discussion?->user?->name ?? 'TechSam';
             $authorAvatar = strtoupper(substr($authorName, 0, 2));
-            $authorLocation = $discussion?->user?->primaryLocation?->city ? "{$discussion->user->primaryLocation->city}, {$discussion->user->primaryLocation->state}" : ($discussion?->attachments['location'] ?? 'Computer Village, Ikeja, Lagos');
+            $authorLocation = $discussion?->location_text ?? ($discussion?->user?->primaryLocation?->city ? "{$discussion->user->primaryLocation->city}, {$discussion->user->primaryLocation->state}" : ($discussion?->attachments['location'] ?? 'Computer Village, Ikeja, Lagos'));
             $postedTime = $discussion ? $discussion->created_at->diffForHumans() : '2 hours ago';
             $categoryName = $discussion?->category?->name ?? 'Electronics';
+            $brandName = $discussion?->brand?->name ?? '';
+            $modelName = $discussion?->deviceModel?->name ?? '';
             $typeLabel = match ($discussion?->type) {
               'service' => 'Repair / Service',
               'delivery' => 'Delivery / Logistics',
@@ -77,7 +82,13 @@
             };
             $postTitle = $discussion?->title ?? 'Looking for HP EliteBook 840 G5 motherboard in Lagos';
             $postBody = $discussion?->body ?? "I need a clean, tested HP EliteBook 840 G5 motherboard without GPU issues.\nI am willing to pick up at Computer Village today. Instant payment guaranteed.";
-            $budget = $discussion?->attachments['budget'] ?? '₦70,000 - ₦90,000';
+            $budget = $discussion?->budget ?: ($discussion?->attachments['budget'] ?? '₦70,000 - ₦90,000');
+            $fulfillment = $discussion?->fulfillment ?? ($discussion?->attachments['fulfillment'] ?? 'Pickup / Delivery');
+            $urgency = $discussion?->urgency ?? ($discussion?->attachments['urgency'] ?? 'Flexible');
+            $isVerified = (bool) ($discussion?->user?->is_verified ?? true);
+            $offersCount = $discussion ? $discussion->offers->count() : 3;
+            $repliesCount = count($responses);
+            $viewsCount = $discussion?->attachments['views'] ?? 48;
           @endphp
 
           <!-- AUTHOR INFO (AVATAR, NAME, TIME, LOCATION) -->
@@ -88,9 +99,11 @@
             <div>
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="font-extrabold text-slate-950 text-sm">{{ $authorName }}</span>
-                <span class="px-2 py-0.5 rounded-full bg-pp-50 text-pp-700 font-bold text-[10px] border border-pp-100">
-                  ✓ Verified Member
-                </span>
+                @if($isVerified)
+                  <span class="px-2 py-0.5 rounded-full bg-pp-50 text-pp-700 font-bold text-[10px] border border-pp-100">
+                    ✓ Verified Member
+                  </span>
+                @endif
               </div>
               <div class="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5 flex-wrap">
                 <span><i class="fas fa-map-marker-alt text-slate-400 mr-0.5"></i> {{ $authorLocation }}</span>
@@ -121,7 +134,7 @@
         </div>
 
         <!-- EMBEDDED SPECIFICATION PILLS GRID -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
           <div class="space-y-0.5">
             <span class="text-slate-400 font-bold uppercase text-[10px] block">Target Budget</span>
             <span class="font-extrabold text-pp-700 text-sm">{{ $budget }}</span>
@@ -129,49 +142,63 @@
 
           <div class="space-y-0.5">
             <span class="text-slate-400 font-bold uppercase text-[10px] block">Preferred Fulfilment</span>
-            <span class="font-bold text-slate-800">{{ $discussion?->attachments['fulfillment'] ?? 'Pickup / Delivery' }}</span>
+            <span class="font-bold text-slate-800">{{ $fulfillment }}</span>
           </div>
 
           <div class="space-y-0.5">
-            <span class="text-slate-400 font-bold uppercase text-[10px] block">Status</span>
-            <span class="font-bold text-emerald-700 uppercase">{{ $discussion?->status ?? 'Open' }}</span>
+            <span class="text-slate-400 font-bold uppercase text-[10px] block">Brand &amp; Model</span>
+            <span class="font-bold text-slate-800">
+              @if($brandName)
+                {{ $brandName }} @if($modelName) · {{ $modelName }} @endif
+              @else
+                Any Compatible
+              @endif
+            </span>
+          </div>
+
+          <div class="space-y-0.5">
+            <span class="text-slate-400 font-bold uppercase text-[10px] block">Timeline / Urgency</span>
+            <span class="font-bold {{ $urgency === 'Urgent (Today)' ? 'text-amber-600' : 'text-slate-800' }}">
+              @if($urgency === 'Urgent (Today)') <i class="fas fa-bolt text-amber-500 text-[10px]"></i> @endif {{ $urgency }}
+            </span>
           </div>
         </div>
 
-        <!-- COMPACT MEDIA ATTACHMENTS THUMBNAILS (PHOTO, VIDEO, PDF) -->
-        <div class="space-y-2">
-          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Attached Media &amp; Documents (4):</span>
-          <div class="flex items-center gap-3 overflow-x-auto pb-1">
-            
-            <!-- THUMB 0: PHOTO 1 -->
-            <div @click="openMedia(0)" class="w-16 h-16 rounded-2xl border-2 border-slate-200 hover:border-pp-600 transition bg-slate-100 relative overflow-hidden shrink-0 cursor-pointer shadow-2xs group" title="Motherboard Front Photo">
-              <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=200&q=80" alt="Mobo" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" />
-              <span class="absolute bottom-1 right-1 bg-slate-950/70 text-white text-[9px] font-extrabold px-1 rounded"><i class="fas fa-image"></i></span>
+        <!-- DYNAMIC MEDIA ATTACHMENTS THUMBNAILS (PHOTO, VIDEO, PDF) -->
+        <template x-if="mediaItems && mediaItems.length > 0">
+          <div class="space-y-2">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+              Attached Media &amp; Documents (<span x-text="mediaItems.length"></span>):
+            </span>
+            <div class="flex items-center gap-3 overflow-x-auto pb-1">
+              <template x-for="(item, index) in mediaItems" :key="index">
+                <div @click="openMedia(index)" class="w-16 h-16 rounded-2xl border-2 border-slate-200 hover:border-pp-600 transition bg-slate-100 relative overflow-hidden shrink-0 cursor-pointer shadow-2xs group" :title="item.title">
+                  <template x-if="item.type === 'image'">
+                    <div class="w-full h-full relative">
+                      <img :src="item.src" :alt="item.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" />
+                      <span class="absolute bottom-1 right-1 bg-slate-950/70 text-white text-[9px] font-extrabold px-1 rounded"><i class="fas fa-image"></i></span>
+                    </div>
+                  </template>
+                  <template x-if="item.type === 'video'">
+                    <div class="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-white relative">
+                      <div class="w-7 h-7 rounded-full bg-pp-600 text-white grid place-items-center text-xs group-hover:scale-110 transition">
+                        <i class="fas fa-play ml-0.5"></i>
+                      </div>
+                      <span class="absolute bottom-1 right-1 bg-slate-950/80 text-amber-400 text-[8px] font-extrabold px-1 rounded">VID</span>
+                    </div>
+                  </template>
+                  <template x-if="item.type === 'pdf' || item.type === 'document'">
+                    <div class="w-full h-full bg-rose-50 flex flex-col items-center justify-center p-1 text-center relative">
+                      <i class="fas fa-file-pdf text-rose-600 text-xl group-hover:scale-110 transition"></i>
+                      <span class="text-[8px] font-extrabold text-rose-800 uppercase mt-0.5 truncate w-full" x-text="item.title"></span>
+                      <span class="absolute bottom-1 right-1 bg-rose-600 text-white text-[8px] font-extrabold px-1 rounded">DOC</span>
+                    </div>
+                  </template>
+                </div>
+              </template>
             </div>
-
-            <!-- THUMB 1: PHOTO 2 -->
-            <div @click="openMedia(1)" class="w-16 h-16 rounded-2xl border-2 border-slate-200 hover:border-pp-600 transition bg-slate-100 relative overflow-hidden shrink-0 cursor-pointer shadow-2xs group" title="Motherboard Back Photo">
-              <img src="https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=200&q=80" alt="Mobo Back" class="w-full h-full object-cover group-hover:scale-105 transition duration-200" />
-              <span class="absolute bottom-1 right-1 bg-slate-950/70 text-white text-[9px] font-extrabold px-1 rounded"><i class="fas fa-image"></i></span>
-            </div>
-
-            <!-- THUMB 2: VIDEO -->
-            <div @click="openMedia(2)" class="w-16 h-16 rounded-2xl border-2 border-slate-200 hover:border-pp-600 transition bg-slate-900 relative overflow-hidden shrink-0 cursor-pointer shadow-2xs group flex flex-col items-center justify-center text-white" title="Boot Test Video">
-              <div class="w-7 h-7 rounded-full bg-pp-600 text-white grid place-items-center text-xs group-hover:scale-110 transition">
-                <i class="fas fa-play ml-0.5"></i>
-              </div>
-              <span class="absolute bottom-1 right-1 bg-slate-950/80 text-amber-400 text-[8px] font-extrabold px-1 rounded">0:15</span>
-            </div>
-
-            <!-- THUMB 3: PDF -->
-            <div @click="openMedia(3)" class="w-16 h-16 rounded-2xl border-2 border-slate-200 hover:border-pp-600 transition bg-rose-50 relative overflow-hidden shrink-0 cursor-pointer shadow-2xs group flex flex-col items-center justify-center p-1 text-center" title="Diagnostic Spec Sheet PDF">
-              <i class="fas fa-file-pdf text-rose-600 text-xl group-hover:scale-110 transition"></i>
-              <span class="text-[9px] font-extrabold text-rose-800 uppercase mt-0.5 truncate w-full">Diagnostic</span>
-              <span class="absolute bottom-1 right-1 bg-rose-600 text-white text-[8px] font-extrabold px-1 rounded">PDF</span>
-            </div>
-
           </div>
-        </div>
+        </template>
 
         <!-- SOCIAL ENGAGEMENT & ACTION BAR -->
         <div class="flex items-center justify-between pt-4 border-t border-slate-100 text-xs">
@@ -179,25 +206,21 @@
           <div class="flex items-center gap-4 text-slate-600">
             <!-- ENGAGEMENT STATS -->
             <span class="flex items-center gap-1 font-semibold text-slate-500">
-              <i class="fas fa-handshake text-pp-600"></i> <strong class="text-slate-900">3</strong> Offers
+              <i class="fas fa-handshake text-pp-600"></i> <strong class="text-slate-900">{{ $offersCount }}</strong> Offers
             </span>
             <span class="flex items-center gap-1 font-semibold text-slate-500">
-              <i class="fas fa-comment-dots text-pp-600"></i> <strong class="text-slate-900">7</strong> Replies
+              <i class="fas fa-comment-dots text-pp-600"></i> <strong class="text-slate-900">{{ $repliesCount }}</strong> Replies
             </span>
             <span class="flex items-center gap-1 font-semibold text-slate-500">
-              <i class="fas fa-eye text-slate-400"></i> <strong class="text-slate-900">48</strong> Views
+              <i class="fas fa-eye text-slate-400"></i> <strong class="text-slate-900">{{ $viewsCount }}</strong> Views
             </span> 
           </div>
 
           <div class="flex items-center gap-4">
-            <!-- FOLLOW BUTTON (CHANGED FROM SAVE REQUEST) -->
-            <button class="flex items-center gap-1.5 font-bold hover:text-pp-600 transition cursor-pointer text-pp-700">
-              <i class="fas fa-rss text-pp-600 text-xs"></i> Follow
-            </button>
-
             <!-- SHARE BUTTON -->
-            <button class="flex items-center gap-1.5 font-bold hover:text-pp-600 transition cursor-pointer">
-              <i class="fas fa-share-alt text-slate-400 text-sm"></i> Share
+            <button @click="copyShareLink()" class="flex items-center gap-1.5 font-bold hover:text-pp-600 transition cursor-pointer">
+              <i class="fas fa-share-alt text-slate-400 text-sm"></i>
+              <span x-text="copiedShare ? 'Copied Link!' : 'Share'"></span>
             </button>
 
             <!-- REPORT BUTTON -->
@@ -389,42 +412,61 @@
         <div class="space-y-2.5 text-xs">
           <div class="flex justify-between items-center text-slate-600 border-b border-slate-100 pb-2">
             <span>Status</span>
-            <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[10px] uppercase border border-emerald-100">● Open</span>
+            <span class="px-2.5 py-0.5 rounded-full {{ ($discussion?->status ?? 'open') === 'open' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-100 text-slate-700 border-slate-200' }} font-bold text-[10px] uppercase border">
+              ● {{ ucfirst($discussion?->status ?? 'Open') }}
+            </span>
           </div>
 
           <div class="flex justify-between border-b border-slate-100 pb-2 text-slate-600">
             <span>Target Budget</span>
-            <span class="font-extrabold text-pp-700">₦70,000 - ₦90,000</span>
+            <span class="font-extrabold text-pp-700">{{ $budget }}</span>
           </div>
 
           <div class="flex justify-between border-b border-slate-100 pb-2 text-slate-600">
             <span>Location</span>
-            <span class="font-bold text-slate-800">Ikeja, Lagos</span>
+            <span class="font-bold text-slate-800">{{ $authorLocation }}</span>
           </div>
 
           <div class="flex justify-between border-b border-slate-100 pb-2 text-slate-600">
             <span>Request Type</span>
-            <span class="font-bold text-slate-800">Product / Part</span>
+            <span class="font-bold text-slate-800">{{ $typeLabel }}</span>
           </div>
 
           <div class="flex justify-between border-b border-slate-100 pb-2 text-slate-600">
+            <span>Category</span>
+            <span class="font-bold text-slate-800">{{ $categoryName }}</span>
+          </div>
+
+          @if($brandName)
+            <div class="flex justify-between border-b border-slate-100 pb-2 text-slate-600">
+              <span>Brand &amp; Model</span>
+              <span class="font-bold text-slate-800">{{ $brandName }} @if($modelName) · {{ $modelName }} @endif</span>
+            </div>
+          @endif
+
+          <div class="flex justify-between border-b border-slate-100 pb-2 text-slate-600">
             <span>Fulfilment</span>
-            <span class="font-bold text-slate-800">Pickup in Shop</span>
+            <span class="font-bold text-slate-800">{{ $fulfillment }}</span>
+          </div>
+
+          <div class="flex justify-between border-b border-slate-100 pb-2 text-slate-600">
+            <span>Urgency</span>
+            <span class="font-bold {{ $urgency === 'Urgent (Today)' ? 'text-amber-600' : 'text-slate-800' }}">{{ $urgency }}</span>
           </div>
 
           <div class="flex justify-between items-center border-b border-slate-100 pb-2 text-slate-600">
             <span>Activity</span>
-            <span class="font-bold text-slate-800">7 Responses · 3 Negotiations · 48 Views</span>
+            <span class="font-bold text-slate-800">{{ $offersCount }} Offers · {{ $repliesCount }} Replies · {{ $viewsCount }} Views</span>
           </div>
 
           <div class="flex justify-between items-center border-b border-slate-100 pb-2 text-slate-600">
             <span>Posted</span>
-            <span class="font-semibold text-slate-700">2 hours ago</span>
+            <span class="font-semibold text-slate-700">{{ $postedTime }}</span>
           </div>
 
           <div class="flex justify-between items-center text-slate-600">
             <span>Last activity</span>
-            <span class="font-semibold text-slate-700">12 minutes ago</span>
+            <span class="font-semibold text-slate-700">{{ $discussion ? $discussion->updated_at->diffForHumans() : 'Just now' }}</span>
           </div>
         </div>
       </div>
@@ -436,31 +478,17 @@
         </h3>
 
         <div class="space-y-3 text-xs">
-          
-          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1 hover:border-pp-300 transition cursor-pointer">
-            <h4 class="font-bold text-slate-900 leading-snug">Need a working HP EliteBook 840 G5 battery in Lagos</h4>
-            <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-              <span><i class="fas fa-map-marker-alt"></i> Ikeja</span>
-              <span class="font-extrabold text-pp-700">₦25,000</span>
-            </div>
-          </div>
-
-          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1 hover:border-pp-300 transition cursor-pointer">
-            <h4 class="font-bold text-slate-900 leading-snug">Looking for Dell Latitude 5400 motherboard - tested</h4>
-            <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-              <span><i class="fas fa-map-marker-alt"></i> Computer Village</span>
-              <span class="font-extrabold text-pp-700">₦50,000</span>
-            </div>
-          </div>
-
-          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1 hover:border-pp-300 transition cursor-pointer">
-            <h4 class="font-bold text-slate-900 leading-snug">HP EliteBook 840 G5 screen replacement in Abuja</h4>
-            <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-              <span><i class="fas fa-map-marker-alt"></i> Abuja</span>
-              <span class="font-extrabold text-pp-700">₦35,000</span>
-            </div>
-          </div>
-
+          @forelse($similarRequests as $sim)
+            <a href="{{ route('community.request', ['id' => $sim->id]) }}" class="block p-3 rounded-2xl bg-slate-50 border border-slate-100 space-y-1 hover:border-pp-300 hover:bg-pp-50/40 transition cursor-pointer">
+              <h4 class="font-bold text-slate-900 leading-snug line-clamp-2">{{ $sim->title }}</h4>
+              <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                <span><i class="fas fa-map-marker-alt text-[10px]"></i> {{ $sim->location ? $sim->location->city : ($sim->attachments['location'] ?? 'Nigeria') }}</span>
+                <span class="font-extrabold text-pp-700">{{ $sim->budget ?: ($sim->attachments['budget'] ?? 'Flexible') }}</span>
+              </div>
+            </a>
+          @empty
+            <p class="text-xs text-slate-400 py-2">No other related requests found.</p>
+          @endforelse
         </div>
       </div>
 
@@ -482,8 +510,8 @@
     <!-- MODAL HEADER -->
     <div class="flex items-center justify-between border-b border-slate-800 pb-3">
       <div class="flex items-center gap-3">
-        <span class="px-2.5 py-0.5 rounded-full bg-pp-600 text-white font-extrabold text-[10px] uppercase" x-text="mediaItems[currentIndex].badge"></span>
-        <h3 class="text-sm sm:text-base font-extrabold text-white truncate max-w-md" x-text="mediaItems[currentIndex].title"></h3>
+        <span class="px-2.5 py-0.5 rounded-full bg-pp-600 text-white font-extrabold text-[10px] uppercase" x-text="mediaItems[currentIndex]?.badge"></span>
+        <h3 class="text-sm sm:text-base font-extrabold text-white truncate max-w-md" x-text="mediaItems[currentIndex]?.title"></h3>
       </div>
       
       <div class="flex items-center gap-3">
@@ -503,29 +531,29 @@
       </button>
 
       <!-- IMAGE TYPE -->
-      <template x-if="mediaItems[currentIndex].type === 'image'">
-        <img :src="mediaItems[currentIndex].src" :alt="mediaItems[currentIndex].title" class="max-h-full max-w-full rounded-2xl object-contain shadow-2xl border border-slate-800" />
+      <template x-if="mediaItems[currentIndex]?.type === 'image'">
+        <img :src="mediaItems[currentIndex]?.src" :alt="mediaItems[currentIndex]?.title" class="max-h-full max-w-full rounded-2xl object-contain shadow-2xl border border-slate-800" />
       </template>
 
       <!-- VIDEO TYPE -->
-      <template x-if="mediaItems[currentIndex].type === 'video'">
+      <template x-if="mediaItems[currentIndex]?.type === 'video'">
         <div class="w-full max-w-3xl aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl border border-slate-800 flex items-center justify-center">
-          <video controls autoplay :src="mediaItems[currentIndex].src" class="w-full h-full object-contain"></video>
+          <video controls autoplay :src="mediaItems[currentIndex]?.src" class="w-full h-full object-contain"></video>
         </div>
       </template>
 
       <!-- PDF TYPE -->
-      <template x-if="mediaItems[currentIndex].type === 'pdf'">
+      <template x-if="mediaItems[currentIndex]?.type === 'pdf' || mediaItems[currentIndex]?.type === 'document'">
         <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl max-w-md w-full text-center space-y-4 shadow-2xl">
           <div class="w-16 h-16 rounded-3xl bg-rose-500/20 text-rose-500 grid place-items-center text-3xl mx-auto">
             <i class="fas fa-file-pdf"></i>
           </div>
           <div class="space-y-1">
-            <h4 class="text-base font-extrabold text-white" x-text="mediaItems[currentIndex].title"></h4>
-            <p class="text-xs text-slate-400" x-text="`PDF Document · ${mediaItems[currentIndex].size}`"></p>
+            <h4 class="text-base font-extrabold text-white" x-text="mediaItems[currentIndex]?.title"></h4>
+            <p class="text-xs text-slate-400" x-text="`Document · ${mediaItems[currentIndex]?.size || 'Ready for download'}`"></p>
           </div>
-          <a href="#" download class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition">
-            <i class="fas fa-download"></i> Download PDF Document
+          <a :href="mediaItems[currentIndex]?.src" download class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition">
+            <i class="fas fa-download"></i> Download Document
           </a>
         </div>
       </template>

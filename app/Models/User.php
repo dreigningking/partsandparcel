@@ -18,6 +18,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'email_verified_at',
         'password',
         'role_id',
         'phone',
@@ -26,8 +27,7 @@ class User extends Authenticatable
         'bio',
         'is_verified',
         'theme_preference',
-        'country_code',
-        'currency',
+        'country_id'
     ];
 
     protected $hidden = [

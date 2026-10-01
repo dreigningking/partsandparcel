@@ -47,10 +47,18 @@
   </div>
 
   @if(session()->has('cart_success'))
-    <div class="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2">
+    <div class="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 shadow-2xs">
       <i class="fas fa-check-circle text-emerald-600"></i>
       <span>{{ session('cart_success') }}</span>
       <a href="{{ route('cart') }}" class="underline ml-auto font-extrabold hover:text-emerald-950">View Cart →</a>
+    </div>
+  @endif
+
+  @if(session()->has('wishlist_message'))
+    <div class="mb-4 p-3 bg-pp-50 border border-pp-200 text-pp-800 text-xs font-bold rounded-xl flex items-center gap-2 shadow-2xs">
+      <i class="fas fa-heart text-pp-600"></i>
+      <span>{{ session('wishlist_message') }}</span>
+      <a href="{{ route('wishlists') }}" class="underline ml-auto font-extrabold hover:text-pp-950">View Wishlist →</a>
     </div>
   @endif
 

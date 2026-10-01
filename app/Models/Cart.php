@@ -15,14 +15,11 @@ class Cart extends Model
         'buyer_id',
         'seller_id',
         'status',
-        'expires_at',
     ];
 
     protected function casts(): array
     {
-        return [
-            'expires_at' => 'datetime',
-        ];
+        return [];
     }
 
     public function buyer(): BelongsTo

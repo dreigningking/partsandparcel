@@ -6,7 +6,6 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Item;
 use App\Models\Listing;
-use App\Models\Location;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
@@ -31,7 +30,7 @@ class Listings extends Component
     public float $editPrice = 0.0;
     public bool $editIsNegotiable = false;
     public int $editQuantity = 1;
-    public string $editStatus = 'active';
+    public bool $is_published = true;
     public int $editWarrantyPeriodDays = 0;
     public bool $editIsWarrantyNegotiable = false;
     public string $editWarrantyTerms = '';
@@ -48,7 +47,6 @@ class Listings extends Component
     public bool $is_warranty_negotiable = false;
     public string $warranty_terms = '';
     public bool $allow_shipping = false;
-    public ?int $location_id = null;
 
     public function mount()
     {
@@ -92,8 +90,7 @@ class Listings extends Component
     public function openCreateListingModal(?int $itemId = null)
     {
         $user = Auth::user();
-        $defaultLoc = $user?->locations()->where('is_default', true)->first() ?? $user?->locations()->first();
-        $this->location_id = $defaultLoc?->id;
+        
 
         if ($itemId) {
             $this->selectedAssetKey = 'item_' . $itemId;
@@ -151,14 +148,24 @@ class Listings extends Component
             $this->quantity = 1;
         }
 
+        $user = Auth::user();
+        if ($user) {
+            $subscriptionService = app(\App\Services\Commercial\SubscriptionService::class);
+            $usage = $subscriptionService->getUsageStats($user);
+
+            if (! $usage['can_create_listing']) {
+                session()->flash('error', "You have reached your total active listings quota ({$usage['listings_used']}/{$usage['listing_limit']} for {$usage['plan_name']}). Please upgrade your subscription to list more parts.");
+                return;
+            }
+        }
+
         Listing::create([
             'user_id' => Auth::id(),
             'item_id' => $asset->id,
-            'location_id' => $asset->location_id,
             'quantity' => $this->quantity,
             'price' => $this->price,
             'is_negotiable' => $this->is_negotiable,
-            'status' => 'active',
+            'is_published' => true,
             'warranty_period_days' => $this->warranty_period_days ?: 0,
             'is_warranty_negotiable' => $this->is_warranty_negotiable,
             'warranty_terms' => $this->warranty_terms ?: '',
@@ -185,7 +192,7 @@ class Listings extends Component
         $this->editPrice = (float) $listing->price;
         $this->editIsNegotiable = (bool) $listing->is_negotiable;
         $this->editQuantity = (int) $listing->quantity;
-        $this->editStatus = $listing->status;
+        $this->is_published = $listing->is_published;
         $this->editWarrantyPeriodDays = (int) $listing->warranty_period_days;
         $this->editIsWarrantyNegotiable = (bool) $listing->is_warranty_negotiable;
         $this->editWarrantyTerms = (string) $listing->warranty_terms;
@@ -204,22 +211,19 @@ class Listings extends Component
         $this->validate([
             'editPrice' => 'required|numeric|min:0',
             'editQuantity' => 'required|integer|min:0',
-            'editStatus' => 'required|in:active,inactive,draft,rejected,sold_out',
+            'is_published' => 'required|boolean',
         ]);
 
         $listing = Listing::where('user_id', Auth::id())->find($this->editingListingId);
 
         if ($listing) {
-            $status = $this->editStatus;
-            if ($this->editQuantity <= 0 && $status === 'active') {
-                $status = 'sold_out';
-            }
+            
 
             $listing->update([
                 'price' => $this->editPrice,
                 'is_negotiable' => $this->editIsNegotiable,
                 'quantity' => $this->editQuantity,
-                'status' => $status,
+                'is_published' => $this->is_published,
                 'warranty_period_days' => $this->editWarrantyPeriodDays ?: 0,
                 'is_warranty_negotiable' => $this->editIsWarrantyNegotiable,
                 'warranty_terms' => $this->editWarrantyTerms ?: '',
@@ -285,7 +289,6 @@ class Listings extends Component
         $user = Auth::user();
 
         $query = Listing::with([
-            'location',
             'item.deviceModel.category.parent',
             'item.deviceModel.brand',
             'item.parent.deviceModel.brand',

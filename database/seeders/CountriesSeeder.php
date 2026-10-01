@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Country;
 use App\Models\State;
+use App\Services\GeographyService;
 use Illuminate\Database\Seeder;
 
 class CountriesSeeder extends Seeder
@@ -19,10 +20,12 @@ class CountriesSeeder extends Seeder
                 'currency' => 'NGN',
                 'currency_symbol' => '₦',
                 'timezone' => 'Africa/Lagos',
+                'is_default' => true,
                 'is_active' => true,
             ]
         );
 
+        /*
         $nigerianStates = [
             ['name' => 'Lagos', 'code' => 'LA'],
             ['name' => 'Abuja (FCT)', 'code' => 'FC'],
@@ -44,36 +47,15 @@ class CountriesSeeder extends Seeder
                 ['code' => $state['code'], 'is_active' => true]
             );
         }
+        */
 
-        // 2. United States
-        $usa = Country::updateOrCreate(
-            ['code' => 'US'],
-            [
-                'name' => 'United States',
-                'phone_code' => '+1',
-                'currency' => 'USD',
-                'currency_symbol' => '$',
-                'timezone' => 'America/New_York',
-                'is_active' => true,
-            ]
-        );
-
-        $usStates = [
-            ['name' => 'California', 'code' => 'CA'],
-            ['name' => 'Texas', 'code' => 'TX'],
-            ['name' => 'New York', 'code' => 'NY'],
-            ['name' => 'Florida', 'code' => 'FL'],
-            ['name' => 'Illinois', 'code' => 'IL'],
-            ['name' => 'Georgia', 'code' => 'GA'],
-            ['name' => 'Washington', 'code' => 'WA'],
-            ['name' => 'Ohio', 'code' => 'OH'],
-        ];
-
-        foreach ($usStates as $state) {
-            State::updateOrCreate(
-                ['country_id' => $usa->id, 'name' => $state['name']],
-                ['code' => $state['code'], 'is_active' => true]
-            );
+        try {
+            app(GeographyService::class)->fetchAndSave($nigeria);
+        } catch (\Throwable $e) {
+            // Swallow errors in seeder but log if available
+            if (function_exists('logger')) {
+                logger()->warning('GeographySeeder: failed to fetch states/cities for Nigeria: '.$e->getMessage());
+            }
         }
     }
 }

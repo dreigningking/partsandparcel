@@ -350,8 +350,6 @@ class ItemCreate extends Component
             'condition_status' => $this->condition_status,
             'condition_notes' => $this->condition_notes,
             'description' => $this->description,
-            'status' => 'acquired',
-            'acquired_at' => now(),
         ]);
 
         $this->attachUploadedMedia($item);
@@ -367,9 +365,7 @@ class ItemCreate extends Component
                         'item_type' => 'part',
                         'name' => $compData['name'],
                         'condition_status' => $compData['condition_status'] ?? 'Testing working',
-                        'condition_notes' => $compData['notes'] ?? null,
-                        'status' => 'available',
-                        'acquired_at' => now(),
+                        'condition_notes' => $compData['notes'] ?? null
                     ]);
                 }
             }
@@ -409,8 +405,7 @@ class ItemCreate extends Component
             'condition_status' => $this->condition_status,
             'condition_notes' => $this->condition_notes,
             'description' => $this->description,
-            'status' => 'acquired',
-            'acquired_at' => now(),
+            'year' => now(),
         ]);
 
         $this->attachUploadedMedia($item);
@@ -420,11 +415,10 @@ class ItemCreate extends Component
             $listing = Listing::create([
                 'user_id' => Auth::id(),
                 'item_id' => $item->id,
-                'location_id' => $this->location_id,
                 'quantity' => $this->quantity,
                 'price' => $this->price,
                 'is_negotiable' => $this->is_negotiable,
-                'status' => 'active',
+                'is_published' => true,
                 'warranty_period_days' => $this->warranty_period_days,
                 'is_warranty_negotiable' => $this->is_warranty_negotiable,
                 'warranty_terms' => $this->warranty_terms,
@@ -455,8 +449,7 @@ class ItemCreate extends Component
                         'name' => $compData['name'],
                         'condition_status' => $compData['condition_status'] ?? 'Testing working',
                         'condition_notes' => $compData['notes'] ?? null,
-                        'status' => 'available',
-                        'acquired_at' => now(),
+                        'year' => now(),
                     ]);
 
                     $listThisComp = $this->include_component_listings && !empty($compData['list_for_sale']);
@@ -464,11 +457,10 @@ class ItemCreate extends Component
                         Listing::create([
                             'user_id' => Auth::id(),
                             'item_id' => $childItem->id,
-                            'location_id' => $this->location_id,
                             'quantity' => 1,
                             'price' => $compData['price'],
                             'is_negotiable' => !empty($compData['is_negotiable']),
-                            'status' => 'active',
+                            'is_published' => true,
                             'warranty_period_days' => $compData['warranty_period_days'] ?? $this->warranty_period_days,
                             'is_warranty_negotiable' => !empty($compData['is_warranty_negotiable']),
                             'warranty_terms' => $compData['warranty_terms'] ?? $this->warranty_terms,

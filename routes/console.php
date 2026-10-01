@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\AbandonedCartJob;
+use App\Jobs\ModerationNotifierJob;
 use App\Jobs\SubscriptionAutoRenewJob;
 use App\Jobs\SubscriptionExpiredJob;
 use App\Jobs\SubscriptionExpiringJob;
@@ -16,3 +17,4 @@ Schedule::job(new SubscriptionExpiringJob)->daily();
 Schedule::job(new SubscriptionExpiredJob)->daily();
 Schedule::job(new SubscriptionAutoRenewJob)->hourly();
 Schedule::job(new AbandonedCartJob)->daily();
+Schedule::job(new ModerationNotifierJob)->hourly();

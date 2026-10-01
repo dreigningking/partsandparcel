@@ -28,6 +28,7 @@ use App\Livewire\Dashboard\Responses\MyResponses;
 use App\Livewire\Dashboard\Responses\MyResponseView;
 use App\Livewire\Dashboard\Shipments\ShipmentsList;
 use App\Livewire\Dashboard\Shipments\ShipmentView;
+use App\Livewire\Dashboard\SubscriptionConfirmation;
 use App\Livewire\Dashboard\SubscriptionPlans;
 use App\Livewire\Dashboard\Subscriptions;
 use App\Livewire\Dashboard\Wishlists;
@@ -39,6 +40,7 @@ use App\Livewire\Marketplace\Listings\Category;
 use App\Livewire\Marketplace\Listings\ListingDetails;
 use App\Livewire\Marketplace\Listings\SearchPage;
 use App\Livewire\Marketplace\Welcome;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -85,6 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::get('dashboard', Overview::class)->name('dashboard');
     Route::get('subscriptions', Subscriptions::class)->name('subscriptions');
     Route::get('subscription-plans', SubscriptionPlans::class)->name('subscription-plans');
+    Route::get('subscription/confirm/{plan}', SubscriptionConfirmation::class)->name('subscription.confirm');
     Route::get('messages', MessageList::class)->name('messages');
     Route::get('messages/conversation', MessageConversation::class)->name('conversation');
     Route::get('offers', OffersList::class)->name('offers');
@@ -122,4 +125,45 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('/', \App\Livewire\Admin\AdminDashboard::class)->name('index');
     Route::get('dashboard', \App\Livewire\Admin\AdminDashboard::class)->name('dashboard');
+});
+    // Route::middleware(['admin', 'role.selected'])->prefix('admin')->name('admin.')->group(function () {
+    //     Route::get('dashboard', AdminDashboard::class)->name('dashboard');
+    //     Route::get('profile', Profile::class)->name('profile');
+    //     Route::get('moderations', AdminModerations::class)->name('moderations');
+    //     Route::get('users', AdminUsers::class)->name('users');
+    //     Route::get('users/{user}', AdminUserDetails::class)->whereNumber('user')->name('users.show');
+    //     Route::get('subscriptions', AdminSubscriptions::class)->name('subscriptions');
+    //     Route::get('promotions', AdminPromotions::class)->name('promotions');
+    //     Route::get('properties', AdminListings::class)->name('properties');
+    //     Route::get('properties/{property}', AdminListingDetails::class)->whereNumber('property')->name('properties.show');
+    //     Route::get('blog', AdminBlog::class)->name('blog');
+    //     Route::get('blog/create', AdminBlogPostCreate::class)->name('blog.create');
+    //     Route::get('blog/{post}', AdminBlogPostShow::class)->whereNumber('post')->name('blog.show');
+    //     Route::get('blog/{post}/edit', AdminBlogPostEdit::class)->whereNumber('post')->name('blog.edit');
+    //     Route::get('payments', AdminPayments::class)->name('payments');
+    //     Route::get('coupons', AdminCoupons::class)->name('coupons');
+    //     Route::get('coupons/create', AdminCouponCreate::class)->name('coupons.create');
+    //     Route::get('coupons/{coupon}/edit', AdminCouponEdit::class)->whereNumber('coupon')->name('coupons.edit');
+    //     Route::get('faqs', AdminFaqs::class)->name('faqs');
+    //     Route::get('advertisements', AdminAdvertisements::class)->name('advertisements');
+    //     Route::prefix('settings')->name('settings.')->group(function () {
+    //         Route::get('general', AdminGeneral::class)->name('general');
+    //         Route::get('categories', AdminCategories::class)->name('categories');
+    //         Route::get('subscription-plans', AdminSubscriptionPlans::class)->name('subscription-plans');
+    //         Route::get('promotion-plans', AdminPromotionPlans::class)->name('promotion-plans');
+    //         Route::get('staff', AdminStaff::class)->name('staff');
+    //         Route::get('roles', AdminRolesPermissions::class)->name('roles');
+    //         Route::get('currencies', AdminCurrencies::class)->name('currencies');
+    //         Route::get('countries', AdminCountries::class)->name('countries');
+
+    //     });
+    // });
+
+Route::get('clear-cache', function () {
+    Artisan::call('cache:clear');
+    Artisan::call('config:clear');
+    Artisan::call('view:clear');
+    Artisan::call('route:clear');
+
+    return 'Cache cleared!';
 });

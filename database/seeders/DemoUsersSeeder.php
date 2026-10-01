@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\BankAccount;
 use App\Models\Cart;
 use App\Models\CartItem;
-use App\Models\Component;
 use App\Models\DeviceModel;
 use App\Models\Discussion;
 use App\Models\Item;
@@ -158,7 +157,7 @@ class DemoUsersSeeder extends Seeder
 
         if ($camryModel) {
             $camryItem = Item::updateOrCreate(
-                ['user_id' => $emeka->id, 'serial_number' => '2AR-FE-984321'],
+                ['user_id' => $emeka->id],
                 [
                     'model_id' => $camryModel->id,
                     'condition_status' => 'tested_used',
@@ -183,7 +182,7 @@ class DemoUsersSeeder extends Seeder
 
         if ($iphoneModel) {
             $iphoneItem = Item::updateOrCreate(
-                ['user_id' => $emeka->id, 'serial_number' => 'A2633-SN-498112'],
+                ['user_id' => $emeka->id],
                 [
                     'model_id' => $iphoneModel->id,
                     'condition_status' => 'donor_unit',
@@ -192,11 +191,11 @@ class DemoUsersSeeder extends Seeder
                 ]
             );
 
-            $screenComponent = Component::updateOrCreate(
-                ['item_id' => $iphoneItem->id, 'name' => 'OEM Super Retina XDR OLED Display'],
+            $screenComponent = Item::updateOrCreate(
+                ['parent_id' => $iphoneItem->id, 'name' => 'OEM Super Retina XDR OLED Display'],
                 [
                     'condition_status' => 'tested_grade_a',
-                    'serial_number' => 'SCR-IP13-8891',
+                    
                     'status' => 'available',
                 ]
             );

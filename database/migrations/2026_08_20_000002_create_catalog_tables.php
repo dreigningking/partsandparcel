@@ -38,30 +38,23 @@ return new class extends Migration {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('parent_id')->nullable()->constrained('items')->cascadeOnDelete();
+            $table->foreignId('location_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('model_id')->constrained()->restrictOnDelete();
-            $table->string('serial_number')->nullable()->unique();
+            $table->string('year')->nullable();
+            $table->string('name')->nullable();
+            $table->string('item_type')->default('whole');
             $table->string('condition_status');
-            $table->string('status')->default('available');
-            $table->timestamp('acquired_at')->nullable();
+            $table->text('condition_notes')->nullable();
+            $table->text('description')->nullable();
+            $table->softDeletes();
             $table->timestamps();
-            $table->index(['user_id', 'status']);
-        });
-
-        Schema::create('components', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('item_id')->constrained('items')->cascadeOnDelete();
-            $table->string('name');
-            $table->string('condition_status');
-            $table->string('serial_number')->nullable();
-            $table->string('status')->default('available');
-            $table->timestamps();
-            $table->index(['item_id', 'status']);
+            $table->index(['user_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('components');
         Schema::dropIfExists('items');
         Schema::dropIfExists('models');
         Schema::dropIfExists('brands');
