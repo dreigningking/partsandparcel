@@ -90,7 +90,7 @@ return new class extends Migration {
             $table->unique(['conversation_id', 'user_id']);
         });
 
-        Schema::create('messages', function (Blueprint $table) {
+        Schema::create('conversation_messages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('conversation_id')->constrained()->cascadeOnDelete();
             $table->foreignId('sender_id')->constrained('users');
@@ -105,7 +105,7 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('messages');
+        Schema::dropIfExists('conversation_messages');
         Schema::dropIfExists('conversation_participants');
         Schema::dropIfExists('conversations');
         Schema::dropIfExists('offer_items');

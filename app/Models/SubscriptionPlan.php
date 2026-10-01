@@ -17,6 +17,7 @@ class SubscriptionPlan extends Model
         'response_limit',
         'request_limit',
         'listing_limit',
+        'escrow_percentage',
         'features',
         'is_active',
         'is_default'
@@ -28,6 +29,7 @@ class SubscriptionPlan extends Model
             'response_limit' => 'integer',
             'request_limit' => 'integer',
             'listing_limit' => 'integer',
+            'escrow_percentage' => 'decimal:2',
             'features' => 'array',
             'is_active' => 'boolean',
             'is_default' => 'boolean',

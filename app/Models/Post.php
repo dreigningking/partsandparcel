@@ -3,16 +3,16 @@
 namespace App\Models;
 
 use App\Models\ViewedEntity;
+use App\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-
 class Post extends Model
 {
-    use SoftDeletes;
+    use HasMedia, SoftDeletes;
     protected $fillable = [
         'user_id',
         'category_id',
@@ -50,11 +50,6 @@ class Post extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(PostComment::class);
-    }
-
-    public function media(): MorphMany
-    {
-        return $this->morphMany(Media::class, 'mediable');
     }
 
     public function views(): MorphMany

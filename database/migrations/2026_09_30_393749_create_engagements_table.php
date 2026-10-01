@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('user_agent'); //
             $table->string('device_type'); // mobile, desktop, tablet
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->unsignedBigInteger('viewable_id');//listing, post, c
-            $table->string('viewable_type');
+            $table->unsignedBigInteger('viewable_id');
+            $table->string('viewable_type'); //listing, post, discussion, user profile
             $table->timestamps();
             $table->index('user_id');
             $table->index(['viewable_id', 'viewable_type']);

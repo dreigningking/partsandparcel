@@ -137,481 +137,514 @@ class CategoriesAndBrandsSeeder extends Seeder
             ],
         ];
 
-        // Collect all active primary and child category slugs
-        $allValidSlugs = [];
-        foreach ($categoriesStructure as $parentData) {
-            $allValidSlugs[] = $parentData['slug'];
-            foreach ($parentData['children'] as $child) {
-                $allValidSlugs[] = $child['slug'];
-            }
-        }
-
-        // Clean up obsolete categories from previous test seeders (only if not linked to existing models/discussions)
-        Category::whereNotIn('slug', $allValidSlugs)
-            ->whereDoesntHave('deviceModels')
-            ->whereDoesntHave('discussions')
-            ->delete();
-
+        // Seed Categories and Subcategories
         foreach ($categoriesStructure as $parentName => $data) {
-            $parent = Category::where('slug', $data['slug'])
-                ->orWhere('name', $parentName)
-                ->first();
-
-            if ($parent) {
-                $parent->update([
+            $parent = Category::updateOrCreate(
+                ['slug' => $data['slug']],
+                [
                     'name' => $parentName,
-                    'slug' => $data['slug'],
                     'parent_id' => null,
                     'is_active' => true,
-                ]);
-            } else {
-                $parent = Category::create([
-                    'name' => $parentName,
-                    'slug' => $data['slug'],
-                    'parent_id' => null,
-                    'is_active' => true,
-                ]);
-            }
+                ]
+            );
 
             foreach ($data['children'] as $child) {
-                $existingChild = Category::where('slug', $child['slug'])
-                    ->orWhere('name', $child['name'])
-                    ->first();
-
-                if ($existingChild) {
-                    $existingChild->update([
+                Category::updateOrCreate(
+                    ['slug' => $child['slug']],
+                    [
                         'name' => $child['name'],
-                        'slug' => $child['slug'],
                         'parent_id' => $parent->id,
                         'is_active' => true,
-                    ]);
-                } else {
-                    Category::create([
-                        'name' => $child['name'],
-                        'slug' => $child['slug'],
-                        'parent_id' => $parent->id,
-                        'is_active' => true,
-                    ]);
-                }
+                    ]
+                );
             }
         }
 
-        // 2. Brands & Models
-        $brandsWithModels = [
+        // 2. Arrangement: Brand -> Category -> Models
+        $catalog = [
             'Apple' => [
-                'category' => 'phones',
-                'models' => [
+                'phones' => [
                     'iPhone 11',
                     'iPhone 12',
                     'iPhone 13',
+                    'iPhone 13 Pro Max',
                     'iPhone 14 Pro',
+                    'iPhone 15',
                     'iPhone 15 Pro Max',
+                    'iPhone 16 Pro',
                     'iPad Air M1',
                     'iPad Pro 12.9 M2',
-                    'MacBook Air M1',
+                ],
+                'laptops' => [
+                    'MacBook Air M1 13-inch',
+                    'MacBook Air M2 13-inch',
                     'MacBook Pro 14 (M1 Pro)',
                     'MacBook Pro 16 M2 Max',
+                    'MacBook Pro 16 M3 Max',
+                ],
+                'screens-displays' => [
+                    'Apple Studio Display 27-inch 5K',
+                    'Pro Display XDR 32-inch 6K',
+                ],
+                'batteries-chargers' => [
+                    'MagSafe 85W Power Adapter',
+                    'Apple 140W USB-C Power Adapter',
                 ],
             ],
+
             'Samsung' => [
-                'category' => 'phones',
-                'models' => [
+                'phones' => [
                     'Galaxy S21 Ultra',
-                    'Galaxy S22',
+                    'Galaxy S22 5G',
                     'Galaxy S23 Ultra',
                     'Galaxy S24 Ultra',
                     'Galaxy A53 5G',
-                    'Galaxy A54',
+                    'Galaxy A54 5G',
+                    'Galaxy Z Fold 5',
                     'Galaxy Note 20 Ultra',
-                    'EcoBubble 8kg Washer',
-                    'Double Door 320L Refrigerator',
+                ],
+                'screens-displays' => [
+                    'Odyssey G9 49-inch Curved Gaming OLED',
+                    'Smart Monitor M8 32-inch 4K',
+                ],
+                'washing-machines' => [
+                    'EcoBubble 8kg Front Load Washer',
+                    'QuickDrive 10.5kg Smart Washer',
+                    'Top Load Wobble 9kg Washer',
+                ],
+                'refrigerators' => [
+                    'French Door 650L Refrigerator',
+                    'Double Door 320L Frost-Free Fridge',
+                    'Bespoke 4-Door Flex Fridge',
+                ],
+                'air-conditioners' => [
+                    'WindFree 1.5HP Inverter Split AC',
+                    'Digital Inverter 2.0HP Fast Cooling AC',
                 ],
             ],
+
+            'HP' => [
+                'laptops' => [
+                    'EliteBook 840 G5',
+                    'EliteBook 840 G6',
+                    'EliteBook 840 G7',
+                    'EliteBook 840 G8',
+                    'ProBook 450 G8',
+                    'ProBook 450 G9',
+                    'ZBook Power G8 Mobile Workstation',
+                    'Omen 16 Gaming Laptop',
+                    'Spectre x360 14',
+                ],
+                'storage-memory' => [
+                    'HP EX900 M.2 NVMe PCIe SSD 512GB',
+                    'HP EX950 PCIe NVMe SSD 1TB',
+                ],
+            ],
+
+            'Dell' => [
+                'laptops' => [
+                    'Latitude 5420',
+                    'Latitude 7490',
+                    'Latitude 7420 Carbon',
+                    'XPS 13 9310',
+                    'XPS 15 9520',
+                    'Precision 7560 Workstation',
+                    'Inspiron 15 3511',
+                    'Alienware m15 R7 Gaming',
+                ],
+                'screens-displays' => [
+                    'UltraSharp U2723QE 27-inch 4K Hub Monitor',
+                    'Dell P2419H 24-inch FHD IPS Monitor',
+                ],
+            ],
+
+            'Lenovo' => [
+                'laptops' => [
+                    'ThinkPad T480',
+                    'ThinkPad T490',
+                    'ThinkPad X1 Carbon Gen 10',
+                    'Legion 5 Pro 16-inch Gaming',
+                    'IdeaPad 3 15ALC6',
+                    'ThinkPad E15 Gen 4',
+                ],
+            ],
+
             'Google' => [
-                'category' => 'phones',
-                'models' => [
+                'phones' => [
                     'Pixel 6 Pro',
                     'Pixel 7',
                     'Pixel 7 Pro',
                     'Pixel 8 Pro',
+                    'Pixel 9 Pro XL',
                 ],
             ],
+
             'Tecno' => [
-                'category' => 'phones',
-                'models' => [
-                    'Camon 20 Pro',
+                'phones' => [
+                    'Camon 20 Pro 5G',
                     'Camon 30 Premier',
                     'Spark 10 Pro',
                     'Phantom V Fold',
+                    'Pova 5 Pro 5G',
                 ],
             ],
+
             'Infinix' => [
-                'category' => 'phones',
-                'models' => [
+                'phones' => [
                     'Note 30 Pro',
-                    'Hot 30 Play',
+                    'Note 40 Pro 5G',
+                    'Hot 40 Pro',
                     'Zero 30 5G',
-                    'GT 10 Pro',
+                    'GT 10 Pro Gaming',
                 ],
             ],
-            'HP' => [
-                'category' => 'laptops',
-                'models' => [
-                    'EliteBook 840 G5',
-                    'EliteBook 840 G7',
-                    'EliteBook 850 G6',
-                    'ProBook 450 G8',
-                    'Envy x360 15',
-                    'Spectre x360 14',
-                    'Omen 16 Gaming',
-                    'LaserJet Pro M404n',
+
+            'Xiaomi' => [
+                'phones' => [
+                    'Redmi Note 12 Pro 5G',
+                    'Redmi Note 13 Pro+ 5G',
+                    'Poco F5 Pro',
+                    'Xiaomi 13 Pro Leica',
                 ],
             ],
-            'Dell' => [
-                'category' => 'laptops',
-                'models' => [
-                    'XPS 13 (9310)',
-                    'XPS 15 (9520)',
-                    'Latitude 5420',
-                    'Latitude 7490',
-                    'Latitude 5510',
-                    'Inspiron 15 (3511)',
-                    'Precision 5560 Workstation',
+
+            'Sony' => [
+                'audio-sound' => [
+                    'WH-1000XM4 Noise-Cancelling Headphones',
+                    'WH-1000XM5 Wireless Headphones',
+                    'SRS-XG500 Portable Wireless Boombox',
+                ],
+                'cameras-sensors' => [
+                    'Alpha A7 III Full Frame Mirrorless',
+                    'Alpha A7 IV Mirrorless Camera',
+                    'FX3 Cinema Line Full Frame Camera',
                 ],
             ],
-            'Lenovo' => [
-                'category' => 'laptops',
-                'models' => [
-                    'ThinkPad X1 Carbon Gen 9',
-                    'ThinkPad T14 Gen 2',
-                    'ThinkPad E14',
-                    'ThinkPad X280',
-                    'Legion 5 Pro',
-                    'IdeaPad Slim 3',
-                ],
-            ],
-            'Toyota' => [
-                'category' => 'cars',
-                'models' => [
-                    'Corolla (2014-2019)',
-                    'Corolla (2020+)',
-                    'Camry (2018-2022)',
-                    'Camry (2012-2017)',
-                    'RAV4 (2019+)',
-                    'Hilux 2.8 GD-6',
-                    'Land Cruiser Prado (2020)',
-                    'Highlander (2017-2021)',
-                    'HiAce Bus (Commuter)',
-                ],
-            ],
-            'Honda' => [
-                'category' => 'cars',
-                'models' => [
-                    'Civic (2016-2021)',
-                    'Accord (2018-2022)',
-                    'Accord (2013-2017)',
-                    'CR-V (2017+)',
-                    'Pilot (2016-2022)',
-                ],
-            ],
-            'Lexus' => [
-                'category' => 'cars',
-                'models' => [
-                    'RX350 (2010-2015)',
-                    'RX350 (2016-2022)',
-                    'ES350 (2013-2018)',
-                    'ES350 (2019+)',
-                    'GX460 (2014-2021)',
-                    'IS250 (2014-2019)',
-                ],
-            ],
-            'Mercedes-Benz' => [
-                'category' => 'cars',
-                'models' => [
-                    'C300 (W204)',
-                    'C300 (W205)',
-                    'E350 (W212)',
-                    'E300 (W213)',
-                    'GLE 350 (2016-2019)',
-                    'ML 350 (W166)',
-                    'Actros 3340 Prime Mover',
-                ],
-            ],
-            'Sinotruk' => [
-                'category' => 'trucks',
-                'models' => [
-                    'HOWO 371 6x4 Tipper',
-                    'HOWO A7 420 Tractor Head',
-                    'HOWO 336 10-Wheeler Dump',
-                ],
-            ],
-            'Mack' => [
-                'category' => 'trucks',
-                'models' => [
-                    'Granite 6x4 Dump Truck',
-                    'Anthem Tractor Head',
-                    'CH613 Vision Truck',
-                ],
-            ],
-            'Bajaj' => [
-                'category' => 'motorcycles',
-                'models' => [
-                    'Boxer BM150 Motorcycle',
-                    'RE Compact 4S Tricycle (Keke)',
-                    'Maxima Cargo 3-Wheeler',
-                    'Pulsar 200NS',
-                ],
-            ],
+
             'LG' => [
-                'category' => 'washing-machines',
-                'models' => [
-                    'Vivace 9kg Front Load Washer',
-                    'Smart Inverter Top Load 11kg',
-                    'InstaView Door-in-Door Refrigerator 601L',
-                    'Dual Inverter 1.5HP Split AC',
-                    'NeoChef 42L Microwave Oven',
+                'washing-machines' => [
+                    'Vivace 9kg AI DD Front Loader Washer',
+                    'TurboWash 12kg Smart Inverter Washer',
+                    'Top Loader Smart Inverter 10kg Washer',
+                ],
+                'refrigerators' => [
+                    'InstaView Door-in-Door 601L Fridge',
+                    'Smart Inverter 260L Double Door Fridge',
+                    'Chest Freezer 350L Linear Compressor',
+                ],
+                'air-conditioners' => [
+                    'Dual Inverter 1.5HP GenCool Split AC',
+                    'Artcool 2.0HP Mirror Finish Inverter AC',
+                ],
+                'kitchen-appliances' => [
+                    'NeoChef 42L Smart Inverter Microwave Oven',
                 ],
             ],
+
             'Haier Thermocool' => [
-                'category' => 'refrigerators',
-                'models' => [
-                    'Turbo Chest Freezer 250L',
-                    'GenPAL 1.5HP Inverter AC',
-                    'Luxury Top Load 8kg Washer',
-                    'Double Door Frost Free Fridge 200L',
+                'refrigerators' => [
+                    'HRF-350 Double Door Refrigerator',
+                    'HTF-319 Silver Deep Freezer',
+                    'HTF-519 Turbo Deep Freezer',
+                ],
+                'washing-machines' => [
+                    'Top Load Semi-Automatic 10kg Washer',
+                    'Front Load 8kg Inverter Washer',
+                ],
+                'air-conditioners' => [
+                    'SuperCool 1.5HP Split Unit AC',
+                    'GenPAL 1.0HP Inverter AC',
                 ],
             ],
-            'Hisense' => [
-                'category' => 'air-conditioners',
-                'models' => [
-                    '1.5HP Copper Split AC',
-                    '205L Double Door Top Mount Fridge',
-                    'PureJet 8kg Front Load Washer',
+
+            'Panasonic' => [
+                'air-conditioners' => [
+                    'Nanoe-X Inverter 1.5HP Split AC',
+                    'Deluxe Non-Inverter 2.0HP AC',
+                ],
+                'kitchen-appliances' => [
+                    'Inverter Convection 34L Microwave Oven',
                 ],
             ],
+
+            'Toyota' => [
+                'cars' => [
+                    'Corolla 1.8L (2008-2013)',
+                    'Corolla 1.8L (2014-2019)',
+                    'Camry 2.4L "Muscle" (2007-2011)',
+                    'Camry 2.5L XLE (2012-2017)',
+                    'Camry 3.5L V6 (2018-2022)',
+                    'RAV4 2.5L AWD (2013-2018)',
+                    'Highlander 3.5L V6 (2010-2016)',
+                    'Sienna 3.5L V6 (2011-2018)',
+                    'Hilux 2.7L Petrol / 2.8L Diesel',
+                    'Land Cruiser Prado TX-L 3.0L',
+                ],
+                'complete-engines' => [
+                    '2AZ-FE 2.4L 4-Cylinder Tokunbo Engine',
+                    '2GR-FE 3.5L V6 Complete Tokunbo Engine',
+                    '1ZZ-FE 1.8L Engine Assembly',
+                    '1TR-FE 2.0L Petrol Hilux Engine',
+                    '1GD-FTV 2.8L Turbo Diesel Engine',
+                ],
+                'gearboxes-transmissions' => [
+                    'U241E 4-Speed Automatic Transmission',
+                    'U660E 6-Speed Automatic Transmission',
+                    'K114 CVT Transmission Box',
+                ],
+                'ecus-electrical' => [
+                    'Denso ECM / ECU Engine Control Unit',
+                    'Bosch ABS Pump & Modulator Unit',
+                ],
+            ],
+
+            'Honda' => [
+                'cars' => [
+                    'Civic 1.8L EX (2012-2015)',
+                    'Accord 2.4L "Evil Spirit" (2008-2012)',
+                    'Accord 2.4L (2013-2017)',
+                    'CR-V 2.4L AWD (2012-2016)',
+                    'Pilot 3.5L Touring (2011-2015)',
+                ],
+                'complete-engines' => [
+                    'K24A 2.4L i-VTEC Complete Engine',
+                    'R18A 1.8L VTEC Engine Assembly',
+                    'J35A 3.5L V6 Engine Assembly',
+                ],
+                'gearboxes-transmissions' => [
+                    'BAYA 5-Speed Automatic Transmission',
+                    'Honda Earth Dreams CVT Transmission',
+                ],
+            ],
+
+            'Mercedes-Benz' => [
+                'cars' => [
+                    'C-Class C300 (W204)',
+                    'C-Class C300 (W205)',
+                    'E-Class E350 (W212)',
+                    'GLE 350 4MATIC (W166)',
+                    'G-Wagon G63 AMG',
+                ],
+                'complete-engines' => [
+                    'M272 3.5L V6 Complete Engine',
+                    'M274 2.0L Turbocharged Engine',
+                    'OM642 3.0L V6 CDI Diesel Engine',
+                ],
+                'gearboxes-transmissions' => [
+                    '722.9 7G-Tronic Automatic Transmission',
+                    '9G-Tronic Automatic Transmission',
+                ],
+            ],
+
+            'Lexus' => [
+                'cars' => [
+                    'ES 350 (2007-2012)',
+                    'ES 350 (2013-2018)',
+                    'RX 350 (2010-2015)',
+                    'GX 460 V8 (2010-2020)',
+                ],
+                'complete-engines' => [
+                    '2GR-FE 3.5L V6 Lexus Engine Assembly',
+                    '1UR-FE 4.6L V8 Engine Assembly',
+                ],
+            ],
+
+            'Ford' => [
+                'cars' => [
+                    'Edge 3.5L V6 AWD (2011-2014)',
+                    'Explorer 3.5L Limited (2012-2017)',
+                    'F-150 SuperCrew 3.5L EcoBoost',
+                ],
+                'trucks' => [
+                    'F-650 Super Duty Commercial Truck',
+                    'Cargo 1830 Heavy Rigid Hauler',
+                ],
+            ],
+
+            'Mack' => [
+                'trucks' => [
+                    'Vision CXN613 Conventional Tractor',
+                    'Granite GU713 Dump Truck Chassis',
+                    'CH613 Heavy Duty Haulage Tractor',
+                ],
+            ],
+
+            'DAF' => [
+                'trucks' => [
+                    'XF 105.460 Super Space Cab 6x2',
+                    'CF 85.410 Tipper Haulage Chassis',
+                    'LF 55.220 Distribution Truck',
+                ],
+            ],
+
+            'Bajaj' => [
+                'motorcycles' => [
+                    'Boxer BM150 Heavy Commercial Motorcycle',
+                    'RE Compact 4-Stroke Commercial Tricycle (Keke)',
+                    'Maxima Cargo 3-Wheeler Delivery Box',
+                ],
+            ],
+
+            'TVS' => [
+                'motorcycles' => [
+                    'King Deluxe Plus Commercial Tricycle (Keke)',
+                    'HLX 125cc Commercial Motorcycle',
+                ],
+            ],
+
             'Caterpillar' => [
-                'category' => 'excavators',
-                'models' => [
-                    '320D Hydraulic Excavator',
-                    '330D L Excavator',
-                    '336D Heavy Excavator',
-                    'D6R Track-Type Tractor (Bulldozer)',
-                    'D8R Heavy Crawler Bulldozer',
-                    '966H Wheel Loader',
-                    '428F Backhoe Loader',
-                    '3512B 1500kVA Diesel Generator',
-                    'C18 700kVA Soundproof Generator',
+                'excavators' => [
+                    'CAT 320D Hydraulic Tracked Excavator',
+                    'CAT 330D2L Heavy Excavator',
+                ],
+                'bulldozers' => [
+                    'CAT D6R XL Crawler Dozer',
+                    'CAT D8R Heavy Duty Track-Type Tractor',
+                ],
+                'wheel-loaders' => [
+                    'CAT 950H Wheel Loader',
+                    'CAT 966H Heavy Wheel Loader',
+                ],
+                'generators' => [
+                    'CAT 3406 350kVA Standby Diesel Generator',
+                    'CAT C15 500kVA Heavy Industrial Generator',
                 ],
             ],
+
             'Komatsu' => [
-                'category' => 'excavators',
-                'models' => [
-                    'PC200-8 Hydraulic Excavator',
-                    'PC300-8 Heavy Excavator',
-                    'D65EX-16 Crawler Bulldozer',
-                    'WA380-6 Wheel Loader',
-                    'D155A Heavy Dozer',
+                'excavators' => [
+                    'PC200-8 Hydraulic Crawler Excavator',
+                    'PC300-8 Heavy Mining Excavator',
+                ],
+                'bulldozers' => [
+                    'D155A-6 Heavy Crawler Dozer',
+                ],
+                'wheel-loaders' => [
+                    'WA380-6 Heavy Wheel Loader',
                 ],
             ],
-            'Volvo' => [
-                'category' => 'excavators',
-                'models' => [
-                    'EC210B Prime Excavator',
-                    'EC380D Heavy Excavator',
-                    'L120F Wheel Loader',
-                    'L150H Wheel Loader',
-                    'FMX 400 Tipper Truck',
-                ],
-            ],
-            'Hitachi' => [
-                'category' => 'excavators',
-                'models' => [
-                    'ZX200-5G Hydraulic Excavator',
-                    'ZX330-5G Heavy Excavator',
-                    'ZX350LCH Quarry Excavator',
-                ],
-            ],
+
             'JCB' => [
-                'category' => 'wheel-loaders',
-                'models' => [
-                    '3CX Backhoe Loader',
-                    '4CX 4WS Backhoe Loader',
-                    '531-70 Telescopic Handler',
-                    'JS205 Tracked Excavator',
+                'wheel-loaders' => [
+                    '3CX Eco Backhoe Loader',
+                    '4DX Heavy Duty Backhoe Loader',
+                ],
+                'excavators' => [
+                    'JS205 Heavy Tracked Excavator',
                 ],
             ],
-            'Tadano' => [
-                'category' => 'cranes',
-                'models' => [
-                    'GT-550E 55-Ton Truck Crane',
-                    'GR-300EX 30-Ton Rough Terrain Crane',
-                    'TG-500E Hydraulic Mobile Crane',
-                ],
-            ],
-            'Liebherr' => [
-                'category' => 'cranes',
-                'models' => [
-                    'LTM 1050 50-Ton All Terrain Crane',
-                    'LTM 1100 Mobile Crane',
-                    'R 920 Compact Crawler Excavator',
-                ],
-            ],
-            'Cummins' => [
-                'category' => 'generators',
-                'models' => [
-                    '6BT5.9G2 100kVA Diesel Generator',
-                    'QSL9 250kVA Generator Set',
-                    'KTA50-G3 1500kVA Power Plant',
-                    'NT855 Heavy Diesel Engine',
-                ],
-            ],
+
             'Perkins' => [
-                'category' => 'generators',
-                'models' => [
-                    '1103A-33G 30kVA Generator',
-                    '1104A-44TG2 60kVA Generator',
-                    '2506C-E15TAG2 500kVA Generator',
-                    '4006-23TAG2A 800kVA Generator',
+                'generators' => [
+                    '1103A-33G 30kVA Prime Diesel Generator',
+                    '1104A-44TG2 60kVA Silent Soundproof Generator',
+                    '1106A-70TAG2 150kVA Heavy Power Generator',
+                    '2506A-E15TAG2 500kVA Industrial Generator',
+                ],
+                'generator-accessories-parts' => [
+                    'Perkins 1104 Fuel Injection Pump Assembly',
+                    'Perkins Complete Turbocharger Unit',
                 ],
             ],
+
+            'Cummins' => [
+                'generators' => [
+                    'C33D5 33kVA Diesel Generator',
+                    '6BTA5.9-G2 125kVA Standby Generator',
+                    'QSL9-G5 300kVA Industrial Heavy Generator',
+                ],
+            ],
+
             'Mikano' => [
-                'category' => 'generators',
-                'models' => [
-                    '20kVA Perkins Powered Soundproof Gen',
-                    '50kVA Perkins Diesel Generator',
-                    '100kVA Prime Power Generator',
-                    '250kVA Heavy Mikano Generator',
+                'generators' => [
+                    'Mikano YorPower 20kVA Soundproof Generator',
+                    'Mikano 50kVA Soundproof Generator (Perkins Engine)',
+                    'Mikano 100kVA Industrial Power Unit',
                 ],
             ],
-            'Elepaq' => [
-                'category' => 'generators',
-                'models' => [
-                    'SV6800E 3.5kVA Key-Starter Generator',
-                    'SV20000E2 10kVA Petrol Generator',
-                    'Constant 4.5kVA Manual Generator',
-                ],
-            ],
-            'Tiger' => [
-                'category' => 'generators',
-                'models' => [
-                    'TG950 Small 650W Petrol Generator',
-                    'TGR2900 2.5kVA Generator',
-                ],
-            ],
-            'Felicity Solar' => [
-                'category' => 'solar-inverters',
-                'models' => [
-                    'FL-IVPS 5000W 48V Hybrid Solar Inverter',
-                    '10kWh 48V LiFePO4 Lithium Battery',
-                    '550W Monocrystalline Solar Panel',
-                ],
-            ],
-            'Ingersoll Rand' => [
-                'category' => 'compressors',
-                'models' => [
-                    'UP6 15 Rotary Screw Air Compressor',
-                    'SSR M22 30HP Industrial Compressor',
-                    '2475 Two-Stage Piston Compressor Pump',
-                ],
-            ],
+
             'Atlas Copco' => [
-                'category' => 'compressors',
-                'models' => [
-                    'GA 15 VSD+ Variable Speed Screw Compressor',
-                    'GA 37 Stationary Rotary Compressor',
-                    'XAS 88 Towable Diesel Air Compressor',
+                'compressors' => [
+                    'GA 30 Rotary Screw Air Compressor (30kW)',
+                    'GA 75 VSD Variable Speed Compressor',
+                    'XAS 97 Portable Towable Diesel Compressor',
                 ],
             ],
-            'ABB' => [
-                'category' => 'motors',
-                'models' => [
-                    'M2BAX 15kW 3-Phase Induction Motor',
-                    'M3AA 7.5kW Aluminum Motor',
-                    'ACS880 Industrial Frequency Inverter',
-                    'Emax 2 High Voltage Air Circuit Breaker',
-                ],
-            ],
-            'Siemens' => [
-                'category' => 'switchgear',
-                'models' => [
-                    'SIMOTICS GP 11kW Low Voltage Motor',
-                    'SIMATIC S7-1200 PLC Processor',
-                    'SENTRON 3VA Molded Case Circuit Breaker',
-                    'SIRIUS 3RW Soft Starter',
-                ],
-            ],
-            'Massey Ferguson' => [
-                'category' => 'tractors',
-                'models' => [
-                    'MF 375 75HP 2WD Farm Tractor',
-                    'MF 385 85HP 4WD Heavy Tractor',
-                    'MF 240 50HP Compact Tractor',
-                ],
-            ],
+
             'John Deere' => [
-                'category' => 'tractors',
-                'models' => [
-                    '5075E 75HP Utility Tractor',
+                'tractors' => [
+                    '5075E 75HP 4WD Utility Tractor',
                     '6120M Heavy Duty Ag Tractor',
+                ],
+                'harvesters-combines' => [
                     'W70 Self-Propelled Combine Harvester',
                 ],
             ],
+
             'Mahindra' => [
-                'category' => 'tractors',
-                'models' => [
-                    '575 DI Sarpanch 45HP Tractor',
-                    '475 DI Bhoomiputra 42HP Tractor',
-                    'Arjun Novo 605 DI 57HP Tractor',
+                'tractors' => [
+                    '575 DI Sarpanch 45HP Farm Tractor',
+                    'Arjun Novo 605 DI 57HP Heavy Tractor',
                 ],
             ],
+
             'Bosch' => [
-                'category' => 'construction-tools',
-                'models' => [
+                'construction-tools' => [
                     'GWS 750-115 Professional Angle Grinder',
                     'GBH 2-26 DRE Rotary Hammer with SDS Plus',
-                    'GSB 18V-50 Brushless Impact Drill',
+                    'GSB 18V-50 Brushless Cordless Impact Drill',
                     'GCO 14-24 J Metal Cut-Off Saw',
                 ],
-            ],
-            'Makita' => [
-                'category' => 'construction-tools',
-                'models' => [
-                    'GA4530 4-1/2 Inch Angle Grinder',
-                    'HR2470 24mm Rotary Hammer Drill',
-                    'DHP482 18V LXT Combi Drill',
+                'ecus-electrical' => [
+                    'Bosch Common Rail Diesel High Pressure Pump CP4',
+                    'Bosch 12V 150A Heavy Vehicle Alternator',
                 ],
             ],
+
+            'Makita' => [
+                'construction-tools' => [
+                    'GA4530 4-1/2 Inch Angle Grinder',
+                    'HR2470 24mm SDS-Plus Rotary Hammer',
+                    'DHP482 18V LXT Cordless Combi Drill',
+                ],
+            ],
+
             'DeWalt' => [
-                'category' => 'construction-tools',
-                'models' => [
-                    'DWE402 4-1/2 Small Angle Grinder',
+                'construction-tools' => [
+                    'DWE402 4-1/2 Inch Small Angle Grinder',
                     'DCD771C2 20V MAX Cordless Drill Kit',
                     'D25133K SDS Plus 1-Inch Pistol Grip Hammer',
                 ],
             ],
         ];
 
-        foreach ($brandsWithModels as $brandName => $data) {
+        // Seed Brands and Models using Brand -> Category -> Models arrangement
+        foreach ($catalog as $brandName => $categories) {
             $brand = Brand::updateOrCreate(
                 ['slug' => Str::slug($brandName)],
-                ['name' => $brandName, 'is_active' => true]
+                [
+                    'name' => $brandName,
+                    'is_active' => true,
+                ]
             );
 
-            $category = Category::where('slug', $data['category'])
-                ->orWhere('name', $data['category'])
-                ->first() ?? Category::first();
+            foreach ($categories as $categorySlug => $models) {
+                $category = Category::where('slug', $categorySlug)->first()
+                    ?? Category::where('name', $categorySlug)->first()
+                    ?? Category::first();
 
-            foreach ($data['models'] as $modelName) {
-                DeviceModel::updateOrCreate(
-                    [
-                        'brand_id' => $brand->id,
-                        'slug' => Str::slug($brandName . ' ' . $modelName),
-                    ],
-                    [
-                        'category_id' => $category->id,
-                        'name' => $modelName,
-                    ]
-                );
+                foreach ($models as $modelName) {
+                    DeviceModel::updateOrCreate(
+                        [
+                            'brand_id' => $brand->id,
+                            'slug' => Str::slug($brandName . ' ' . $modelName),
+                        ],
+                        [
+                            'category_id' => $category->id,
+                            'name' => $modelName,
+                        ]
+                    );
+                }
             }
         }
     }

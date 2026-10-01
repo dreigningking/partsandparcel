@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\ConversationMessage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,11 +36,11 @@ class Conversation extends Model
 
     public function messages(): HasMany
     {
-        return $this->hasMany(Message::class);
+        return $this->hasMany(ConversationMessage::class);
     }
 
     public function latestMessage()
     {
-        return $this->hasOne(Message::class)->latestOfMany();
+        return $this->hasOne(ConversationMessage::class)->latestOfMany();
     }
 }

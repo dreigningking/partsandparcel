@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->unsignedInteger('response_limit')->default(1);
             $table->unsignedInteger('request_limit')->default(1);
             $table->unsignedInteger('listing_limit')->default(10);
+            $table->decimal('escrow_percentage', 5, 2)->default(10.00);
             $table->json('features')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_default')->default(false);

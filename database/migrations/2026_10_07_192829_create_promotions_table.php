@@ -16,8 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->nullable();
             $table->foreignId('country_id')->nullable()->constrained('countries')->nullOnDelete();
-            $table->decimal('views', 10, 0)->default(0.00); //cost of views
-            $table->decimal('clicks', 10, 0)->default(0.00); //cost of clicks
+            $table->decimal('views', 10, 4)->default(0.0000); //cost of views
+            $table->decimal('clicks', 10, 2)->default(0.00); //cost of clicks
             $table->timestamps();
         });
 

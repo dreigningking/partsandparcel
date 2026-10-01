@@ -43,7 +43,7 @@ return new class extends Migration {
             $table->foreignId('model_id')->constrained()->restrictOnDelete();
             $table->string('year')->nullable();
             $table->string('name')->nullable();
-            $table->string('item_type')->default('whole');
+            $table->enum('item_type', ['whole', 'part','scrap'])->default('whole');
             $table->string('condition_status');
             $table->text('condition_notes')->nullable();
             $table->text('description')->nullable();

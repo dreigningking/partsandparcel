@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Country;
 use App\Models\SubscriptionPlan;
 use App\Models\SubscriptionPlanPrice;
 use Illuminate\Database\Seeder;
@@ -10,86 +11,105 @@ class SubscriptionPlansSeeder extends Seeder
 {
     public function run(): void
     {
+        $nigeria = Country::where('code', 'NG')->first() ?? Country::where('is_default', true)->first();
+
         $plans = [
             [
                 'name' => 'Starter Free',
-                'price' => 0.00,
-                'price_annual' => 0.00,
-                'billing_interval' => 'monthly',
+                'slug' => 'starter-free',
                 'request_limit' => 1,
                 'response_limit' => 1,
                 'listing_limit' => 10,
+                'escrow_percentage' => 10.00,
+                'price_monthly' => 0.00,
+                'price_annual' => 0.00,
                 'features' => [
                     'daily_request_limit' => 1,
                     'daily_response_limit' => 1,
                     'listing_limit' => 10,
-                    'price_monthly' => 0.00,
-                    'price_annual' => 0.00,
+                    'escrow_fee' => '10%',
                     'priority_placement' => false,
-                    'description' => '1 community request/day, 1 quote response/day, up to 10 active listings',
+                    'dedicated_support' => false,
+                    'description' => '1 community request/day, 1 quote response/day, up to 10 active listings, 10% escrow fee',
                 ],
                 'is_active' => true,
+                'is_default' => true,
             ],
             [
                 'name' => 'Pro Technician & Vendor',
-                'price' => 2000.00,
-                'price_annual' => 20000.00,
-                'billing_interval' => 'monthly',
+                'slug' => 'pro-technician-vendor',
                 'request_limit' => 10,
                 'response_limit' => 10,
                 'listing_limit' => 50,
+                'escrow_percentage' => 7.00,
+                'price_monthly' => 2000.00,
+                'price_annual' => 20000.00,
                 'features' => [
                     'daily_request_limit' => 10,
                     'daily_response_limit' => 10,
                     'listing_limit' => 50,
-                    'price_monthly' => 2000.00,
-                    'price_annual' => 20000.00,
+                    'escrow_fee' => '7%',
                     'priority_placement' => true,
-                    'description' => '10 community requests/day, 10 quote responses/day, up to 50 active listings, priority placement',
+                    'verified_badge' => true,
+                    'dedicated_support' => false,
+                    'description' => '10 community requests/day, 10 quote responses/day, up to 50 active listings, 7% escrow fee',
                 ],
                 'is_active' => true,
+                'is_default' => false,
             ],
             [
                 'name' => 'Enterprise Salvage & Dealer',
-                'price' => 5000.00,
-                'price_annual' => 50000.00,
-                'billing_interval' => 'monthly',
-                'request_limit' => 100,
-                'response_limit' => 100,
+                'slug' => 'enterprise-salvage-dealer',
+                'request_limit' => 50,
+                'response_limit' => 50,
                 'listing_limit' => 500,
+                'escrow_percentage' => 5.00,
+                'price_monthly' => 5000.00,
+                'price_annual' => 50000.00,
                 'features' => [
-                    'daily_request_limit' => 100,
-                    'daily_response_limit' => 100,
+                    'daily_request_limit' => 50,
+                    'daily_response_limit' => 50,
                     'listing_limit' => 500,
-                    'price_monthly' => 5000.00,
-                    'price_annual' => 50000.00,
+                    'escrow_fee' => '5%',
                     'priority_placement' => true,
+                    'dedicated_arbitration' => true,
                     'dedicated_support' => true,
-                    'description' => '100 community requests/day, 100 quote responses/day, up to 500 active listings, dedicated arbitration',
+                    'description' => '50 community requests/day, 50 quote responses/day, up to 500 active listings, 5% escrow fee, dedicated arbitration',
                 ],
                 'is_active' => true,
+                'is_default' => false,
             ],
         ];
 
         foreach ($plans as $planData) {
             $plan = SubscriptionPlan::updateOrCreate(
-                ['name' => $planData['name']],
-                $planData
-            );
-
-            // Seed price record for Nigeria (NGN)
-            SubscriptionPlanPrice::updateOrCreate(
+                ['slug' => $planData['slug']],
                 [
-                    'subscription_plan_id' => $plan->id,
-                    'country_code' => 'NG',
-                    'currency' => 'NGN',
-                ],
-                [
-                    'price_monthly' => $planData['price'],
-                    'price_annual' => $planData['price_annual'],
-                    'is_active' => true,
+                    'name' => $planData['name'],
+                    'request_limit' => $planData['request_limit'],
+                    'response_limit' => $planData['response_limit'],
+                    'listing_limit' => $planData['listing_limit'],
+                    'escrow_percentage' => $planData['escrow_percentage'],
+                    'features' => $planData['features'],
+                    'is_active' => $planData['is_active'],
+                    'is_default' => $planData['is_default'],
                 ]
             );
+
+            // Incorporate plan prices for Nigeria
+            if ($nigeria) {
+                SubscriptionPlanPrice::updateOrCreate(
+                    [
+                        'subscription_plan_id' => $plan->id,
+                        'country_id' => $nigeria->id,
+                    ],
+                    [
+                        'price_monthly' => $planData['price_monthly'],
+                        'price_annual' => $planData['price_annual'],
+                        'is_active' => true,
+                    ]
+                );
+            }
         }
     }
 }
