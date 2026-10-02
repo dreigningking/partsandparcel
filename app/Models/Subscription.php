@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Subscription extends Model
@@ -51,6 +50,11 @@ class Subscription extends Model
 
     public function isActive(): bool
     {
-        return $this->status === 'active' && $this->ends_at && $this->ends_at->isFuture();
+        return $this->status === 'active' && ($this->ends_at === null || $this->ends_at->isFuture());
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->ends_at !== null && $this->ends_at->isPast();
     }
 }

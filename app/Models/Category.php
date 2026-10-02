@@ -44,4 +44,9 @@ class Category extends Model
     {
         return $this->hasMany(Discussion::class);
     }
+
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
+    }
 }

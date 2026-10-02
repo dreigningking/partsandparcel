@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\PromoCode;
+use App\Models\Coupon;
 use Illuminate\Database\Seeder;
 
-class DemoPromoCodesSeeder extends Seeder
+class DemoCouponsSeeder extends Seeder
 {
     public function run(): void
     {
@@ -57,7 +57,7 @@ class DemoPromoCodesSeeder extends Seeder
         ];
 
         foreach ($promos as $promo) {
-            PromoCode::updateOrCreate(
+            Coupon::updateOrCreate(
                 ['code' => $promo['code']],
                 $promo
             );

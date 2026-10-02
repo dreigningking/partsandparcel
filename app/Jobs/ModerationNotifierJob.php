@@ -2,7 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Models\Discussion;
+use App\Models\Listing;
 use App\Models\Moderation;
+use App\Models\PostComment;
 use App\Models\User;
 use App\Notifications\ModerationNotification;
 use Illuminate\Bus\Queueable;
@@ -19,23 +22,41 @@ class ModerationNotifierJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct()
-    {
-        //
-    }
+    public function __construct(
+        public ?int $moderationId = null
+    ) {}
 
     /**
      * Execute the job.
      */
     public function handle(): void
     {
-        $pendingCount = Moderation::where('status', 'pending')->count();
+        $pendingListings = Moderation::where('status', 'pending')
+            ->where('moderatable_type', Listing::class)
+            ->count();
 
-        if ($pendingCount > 0) {
-            // Notify admins (you can adjust the notification method as needed)
-            // For example, sending an email to all admins
-            $admins = User::where('role_id', '!=', null)->get();
-            Notification::send($admins, new ModerationNotification($pendingCount));
+        $pendingDiscussions = Moderation::where('status', 'pending')
+            ->where('moderatable_type', Discussion::class)
+            ->count();
+
+        $pendingComments = Moderation::where('status', 'pending')
+            ->where('moderatable_type', PostComment::class)
+            ->count();
+
+        $totalPending = Moderation::where('status', 'pending')->count();
+
+        if ($totalPending > 0) {
+            $breakdown = [
+                'listings' => $pendingListings,
+                'discussions' => $pendingDiscussions,
+                'comments' => $pendingComments,
+            ];
+
+            // Notify all staff/admins
+            $admins = User::whereNotNull('role_id')->get();
+            if ($admins->isNotEmpty()) {
+                Notification::send($admins, new ModerationNotification($totalPending, $breakdown));
+            }
         }
     }
 }

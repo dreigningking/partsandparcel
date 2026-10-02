@@ -2,21 +2,23 @@
 
 namespace App\Livewire\Admin\Settings;
 
-use App\Models\Currency;
-use App\Models\Price;
+use App\Models\Country;
 use App\Models\SubscriptionPlan;
+use App\Models\SubscriptionPlanPrice;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
+#[Layout('layouts.dash')]
+#[Title('Subscription Plans & Pricing — Admin Settings')]
 class AdminSubscriptionPlans extends Component
 {
-    const FEATURE_KEYS = [
-        'max_listings',
-        'featured_listings',
-        'api_access',
-        'analytics',
-        'priority_support',
-    ];
+    #[Url(as: 'q')]
+    public string $search = '';
 
     public bool $showModal = false;
 
@@ -26,14 +28,30 @@ class AdminSubscriptionPlans extends Component
 
     public string $slug = '';
 
-    public int $seats = 1;
+    public int $request_limit = 1;
 
-    public int $days = 30;
+    public int $response_limit = 1;
 
-    /** @var list<array{key: string, value: string}> */
-    public array $featureRows = [];
+    public int $listing_limit = 10;
 
-    /** @var list<array{currency_id: int|null, amount: string}> */
+    public string $escrow_percentage = '10.00';
+
+    public bool $is_active = true;
+
+    public bool $is_default = false;
+
+    // Feature toggles
+    public bool $priority_placement = false;
+
+    public bool $verified_badge = false;
+
+    public bool $dedicated_support = false;
+
+    public bool $dedicated_arbitration = false;
+
+    public string $description = '';
+
+    /** @var list<array{country_id: int|null, price_monthly: string, price_annual: string, is_active: bool}> */
     public array $priceRows = [];
 
     public function openCreate(): void
@@ -41,39 +59,79 @@ class AdminSubscriptionPlans extends Component
         $this->editingId = null;
         $this->name = '';
         $this->slug = '';
-        $this->seats = 1;
-        $this->days = 30;
-        $this->featureRows = array_map(
-            fn ($key) => ['key' => $key, 'value' => ''],
-            self::FEATURE_KEYS
-        );
-        $defaultCurrency = Currency::query()->where('is_active', true)->orderByDesc('is_default')->orderBy('code')->value('id');
-        $this->priceRows = [['currency_id' => $defaultCurrency, 'amount' => '0']];
-        $this->resetErrorBag();
+        $this->request_limit = 1;
+        $this->response_limit = 1;
+        $this->listing_limit = 10;
+        $this->escrow_percentage = '10.00';
+        $this->is_active = true;
+        $this->is_default = false;
+        $this->priority_placement = false;
+        $this->verified_badge = false;
+        $this->dedicated_support = false;
+        $this->dedicated_arbitration = false;
+        $this->description = '';
+
+        $defaultCountry = Country::query()
+            ->where('is_default', true)
+            ->first() ?? Country::query()->where('code', 'NG')->first() ?? Country::query()->where('is_active', true)->first();
+
+        $this->priceRows = [
+            [
+                'country_id' => $defaultCountry?->id,
+                'price_monthly' => '0.00',
+                'price_annual' => '0.00',
+                'is_active' => true,
+            ],
+        ];
+
+        $this->resetValidation();
         $this->showModal = true;
     }
 
     public function openEdit(int $id): void
     {
-        $plan = SubscriptionPlan::query()->with(['prices' => fn ($q) => $q->whereNull('country_id')])->findOrFail($id);
+        $plan = SubscriptionPlan::query()->with(['prices.country'])->findOrFail($id);
+
         $this->editingId = $plan->id;
         $this->name = $plan->name;
         $this->slug = (string) ($plan->slug ?? '');
-        $this->seats = (int) $plan->seats;
-        $this->days = (int) $plan->days;
-        $this->featureRows = array_map(function ($key) use ($plan) {
-            $value = $plan->features[$key] ?? '';
-            return ['key' => $key, 'value' => (string) $value];
-        }, self::FEATURE_KEYS);
+        $this->request_limit = (int) $plan->request_limit;
+        $this->response_limit = (int) $plan->response_limit;
+        $this->listing_limit = (int) $plan->listing_limit;
+        $this->escrow_percentage = (string) $plan->escrow_percentage;
+        $this->is_active = (bool) $plan->is_active;
+        $this->is_default = (bool) $plan->is_default;
+
+        $features = $plan->features ?? [];
+        $this->priority_placement = (bool) ($features['priority_placement'] ?? false);
+        $this->verified_badge = (bool) ($features['verified_badge'] ?? false);
+        $this->dedicated_support = (bool) ($features['dedicated_support'] ?? false);
+        $this->dedicated_arbitration = (bool) ($features['dedicated_arbitration'] ?? false);
+        $this->description = (string) ($features['description'] ?? '');
+
         $this->priceRows = [];
         foreach ($plan->prices as $p) {
-            $this->priceRows[] = ['currency_id' => $p->currency_id, 'amount' => (string) $p->amount];
+            $this->priceRows[] = [
+                'country_id' => $p->country_id,
+                'price_monthly' => (string) $p->price_monthly,
+                'price_annual' => (string) $p->price_annual,
+                'is_active' => (bool) $p->is_active,
+            ];
         }
+
         if ($this->priceRows === []) {
-            $defaultCurrency = Currency::query()->where('is_active', true)->orderByDesc('is_default')->orderBy('code')->value('id');
-            $this->priceRows = [['currency_id' => $defaultCurrency, 'amount' => '0']];
+            $defaultCountry = Country::query()->where('is_default', true)->first() ?? Country::query()->first();
+            $this->priceRows = [
+                [
+                    'country_id' => $defaultCountry?->id,
+                    'price_monthly' => '0.00',
+                    'price_annual' => '0.00',
+                    'is_active' => true,
+                ],
+            ];
         }
-        $this->resetErrorBag();
+
+        $this->resetValidation();
         $this->showModal = true;
     }
 
@@ -81,110 +139,190 @@ class AdminSubscriptionPlans extends Component
     {
         $this->showModal = false;
         $this->editingId = null;
+        $this->resetValidation();
     }
 
     public function addPriceRow(): void
     {
-        $defaultCurrency = Currency::query()->where('is_active', true)->orderByDesc('is_default')->orderBy('code')->value('id');
-        $this->priceRows[] = ['currency_id' => $defaultCurrency, 'amount' => '0'];
+        $usedCountryIds = array_filter(array_column($this->priceRows, 'country_id'));
+        $nextCountry = Country::query()
+            ->where('is_active', true)
+            ->whereNotIn('id', $usedCountryIds)
+            ->first() ?? Country::query()->where('is_active', true)->first();
+
+        $this->priceRows[] = [
+            'country_id' => $nextCountry?->id,
+            'price_monthly' => '0.00',
+            'price_annual' => '0.00',
+            'is_active' => true,
+        ];
     }
 
     public function removePriceRow(int $index): void
     {
         unset($this->priceRows[$index]);
         $this->priceRows = array_values($this->priceRows);
+
         if ($this->priceRows === []) {
             $this->addPriceRow();
         }
+    }
+
+    public function toggleActive(int $id): void
+    {
+        $plan = SubscriptionPlan::query()->findOrFail($id);
+        $plan->update(['is_active' => ! $plan->is_active]);
+
+        session()->flash('status', __('Plan status updated.'));
     }
 
     public function savePlan(): void
     {
         $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255'],
-            'seats' => ['required', 'integer', 'min:1'],
-            'days' => ['required', 'integer', 'min:1'],
-            'featureRows' => ['nullable', 'array'],
-            'featureRows.*.value' => ['nullable', 'string', 'max:1000'],
+            'slug' => ['nullable', 'string', 'max:255', Rule::unique('subscription_plans', 'slug')->ignore($this->editingId)],
+            'request_limit' => ['required', 'integer', 'min:0'],
+            'response_limit' => ['required', 'integer', 'min:0'],
+            'listing_limit' => ['required', 'integer', 'min:0'],
+            'escrow_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
             'priceRows' => ['required', 'array', 'min:1'],
-            'priceRows.*.currency_id' => ['required', 'integer', 'exists:currencies,id'],
-            'priceRows.*.amount' => ['required', 'numeric', 'min:0'],
+            'priceRows.*.country_id' => ['required', 'exists:countries,id'],
+            'priceRows.*.price_monthly' => ['required', 'numeric', 'min:0'],
+            'priceRows.*.price_annual' => ['required', 'numeric', 'min:0'],
         ]);
 
-        // Convert feature rows to associative array
-        $features = [];
-        foreach ($this->featureRows as $row) {
-            if (isset($row['key'], $row['value'])) {
-                $features[$row['key']] = $row['value'];
-            }
+        $baseSlug = $this->slug !== '' ? Str::slug($this->slug) : Str::slug($this->name);
+
+        if ($this->is_default) {
+            SubscriptionPlan::query()->where('id', '!=', $this->editingId ?? 0)->update(['is_default' => false]);
         }
 
-        $slug = $this->slug !== '' ? Str::slug($this->slug) : Str::slug($this->name);
+        $features = [
+            'daily_request_limit' => $this->request_limit,
+            'daily_response_limit' => $this->response_limit,
+            'listing_limit' => $this->listing_limit,
+            'escrow_fee' => rtrim(rtrim((string) $this->escrow_percentage, '0'), '.').'%',
+            'priority_placement' => $this->priority_placement,
+            'verified_badge' => $this->verified_badge,
+            'dedicated_support' => $this->dedicated_support,
+            'dedicated_arbitration' => $this->dedicated_arbitration,
+            'description' => $this->description ?: "{$this->request_limit} community requests/day, {$this->response_limit} quote responses/day, up to {$this->listing_limit} listings, {$this->escrow_percentage}% escrow fee",
+        ];
 
-        if ($this->editingId) {
-            $plan = SubscriptionPlan::query()->findOrFail($this->editingId);
-            $plan->update([
+        $plan = SubscriptionPlan::query()->updateOrCreate(
+            ['id' => $this->editingId],
+            [
                 'name' => $this->name,
-                'slug' => $slug,
-                'seats' => $this->seats,
-                'days' => $this->days,
+                'slug' => $baseSlug,
+                'request_limit' => $this->request_limit,
+                'response_limit' => $this->response_limit,
+                'listing_limit' => $this->listing_limit,
+                'escrow_percentage' => $this->escrow_percentage,
                 'features' => $features,
-            ]);
-        } else {
-            $plan = SubscriptionPlan::query()->create([
-                'name' => $this->name,
-                'slug' => $slug,
-                'seats' => $this->seats,
-                'days' => $this->days,
-                'features' => $features,
-            ]);
-        }
+                'is_active' => $this->is_active,
+                'is_default' => $this->is_default,
+            ]
+        );
 
-        $plan->prices()->whereNull('country_id')->delete();
-
+        $savedCountryIds = [];
         foreach ($this->priceRows as $row) {
-            if (! isset($row['currency_id'], $row['amount'])) {
+            if (empty($row['country_id'])) {
                 continue;
             }
-            Price::query()->create([
-                'priceable_type' => SubscriptionPlan::class,
-                'priceable_id' => $plan->id,
-                'country_id' => null,
-                'currency_id' => (int) $row['currency_id'],
-                'amount' => $row['amount'],
-            ]);
+
+            SubscriptionPlanPrice::query()->updateOrCreate(
+                [
+                    'subscription_plan_id' => $plan->id,
+                    'country_id' => $row['country_id'],
+                ],
+                [
+                    'price_monthly' => $row['price_monthly'],
+                    'price_annual' => $row['price_annual'],
+                    'is_active' => $row['is_active'] ?? true,
+                ]
+            );
+
+            $savedCountryIds[] = (int) $row['country_id'];
         }
 
-        session()->flash('status', __('Subscription plan saved.'));
+        // Clean up prices for removed countries
+        SubscriptionPlanPrice::query()
+            ->where('subscription_plan_id', $plan->id)
+            ->whereNotIn('country_id', $savedCountryIds)
+            ->delete();
+
+        session()->flash('status', $this->editingId ? __('Subscription plan updated successfully.') : __('Subscription plan created successfully.'));
         $this->closeModal();
     }
 
     public function deletePlan(int $id): void
     {
         $plan = SubscriptionPlan::query()->findOrFail($id);
+
         if ($plan->subscriptions()->exists()) {
-            session()->flash('error', __('Cannot delete a plan that has subscriptions.'));
+            session()->flash('error', __('Cannot delete a subscription plan that has active or past subscribers. Consider deactivating it instead.'));
 
             return;
         }
+
         $plan->prices()->delete();
         $plan->delete();
-        session()->flash('status', __('Plan deleted.'));
+
+        session()->flash('status', __('Subscription plan deleted successfully.'));
     }
 
     public function render()
     {
-        $plans = SubscriptionPlan::query()
-            ->with(['prices' => fn ($q) => $q->whereNull('country_id')->with('currency')])
-            ->orderBy('name','asc')
+        $plansQuery = SubscriptionPlan::query()
+            ->with(['prices.country'])
+            ->withCount('subscriptions')
+            ->when($this->search !== '', function (Builder $query) {
+                $query->where(function (Builder $sub) {
+                    $sub->where('name', 'like', '%'.$this->search.'%')
+                        ->orWhere('slug', 'like', '%'.$this->search.'%')
+                        ->orWhereHas('prices.country', function (Builder $cq) {
+                            $cq->where('name', 'like', '%'.$this->search.'%')
+                                ->orWhere('currency', 'like', '%'.$this->search.'%');
+                        });
+                });
+            })
+            ->orderByDesc('is_default')
+            ->orderBy('id', 'asc');
+
+        $plans = $plansQuery->get();
+
+        $countries = Country::query()
+            ->where('is_active', true)
+            ->orderBy('name')
             ->get();
 
-        $currencies = Currency::query()->where('is_active', true)->orderBy('code')->get();
+        $totalPlans = SubscriptionPlan::query()->count();
+        $activeSubscribersCount = \App\Models\Subscription::query()->where('status', 'active')->count();
+        $defaultPlan = SubscriptionPlan::query()->where('is_default', true)->first();
 
         return view('livewire.admin.settings.admin-subscription-plans', [
             'plans' => $plans,
-            'currencies' => $currencies,
+            'countries' => $countries,
+            'totalPlans' => $totalPlans,
+            'activeSubscribersCount' => $activeSubscribersCount,
+            'defaultPlan' => $defaultPlan,
+            'showModal' => $this->showModal,
+            'editingId' => $this->editingId,
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'request_limit' => $this->request_limit,
+            'response_limit' => $this->response_limit,
+            'listing_limit' => $this->listing_limit,
+            'escrow_percentage' => $this->escrow_percentage,
+            'is_active' => $this->is_active,
+            'is_default' => $this->is_default,
+            'priority_placement' => $this->priority_placement,
+            'verified_badge' => $this->verified_badge,
+            'dedicated_support' => $this->dedicated_support,
+            'dedicated_arbitration' => $this->dedicated_arbitration,
+            'description' => $this->description,
+            'priceRows' => $this->priceRows,
+            'search' => $this->search,
         ]);
     }
 }

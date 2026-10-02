@@ -3,14 +3,15 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Category;
-use App\Models\Media;
 use App\Models\Post;
-use App\Models\Listing;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
+#[Layout('layouts.dash')]
+#[Title('Edit Blog Post — Admin Console')]
 class AdminBlogPostEdit extends Component
 {
     use WithFileUploads;
@@ -18,22 +19,14 @@ class AdminBlogPostEdit extends Component
     public Post $post;
 
     public string $title = '';
-
     public string $excerpt = '';
-
     public string $content = '';
-
     public ?int $category_id = null;
-
-    public ?int $listing_id = null;
-
     public string $tagsInput = '';
-
     public string $status = 'draft';
 
-    public string $content_source = 'manual';
-
-    public $featuredImage;
+    public $featuredImage = null;
+    public $featuredVideo = null;
 
     public function mount(Post $post): void
     {
@@ -42,10 +35,8 @@ class AdminBlogPostEdit extends Component
         $this->excerpt = (string) ($post->excerpt ?? '');
         $this->content = $post->content;
         $this->category_id = $post->category_id;
-        $this->listing_id = $post->listing_id;
         $this->tagsInput = is_string($post->tags) ? $post->tags : (is_array($post->tags) ? implode(', ', $post->tags) : '');
         $this->status = $post->status;
-        $this->content_source = $post->content_source ?? 'manual';
     }
 
     protected function rules(): array
@@ -53,14 +44,28 @@ class AdminBlogPostEdit extends Component
         return [
             'title' => ['required', 'string', 'max:255'],
             'excerpt' => ['nullable', 'string', 'max:500'],
-            'content' => ['required', 'string', 'min:20'],
+            'content' => ['required', 'string', 'min:10'],
             'category_id' => ['required', 'exists:categories,id'],
-            'listing_id' => ['nullable', 'exists:properties,id'],
             'tagsInput' => ['nullable', 'string', 'max:500'],
             'status' => ['required', 'in:draft,published,archived'],
-            'content_source' => ['required', 'in:manual,ai'],
-            'featuredImage' => ['nullable', 'image', 'max:5120'],
+            'featuredImage' => ['nullable', 'image', 'max:5120'], // 5MB max
+            'featuredVideo' => ['nullable', 'mimes:mp4,mov,webm,ogg', 'max:51200'], // 50MB max
         ];
+    }
+
+    public function removeImage(): void
+    {
+        $this->post->clearMediaCollection('featured');
+        $this->post->clearMediaCollection('default');
+        $this->featuredImage = null;
+        session()->flash('status', 'Featured image removed.');
+    }
+
+    public function removeVideo(): void
+    {
+        $this->post->clearMediaCollection('featured_video');
+        $this->featuredVideo = null;
+        session()->flash('status', 'Featured video removed.');
     }
 
     public function save(): mixed
@@ -69,66 +74,59 @@ class AdminBlogPostEdit extends Component
 
         $tagsString = implode(', ', array_values(array_filter(array_map('trim', explode(',', $this->tagsInput)))));
 
-        $slug = Str::slug($this->title);
-        if ($slug !== $this->post->slug) {
-            $base = $slug;
+        // Update slug if title changed
+        $slug = $this->post->slug;
+        if (trim($this->title) !== trim($this->post->title)) {
+            $base = Str::slug($this->title) ?: 'post';
+            $slug = $base;
             $i = 0;
             while (Post::query()->where('slug', $slug)->where('id', '!=', $this->post->id)->exists()) {
-                $slug = $base.'-'.(++$i);
+                $slug = $base . '-' . (++$i);
             }
-        } else {
-            $slug = $this->post->slug;
         }
 
-        $publishedAt = $this->post->published_at;
-        if ($this->status === 'published') {
-            $publishedAt = $publishedAt ?? now();
-        } elseif ($this->status === 'draft') {
-            $publishedAt = null;
-        }
+        $wasDraft = $this->post->status !== 'published';
+        $nowPublished = $this->status === 'published';
 
         $this->post->update([
+            'category_id' => $this->category_id,
             'title' => $this->title,
             'slug' => $slug,
             'excerpt' => $this->excerpt ?: null,
             'content' => $this->content,
-            'category_id' => $this->category_id,
-            'listing_id' => $this->listing_id,
             'status' => $this->status,
-            'published_at' => $publishedAt,
-            'tags'         => $tagsString ?: null,
-            'content_source' => $this->content_source,
+            'published_at' => ($wasDraft && $nowPublished) ? ($this->post->published_at ?: now()) : $this->post->published_at,
+            'tags' => $tagsString ?: null,
         ]);
 
         if ($this->featuredImage) {
-            $this->post->media()->where('is_primary', true)->delete();
-            $path = $this->featuredImage->store('posts', 'public');
-            Media::query()->create([
-                'user_id' => Auth::id(),
-                'mediable_id' => $this->post->id,
-                'mediable_type' => Post::class,
-                'name' => $this->post->title ?: 'Featured image',
-                'path' => $path,
-                'type' => 'image',
-                'mime_type' => $this->featuredImage->getMimeType(),
-                'size' => (string) $this->featuredImage->getSize(),
-                'extension' => $this->featuredImage->getClientOriginalExtension(),
-                'is_primary' => true,
-            ]);
+            $this->post->clearMediaCollection('featured');
+            $this->post->clearMediaCollection('default');
+            $this->post->attachMedia($this->featuredImage, 'featured');
         }
 
-        session()->flash('status', __('Post updated.'));
+        if ($this->featuredVideo) {
+            $this->post->clearMediaCollection('featured_video');
+            $this->post->attachMedia($this->featuredVideo, 'featured_video');
+        }
 
-        return redirect()->route('admin.blog.show', ['post' => $this->post->id]);
+        session()->flash('status', 'Article updated successfully.');
+
+        return redirect()->route('admin.blog.show', $this->post);
     }
 
     public function render()
     {
+        $existingImage = $this->post->featured_image_url;
+        $existingVideo = $this->post->featured_video_url;
+
         return view('livewire.admin.admin-blog-post-form', [
-            'categories' => Category::query()->orderBy('name', 'asc')->get(),
-            'properties' => Listing::query()->orderBy('name', 'asc')->limit(200)->get(['id', 'name']),
-            'heading' => __('Edit post'),
-            'submitLabel' => __('Save'),
+            'heading' => 'Edit Article: ' . Str::limit($this->post->title, 40),
+            'submitLabel' => 'Save Changes',
+            'categories' => Category::query()->orderBy('name', 'asc')->get(['id', 'name']),
+            'isEdit' => true,
+            'existingImage' => $existingImage,
+            'existingVideo' => $existingVideo,
         ]);
     }
 }

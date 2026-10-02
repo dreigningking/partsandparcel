@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Dashboard;
 
-use App\Models\PromoCode;
+use App\Models\Coupon;
 use App\Models\SubscriptionPlan;
 use App\Services\Commercial\SubscriptionService;
 use Illuminate\Support\Facades\Auth;
@@ -15,8 +15,8 @@ class SubscriptionConfirmation extends Component
     public int $planId;
     public ?SubscriptionPlan $plan = null;
     public int $months = 1;
-    public string $promoCodeInput = '';
-    public ?PromoCode $appliedPromo = null;
+    public string $couponInput = '';
+    public ?Coupon $appliedPromo = null;
     public ?string $promoMessage = null;
     public ?string $promoError = null;
     public string $defaultGateway = 'paystack';
@@ -59,21 +59,21 @@ class SubscriptionConfirmation extends Component
         $this->revalidatePromo();
     }
 
-    public function applyPromoCode()
+    public function applyCoupon()
     {
         $this->promoError = null;
         $this->promoMessage = null;
 
-        $code = strtoupper(trim($this->promoCodeInput));
+        $code = strtoupper(trim($this->couponInput));
         if (empty($code)) {
-            $this->promoError = 'Please enter a promo code.';
+            $this->promoError = 'Please enter a coupon.';
             return;
         }
 
-        $promo = PromoCode::where('code', $code)->first();
+        $promo = Coupon::where('code', $code)->first();
 
         if (! $promo) {
-            $this->promoError = "Promo code '{$code}' is invalid or does not exist.";
+            $this->promoError = "coupon '{$code}' is invalid or does not exist.";
             $this->appliedPromo = null;
             return;
         }
@@ -88,14 +88,14 @@ class SubscriptionConfirmation extends Component
         }
 
         $this->appliedPromo = $promo;
-        $this->promoMessage = "Promo code '{$promo->code}' applied successfully!";
+        $this->promoMessage = "coupon '{$promo->code}' applied successfully!";
         $this->promoError = null;
     }
 
-    public function removePromoCode()
+    public function removeCoupon()
     {
         $this->appliedPromo = null;
-        $this->promoCodeInput = '';
+        $this->couponInput = '';
         $this->promoMessage = null;
         $this->promoError = null;
     }
@@ -106,7 +106,7 @@ class SubscriptionConfirmation extends Component
             $subtotal = $this->calculations['subtotal_after_duration'];
             $check = $this->appliedPromo->validateEligibility($subtotal);
             if (! $check['valid']) {
-                $this->promoError = "Promo code removed: {$check['message']}";
+                $this->promoError = "coupon removed: {$check['message']}";
                 $this->appliedPromo = null;
                 $this->promoMessage = null;
             }
@@ -139,7 +139,7 @@ class SubscriptionConfirmation extends Component
 
         $subtotalAfterDuration = max(0.0, (float) ($grossTotal - $durationDiscount));
 
-        // Promo code discount
+        // coupon discount
         $promoDiscount = 0.0;
         if ($this->appliedPromo) {
             $promoDiscount = (float) $this->appliedPromo->calculateDiscount($subtotalAfterDuration);
@@ -178,7 +178,7 @@ class SubscriptionConfirmation extends Component
             planId: $this->plan->id,
             provider: $this->defaultGateway,
             months: $this->months,
-            promoCode: $this->appliedPromo?->code,
+            coupon: $this->appliedPromo?->code,
             customAmount: $calc['total_payable'],
             durationDiscount: $calc['duration_discount'],
             promoDiscount: $calc['promo_discount']

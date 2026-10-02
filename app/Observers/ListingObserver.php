@@ -2,8 +2,8 @@
 
 namespace App\Observers;
 
-use App\Models\Moderation;
 use App\Models\Listing;
+use App\Models\Moderation;
 
 class ListingObserver
 {
@@ -11,26 +11,49 @@ class ListingObserver
 
     public function created(Listing $listing): void
     {
-        if (self::$seeding || ($listing->is_published && $this->hasSubscription($listing))) {
-            $this->createModerationRecord($listing, 'created');
+        if (self::$seeding) {
+            return;
         }
+
+        $this->createModerationRecord($listing, 'created');
     }
 
     public function updated(Listing $listing): void
     {
-        if (! self::$seeding && $listing->wasChanged('is_published') && $listing->is_published && $listing->latestModeration?->status == 'approved') {
+        if (self::$seeding) {
+            return;
+        }
+
+        // Substantive listing changes (price, warranty, etc.), ignoring counters and moderation-managed flags
+        $changes = array_diff(array_keys($listing->getChanges()), [
+            'updated_at',
+            'is_published',
+            'is_active',
+            'reserved_quantity',
+            'sold_quantity',
+        ]);
+
+        if (!empty($changes)) {
             $this->createModerationRecord($listing, 'updated');
         }
     }
 
-
     protected function createModerationRecord(Listing $listing, string $action): void
     {
+        $alreadyPending = Moderation::where('moderatable_type', Listing::class)
+            ->where('moderatable_id', $listing->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($alreadyPending) {
+            return;
+        }
+
         Moderation::create([
             'moderatable_type' => Listing::class,
             'moderatable_id' => $listing->id,
             'action' => $action,
-            'status' => self::$seeding ? 'approved' : 'pending',
+            'status' => 'pending',
             'reason' => null,
             'moderated_by' => null,
         ]);

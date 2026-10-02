@@ -162,7 +162,7 @@
 
     </div>
 
-    <!-- RIGHT COLUMN: ORDER SUMMARY & PROMO CODE & PAY -->
+    <!-- RIGHT COLUMN: ORDER SUMMARY & coupon & PAY -->
     <div class="lg:col-span-5 space-y-6">
 
       <div class="bg-white rounded-3xl border-2 border-slate-200 p-6 sm:p-8 space-y-6 shadow-soft">
@@ -192,7 +192,7 @@
           @if($calc['promo_discount'] > 0)
             <div class="flex justify-between items-center text-emerald-700 font-bold bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200">
               <span class="flex items-center gap-1.5">
-                <i class="fas fa-percent text-emerald-600"></i> Promo Code ({{ $appliedPromo->code }})
+                <i class="fas fa-percent text-emerald-600"></i> coupon ({{ $appliedPromo->code }})
               </span>
               <span>-@money($calc['promo_discount'], $calc['currency'])</span>
             </div>
@@ -213,9 +213,9 @@
 
         </div>
 
-        <!-- PROMO CODE INPUT -->
+        <!-- coupon INPUT -->
         <div class="space-y-2 border-t border-slate-100 pt-4">
-          <label class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">Have a Promo Code?</label>
+          <label class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider block">Have a coupon?</label>
           
           @if($appliedPromo)
             <div class="flex items-center justify-between p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs">
@@ -224,15 +224,15 @@
                 <span class="font-extrabold text-emerald-900">{{ $appliedPromo->code }}</span>
                 <span class="text-[11px] text-emerald-700">({{ $appliedPromo->type === 'percentage' ? $appliedPromo->value . '% off' : '₦' . number_format($appliedPromo->value, 0) . ' off' }})</span>
               </div>
-              <button type="button" wire:click="removePromoCode" class="text-rose-600 hover:text-rose-800 font-bold text-xs cursor-pointer">
+              <button type="button" wire:click="removeCoupon" class="text-rose-600 hover:text-rose-800 font-bold text-xs cursor-pointer">
                 Remove
               </button>
             </div>
           @else
             <div class="flex gap-2">
-              <input type="text" wire:model="promoCodeInput" placeholder="Enter code (e.g. WELCOME10)" 
+              <input type="text" wire:model="couponInput" placeholder="Enter code (e.g. WELCOME10)" 
                 class="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-pp-600/20 focus:border-pp-600">
-              <button type="button" wire:click="applyPromoCode" 
+              <button type="button" wire:click="applyCoupon" 
                 class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition cursor-pointer">
                 Apply
               </button>

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PromoCode extends Model
+class Coupon extends Model
 {
     use HasFactory;
 
@@ -34,31 +34,65 @@ class PromoCode extends Model
         ];
     }
 
+    public function isExpired(): bool
+    {
+        return $this->expires_at !== null && $this->expires_at->isPast();
+    }
+
+    public function hasUsageLimit(): bool
+    {
+        return $this->usage_limit !== null && $this->usage_limit > 0;
+    }
+
+    public function isLimitReached(): bool
+    {
+        return $this->hasUsageLimit() && $this->used_count >= $this->usage_limit;
+    }
+
+    public function usageRemaining(): ?int
+    {
+        return $this->hasUsageLimit() ? max(0, $this->usage_limit - $this->used_count) : null;
+    }
+
+    public function isValid(): bool
+    {
+        return $this->is_active && ! $this->isExpired() && ! $this->isLimitReached();
+    }
+
+    public function formattedValue(): string
+    {
+        if ($this->type === 'percentage') {
+            return rtrim(rtrim((string) $this->value, '0'), '.') . '%';
+        }
+
+        return '₦' . number_format($this->value, 2);
+    }
+
     /**
-     * Validate whether this promo code is eligible for an amount.
+     * Validate whether this coupon is eligible for an amount.
      */
     public function validateEligibility(float $amount = 0.0): array
     {
         if (! $this->is_active) {
-            return ['valid' => false, 'message' => 'This promo code is currently inactive.'];
+            return ['valid' => false, 'message' => 'This coupon is currently inactive.'];
         }
 
-        if ($this->expires_at && $this->expires_at->isPast()) {
-            return ['valid' => false, 'message' => 'This promo code has expired.'];
+        if ($this->isExpired()) {
+            return ['valid' => false, 'message' => 'This coupon has expired.'];
         }
 
-        if ($this->usage_limit !== null && $this->used_count >= $this->usage_limit) {
-            return ['valid' => false, 'message' => 'This promo code has reached its maximum usage limit.'];
+        if ($this->isLimitReached()) {
+            return ['valid' => false, 'message' => 'This coupon has reached its maximum usage limit.'];
         }
 
         if ($amount > 0 && $this->min_order_amount > 0 && $amount < $this->min_order_amount) {
             return [
                 'valid' => false,
-                'message' => 'Minimum order amount for this promo code is ₦' . number_format($this->min_order_amount, 2) . '.',
+                'message' => 'Minimum order amount for this coupon is ₦' . number_format($this->min_order_amount, 2) . '.',
             ];
         }
 
-        return ['valid' => true, 'message' => 'Promo code applied successfully!'];
+        return ['valid' => true, 'message' => 'Coupon applied successfully!'];
     }
 
     /**
@@ -76,6 +110,7 @@ class PromoCode extends Model
             if ($this->max_discount !== null && $discount > $this->max_discount) {
                 $discount = (float) $this->max_discount;
             }
+
             return min($discount, $amount);
         }
 
@@ -84,7 +119,7 @@ class PromoCode extends Model
     }
 
     /**
-     * Record usage of the promo code.
+     * Record usage of the coupon.
      */
     public function recordUsage(): void
     {

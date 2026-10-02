@@ -42,7 +42,31 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_verified' => 'boolean',
+            'notification_preferences' => 'array',
         ];
+    }
+
+    public function notificationPreference(string $channel): bool
+    {
+        $prefs = $this->notification_preferences;
+        if (is_string($prefs)) {
+            $prefs = json_decode($prefs, true);
+        }
+        if (! is_array($prefs)) {
+            return true;
+        }
+        return (bool) ($prefs[$channel] ?? true);
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (! $this->avatar) {
+            return null;
+        }
+        if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+            return $this->avatar;
+        }
+        return asset('storage/' . $this->avatar);
     }
 
     // Access checks
@@ -61,6 +85,11 @@ class User extends Authenticatable
     }
 
     // Relationships
+    public function country(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
+
     public function role(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Role::class);
@@ -179,5 +208,20 @@ class User extends Authenticatable
     public function serviceJobsAsProvider(): HasMany
     {
         return $this->hasMany(ServiceJob::class, 'provider_id');
+    }
+
+    public function listingReviews(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(ListingReview::class, Listing::class, 'user_id', 'listing_id');
+    }
+
+    public function serviceReviews(): HasMany
+    {
+        return $this->hasMany(ServiceReview::class, 'provider_id');
+    }
+
+    public function reviewsWritten(): HasMany
+    {
+        return $this->hasMany(ListingReview::class, 'user_id');
     }
 }

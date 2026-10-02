@@ -2,13 +2,18 @@
 
 namespace App\Models;
 
+use App\Observers\DiscussionObserver;
 use App\Traits\HasMedia;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
+#[ObservedBy([DiscussionObserver::class])]
 class Discussion extends Model
 {
     use HasFactory, HasMedia;
@@ -98,6 +103,38 @@ class Discussion extends Model
     public function conversations(): MorphMany
     {
         return $this->morphMany(Conversation::class, 'contextable');
+    }
+
+    public function moderations(): MorphMany
+    {
+        return $this->morphMany(Moderation::class, 'moderatable');
+    }
+
+    public function latestModeration(): MorphOne
+    {
+        return $this->morphOne(Moderation::class, 'moderatable')->latestOfMany();
+    }
+
+    public function scopeModerationStatus(Builder $query, string $status): Builder
+    {
+        return $query->whereHas('latestModeration', function (Builder $m) use ($status) {
+            $m->where('status', $status);
+        });
+    }
+
+    public function scopeApproved(Builder $query): Builder
+    {
+        return $this->scopeModerationStatus($query, 'approved');
+    }
+
+    public function scopePending(Builder $query): Builder
+    {
+        return $this->scopeModerationStatus($query, 'pending');
+    }
+
+    public function scopeRejected(Builder $query): Builder
+    {
+        return $this->scopeModerationStatus($query, 'rejected');
     }
 
     public function scopeInCurrentCountry($query, ?string $countryCode = null)

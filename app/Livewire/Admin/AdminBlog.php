@@ -4,11 +4,16 @@ namespace App\Livewire\Admin;
 
 use App\Models\Category;
 use App\Models\Post;
+use App\Models\PostComment;
 use Illuminate\Database\Eloquent\Builder;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+#[Layout('layouts.dash')]
+#[Title('Blog Articles — Admin Console')]
 class AdminBlog extends Component
 {
     use WithPagination;
@@ -22,25 +27,75 @@ class AdminBlog extends Component
     #[Url(as: 'category')]
     public ?int $category = null;
 
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedCategory(): void
+    {
+        $this->resetPage();
+    }
+
+    public function deletePost(int $id): void
+    {
+        $post = Post::findOrFail($id);
+        $post->delete();
+
+        session()->flash('status', 'Article deleted successfully.');
+    }
+
+    public function togglePublish(int $id): void
+    {
+        $post = Post::findOrFail($id);
+        if ($post->status === 'published') {
+            $post->update(['status' => 'draft']);
+            session()->flash('status', 'Article moved to draft.');
+        } else {
+            $post->update([
+                'status' => 'published',
+                'published_at' => $post->published_at ?: now(),
+            ]);
+            session()->flash('status', 'Article published successfully.');
+        }
+    }
+
     public function render()
     {
         $posts = Post::query()
-            ->with(['user', 'category', 'listing'])
+            ->with(['user', 'category', 'media', 'comments'])
+            ->withCount('comments')
             ->when($this->search !== '', function (Builder $query) {
                 $query->where(function (Builder $inner) {
-                    $inner->where('title', 'like', '%'.$this->search.'%')
-                        ->orWhereHas('user', fn (Builder $userQuery) => $userQuery->where('name', 'like', '%'.$this->search.'%'));
+                    $inner->where('title', 'like', '%' . $this->search . '%')
+                        ->orWhere('excerpt', 'like', '%' . $this->search . '%')
+                        ->orWhere('tags', 'like', '%' . $this->search . '%')
+                        ->orWhereHas('user', fn (Builder $userQuery) => $userQuery->where('name', 'like', '%' . $this->search . '%'));
                 });
             })
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->category, fn (Builder $query) => $query->where('category_id', $this->category))
             ->latest('created_at')
-            ->paginate(10);
+            ->paginate(12);
+
+        $pendingCommentsCount = PostComment::pending()->count();
+        $totalPosts = Post::count();
+        $publishedPosts = Post::where('status', 'published')->count();
+        $draftPosts = Post::where('status', 'draft')->count();
 
         return view('livewire.admin.admin-blog', [
             'posts' => $posts,
-            'statuses' => Post::query()->distinct()->pluck('status')->filter()->values(),
-            'categories' => Category::query()->orderBy('name','asc')->get(['id', 'name']),
+            'statuses' => ['published', 'draft', 'archived'],
+            'categories' => Category::query()->orderBy('name', 'asc')->get(['id', 'name']),
+            'pendingCommentsCount' => $pendingCommentsCount,
+            'totalPosts' => $totalPosts,
+            'publishedPosts' => $publishedPosts,
+            'draftPosts' => $draftPosts,
         ]);
     }
 }

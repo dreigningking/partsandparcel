@@ -232,11 +232,11 @@
       <div class="border border-slate-200 rounded-xl p-4 bg-white shadow-2xs">
         <h2 class="font-bold text-sm text-slate-900">Seller Information</h2>
         <div class="flex gap-3 mt-3">
-          <div class="w-11 h-11 rounded-full bg-pp-100 text-pp-700 grid place-items-center font-bold text-sm shrink-0">
+          <a href="{{ route('user.profile', $seller->id) }}" class="w-11 h-11 rounded-full bg-pp-100 hover:bg-pp-200 text-pp-700 grid place-items-center font-bold text-sm shrink-0 transition">
             {{ strtoupper(substr($seller->business_name ?? $seller->name, 0, 2)) }}
-          </div>
+          </a>
           <div class="overflow-hidden">
-            <b class="text-slate-900 text-xs block truncate">{{ $seller->business_name ?? $seller->name }}</b>
+            <a href="{{ route('user.profile', $seller->id) }}" class="text-slate-900 hover:text-pp-600 font-extrabold text-xs block truncate transition">{{ $seller->business_name ?? $seller->name }}</a>
             @if($seller->is_verified)
               <p class="text-[10px] text-pp-600 font-bold flex items-center gap-1">
                 <span>✓ Verified Seller</span>
@@ -248,7 +248,7 @@
 
         <div class="grid grid-cols-2 border-y border-slate-100 my-3 py-3 text-center text-[10px]">
           <div>
-            <b class="text-sm font-extrabold text-slate-900">{{ $seller->listings()->where('status', 'active')->count() }}</b>
+            <b class="text-sm font-extrabold text-slate-900">{{ $seller->listings()->where('is_published', true)->where('is_active', true)->count() }}</b>
             <span class="block font-medium text-slate-500">Active Listings</span>
           </div>
           <div>
@@ -257,8 +257,8 @@
           </div>
         </div>
 
-        <a href="{{ route('category') }}?brand={{ $brand?->slug }}" class="w-full block text-center border border-slate-200 hover:bg-slate-50 rounded-lg py-2 text-xs font-bold text-slate-700 transition cursor-pointer">
-          View Seller Catalog
+        <a href="{{ route('user.profile', $seller->id) }}" class="w-full block text-center border border-slate-200 hover:bg-slate-50 rounded-lg py-2 text-xs font-bold text-slate-700 transition cursor-pointer">
+          View Seller Profile &amp; Catalog
         </a>
       </div>
       

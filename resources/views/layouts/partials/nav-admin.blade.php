@@ -59,13 +59,13 @@
                 ▥ <span class="label">Items &amp; Components</span>
             </a>
             <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"
-                href="{{ route('mylistings') }}"
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.moderations*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.moderations') }}"
             >
-                ⚑ <span class="label">Listing Moderation</span>
-                @php $pendingCount = \App\Models\Listing::where('status', 'pending')->count(); @endphp
-                @if($pendingCount > 0)
-                    <span class="label ml-auto text-[10px] bg-rose-100 text-rose-600 rounded-full px-2 font-bold">{{ $pendingCount }}</span>
+                ⚑ <span class="label">Content Moderation</span>
+                @php $pendingModerationsCount = \App\Models\Moderation::where('status', 'pending')->count(); @endphp
+                @if($pendingModerationsCount > 0)
+                    <span class="label ml-auto text-[10px] bg-amber-100 text-amber-700 rounded-full px-2 font-bold">{{ $pendingModerationsCount }}</span>
                 @endif
             </a>
             <a
@@ -76,6 +76,16 @@
                 @php $activePromos = \App\Models\Promotion::where('status', 'active')->count(); @endphp
                 @if($activePromos > 0)
                     <span class="label ml-auto text-[10px] bg-indigo-100 text-indigo-700 rounded-full px-2 font-bold">{{ $activePromos }}</span>
+                @endif
+            </a>
+            <a
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.coupons*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.coupons') }}"
+            >
+                🎟 <span class="label">Coupons &amp; Discounts</span>
+                @php $activeCouponsCount = \App\Models\Coupon::where('is_active', true)->count(); @endphp
+                @if($activeCouponsCount > 0)
+                    <span class="label ml-auto text-[10px] bg-emerald-100 text-emerald-700 rounded-full px-2 font-bold">{{ $activeCouponsCount }}</span>
                 @endif
             </a>
         </div>
@@ -220,6 +230,41 @@
         </div>
     </div>
 
+    <!-- CONTENT & BLOG -->
+    <div>
+        <button
+            class="section w-full text-left px-3 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-500 hover:text-slate-700 transition cursor-pointer flex items-center justify-between"
+            onclick="openGroup('blog_content')"
+        >
+            <span>CONTENT &amp; BLOG</span>
+            <span class="text-xs">⌄</span>
+        </button>
+        <div id="blog_content" class="sub {{ request()->routeIs('admin.blog*') || request()->routeIs('admin.moderations*') ? 'open' : '' }} pl-1 space-y-1 mt-1">
+            <a
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.blog') || request()->routeIs('admin.blog.create') || request()->routeIs('admin.blog.show') || request()->routeIs('admin.blog.edit') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.blog') }}"
+            >
+                📰 <span class="label">Blog Articles</span>
+            </a>
+            <a
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.blog.comments') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.blog.comments') }}"
+            >
+                💬 <span class="label">Post Comments</span>
+                @php $pendingCommCount = \App\Models\PostComment::pending()->count(); @endphp
+                @if($pendingCommCount > 0)
+                    <span class="label ml-auto text-[10px] bg-amber-100 text-amber-800 rounded-full px-2 font-bold">{{ $pendingCommCount }}</span>
+                @endif
+            </a>
+            <a
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.moderations*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.moderations') }}"
+            >
+                🛡 <span class="label">Content Moderation</span>
+            </a>
+        </div>
+    </div>
+
     <!-- LOGISTICS -->
     <div>
         <button
@@ -256,10 +301,16 @@
         </button>
         <div id="finance" class="sub pl-1 space-y-1 mt-1">
             <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"
-                href="{{ route('subscriptions') }}"
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.subscriptions*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.subscriptions') }}"
             >
                 ◈ <span class="label">Subscriptions</span>
+            </a>
+            <a
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.subscription-plans*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.settings.subscription-plans') }}"
+            >
+                💳 <span class="label">Subscription Plans</span>
             </a>
             <a
                 class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"

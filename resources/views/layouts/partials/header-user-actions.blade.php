@@ -11,6 +11,16 @@
         <span>Community</span>
     </a>
 
+    <!-- BLOG & KNOWLEDGE BASE MENU LINK -->
+    <a href="{{ route('blog.index') }}" class="hidden lg:flex items-center gap-2 px-3.5 py-3 rounded-xl hover:bg-slate-100 text-slate-700 hover:text-pp-700 border border-slate-200/80 text-xs font-extrabold transition shadow-2xs mr-1" title="Parts & Parcel Technical Guides & Blog">
+        <svg class="w-4 h-4 text-pp-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+            <path d="M6 6h10"></path>
+            <path d="M6 10h10"></path>
+        </svg>
+        <span>Blog</span>
+    </a>
+
     <!-- CART -->
     @php
         $navCartCount = app(\App\Services\Commercial\CartService::class)->getCartCount(auth()->user());

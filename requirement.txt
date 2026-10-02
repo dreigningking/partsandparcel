@@ -23,6 +23,10 @@ Setting{
 Promotion{
   PromotionPlan
 }
+Subscription{
+  SubscriptionPlan
+  SubscriptionPlanPrice
+}
 =====================================
 
 
@@ -33,15 +37,13 @@ Post{
   Media
 }
 
-PromoCode
-
-
-Subscription{
-  SubscriptionPlan
-  SubscriptionPlanPrice
+Moderation
+============================
+Coupon{
+  These coupons will be used when purchasing subscriptions, promotions, and listings
 }
 
-Moderation
+
 
 Payment{
 Payout
@@ -110,8 +112,8 @@ Invoice{
   DisputeItem
 }
 
-
 Item{
+  Item - i
   Location
   Listing
   ListingReport
@@ -126,6 +128,8 @@ Item{
     ConversationMessage
     ConversationParticipant
   }
+  When buyer purchase a listing, they can review the listing user [ListingReview.php](file;file:///c%3A/laragon/www/partsandparcel/app/Models/ListingReview.php) . This one will be on the dashboard pages possibly on the invoice page
+  We need to have a Seller Listing Details page from w 
 }
 
 
@@ -133,25 +137,29 @@ Offer
 OfferItem
 
 User{
-  Notification settings: in-app (notification table & reverb), push (firebase), email
-  DeviceToken{
-    Firebase Cloud Messaging push notification token
-  }
-  Profile{
+  Done{
+    Notification settings: in-app (notification table & reverb), push (firebase), email
+    DeviceToken{
+      Firebase Cloud Messaging push notification token
+    }
+    Profile{
+      
+    }
+    Password Reset{
+      
+    }
     
+    Public Profile{
+      ServiceJob
+      ServiceReview
+    }
   }
-  Password Reset{
-    
-  }
-  
-  Public Profile{
-    ServiceJob
-    ServiceReview
-  }
+  Test Theme Preference (theme_preference) (system, light, dark)
+  User verification via id card
 }
 
 Location{
-
+ 
 }
 
 

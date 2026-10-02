@@ -30,7 +30,7 @@ class ListingDetails extends Component
             'item.deviceModel.category.parent',
             'item.deviceModel.brand',
             'item.children',
-            'location',
+            'item.location',
             'seller.primaryLocation',
             'media',
             'item.media',

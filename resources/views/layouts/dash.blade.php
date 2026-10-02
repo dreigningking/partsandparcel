@@ -55,6 +55,7 @@
     <link rel="stylesheet" href="{{ asset('css/app-custom.css') }}">
 
     @livewireStyles
+    @stack('styles')
 </head>
 
 <body class="bg-slate-50 text-slate-900">
@@ -112,6 +113,7 @@
     <!-- SHARED CUSTOM JS -->
     <script src="{{ asset('js/app-custom.js') }}"></script>
     <script src="{{ asset('js/webcam-capture.js') }}"></script>
+    @stack('scripts')
 </body>
 
 </html>

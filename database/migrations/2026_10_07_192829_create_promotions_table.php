@@ -28,7 +28,7 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('user_id')->constrained('users')->nullOnDelete();
                 $table->foreignId('listing_id')->constrained('listings')->nullOnDelete();
-                $table->enum('type',['views','clicks'])->default('clicks');
+                $table->enum('type', ['views', 'clicks'])->default('clicks');
                 $table->unsignedInteger('achieved_count')->default(0);
                 $table->enum('status', ['pending', 'active', 'inactive', 'completed'])->default('pending');
                 $table->timestamps();
@@ -37,8 +37,8 @@ return new class extends Migration
             });
         }
 
-        if (! Schema::hasTable('promo_codes')) {
-            Schema::create('promo_codes', function (Blueprint $table) {
+        if (! Schema::hasTable('coupons')) {
+            Schema::create('coupons', function (Blueprint $table) {
                 $table->id();
                 $table->string('code')->unique();
                 $table->string('type')->default('percentage'); // percentage | fixed
@@ -59,7 +59,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('promo_codes');
+        Schema::dropIfExists('coupons');
         Schema::dropIfExists('promotions');
         Schema::dropIfExists('promotion_plans');
     }

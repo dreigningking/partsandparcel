@@ -5,7 +5,7 @@ namespace App\Services\Commercial;
 use App\Models\Discussion;
 use App\Models\Listing;
 use App\Models\Payment;
-use App\Models\PromoCode;
+use App\Models\Coupon;
 use App\Models\Response;
 use App\Models\Revenue;
 use App\Models\Subscription;
@@ -67,7 +67,7 @@ class SubscriptionService
             'is_paid' => $activeSub !== null && (float) ($plan?->price ?? 0) > 0,
             'is_active' => $activeSub !== null ? $activeSub->isActive() : true,
             'subscription' => $activeSub,
-            
+
             // Community Requests
             'daily_request_limit' => $dailyRequestLimit,
             'daily_requests_used' => (int) $todayRequestsUsed,
@@ -124,7 +124,7 @@ class SubscriptionService
         int $planId,
         ?string $provider = null,
         int $months = 1,
-        ?string $promoCode = null,
+        ?string $coupon = null,
         ?float $customAmount = null,
         float $durationDiscount = 0.0,
         float $promoDiscount = 0.0
@@ -167,7 +167,7 @@ class SubscriptionService
                     'plan_id' => $plan->id,
                     'user_id' => $user->id,
                     'months' => $months,
-                    'promo_code' => $promoCode,
+                    'coupon' => $coupon,
                     'duration_discount' => $durationDiscount,
                     'promo_discount' => $promoDiscount,
                 ],
@@ -198,7 +198,7 @@ class SubscriptionService
                 'plan_name' => $plan->name,
                 'user_id' => $user->id,
                 'months' => $months,
-                'promo_code' => $promoCode,
+                'coupon' => $coupon,
                 'duration_discount' => $durationDiscount,
                 'promo_discount' => $promoDiscount,
             ],
@@ -267,9 +267,9 @@ class SubscriptionService
             'paid_at' => now(),
         ]);
 
-        // Record promo code usage if applied
-        if (! empty($payment->metadata['promo_code'])) {
-            PromoCode::where('code', $payment->metadata['promo_code'])->first()?->recordUsage();
+        // Record coupon usage if applied
+        if (! empty($payment->metadata['coupon'])) {
+            Coupon::where('code', $payment->metadata['coupon'])->first()?->recordUsage();
         }
 
         // Record platform revenue

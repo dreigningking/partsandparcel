@@ -1,77 +1,822 @@
-<x-admin.page title="Moderations" description="Review and manage pending items for approval.">
+<div class="space-y-6">
+
+    <!-- PAGE HEADER -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">
+                <a href="{{ route('admin.dashboard') }}" class="hover:text-pp-600 transition">Admin Console</a>
+                <span>/</span>
+                <span class="text-pp-700 dark:text-pp-400">Operations</span>
+                <span>/</span>
+                <span class="text-slate-600 dark:text-slate-300">Moderation Queue</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950 dark:text-white tracking-tight">
+                Content Moderation & Review Queue
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Inspect, verify, approve, or reject user-submitted listings, community discussions, and blog post comments.
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3 self-start sm:self-auto">
+            <button
+                type="button"
+                wire:click="sendNotifierAlert"
+                wire:loading.attr="disabled"
+                class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-2xs transition flex items-center gap-2"
+                title="Send notification digest of pending items to all admins"
+            >
+                <i class="fas fa-bell text-amber-500" wire:loading.remove wire:target="sendNotifierAlert"></i>
+                <i class="fas fa-spinner fa-spin text-amber-500" wire:loading wire:target="sendNotifierAlert"></i>
+                <span>Notify Admins</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- FLASH NOTIFICATIONS -->
     @if (session('status'))
-        <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('status') }}</div>
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-800/60 dark:bg-emerald-950/40 p-4 text-sm font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-3">
+            <i class="fas fa-check-circle text-emerald-500 text-base"></i>
+            <span>{{ session('status') }}</span>
+        </div>
     @endif
     @if (session('error'))
-        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{{ session('error') }}</div>
+        <div class="rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-800/60 dark:bg-rose-950/40 p-4 text-sm font-semibold text-rose-800 dark:text-rose-300 flex items-center gap-3">
+            <i class="fas fa-exclamation-circle text-rose-500 text-base"></i>
+            <span>{{ session('error') }}</span>
+        </div>
     @endif
 
-    <div class="mb-4 flex gap-2">
-        <button type="button" wire:click="$set('filter', 'pending')" class="rounded-lg px-3 py-1 text-sm font-medium {{ $filter === 'pending' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700' }}">Pending</button>
-        <button type="button" wire:click="$set('filter', 'processed')" class="rounded-lg px-3 py-1 text-sm font-medium {{ $filter === 'processed' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700' }}">Processed</button>
-        <button type="button" wire:click="$set('filter', 'all')" class="rounded-lg px-3 py-1 text-sm font-medium {{ $filter === 'all' ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700' }}">All</button>
+    <!-- KPI STATS CARDS -->
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+        <!-- Pending Total -->
+        <div 
+            wire:click="setFilter('pending')"
+            class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border transition cursor-pointer {{ $filter === 'pending' ? 'border-amber-500 ring-2 ring-amber-500/20 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300' }}"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Awaiting Review</span>
+                <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs">
+                    <i class="fas fa-hourglass-half"></i>
+                </span>
+            </div>
+            <div class="mt-2 sm:mt-3 text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">{{ number_format($pendingCount) }}</div>
+            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Needs admin action</p>
+        </div>
+
+        <!-- Pending Listings -->
+        <div 
+            wire:click="setType('listing')"
+            class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border transition cursor-pointer {{ $type === 'listing' ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300' }}"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Listings</span>
+                <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs">
+                    <i class="fas fa-box-open"></i>
+                </span>
+            </div>
+            <div class="mt-2 sm:mt-3 text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ number_format($pendingListingsCount) }}</div>
+            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Pending marketplace items</p>
+        </div>
+
+        <!-- Pending Discussions -->
+        <div 
+            wire:click="setType('discussion')"
+            class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border transition cursor-pointer {{ $type === 'discussion' ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300' }}"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Discussions</span>
+                <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xs">
+                    <i class="fas fa-comments"></i>
+                </span>
+            </div>
+            <div class="mt-2 sm:mt-3 text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ number_format($pendingDiscussionsCount) }}</div>
+            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Pending community posts</p>
+        </div>
+
+        <!-- Pending Comments -->
+        <div 
+            wire:click="setType('post_comment')"
+            class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border transition cursor-pointer {{ $type === 'post_comment' ? 'border-sky-500 ring-2 ring-sky-500/20 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300' }}"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Blog Comments</span>
+                <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-xs">
+                    <i class="fas fa-comment-dots"></i>
+                </span>
+            </div>
+            <div class="mt-2 sm:mt-3 text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ number_format($pendingCommentsCount) }}</div>
+            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Pending blog comments</p>
+        </div>
+
+        <!-- Processed Summary -->
+        <div 
+            wire:click="setFilter('processed')"
+            class="col-span-2 sm:col-span-1 p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border transition cursor-pointer {{ $filter === 'processed' ? 'border-pp-500 ring-2 ring-pp-500/20 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300' }}"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Processed</span>
+                <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-pp-50 dark:bg-pp-950/60 text-pp-600 dark:text-pp-400 flex items-center justify-center text-xs">
+                    <i class="fas fa-shield-alt"></i>
+                </span>
+            </div>
+            <div class="mt-2 sm:mt-3 flex items-baseline gap-2">
+                <span class="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">{{ number_format($approvedCount) }}</span>
+                <span class="text-xs text-slate-400">/</span>
+                <span class="text-base sm:text-lg font-bold text-rose-500 dark:text-rose-400">{{ number_format($rejectedCount) }}</span>
+            </div>
+            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Approved / Rejected</p>
+        </div>
     </div>
 
-    <div class="overflow-x-auto rounded-lg border border-gray-200">
-        <table class="min-w-full text-left text-sm">
-            <thead class="border-b border-gray-200 bg-gray-50 text-gray-600">
-                <tr>
-                    <th class="px-3 py-2">Item</th>
-                    <th class="px-3 py-2">Owner</th>
-                    <th class="px-3 py-2">Type</th>
-                    <th class="px-3 py-2">Status</th>
-                    <th class="px-3 py-2">Moderated By</th>
-                    <th class="px-3 py-2">Reason</th>
-                    <th class="px-3 py-2">Moderated At</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-                @forelse ($moderations as $moderation)
+    <!-- MAIN CONTROL PANEL & DATA TABLE -->
+    <div class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs overflow-hidden">
+
+        <!-- FILTERS & SEARCH TOOLBAR -->
+        <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            
+            <!-- STATUS TABS -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button
+                    type="button"
+                    wire:click="setFilter('pending')"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 {{ $filter === 'pending' ? 'bg-amber-500 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700' }}"
+                >
+                    <span>Pending Review</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black {{ $filter === 'pending' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' }}">
+                        {{ $pendingCount }}
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="setFilter('approved')"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 {{ $filter === 'approved' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700' }}"
+                >
+                    <span>Approved</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black {{ $filter === 'approved' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' }}">
+                        {{ $approvedCount }}
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="setFilter('rejected')"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 {{ $filter === 'rejected' ? 'bg-rose-600 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700' }}"
+                >
+                    <span>Rejected</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black {{ $filter === 'rejected' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' }}">
+                        {{ $rejectedCount }}
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="setFilter('all')"
+                    class="px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 {{ $filter === 'all' ? 'bg-pp-700 text-white shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700' }}"
+                >
+                    <span>All Records</span>
+                    <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black {{ $filter === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' }}">
+                        {{ $totalCount }}
+                    </span>
+                </button>
+            </div>
+
+            <!-- SEARCH & TYPE FILTERS -->
+            <div class="flex flex-wrap items-center gap-2.5">
+                <!-- Type Filter Dropdown -->
+                <div class="relative">
+                    <select
+                        wire:model.live="type"
+                        class="h-9 pl-3 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-semibold focus:outline-hidden focus:ring-2 focus:ring-pp-500/30"
+                    >
+                        <option value="all">All Content Types</option>
+                        <option value="listing">Listings (Marketplace)</option>
+                        <option value="discussion">Discussions (Community)</option>
+                        <option value="post_comment">Blog Comments</option>
+                    </select>
+                </div>
+
+                <!-- Search Input -->
+                <div class="relative w-full sm:w-64">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <i class="fas fa-search text-xs"></i>
+                    </span>
+                    <input
+                        type="text"
+                        wire:model.live.debounce.300ms="search"
+                        placeholder="Search item, author, reason..."
+                        class="w-full h-9 pl-8 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-pp-500/30"
+                    >
+                    @if($search)
+                        <button
+                            type="button"
+                            wire:click="$set('search', '')"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                        >
+                            <i class="fas fa-times-circle text-xs"></i>
+                        </button>
+                    @endif
+                </div>
+
+                <!-- Sort Order -->
+                <button
+                    type="button"
+                    wire:click="$set('sortOrder', '{{ $sortOrder === 'desc' ? 'asc' : 'desc' }}')"
+                    class="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold flex items-center gap-1.5 transition"
+                    title="Toggle sort direction"
+                >
+                    <i class="fas fa-sort-amount-{{ $sortOrder === 'desc' ? 'down' : 'up' }} text-slate-400"></i>
+                    <span class="hidden sm:inline">{{ $sortOrder === 'desc' ? 'Newest' : 'Oldest' }}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- TABLE OF MODERATIONS -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-xs divide-y divide-slate-100 dark:divide-slate-800">
+                <thead class="bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
                     <tr>
-                        <td class="px-3 py-2">
-                            @if($moderation->moderatable)
-                                @if($moderation->moderatable_type === 'App\Models\Listing')
-                                    <a href="{{ route('admin.listings.show', $moderation->moderatable->id, absolute: false) }}" class="text-emerald-600 hover:underline" target="_blank">
-                                        {{ $moderation->moderatable->name ?? '—' }}
-                                    </a>
-                                @elseif($moderation->moderatable_type === 'App\Models\User')
-                                    <a href="{{ route('admin.users.show', $moderation->moderatable->id, absolute: false) }}" class="text-emerald-600 hover:underline" target="_blank">
-                                        User Verification
-                                    </a>
-                                @else
-                                    {{ class_basename($moderation->moderatable_type) }} #{{ $moderation->moderatable_id }}
-                                @endif
-                            @else
-                                —
-                            @endif
-                        </td>
-                        <td class="px-3 py-2">
-                            @if($moderation->moderatable_type === 'App\Models\Listing')
-                                {{ $moderation->moderatable->user->name ?? '—' }}
-
-                            @else
-                                    {{ $moderation->moderatable->name ?? '—' }}
-                                @endif
-
-                        </td>
-                        <td class="px-3 py-2">{{ $moderation->moderatable_type ? class_basename($moderation->moderatable_type) : '—' }}</td>
-                        <td class="px-3 py-2">
-                            @if($moderation->status === 'pending')
-                                <span class="rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800">Pending</span>
-                            @elseif($moderation->status === 'approved')
-                                <span class="rounded-full bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-800">Approved</span>
-                            @else
-                                <span class="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-800">Rejected</span>
-                            @endif
-                        </td>
-                        <td class="px-3 py-2">{{ $moderation->moderator->name ?? '—' }}</td>
-                        <td class="px-3 py-2 text-gray-500">{{ $moderation->reason ?? '—' }}</td>
-                        <td class="px-3 py-2 text-gray-500">{{ $moderation->moderated_at?->diffForHumans() ?? '—' }}</td>
+                        <th class="px-4 py-3.5">Content Item</th>
+                        <th class="px-4 py-3.5">Type & Action</th>
+                        <th class="px-4 py-3.5">Submitter</th>
+                        <th class="px-4 py-3.5">Status</th>
+                        <th class="px-4 py-3.5">Timeline / Reviewer</th>
+                        <th class="px-4 py-3.5 text-right">Actions</th>
                     </tr>
-                @empty
-                    <tr><td colspan="7" class="px-4 py-6 text-center text-gray-500">No moderations found.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/50">
+                    @forelse ($moderations as $moderation)
+                        @php
+                            $item = $moderation->moderatable;
+                            $isListing = $moderation->moderatable_type === 'App\Models\Listing' || $item instanceof \App\Models\Listing;
+                            $isDiscussion = $moderation->moderatable_type === 'App\Models\Discussion' || $item instanceof \App\Models\Discussion;
+                            $isComment = $moderation->moderatable_type === 'App\Models\PostComment' || $item instanceof \App\Models\PostComment;
+                        @endphp
+                        <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                            
+                            <!-- ITEM / CONTENT -->
+                            <td class="px-4 py-3.5 max-w-xs sm:max-w-sm">
+                                <div class="flex items-start gap-3">
+                                    <!-- Type Icon / Thumbnail -->
+                                    <div class="shrink-0 mt-0.5">
+                                        @if($isListing)
+                                            <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-100 dark:border-emerald-800/60 shadow-2xs">
+                                                <i class="fas fa-tag"></i>
+                                            </div>
+                                        @elseif($isDiscussion)
+                                            <div class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs border border-indigo-100 dark:border-indigo-800/60 shadow-2xs">
+                                                <i class="fas fa-comments"></i>
+                                            </div>
+                                        @elseif($isComment)
+                                            <div class="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center font-bold text-xs border border-sky-100 dark:border-sky-800/60 shadow-2xs">
+                                                <i class="fas fa-comment-dots"></i>
+                                            </div>
+                                        @else
+                                            <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center font-bold text-xs">
+                                                <i class="fas fa-file-alt"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <!-- Content Titles & Details -->
+                                    <div class="min-w-0">
+                                        <div class="font-bold text-slate-900 dark:text-white truncate hover:text-pp-600 transition cursor-pointer" wire:click="preview({{ $moderation->id }})">
+                                            {{ $moderation->item_title }}
+                                        </div>
+
+                                        @if($isListing && $item)
+                                            <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                                                <span class="font-black text-slate-900 dark:text-slate-200">
+                                                    ₦{{ number_format((float) ($item->price ?? 0), 2) }}
+                                                </span>
+                                                <span>·</span>
+                                                <span class="capitalize">{{ $item->item?->condition_status ?? 'Used' }}</span>
+                                                @if($item->item?->deviceModel?->name)
+                                                    <span>·</span>
+                                                    <span class="truncate">{{ $item->item->deviceModel->name }}</span>
+                                                @endif
+                                            </div>
+                                        @elseif($isDiscussion && $item)
+                                            <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                                                <span class="px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold uppercase">
+                                                    {{ $item->type ?? 'request' }}
+                                                </span>
+                                                @if($item->budget)
+                                                    <span>Budget: ₦{{ $item->budget }}</span>
+                                                @endif
+                                                <span class="truncate max-w-[180px]">{{ Str::limit($item->body, 50) }}</span>
+                                            </div>
+                                        @elseif($isComment && $item)
+                                            <div class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 italic">
+                                                "{{ Str::limit($item->comment, 65) }}"
+                                            </div>
+                                        @else
+                                            <div class="text-[11px] text-slate-400">Content reference #{{ $moderation->moderatable_id }}</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- TYPE & ACTION -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <div class="flex flex-col gap-1 items-start">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold {{ $isListing ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : ($isDiscussion ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300' : 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300') }}">
+                                        {{ $moderation->type_label }}
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold {{ $moderation->action === 'created' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400' }}">
+                                        <i class="fas fa-{{ $moderation->action === 'created' ? 'plus-circle' : 'edit' }} text-[9px]"></i>
+                                        <span>{{ ucfirst($moderation->action ?? 'created') }}</span>
+                                    </span>
+                                </div>
+                            </td>
+
+                            <!-- SUBMITTER -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center font-black text-[10px]">
+                                        {{ strtoupper(substr($moderation->author_name, 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
+                                            {{ $moderation->author_name }}
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 truncate max-w-[130px]">
+                                            {{ $moderation->author_email }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- STATUS -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                @if($moderation->status === 'pending')
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/60">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                        Pending Review
+                                    </span>
+                                @elseif($moderation->status === 'approved')
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
+                                        <i class="fas fa-check text-[10px]"></i>
+                                        Approved
+                                    </span>
+                                @else
+                                    <div class="flex flex-col gap-0.5">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/60">
+                                            <i class="fas fa-ban text-[10px]"></i>
+                                            Rejected
+                                        </span>
+                                        @if($moderation->reason)
+                                            <span class="text-[10px] text-rose-500 dark:text-rose-400 truncate max-w-[150px]" title="{{ $moderation->reason }}">
+                                                {{ $moderation->reason }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </td>
+
+                            <!-- TIMELINE & MODERATOR -->
+                            <td class="px-4 py-3.5 whitespace-nowrap">
+                                <div class="text-slate-600 dark:text-slate-300 font-medium">
+                                    {{ $moderation->created_at?->diffForHumans() ?? '—' }}
+                                </div>
+                                @if($moderation->moderator)
+                                    <div class="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+                                        <i class="fas fa-user-shield text-[9px] text-slate-400"></i>
+                                        <span>{{ $moderation->moderator->name }}</span>
+                                    </div>
+                                @endif
+                            </td>
+
+                            <!-- ACTIONS -->
+                            <td class="px-4 py-3.5 text-right whitespace-nowrap">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <!-- Preview Button -->
+                                    <button
+                                        type="button"
+                                        wire:click="preview({{ $moderation->id }})"
+                                        class="p-2 rounded-lg text-slate-500 hover:text-pp-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                                        title="Preview Content"
+                                    >
+                                        <i class="fas fa-eye text-xs"></i>
+                                    </button>
+
+                                    @if($moderation->status === 'pending')
+                                        <!-- Quick Approve -->
+                                        <button
+                                            type="button"
+                                            wire:click="approve({{ $moderation->id }})"
+                                            class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition flex items-center gap-1"
+                                            title="Approve immediately"
+                                        >
+                                            <i class="fas fa-check text-[10px]"></i>
+                                            <span class="hidden sm:inline">Approve</span>
+                                        </button>
+
+                                        <!-- Quick Reject -->
+                                        <button
+                                            type="button"
+                                            wire:click="openRejectModal({{ $moderation->id }})"
+                                            class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800 transition flex items-center gap-1"
+                                            title="Reject with reason"
+                                        >
+                                            <i class="fas fa-times text-[10px]"></i>
+                                            <span class="hidden sm:inline">Reject</span>
+                                        </button>
+                                    @elseif($moderation->status === 'approved')
+                                        <!-- Revoke / Reject -->
+                                        <button
+                                            type="button"
+                                            wire:click="openRejectModal({{ $moderation->id }})"
+                                            class="px-2 py-1 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[11px] font-semibold transition"
+                                            title="Revoke Approval"
+                                        >
+                                            <span>Revoke</span>
+                                        </button>
+                                    @elseif($moderation->status === 'rejected')
+                                        <!-- Re-approve -->
+                                        <button
+                                            type="button"
+                                            wire:click="approve({{ $moderation->id }})"
+                                            class="px-2 py-1 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-[11px] font-semibold transition"
+                                            title="Re-approve Item"
+                                        >
+                                            <span>Re-approve</span>
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto text-lg mb-3">
+                                    <i class="fas fa-check-double text-emerald-500"></i>
+                                </div>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">No moderation items found</h3>
+                                <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                                    @if($filter === 'pending')
+                                        Great job! All submitted listings, discussions, and comments have been reviewed.
+                                    @else
+                                        No items match the selected filter criteria or search query.
+                                    @endif
+                                </p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PAGINATION -->
+        @if ($moderations->hasPages())
+            <div class="px-5 py-4 border-t border-slate-100 dark:border-slate-800">
+                {{ $moderations->links() }}
+            </div>
+        @endif
     </div>
-</x-admin.page>
+
+    <!-- REJECTION MODAL -->
+    @if ($showRejectModal)
+        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <!-- Backdrop -->
+                <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity" wire:click="closeRejectModal"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <!-- Modal Dialog -->
+                <div class="relative inline-block align-bottom bg-white dark:bg-slate-900 rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200 dark:border-slate-800">
+                    <div class="p-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-100 dark:border-rose-900">
+                                <i class="fas fa-exclamation-triangle text-base"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-lg font-bold text-slate-950 dark:text-white" id="modal-title">
+                                    Reject Moderation Item
+                                </h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                    Please select or describe the reason for rejecting this content. This feedback will be recorded and shared with the author.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Preset Reason Quick Chips -->
+                        <div class="mt-4">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                                Common Reasons
+                            </label>
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach([
+                                    'Prohibited or dangerous item/content',
+                                    'Inappropriate or offensive language',
+                                    'Suspected fraud or spam attempt',
+                                    'Inaccurate or misleading information',
+                                    'Low quality images or lack of details',
+                                    'Policy and terms violation'
+                                ] as $chip)
+                                    <button
+                                        type="button"
+                                        wire:click="setPresetReason('{{ $chip }}')"
+                                        class="px-2.5 py-1 rounded-lg text-xs font-medium transition border {{ $rejectionReason === $chip ? 'bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-700' : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 hover:bg-slate-100' }}"
+                                    >
+                                        {{ $chip }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <!-- Custom Reason Textarea -->
+                        <div class="mt-4">
+                            <label for="rejectionReason" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                                Detailed Rejection Explanation <span class="text-rose-500">*</span>
+                            </label>
+                            <textarea
+                                id="rejectionReason"
+                                wire:model="rejectionReason"
+                                rows="3"
+                                placeholder="Explain why this content was rejected so the user can make required corrections..."
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:ring-2 focus:ring-rose-500/30"
+                            ></textarea>
+                            @error('rejectionReason')
+                                <p class="text-xs text-rose-600 dark:text-rose-400 mt-1 font-medium">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <!-- Modal Actions -->
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                        <button
+                            type="button"
+                            wire:click="closeRejectModal"
+                            class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            wire:click="confirmReject"
+                            wire:loading.attr="disabled"
+                            class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5"
+                        >
+                            <i class="fas fa-ban text-[11px]" wire:loading.remove wire:target="confirmReject"></i>
+                            <i class="fas fa-spinner fa-spin text-[11px]" wire:loading wire:target="confirmReject"></i>
+                            <span>Confirm Rejection</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- CONTENT PREVIEW MODAL -->
+    @if ($showPreviewModal && $previewItem)
+        @php
+            $target = $previewItem->moderatable;
+            $isListing = $previewItem->moderatable_type === 'App\Models\Listing' || $target instanceof \App\Models\Listing;
+            $isDiscussion = $previewItem->moderatable_type === 'App\Models\Discussion' || $target instanceof \App\Models\Discussion;
+            $isComment = $previewItem->moderatable_type === 'App\Models\PostComment' || $target instanceof \App\Models\PostComment;
+        @endphp
+        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="preview-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <!-- Backdrop -->
+                <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity" wire:click="closePreview"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <!-- Modal Dialog -->
+                <div class="relative inline-block align-bottom bg-white dark:bg-slate-900 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-slate-200 dark:border-slate-800">
+                    
+                    <!-- Preview Header -->
+                    <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black {{ $isListing ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : ($isDiscussion ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300') }}">
+                                {{ $previewItem->type_label }}
+                            </span>
+                            <span class="text-xs font-semibold text-slate-400">
+                                Submitted {{ $previewItem->created_at?->format('M d, Y h:i A') }}
+                            </span>
+                        </div>
+                        <button
+                            type="button"
+                            wire:click="closePreview"
+                            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-base"
+                        >
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <!-- Preview Content Body -->
+                    <div class="p-6 max-h-[70vh] overflow-y-auto space-y-5">
+                        
+                        <!-- Content Title -->
+                        <div>
+                            <h2 class="text-xl font-black text-slate-950 dark:text-white">
+                                {{ $previewItem->item_title }}
+                            </h2>
+                            <div class="flex items-center gap-2 mt-1 text-xs text-slate-500">
+                                <span>Author: <strong class="text-slate-800 dark:text-slate-200">{{ $previewItem->author_name }}</strong></span>
+                                <span>·</span>
+                                <span>{{ $previewItem->author_email }}</span>
+                            </div>
+                        </div>
+
+                        <!-- LISTING DETAILS -->
+                        @if ($isListing && $target)
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Price</div>
+                                    <div class="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                        ₦{{ number_format((float) ($target->price ?? 0), 2) }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Quantity</div>
+                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                        {{ $target->quantity ?? 1 }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Condition</div>
+                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5 capitalize">
+                                        {{ $target->item?->condition_status ?? 'Used' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Shipping</div>
+                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                        {{ $target->allow_shipping ? 'Allowed' : 'Local Only' }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            @if($target->item?->description)
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Item Description</h4>
+                                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                                        {{ $target->item->description }}
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if($target->item?->condition_notes)
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Condition Notes</h4>
+                                    <div class="p-3.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 leading-relaxed border border-amber-100 dark:border-amber-900/40">
+                                        {{ $target->item->condition_notes }}
+                                    </div>
+                                </div>
+                            @endif
+
+                            <div class="pt-2">
+                                <a 
+                                    href="{{ route('admin.properties.show', $target->id) }}" 
+                                    target="_blank"
+                                    class="inline-flex items-center gap-1.5 text-xs font-bold text-pp-600 hover:text-pp-700 dark:text-pp-400 hover:underline"
+                                >
+                                    <span>Open Full Listing Property Page</span>
+                                    <i class="fas fa-external-link-alt text-[10px]"></i>
+                                </a>
+                            </div>
+
+                        <!-- DISCUSSION DETAILS -->
+                        @elseif ($isDiscussion && $target)
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Type</div>
+                                    <div class="text-sm font-black text-indigo-600 dark:text-indigo-400 mt-0.5 capitalize">
+                                        {{ $target->type ?? 'Item' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Budget</div>
+                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                        {{ $target->budget ? '₦' . $target->budget : 'Open' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Category</div>
+                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">
+                                        {{ $target->category?->name ?? '—' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Urgency</div>
+                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                        {{ $target->urgency }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Discussion Content</h4>
+                                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+                                    {{ $target->body }}
+                                </div>
+                            </div>
+
+                            <div class="pt-2">
+                                <a 
+                                    href="{{ route('community.request', $target->id) }}" 
+                                    target="_blank"
+                                    class="inline-flex items-center gap-1.5 text-xs font-bold text-pp-600 hover:text-pp-700 dark:text-pp-400 hover:underline"
+                                >
+                                    <span>View on Community Board</span>
+                                    <i class="fas fa-external-link-alt text-[10px]"></i>
+                                </a>
+                            </div>
+
+                        <!-- POST COMMENT DETAILS -->
+                        @elseif ($isComment && $target)
+                            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+                                <div class="text-[10px] font-bold text-slate-400 uppercase">Blog Post Reference</div>
+                                <div class="text-sm font-black text-slate-900 dark:text-white mt-1">
+                                    {{ $target->post?->title ?? "Post #{$target->post_id}" }}
+                                </div>
+                                @if($target->post)
+                                    <div class="mt-1">
+                                        <a href="{{ route('admin.blog.show', $target->post_id) }}" target="_blank" class="text-xs font-bold text-pp-600 hover:underline inline-flex items-center gap-1">
+                                            <span>Open Blog Post In Admin</span>
+                                            <i class="fas fa-external-link-alt text-[9px]"></i>
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Submitted Comment Body</h4>
+                                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-800 dark:text-slate-200 leading-relaxed border border-slate-100 dark:border-slate-700/60 whitespace-pre-line">
+                                    {{ $target->comment }}
+                                </div>
+                            </div>
+                        @endif
+
+                        <!-- Moderation Metadata Status -->
+                        @if ($previewItem->status !== 'pending')
+                            <div class="p-3.5 rounded-xl border {{ $previewItem->status === 'approved' ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800' : 'bg-rose-50/50 border-rose-200 dark:bg-rose-950/20 dark:border-rose-800' }}">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-bold {{ $previewItem->status === 'approved' ? 'text-emerald-800 dark:text-emerald-300' : 'text-rose-800 dark:text-rose-300' }}">
+                                        Moderation Status: {{ ucfirst($previewItem->status) }}
+                                    </span>
+                                    <span class="text-[11px] text-slate-500">
+                                        Reviewed by {{ $previewItem->moderator->name ?? 'Admin' }}
+                                    </span>
+                                </div>
+                                @if($previewItem->reason)
+                                    <div class="mt-1 text-xs text-rose-700 dark:text-rose-300">
+                                        Reason: {{ $previewItem->reason }}
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Preview Footer Actions -->
+                    <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <button
+                            type="button"
+                            wire:click="closePreview"
+                            class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition"
+                        >
+                            Close Preview
+                        </button>
+
+                        <div class="flex items-center gap-2">
+                            @if ($previewItem->status === 'pending')
+                                <button
+                                    type="button"
+                                    wire:click="openRejectModal({{ $previewItem->id }})"
+                                    class="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950 dark:hover:bg-rose-900 text-rose-600 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-800 transition"
+                                >
+                                    Reject
+                                </button>
+                                <button
+                                    type="button"
+                                    wire:click="approve({{ $previewItem->id }})"
+                                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition"
+                                >
+                                    Approve Content
+                                </button>
+                            @elseif ($previewItem->status === 'approved')
+                                <button
+                                    type="button"
+                                    wire:click="openRejectModal({{ $previewItem->id }})"
+                                    class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition"
+                                >
+                                    Revoke & Reject
+                                </button>
+                            @elseif ($previewItem->status === 'rejected')
+                                <button
+                                    type="button"
+                                    wire:click="approve({{ $previewItem->id }})"
+                                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition"
+                                >
+                                    Re-approve
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+</div>

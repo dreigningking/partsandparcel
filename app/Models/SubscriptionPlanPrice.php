@@ -39,8 +39,11 @@ class SubscriptionPlanPrice extends Model
 
     public function getCurrencyAttribute(): string
     {
-        return $this->country->currency;
+        return $this->country?->currency ?? 'NGN';
     }
 
-    
+    public function getCurrencySymbolAttribute(): string
+    {
+        return $this->country?->currency_symbol ?? '₦';
+    }
 }

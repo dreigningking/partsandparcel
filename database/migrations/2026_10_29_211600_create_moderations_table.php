@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('moderations', function (Blueprint $table) {
             $table->id();
-            $table->nullableMorphs('moderatable'); //listing, request, response
+            $table->nullableMorphs('moderatable'); //listing, request
             $table->foreignId('moderated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('action')->nullable();
             $table->string('status'); //approved, rejected, pending
