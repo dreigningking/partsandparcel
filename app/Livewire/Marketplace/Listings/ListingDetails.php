@@ -6,7 +6,10 @@ use App\Models\CartItem;
 use App\Models\Discussion;
 use App\Models\Item;
 use App\Models\Listing;
+use App\Models\ListingReport;
+use App\Models\ViewedEntity;
 use App\Models\Wishlist;
+use App\Notifications\ListingReportedNotification;
 use App\Services\Commercial\CartService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -24,6 +27,12 @@ class ListingDetails extends Component
     public bool $isWishlisted = false;
     public string $title = 'Listing Details — Parts & Parcel';
 
+    // Report Listing Modal Properties
+    public bool $showReportModal = false;
+    public string $reportTitle = '';
+    public string $reportDescription = '';
+    public string $presetReportReason = '';
+
     public function mount(Listing $listing)
     {
         $this->listing = $listing->load([
@@ -37,7 +46,7 @@ class ListingDetails extends Component
             'reviews.user',
         ]);
 
-        $this->title = (($this->listing->item?->name ?? $this->listing->item?->name) ?? 'Listing Details') . ' — Parts & Parcel';
+        $this->title = (($this->listing->item?->name ?? $this->listing->title) ?? 'Listing Details') . ' — Parts & Parcel';
 
         // 1. Sold Count: calculate from cart_items where cart has paid invoice, fallback to listing.sold_quantity
         $paidCount = CartItem::where('listing_id', $this->listing->id)
@@ -57,7 +66,10 @@ class ListingDetails extends Component
                 ->exists();
         }
 
-        // 4. Related Discussions (up to 6)
+        // 4. Log Impression to ViewedEntity
+        $this->logViewedEntity();
+
+        // 5. Related Discussions (up to 6)
         $item = $this->listing->item;
         $catId = $item?->deviceModel?->category_id;
         $brandId = $item?->deviceModel?->brand_id;
@@ -82,10 +94,11 @@ class ListingDetails extends Component
             ->take(6)
             ->get();
 
-        // 5. Similar Listings (up to 5)
-        $this->similarListings = Listing::with(['item.deviceModel.brand', 'location', 'media', 'item.media'])
+        // 6. Similar Listings (up to 5)
+        $this->similarListings = Listing::with(['item.deviceModel.brand', 'item.location', 'media', 'item.media'])
             ->where('id', '!=', $this->listing->id)
-            ->where('status', 'active')
+            ->where('is_published', true)
+            ->where('is_active', true)
             ->when($catId || $brandId, function ($q) use ($catId, $brandId) {
                 $q->whereHas('item.deviceModel', function ($dm) use ($catId, $brandId) {
                     if ($catId) {
@@ -100,8 +113,47 @@ class ListingDetails extends Component
             ->take(5)
             ->get();
 
-        // 6. Reviews (up to 6)
+        // 7. Reviews (up to 6)
         $this->reviews = $this->listing->reviews()->with('user')->latest()->take(6)->get();
+    }
+
+    protected function logViewedEntity(): void
+    {
+        $userAgent = request()->userAgent() ?? '';
+        $deviceType = 'desktop';
+        if (preg_match('/(tablet|ipad|playbook)|(android(?!.*(mobi|opera mini)))/i', $userAgent)) {
+            $deviceType = 'tablet';
+        } elseif (preg_match('/(up.browser|up.link|mmp|symbian|smartphone|midp|wap|phone|android|iemobile)/i', $userAgent)) {
+            $deviceType = 'mobile';
+        }
+
+        if (Auth::check()) {
+            ViewedEntity::updateOrCreate(
+                [
+                    'user_id' => Auth::id(),
+                    'viewable_id' => $this->listing->id,
+                    'viewable_type' => Listing::class,
+                ],
+                [
+                    'ip_address' => request()->ip() ?? '127.0.0.1',
+                    'user_agent' => substr($userAgent, 0, 255),
+                    'device_type' => $deviceType,
+                ]
+            );
+        } else {
+            ViewedEntity::firstOrCreate(
+                [
+                    'user_id' => null,
+                    'ip_address' => request()->ip() ?? '127.0.0.1',
+                    'viewable_id' => $this->listing->id,
+                    'viewable_type' => Listing::class,
+                ],
+                [
+                    'user_agent' => substr($userAgent, 0, 255),
+                    'device_type' => $deviceType,
+                ]
+            );
+        }
     }
 
     public function addToCart(CartService $cartService)
@@ -138,6 +190,65 @@ class ListingDetails extends Component
             $this->isWishlisted = true;
             session()->flash('wishlist_message', 'Item saved to your wishlist!');
         }
+    }
+
+    // --- REPORT LISTING MODAL METHODS ---
+    public function openReportModal(): void
+    {
+        if (! Auth::check()) {
+            session()->put('url.intended', url()->current());
+            session()->flash('info', 'Please sign in to report this listing.');
+            $this->redirectRoute('login');
+            return;
+        }
+
+        $this->reportTitle = '';
+        $this->reportDescription = '';
+        $this->presetReportReason = '';
+        $this->resetErrorBag();
+        $this->showReportModal = true;
+    }
+
+    public function closeReportModal(): void
+    {
+        $this->showReportModal = false;
+        $this->reportTitle = '';
+        $this->reportDescription = '';
+        $this->presetReportReason = '';
+        $this->resetErrorBag();
+    }
+
+    public function setPresetReportReason(string $reason): void
+    {
+        $this->presetReportReason = $reason;
+        $this->reportTitle = $reason;
+    }
+
+    public function submitReport(): void
+    {
+        $this->validate([
+            'reportTitle' => ['required', 'string', 'min:3', 'max:150'],
+            'reportDescription' => ['nullable', 'string', 'max:2000'],
+        ], [
+            'reportTitle.required' => 'Please select a reason or provide a title for your report.',
+        ]);
+
+        $report = ListingReport::create([
+            'listing_id' => $this->listing->id,
+            'user_id' => Auth::id(),
+            'title' => $this->reportTitle,
+            'description' => $this->reportDescription,
+            'status' => 'pending',
+        ]);
+
+        // Send email notification to the seller
+        $seller = $this->listing->seller ?? $this->listing->user;
+        if ($seller) {
+            $seller->notify(new ListingReportedNotification($this->listing, $report));
+        }
+
+        $this->closeReportModal();
+        session()->flash('report_success', 'Thank you for your feedback. Your report has been submitted for review.');
     }
 
     public function render()

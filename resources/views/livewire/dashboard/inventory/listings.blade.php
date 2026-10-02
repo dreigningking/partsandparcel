@@ -162,9 +162,9 @@
                     <span class="px-1.5 py-0.5 rounded text-[9px] font-black uppercase {{ $isComponent ? 'bg-amber-100 text-amber-900' : 'bg-pp-100 text-pp-900' }}">
                       {{ $isComponent ? 'Component' : 'Whole Unit' }}
                     </span>
-                    <span class="font-extrabold text-slate-950 text-xs line-clamp-1">
+                    <a href="{{ route('mylisting.view', $lst->id) }}" class="font-extrabold text-slate-950 hover:text-pp-600 transition text-xs line-clamp-1">
                       {{ $itemTitle }}
-                    </span>
+                    </a>
                   </div>
 
                   <!-- Line 2: Brand & Category -->
@@ -228,9 +228,13 @@
                 @endif
               </td>
 
-              <!-- 6. ACTIONS (EDIT, DELETE) -->
+              <!-- 6. ACTIONS (DETAILS, EDIT, DELETE) -->
               <td class="p-3.5 text-center">
                 <div class="flex items-center justify-center gap-1.5">
+                  <a href="{{ route('mylisting.view', $lst->id) }}" class="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 text-[10px] transition cursor-pointer" title="View Details">
+                    <i class="fas fa-eye mr-0.5"></i> Details
+                  </a>
+
                   <button type="button" wire:click="editListing({{ $lst->id }})" class="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 text-[10px] transition cursor-pointer" title="Edit Listing">
                     <i class="fas fa-edit mr-0.5"></i> Edit
                   </button>

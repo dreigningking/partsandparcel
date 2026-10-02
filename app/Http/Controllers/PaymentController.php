@@ -35,11 +35,18 @@ class PaymentController extends Controller
         }
 
         $isSubscription = ($payment->metadata['payment_type'] ?? '') === 'subscription';
+        $isPromotion = ($payment->metadata['payment_type'] ?? '') === 'promotion';
         $planId = $payment->metadata['plan_id'] ?? 1;
 
         if ($payment->status === 'successful') {
             if ($isSubscription) {
                 return redirect()->route('dashboard')->with('success', 'Your subscription is already active!');
+            }
+            if ($isPromotion) {
+                $listingId = $payment->metadata['listing_id'] ?? null;
+                if ($listingId) {
+                    return redirect()->route('mylisting.view', $listingId)->with('success', 'Your promotion payment was successful and campaign is active!');
+                }
             }
             return $this->redirectAfterPayment($payment, 'Payment was successful!');
         }
@@ -73,6 +80,47 @@ class PaymentController extends Controller
                 );
             }
 
+            if ($isPromotion) {
+                $listingId = $payment->metadata['listing_id'] ?? null;
+                $type = $payment->metadata['type'] ?? 'clicks';
+                $quantity = (int) ($payment->metadata['quantity'] ?? 0);
+
+                // Activate existing pending Promotion record or create new
+                $promotionId = $payment->paymentable_id ?? ($payment->metadata['promotion_id'] ?? null);
+                $promotion = $promotionId ? \App\Models\Promotion::find($promotionId) : null;
+
+                if ($promotion) {
+                    $promotion->update(['status' => 'active']);
+                } else {
+                    $promotion = \App\Models\Promotion::create([
+                        'user_id' => $payment->user_id,
+                        'listing_id' => $listingId,
+                        'type' => $type,
+                        'achieved_count' => 0,
+                        'status' => 'active',
+                    ]);
+                }
+
+                $payment->update([
+                    'paymentable_id' => $promotion->id,
+                    'paymentable_type' => \App\Models\Promotion::class,
+                    'status' => 'successful',
+                    'paid_at' => now(),
+                ]);
+
+                if (! empty($payment->metadata['coupon_code'])) {
+                    $coupon = \App\Models\Coupon::where('code', $payment->metadata['coupon_code'])->first();
+                    $coupon?->recordUsage();
+                }
+
+                if ($listingId) {
+                    return redirect()->route('mylisting.view', $listingId)->with(
+                        'success',
+                        "Promotion payment confirmed! Your campaign for " . number_format($quantity) . " promotional {$type} is now active."
+                    );
+                }
+            }
+
             $escrowService->handlePaymentSuccessful($payment, $result);
             return $this->redirectAfterPayment($payment, 'Payment successfully confirmed!');
         }
@@ -86,12 +134,24 @@ class PaymentController extends Controller
                 ->with('error', $errorMessage);
         }
 
+        if ($isPromotion) {
+            $listingId = $payment->metadata['listing_id'] ?? null;
+            $errorMessage = $result['message'] ?? 'Payment verification failed or transaction was cancelled. Please try again.';
+            if ($listingId) {
+                return redirect()->route('mylisting.view', $listingId)->with('error', $errorMessage);
+            }
+        }
+
         return $this->redirectAfterPayment($payment, 'Payment verification pending or failed.', false);
     }
 
     protected function redirectAfterPayment(Payment $payment, string $message, bool $success = true): RedirectResponse
     {
         $statusKey = $success ? 'success' : 'error';
+
+        if (($payment->metadata['payment_type'] ?? '') === 'promotion' && ! empty($payment->metadata['listing_id'])) {
+            return redirect()->route('mylisting.view', $payment->metadata['listing_id'])->with($statusKey, $message);
+        }
 
         if ($payment->invoice_id) {
             return redirect()->route('invoices')->with($statusKey, $message);

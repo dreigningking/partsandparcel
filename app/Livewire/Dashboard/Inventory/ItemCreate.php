@@ -423,7 +423,6 @@ class ItemCreate extends Component
                 'is_warranty_negotiable' => $this->is_warranty_negotiable,
                 'warranty_terms' => $this->warranty_terms,
                 'allow_shipping' => $this->allow_shipping,
-                'description' => $this->description ?: $this->condition_notes,
             ]);
 
             // Sync media to listing as well
@@ -465,7 +464,6 @@ class ItemCreate extends Component
                             'is_warranty_negotiable' => !empty($compData['is_warranty_negotiable']),
                             'warranty_terms' => $compData['warranty_terms'] ?? $this->warranty_terms,
                             'allow_shipping' => $this->allow_shipping,
-                            'description' => $compData['notes'] ?? '',
                         ]);
                     }
                 }

@@ -43,8 +43,6 @@ Coupon{
   These coupons will be used when purchasing subscriptions, promotions, and listings
 }
 
-
-
 Payment{
 Payout
 PayoutSettlement
@@ -61,7 +59,6 @@ Dispute{
   ReplacementItem
   ReturnItem
   ReturnRecord
-
 }
 
 
@@ -99,7 +96,6 @@ Discussion{
       ConversationMessage
       ConversationParticipant
     }
-  
   ServiceJob
   ServiceReview
 }
@@ -113,23 +109,25 @@ Invoice{
 }
 
 Item{
-  Item - i
-  Location
-  Listing
-  ListingReport
-  ListingReview
-  ViewedEntity
-  Watchlist
-  Wishlist
-  Media
+  Done{
+    Item - i
+    Location
+    Listing
+    ListingReport
+    ListingReview
+    ViewedEntity
+    Watchlist
+    Wishlist
+    Media
+    ListingView
+  }
   Offer
   OfferItem
   Conversation{
     ConversationMessage
     ConversationParticipant
   }
-  When buyer purchase a listing, they can review the listing user [ListingReview.php](file;file:///c%3A/laragon/www/partsandparcel/app/Models/ListingReview.php) . This one will be on the dashboard pages possibly on the invoice page
-  We need to have a Seller Listing Details page from w 
+  Buyer ListingReview
 }
 
 

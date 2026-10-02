@@ -145,11 +145,10 @@ class ItemsList extends Component
         Listing::create([
             'user_id' => Auth::id(),
             'item_id' => $asset->id,
-            'location_id' => $asset->location_id,
             'quantity' => $this->quantity,
             'price' => $this->price,
             'is_negotiable' => $this->is_negotiable,
-            'status' => 'active',
+            'is_published' => true,
             'warranty_period_days' => $this->warranty_period_days ?: 0,
             'is_warranty_negotiable' => $this->is_warranty_negotiable,
             'warranty_terms' => $this->warranty_terms ?: '',
@@ -231,7 +230,7 @@ class ItemsList extends Component
             'deviceModel.brand',
             'children.listing',
             'location',
-            'listing.location',
+            'listing',
         ])
         ->where('user_id', $user?->id);
 
@@ -274,9 +273,8 @@ class ItemsList extends Component
             $locId = $this->selectedLocation;
             $query->where(function ($q) use ($locId) {
                 $q->where('location_id', $locId)
-                  ->orWhereHas('listing', fn($lq) => $lq->where('location_id', $locId))
                   ->orWhereHas('parent', fn($pq) => $pq->where('location_id', $locId))
-                  ->orWhereHas('children', fn($cq) => $cq->whereHas('listing', fn($clq) => $clq->where('location_id', $locId)));
+                  ->orWhereHas('children', fn($cq) => $cq->where('location_id', $locId));
             });
         }
 

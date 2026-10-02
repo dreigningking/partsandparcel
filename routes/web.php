@@ -145,9 +145,9 @@ Route::middleware('auth')->group(function () {
     Route::get('myresponses/{id?}', MyResponseView::class)->name('myresponse.view');
     Route::get('myitems', ItemsList::class)->name('myitems');
     Route::get('myitems/create', ItemCreate::class)->name('item.create');
-    Route::get('myitems/item_id', ItemView::class)->name('item.view');
+    Route::get('myitems/{item}', ItemView::class)->name('item.view');
     Route::get('mylistings', Listings::class)->name('mylistings');
-    Route::get('mylistings/listing_id', ListingView::class)->name('mylisting.view');
+    Route::get('mylistings/{listing}', ListingView::class)->name('mylisting.view');
     Route::get('myearnings', Earnings::class)->name('earnings');
     Route::get('disputes', DisputesList::class)->name('disputes');
     Route::get('disputes/dispute_id', DisputeView::class)->name('disputes.view');

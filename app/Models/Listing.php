@@ -307,13 +307,14 @@ class Listing extends Model
         return $this->features->firstWhere('feature', $feature)?->value;
     }
 
-    public function getPriceAttribute()
+    public function getFormattedPriceAttribute(): ?string
     {
-        if ($this->cost === null) {
+        $raw = $this->attributes['price'] ?? null;
+        if ($raw === null) {
             return null;
         }
 
-        $value = (float) $this->cost;
+        $value = (float) $raw;
 
         // Define thresholds and their suffixes
         $thresholds = [

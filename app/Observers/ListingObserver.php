@@ -36,6 +36,52 @@ class ListingObserver
         if (!empty($changes)) {
             $this->createModerationRecord($listing, 'updated');
         }
+
+        $this->notifyWishlistedUsersOfStockChanges($listing);
+    }
+
+    protected function notifyWishlistedUsersOfStockChanges(Listing $listing): void
+    {
+        $oldQty = (int) ($listing->getOriginal('quantity') ?? 0);
+        $oldReserved = (int) ($listing->getOriginal('reserved_quantity') ?? 0);
+        $oldSold = (int) ($listing->getOriginal('sold_quantity') ?? 0);
+        $wasAvailable = max(0, $oldQty - $oldReserved - $oldSold);
+
+        $newQty = (int) ($listing->quantity ?? 0);
+        $newReserved = (int) ($listing->reserved_quantity ?? 0);
+        $newSold = (int) ($listing->sold_quantity ?? 0);
+        $nowAvailable = max(0, $newQty - $newReserved - $newSold);
+
+        // Check if stock state meaningfully changed
+        if ($wasAvailable === $nowAvailable) {
+            return;
+        }
+
+        // Restocked: was 0 or less, now has available stock
+        $isRestocked = ($wasAvailable <= 0 && $nowAvailable > 0);
+
+        // Low stock: dropped into 1 or 2 units remaining from a higher level
+        $isLowStock = ($wasAvailable > 2 && $nowAvailable > 0 && $nowAvailable <= 2);
+
+        if (! $isRestocked && ! $isLowStock) {
+            return;
+        }
+
+        $wishlists = \App\Models\Wishlist::where('listing_id', $listing->id)
+            ->with('user')
+            ->get();
+
+        foreach ($wishlists as $wishlist) {
+            if (! $wishlist->user || $wishlist->user->id === $listing->user_id) {
+                continue;
+            }
+
+            if ($isRestocked) {
+                $wishlist->user->notify(new \App\Notifications\ListingRestockedNotification($listing, $nowAvailable));
+            } elseif ($isLowStock) {
+                $wishlist->user->notify(new \App\Notifications\ListingLowStockNotification($listing, $nowAvailable));
+            }
+        }
     }
 
     protected function createModerationRecord(Listing $listing, string $action): void

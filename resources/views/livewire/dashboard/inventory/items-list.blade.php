@@ -182,7 +182,7 @@
               
               <!-- 1. TITLE -->
               <td class="p-3.5">
-                <a href="{{ route('item.view', ['id' => $item->id]) }}" class="font-extrabold text-slate-900 hover:text-pp-600 transition block text-xs">
+                <a href="{{ route('item.view', $item->id) }}" class="font-extrabold text-slate-900 hover:text-pp-600 transition block text-xs">
                   {{ $item->name ?: ($item->deviceModel?->name ?? 'Inventory Asset #' . $item->id) }}
                 </a>
                 @if($item->parent_id && $item->parent)
@@ -320,13 +320,13 @@
 
                   <!-- DISASSEMBLY (ABEL / SCRAP ONLY) -->
                   @if($item->condition_status === 'scrap' || $item->condition_status === 'faulty')
-                    <a href="{{ route('item.view', ['id' => $item->id]) }}" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[10px] transition shadow-2xs" title="Disassembly Matrix">
+                    <a href="{{ route('item.view', $item->id) }}" class="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-[10px] transition shadow-2xs" title="Disassembly Matrix">
                       <i class="fas fa-microchip mr-0.5"></i> Disassembly
                     </a>
                   @endif
 
                   <!-- EDIT -->
-                  <a href="{{ route('item.view', ['id' => $item->id]) }}" class="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 text-[10px] transition" title="Edit / View Details">
+                  <a href="{{ route('item.view', $item->id) }}" class="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-slate-700 text-[10px] transition" title="Edit / View Details">
                     <i class="fas fa-edit mr-0.5"></i> Edit
                   </a>
 

@@ -60,8 +60,9 @@ class CategoryDevices extends Component
         $modelId = $activeModel?->id;
         $searchTerm = trim($this->search !== '' ? $this->search : $this->q);
 
-        $query = Listing::with(['item.deviceModel.category', 'item.deviceModel.brand', 'location', 'seller', 'media', 'item.media'])
-            ->where('status', 'active')
+        $query = Listing::with(['item.deviceModel.category', 'item.deviceModel.brand', 'item.location', 'seller.primaryLocation', 'media', 'item.media'])
+            ->where('is_published', true)
+            ->where('is_active', true)
             ->whereHas('item', function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
                 $q->where('item_type', 'whole');
 
@@ -115,7 +116,7 @@ class CategoryDevices extends Component
 
         if ($this->selectedLocation !== '') {
             $loc = $this->selectedLocation;
-            $query->whereHas('location', fn($l) => $l->where('city', 'like', "%{$loc}%")->orWhere('state', 'like', "%{$loc}%"));
+            $query->whereHas('item.location', fn($l) => $l->where('city', 'like', "%{$loc}%")->orWhere('state', 'like', "%{$loc}%"));
         }
 
         // Sorting

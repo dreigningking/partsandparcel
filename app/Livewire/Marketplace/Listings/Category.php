@@ -101,7 +101,8 @@ class Category extends Component
         $searchTerm = trim($this->q);
 
         // Calculate count for devices (item_type = whole)
-        $devicesCount = Listing::where('status', 'active')
+        $devicesCount = Listing::where('is_published', true)
+            ->where('is_active', true)
             ->whereHas('item', function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
                 $q->where('item_type', 'whole');
                 if ($catIds->isNotEmpty()) {
@@ -119,7 +120,8 @@ class Category extends Component
             })->count();
 
         // Calculate count for parts (item_type = part or parts)
-        $partsCount = Listing::where('status', 'active')
+        $partsCount = Listing::where('is_published', true)
+            ->where('is_active', true)
             ->whereHas('item', function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
                 $q->whereIn('item_type', ['part', 'parts']);
                 if ($catIds->isNotEmpty()) {
@@ -137,7 +139,8 @@ class Category extends Component
             })->count();
 
         // Calculate count for scraps (item_type = scrap)
-        $scrapsCount = Listing::where('status', 'active')
+        $scrapsCount = Listing::where('is_published', true)
+            ->where('is_active', true)
             ->whereHas('item', function ($q) use ($catIds, $brandId, $modelId, $searchTerm) {
                 $q->where('item_type', 'scrap');
                 if ($catIds->isNotEmpty()) {
@@ -176,7 +179,7 @@ class Category extends Component
         }
         $requestsCount = $requestsQuery->count();
 
-        $activeSellersCount = Listing::where('status', 'active')->distinct('user_id')->count('user_id');
+        $activeSellersCount = Listing::where('is_published', true)->where('is_active', true)->distinct('user_id')->count('user_id');
 
         return view('livewire.marketplace.listings.category', [
             'activeCategory' => $activeCategory,

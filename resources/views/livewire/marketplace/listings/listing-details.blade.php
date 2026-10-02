@@ -207,12 +207,30 @@
         <span>Message / Chat with Seller</span>
       </button>
 
-      <!-- WISHLIST BUTTON -->
-      <button type="button" 
-              wire:click="toggleWishlist" 
-              class="w-full h-11 mt-2 border border-slate-200 rounded-lg font-bold text-xs hover:bg-slate-50 transition cursor-pointer shadow-2xs text-slate-700">
-        {{ $isWishlisted ? '♥ Saved in Wishlist' : '♡ Save to Wishlist' }}
-      </button>
+      @if (session('report_success'))
+        <div class="mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 flex items-center gap-2">
+          <i class="fas fa-check-circle text-emerald-600"></i>
+          <span>{{ session('report_success') }}</span>
+        </div>
+      @endif
+
+      <!-- WISHLIST & REPORT BUTTONS -->
+      <div class="grid grid-cols-2 gap-2 mt-2">
+        <button type="button" 
+                wire:click="toggleWishlist" 
+                class="h-11 border border-slate-200 rounded-lg font-bold text-xs hover:bg-slate-50 transition cursor-pointer shadow-2xs text-slate-700 flex items-center justify-center gap-1.5">
+          <i class="{{ $isWishlisted ? 'fas fa-heart text-rose-500' : 'far fa-heart text-slate-400' }}"></i>
+          <span>{{ $isWishlisted ? 'Saved in Wishlist' : 'Save to Wishlist' }}</span>
+        </button>
+
+        <button type="button" 
+                wire:click="openReportModal" 
+                class="h-11 border border-slate-200 rounded-lg font-bold text-xs hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition cursor-pointer shadow-2xs text-slate-600 flex items-center justify-center gap-1.5"
+                title="Report issues with this listing">
+          <i class="fas fa-flag text-rose-500 text-xs"></i>
+          <span>Report Listing</span>
+        </button>
+      </div>
 
       <!-- WARRANTY & TRUST BANNER -->
       <div class="mt-4 p-4 bg-pp-50 border border-pp-100 rounded-xl text-xs space-y-1">
@@ -632,6 +650,105 @@
   </section>
 
 </main>
+ 
+ <!-- REPORT LISTING MODAL -->
+ @if ($showReportModal)
+   <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="report-modal-title" role="dialog" aria-modal="true">
+     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+       <!-- Backdrop -->
+       <div class="fixed inset-0 bg-slate-950/70 backdrop-blur-xs transition-opacity" wire:click="closeReportModal"></div>
+       <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+       <!-- Modal Card -->
+       <div class="relative inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200">
+         <div class="p-6">
+           <div class="flex items-start gap-3">
+             <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
+               <i class="fas fa-flag text-base"></i>
+             </div>
+             <div class="min-w-0 flex-1">
+               <h3 class="text-lg font-bold text-slate-950" id="report-modal-title">
+                 Report This Listing
+               </h3>
+               <p class="text-xs text-slate-500 mt-0.5">
+                 Help us keep Parts & Parcel safe. Submit a report if this listing violates marketplace standards.
+               </p>
+             </div>
+             <button type="button" wire:click="closeReportModal" class="text-slate-400 hover:text-slate-600">
+               <i class="fas fa-times"></i>
+             </button>
+           </div>
+
+           <!-- Preset Reasons -->
+           <div class="mt-4">
+             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+               Reason for Report <span class="text-rose-500">*</span>
+             </label>
+             <div class="flex flex-wrap gap-1.5">
+               @foreach([
+                 'Inaccurate or misleading information',
+                 'Prohibited or dangerous item',
+                 'Suspected counterfeit or fraud',
+                 'Unresponsive seller or scam pricing',
+                 'Copyright or image infringement',
+                 'Other policy violation'
+               ] as $reason)
+                 <button
+                   type="button"
+                   wire:click="setPresetReportReason('{{ $reason }}')"
+                   class="px-2.5 py-1 rounded-lg text-xs font-medium transition border {{ $reportTitle === $reason ? 'bg-rose-50 text-rose-700 border-rose-300 font-bold' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100' }}"
+                 >
+                   {{ $reason }}
+                 </button>
+               @endforeach
+             </div>
+             @error('reportTitle')
+               <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
+             @enderror
+           </div>
+
+           <!-- Description / Extra Details -->
+           <div class="mt-4">
+             <label for="reportDescription" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+               Additional Details (Optional)
+             </label>
+             <textarea
+               id="reportDescription"
+               wire:model="reportDescription"
+               rows="3"
+               placeholder="Please describe the issue in detail so our moderators can investigate..."
+               class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 text-xs focus:outline-hidden focus:ring-2 focus:ring-rose-500/30"
+             ></textarea>
+             @error('reportDescription')
+               <p class="text-xs text-rose-600 mt-1 font-medium">{{ $message }}</p>
+             @enderror
+           </div>
+         </div>
+
+         <!-- Modal Actions -->
+         <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+           <button
+             type="button"
+             wire:click="closeReportModal"
+             class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold transition"
+           >
+             Cancel
+           </button>
+           <button
+             type="button"
+             wire:click="submitReport"
+             wire:loading.attr="disabled"
+             class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5"
+           >
+             <i class="fas fa-paper-plane text-[10px]" wire:loading.remove wire:target="submitReport"></i>
+             <i class="fas fa-spinner fa-spin text-[10px]" wire:loading wire:target="submitReport"></i>
+             <span>Submit Report</span>
+           </button>
+         </div>
+       </div>
+     </div>
+   </div>
+ @endif
 
 @push('scripts')
 <script>

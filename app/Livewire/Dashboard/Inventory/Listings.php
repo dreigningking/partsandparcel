@@ -170,7 +170,6 @@ class Listings extends Component
             'is_warranty_negotiable' => $this->is_warranty_negotiable,
             'warranty_terms' => $this->warranty_terms ?: '',
             'allow_shipping' => $this->allow_shipping,
-            'description' => $asset->name ?? '',
         ]);
 
         session()->flash('message', 'Marketplace listing published successfully!');
@@ -345,14 +344,15 @@ class Listings extends Component
         // Status Filter
         if ($this->selectedStatus) {
             if ($this->selectedStatus === 'sold_out') {
-                $query->where(function ($q) {
-                    $q->where('status', 'sold_out')
-                      ->orWhere('quantity', '<=', 0);
-                });
+                $query->whereRaw('(quantity - reserved_quantity - sold_quantity) <= 0');
             } elseif ($this->selectedStatus === 'live') {
-                $query->where('status', 'active')->where('quantity', '>', 0);
-            } else {
-                $query->where('status', $this->selectedStatus);
+                $query->where('is_published', true)
+                    ->where('is_active', true)
+                    ->whereRaw('(quantity - reserved_quantity - sold_quantity) > 0');
+            } elseif ($this->selectedStatus === 'paused') {
+                $query->where('is_published', false);
+            } elseif ($this->selectedStatus === 'inactive') {
+                $query->where('is_active', false);
             }
         }
 
