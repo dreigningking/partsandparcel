@@ -35,6 +35,8 @@ class Profile extends Component
     public $kyc_front_image = null;
     public $kyc_back_image = null;
     public $kyc_selfie_image = null;
+    public ?string $capturedSelfie = null;
+    public array $capturedLiveness = [];
     public ?Verification $activeVerification = null;
 
     // User Profile Fields
@@ -44,7 +46,7 @@ class Profile extends Component
     public string $phone = '';
     public ?int $country_id = null;
     public string $bio = '';
-    public string $theme_preference = 'system';
+    public ?string $gender = null;
     public ?string $currentAvatar = null;
     public $avatarFile = null;
 
@@ -87,9 +89,7 @@ class Profile extends Component
             $this->phone = (string) ($user->phone ?? '');
             $this->country_id = $user->country_id ? (int) $user->country_id : null;
             $this->bio = (string) ($user->bio ?? '');
-            $this->theme_preference = in_array($user->theme_preference, ['light', 'dark', 'system']) 
-                ? $user->theme_preference 
-                : 'system';
+            $this->gender = $user->gender ? (string) $user->gender : null;
             $this->currentAvatar = $user->avatar;
 
             // Notification preferences
@@ -98,10 +98,12 @@ class Profile extends Component
             $this->notify_email = $user->notificationPreference('email');
 
             // Identity verification record
-            $this->activeVerification = $user->latestVerification;
+            $this->activeVerification = $user->verification;
             if ($this->activeVerification) {
                 $this->kyc_document_type = $this->activeVerification->document_type ?? 'national_id';
                 $this->kyc_document_number = $this->activeVerification->document_number ?? '';
+                $this->capturedSelfie = $this->activeVerification->selfie_image;
+                $this->capturedLiveness = (array) ($this->activeVerification->liveness_images ?? []);
             }
 
             // Bank details
@@ -138,7 +140,7 @@ class Profile extends Component
             'phone' => 'nullable|string|max:25',
             'country_id' => 'nullable|exists:countries,id',
             'bio' => 'nullable|string|max:1000',
-            'theme_preference' => 'required|in:system,light,dark',
+            'gender' => 'nullable|in:male,female,other',
             'avatarFile' => 'nullable|image|max:2048',
         ]);
 
@@ -149,7 +151,7 @@ class Profile extends Component
             'phone' => $this->phone ?: null,
             'country_id' => $this->country_id ?: $user->country_id,
             'bio' => $this->bio ?: null,
-            'theme_preference' => $this->theme_preference,
+            'gender' => $this->gender ?: null,
         ];
 
         if ($this->avatarFile) {
@@ -163,20 +165,7 @@ class Profile extends Component
 
         $user->update($data);
 
-        $this->dispatch('pp-theme-changed', theme: $this->theme_preference);
-
         session()->flash('profile_success', 'Profile information updated successfully.');
-    }
-
-    public function updatedThemePreference(string $value): void
-    {
-        if (in_array($value, ['system', 'light', 'dark'])) {
-            $user = Auth::user();
-            if ($user) {
-                $user->update(['theme_preference' => $value]);
-                $this->dispatch('pp-theme-changed', theme: $value);
-            }
-        }
     }
 
     public function removeAvatar()
@@ -325,7 +314,7 @@ class Profile extends Component
         $this->showCameraModal = false;
     }
 
-    public function saveCameraSelfie(string $base64Data): void
+    public function saveCameraSelfie(string $base64Data, array $livenessFrames = []): void
     {
         $user = Auth::user();
         if (empty($base64Data)) {
@@ -337,25 +326,41 @@ class Profile extends Component
         if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $type)) {
             $data = substr($base64Data, strpos($base64Data, ',') + 1);
             $type = strtolower($type[1]);
-            $data = base64_decode($data);
+            $decoded = base64_decode($data);
 
-            if ($data === false) {
+            if ($decoded === false) {
                 session()->flash('camera_error', 'Failed to decode captured selfie image.');
                 return;
             }
 
-            $filename = 'avatars/live_selfie_' . $user->id . '_' . time() . '.' . ($type === 'png' ? 'png' : 'jpg');
-            Storage::disk('public')->put($filename, $data);
+            $primaryFilename = 'verifications/selfie/live_selfie_' . $user->id . '_' . time() . '.' . ($type === 'png' ? 'png' : 'jpg');
+            Storage::disk('public')->put($primaryFilename, $decoded);
 
-            // Update user's avatar & facial_verified_at
-            $user->update([
-                'avatar' => $filename,
-                'facial_verified_at' => now(),
-            ]);
+            // Save multi-frame liveness sequence
+            $savedFrames = [];
+            foreach ($livenessFrames as $idx => $frameData) {
+                if (preg_match('/^data:image\/(\w+);base64,/', $frameData, $fType)) {
+                    $rawF = substr($frameData, strpos($frameData, ',') + 1);
+                    $fDecoded = base64_decode($rawF);
+                    if ($fDecoded !== false) {
+                        $fPath = 'verifications/liveness/frame_' . $user->id . '_' . ($idx + 1) . '_' . time() . '.jpg';
+                        Storage::disk('public')->put($fPath, $fDecoded);
+                        $savedFrames[] = $fPath;
+                    }
+                }
+            }
 
-            $this->currentAvatar = $filename;
+            $this->capturedSelfie = $primaryFilename;
+            $this->capturedLiveness = !empty($savedFrames) ? $savedFrames : [$primaryFilename];
+
+            // Update user's avatar if user currently has none
+            if (!$user->avatar) {
+                $user->update(['avatar' => $primaryFilename]);
+                $this->currentAvatar = $primaryFilename;
+            }
+
             $this->closeCameraModal();
-            session()->flash('profile_success', 'Live facial capture completed and profile avatar updated!');
+            session()->flash('profile_success', 'Live facial capture and 3-step active liveness check completed!');
         } else {
             session()->flash('camera_error', 'Invalid selfie image data format.');
         }
@@ -390,14 +395,16 @@ class Profile extends Component
             $backPath = $this->kyc_back_image->store('verifications/back', 'public');
         }
 
-        $selfiePath = $this->activeVerification?->selfie_image;
+        $selfiePath = $this->capturedSelfie ?: $this->activeVerification?->selfie_image;
         if ($this->kyc_selfie_image) {
             $selfiePath = $this->kyc_selfie_image->store('verifications/selfie', 'public');
-        } elseif ($user->avatar) {
+        } elseif (!$selfiePath && $user->avatar) {
             $selfiePath = $user->avatar;
         }
 
-        $isLiveness = (bool) ($user->facial_verified_at || $selfiePath);
+        $livenessImages = !empty($this->capturedLiveness) 
+            ? $this->capturedLiveness 
+            : ($this->activeVerification?->liveness_images ?? []);
 
         $verification = Verification::create([
             'user_id' => $user->id,
@@ -406,9 +413,7 @@ class Profile extends Component
             'front_image' => $frontPath,
             'back_image' => $backPath,
             'selfie_image' => $selfiePath,
-            'liveness_verified' => $isLiveness,
-            'status' => 'pending',
-            'rejection_reason' => null,
+            'liveness_images' => $livenessImages ?: null,
         ]);
 
         // Create Moderation entry for admin review queue
@@ -417,7 +422,7 @@ class Profile extends Component
             'moderatable_id' => $verification->id,
             'status' => 'pending',
             'action' => $this->activeVerification ? 'updated' : 'created',
-            'reason' => 'Government ID identity verification submitted',
+            'reason' => 'Government ID & 3-Frame Facial Liveness verification submitted',
         ]);
 
         $this->activeVerification = $verification;

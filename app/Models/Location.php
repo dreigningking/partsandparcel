@@ -31,9 +31,6 @@ class Location extends Model
         'longitude',
         'is_default',
         'utility_bill_path',
-        'verification_status',
-        'rejection_reason',
-        'verified_at',
     ];
 
     protected function casts(): array
@@ -42,7 +39,6 @@ class Location extends Model
             'is_default' => 'boolean',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
-            'verified_at' => 'datetime',
         ];
     }
 
@@ -87,14 +83,51 @@ class Location extends Model
         return $this->morphMany(Moderation::class, 'moderatable');
     }
 
-    public function latestModeration(): MorphOne
+    public function moderation(): MorphOne
     {
         return $this->morphOne(Moderation::class, 'moderatable')->latestOfMany();
     }
 
+    public function latestModeration(): MorphOne
+    {
+        return $this->moderation();
+    }
+
+    public function getVerificationStatusAttribute(): string
+    {
+        if (empty($this->utility_bill_path)) {
+            return 'unverified';
+        }
+
+        $status = $this->moderation?->status ?? 'pending';
+        return $status === 'approved' ? 'verified' : $status;
+    }
+
+    public function getIsVerifiedAttribute(): bool
+    {
+        return in_array($this->verification_status, ['approved', 'verified']);
+    }
+
+    public function getRejectionReasonAttribute(): ?string
+    {
+        return $this->moderation?->reason;
+    }
+
+    public function getReviewedByAttribute(): ?int
+    {
+        return $this->moderation?->moderated_by;
+    }
+
+    public function getVerifiedAtAttribute()
+    {
+        return $this->moderation && in_array($this->moderation->status, ['approved', 'verified'])
+            ? $this->moderation->updated_at
+            : null;
+    }
+
     public function isVerified(): bool
     {
-        return $this->verification_status === 'verified';
+        return $this->is_verified;
     }
 
     public function isPending(): bool

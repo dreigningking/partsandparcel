@@ -10,36 +10,39 @@
                 <span>/</span>
                 <span class="text-slate-600 dark:text-slate-300">General Settings</span>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950 dark:text-white tracking-tight">
-                General Platform Settings
-            </h1>
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950 dark:text-white tracking-tight">
+                    General Platform Settings
+                </h1>
+                <div class="flex items-center gap-3 self-start sm:self-auto">
+                    <button
+                        type="button"
+                        wire:click="resetToDefaults"
+                        wire:confirm="Are you sure you want to reset all platform settings to their default values? Custom changes will be overwritten."
+                        class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-2xs transition flex items-center gap-2 cursor-pointer"
+                    >
+                        <i class="fas fa-undo-alt text-slate-400"></i>
+                        <span>Restore Defaults</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        wire:click="saveSettings"
+                        class="px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-soft transition flex items-center gap-2 cursor-pointer"
+                    >
+                        <i class="fas fa-save"></i>
+                        <span wire:loading.remove wire:target="saveSettings">Save All Settings</span>
+                        <span wire:loading wire:target="saveSettings">Saving...</span>
+                    </button>
+                </div>
+            </div>
             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                 Configure core marketplace parameters, media limits, promotional thresholds, and order transaction timelines.
             </p>
         </div>
 
         <!-- ACTIONS -->
-        <div class="flex items-center gap-3 self-start sm:self-auto">
-            <button
-                type="button"
-                wire:click="resetToDefaults"
-                wire:confirm="Are you sure you want to reset all platform settings to their default values? Custom changes will be overwritten."
-                class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-2xs transition flex items-center gap-2 cursor-pointer"
-            >
-                <i class="fas fa-undo-alt text-slate-400"></i>
-                <span>Restore Defaults</span>
-            </button>
-
-            <button
-                type="button"
-                wire:click="saveSettings"
-                class="px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-soft transition flex items-center gap-2 cursor-pointer"
-            >
-                <i class="fas fa-save"></i>
-                <span wire:loading.remove wire:target="saveSettings">Save All Settings</span>
-                <span wire:loading wire:target="saveSettings">Saving...</span>
-            </button>
-        </div>
+        
     </div>
 
     <!-- FLASH NOTIFICATIONS -->
@@ -125,27 +128,26 @@
                 </span>
             </button>
         </div>
-
-        <!-- Search Bar -->
-        <div class="relative min-w-[220px]">
-            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
-            <input
-                type="text"
-                wire:model.live.debounce.300ms="search"
-                placeholder="Filter settings..."
-                class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-pp-600"
-            />
-            @if ($search !== '')
-                <button
-                    type="button"
-                    wire:click="$set('search', '')"
-                    class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
-                    title="Clear filter"
-                >
-                    <i class="fas fa-times"></i>
-                </button>
-            @endif
-        </div>
+    </div>
+    <!-- Search Bar -->
+    <div class="relative min-w-[220px] p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-pp-600 font-medium rounded-xl">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+        <input
+            type="text"
+            wire:model.live.debounce.300ms="search"
+            placeholder="Filter settings..."
+            class="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-pp-600"
+        />
+        @if ($search !== '')
+            <button
+                type="button"
+                wire:click="$set('search', '')"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+                title="Clear filter"
+            >
+                <i class="fas fa-times"></i>
+            </button>
+        @endif
     </div>
 
     <!-- SETTINGS LIST -->
@@ -181,12 +183,12 @@
                                     <code class="text-3xs font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                                         {{ $setting->name }}
                                     </code>
-                                    <span class="text-3xs uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                    <span class="text-xs uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                                         {{ $setting->segment }}
                                     </span>
-                                    <span class="text-3xs uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded {{ $type === 'boolean' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400' : ($type === 'array' ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400' : ($type === 'integer' ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400')) }}">
+                                    {{-- <span class="text-3xs uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded {{ $type === 'boolean' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400' : ($type === 'array' ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400' : ($type === 'integer' ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400')) }}">
                                         {{ $type }}
-                                    </span>
+                                    </span> --}}
                                 </div>
                             </div>
                         </div>
@@ -247,9 +249,8 @@
                                 <!-- Current Tags Container -->
                                 <div class="flex flex-wrap items-center gap-1.5 min-h-[42px] p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
                                     @forelse ($settings[$setting->name] ?? [] as $tagIndex => $tagValue)
-                                        <span
-                                            wire:key="tag-{{ $setting->name }}-{{ $tagIndex }}-{{ $tagValue }}"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-pp-600/10 dark:bg-pp-500/20 text-pp-700 dark:text-pp-300 border border-pp-600/20 dark:border-pp-500/30 text-xs font-bold transition hover:bg-pp-600/20"
+                                        <span wire:key="tag-{{ $setting->name }}-{{ $tagIndex }}-{{ $tagValue }}"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-bold transition hover:bg-pp-600/20"
                                         >
                                             <span>{{ $tagValue }}</span>
                                             <button

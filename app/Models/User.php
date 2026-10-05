@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -28,11 +29,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
         'bio',
         'is_verified',
-        'theme_preference',
+        'gender',
         'notification_preferences',
         'country_id',
-        'facial_verified_at',
-        'id_verified_at',
     ];
 
     public function sluggable(): array
@@ -78,8 +77,6 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_verified' => 'boolean',
-            'facial_verified_at' => 'datetime',
-            'id_verified_at' => 'datetime',
             'notification_preferences' => 'array',
         ];
     }
@@ -233,19 +230,45 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Verification::class);
     }
 
-    public function latestVerification(): HasOne
+
+    public function verification(): HasOne
     {
         return $this->hasOne(Verification::class)->latestOfMany();
     }
 
+    public function latestVerification(): HasOne
+    {
+        return $this->verification();
+    }
+
     public function isIdentityVerified(): bool
     {
-        return (bool) ($this->is_verified || $this->id_verified_at);
+        return (bool) ($this->verification && $this->verification->isVerified());
     }
 
     public function isFacialVerified(): bool
     {
-        return !is_null($this->facial_verified_at);
+        return (bool) ($this->verification && $this->verification->isVerified() && $this->verification->selfie_image);
+    }
+
+    public function areLocationsVerified(): bool
+    {
+        $locations = $this->locations;
+        if ($locations->isEmpty()) {
+            return false;
+        }
+
+        return $locations->every(fn($loc) => $loc->isVerified());
+    }
+
+    public function getIsFullyVerifiedAttribute(): bool
+    {
+        return $this->isIdentityVerified() && $this->areLocationsVerified();
+    }
+
+    public function isFullyVerified(): bool
+    {
+        return $this->is_fully_verified;
     }
 
     public function subscriptions(): HasMany

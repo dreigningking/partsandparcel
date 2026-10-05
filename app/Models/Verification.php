@@ -19,18 +19,13 @@ class Verification extends Model
         'front_image',
         'back_image',
         'selfie_image',
-        'liveness_verified',
-        'status',
-        'rejection_reason',
-        'reviewed_by',
-        'verified_at',
+        'liveness_images',
     ];
 
     protected function casts(): array
     {
         return [
-            'liveness_verified' => 'boolean',
-            'verified_at' => 'datetime',
+            'liveness_images' => 'array',
         ];
     }
 
@@ -39,25 +34,53 @@ class Verification extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function reviewer(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'reviewed_by');
-    }
-
     public function moderations(): MorphMany
     {
         return $this->morphMany(Moderation::class, 'moderatable');
     }
 
-    public function latestModeration(): MorphOne
+    public function moderation(): MorphOne
     {
         return $this->morphOne(Moderation::class, 'moderatable')->latestOfMany();
+    }
+
+    public function latestModeration(): MorphOne
+    {
+        return $this->moderation();
+    }
+
+    public function getStatusAttribute(): string
+    {
+        $status = $this->moderation?->status ?? 'pending';
+        return $status === 'approved' ? 'verified' : $status;
+    }
+
+    public function getRejectionReasonAttribute(): ?string
+    {
+        return $this->moderation?->reason;
+    }
+
+    public function getReviewedByAttribute(): ?int
+    {
+        return $this->moderation?->moderated_by;
+    }
+
+    public function getVerifiedAtAttribute()
+    {
+        return $this->moderation && in_array($this->moderation->status, ['approved', 'verified'])
+            ? $this->moderation->updated_at
+            : null;
+    }
+
+    public function getLivenessVerifiedAttribute(): bool
+    {
+        return !empty($this->liveness_images) || !empty($this->selfie_image);
     }
 
     public function getDocumentTypeLabelAttribute(): string
     {
         return match ($this->document_type) {
-            'passport' => 'International Passport',
+            'passport', 'international_passport' => 'International Passport',
             'drivers_license' => "Driver's License",
             'national_id' => 'National ID Card',
             'voters_card' => "Voter's Card",
@@ -66,9 +89,14 @@ class Verification extends Model
         };
     }
 
+    public function getIsVerifiedAttribute(): bool
+    {
+        return $this->isVerified();
+    }
+
     public function isVerified(): bool
     {
-        return $this->status === 'verified';
+        return in_array($this->status, ['approved', 'verified']);
     }
 
     public function isPending(): bool

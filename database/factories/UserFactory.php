@@ -23,12 +23,26 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $countryId = \App\Models\Country::firstOrCreate(
+            ['code' => 'NG'],
+            [
+                'name' => 'Nigeria',
+                'phone_code' => '+234',
+                'currency' => 'NGN',
+                'currency_symbol' => '₦',
+                'timezone' => 'Africa/Lagos',
+                'is_default' => true,
+                'is_active' => true,
+            ]
+        )->id;
+
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'country_id' => $countryId,
         ];
     }
 

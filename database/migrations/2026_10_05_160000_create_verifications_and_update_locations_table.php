@@ -17,11 +17,7 @@ return new class extends Migration
                 $table->string('front_image')->nullable();
                 $table->string('back_image')->nullable();
                 $table->string('selfie_image')->nullable();
-                $table->boolean('liveness_verified')->default(false);
-                $table->string('status')->default('pending'); // 'pending', 'verified', 'rejected'
-                $table->text('rejection_reason')->nullable();
-                $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
-                $table->timestamp('verified_at')->nullable();
+                $table->json('liveness_images')->nullable(); // multi-frame liveness snapshots sequence
                 $table->timestamps();
             });
         }
@@ -29,24 +25,6 @@ return new class extends Migration
         Schema::table('locations', function (Blueprint $table) {
             if (!Schema::hasColumn('locations', 'utility_bill_path')) {
                 $table->string('utility_bill_path')->nullable()->after('longitude');
-            }
-            if (!Schema::hasColumn('locations', 'verification_status')) {
-                $table->string('verification_status')->default('unverified')->after('utility_bill_path'); // 'unverified', 'pending', 'verified', 'rejected'
-            }
-            if (!Schema::hasColumn('locations', 'rejection_reason')) {
-                $table->text('rejection_reason')->nullable()->after('verification_status');
-            }
-            if (!Schema::hasColumn('locations', 'verified_at')) {
-                $table->timestamp('verified_at')->nullable()->after('rejection_reason');
-            }
-        });
-
-        Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'facial_verified_at')) {
-                $table->timestamp('facial_verified_at')->nullable()->after('is_verified');
-            }
-            if (!Schema::hasColumn('users', 'id_verified_at')) {
-                $table->timestamp('id_verified_at')->nullable()->after('facial_verified_at');
             }
         });
     }
@@ -56,11 +34,9 @@ return new class extends Migration
         Schema::dropIfExists('verifications');
 
         Schema::table('locations', function (Blueprint $table) {
-            $table->dropColumn(['utility_bill_path', 'verification_status', 'rejection_reason', 'verified_at']);
-        });
-
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['facial_verified_at', 'id_verified_at']);
+            if (Schema::hasColumn('locations', 'utility_bill_path')) {
+                $table->dropColumn(['utility_bill_path']);
+            }
         });
     }
 };

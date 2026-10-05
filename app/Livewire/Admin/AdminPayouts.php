@@ -1,0 +1,104 @@
+<?php
+
+namespace App\Livewire\Admin;
+
+use App\Models\Payout;
+use App\Models\Settlement;
+use Illuminate\Database\Eloquent\Builder;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+#[Layout('layouts.dash')]
+#[Title('Payouts & Settlements — Admin Control Center')]
+class AdminPayouts extends Component
+{
+    use WithPagination;
+
+    #[Url(as: 'tab')]
+    public string $activeTab = 'payouts'; // payouts, settlements
+
+    #[Url(as: 'q')]
+    public string $search = '';
+
+    #[Url(as: 'status')]
+    public string $status = '';
+
+    public function setTab(string $tab): void
+    {
+        if (in_array($tab, ['payouts', 'settlements'])) {
+            $this->activeTab = $tab;
+            $this->resetPage();
+        }
+    }
+
+    public function markSettlementEligible(int $id): void
+    {
+        $settlement = Settlement::findOrFail($id);
+        $settlement->status = 'eligible';
+        $settlement->save();
+        session()->flash('status', __("Settlement #{$settlement->id} marked as eligible for payout."));
+    }
+
+    public function markPayoutCompleted(int $id): void
+    {
+        $payout = Payout::findOrFail($id);
+        $payout->status = 'paid';
+        $payout->paid_at = now();
+        $payout->save();
+
+        // Mark associated settlements as settled
+        foreach ($payout->settlements as $settlement) {
+            $settlement->status = 'settled';
+            $settlement->settled_at = now();
+            $settlement->save();
+        }
+
+        session()->flash('status', __("Payout #{$payout->reference} marked as completed."));
+    }
+
+    public function render()
+    {
+        if ($this->activeTab === 'payouts') {
+            $items = Payout::query()
+                ->with(['seller', 'settlements'])
+                ->when($this->search !== '', function (Builder $query) {
+                    $query->where(function (Builder $inner) {
+                        $inner->where('reference', 'like', '%' . $this->search . '%')
+                            ->orWhereHas('seller', fn ($q) => $q->where('name', 'like', '%' . $this->search . '%'));
+                    });
+                })
+                ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
+                ->latest()
+                ->paginate(12);
+        } else {
+            $items = Settlement::query()
+                ->with(['seller', 'invoice'])
+                ->when($this->search !== '', function (Builder $query) {
+                    $query->where(function (Builder $inner) {
+                        $inner->whereHas('seller', fn ($q) => $q->where('name', 'like', '%' . $this->search . '%'))
+                            ->orWhereHas('invoice', fn ($q) => $q->where('invoice_number', 'like', '%' . $this->search . '%'));
+                    });
+                })
+                ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
+                ->latest()
+                ->paginate(12);
+        }
+
+        $totalPaidOut = Payout::where('status', 'paid')->sum('amount') ?: 0;
+        $pendingSettlementsAmount = Settlement::whereIn('status', ['pending', 'eligible'])->sum('net_amount') ?: 0;
+
+        return view('livewire.admin.admin-payouts', [
+            'items' => $items,
+            'activeTab' => $this->activeTab,
+            'search' => $this->search,
+            'status' => $this->status,
+            'totalPaidOut' => $totalPaidOut,
+            'pendingSettlementsAmount' => $pendingSettlementsAmount,
+            'payoutsCount' => Payout::count(),
+            'settlementsCount' => Settlement::count(),
+        ]);
+    }
+}

@@ -216,11 +216,10 @@ function openSection(s) {
 }
 
 // 6B. ADMIN ACCORDION GROUPS
-const adminNavGroups = ["market", "users", "tx", "trust", "community", "logistics", "finance", "system"];
+const adminNavGroups = ["market", "trust", "content_blog", "finance", "system"];
 function openGroup(id) {
-    adminNavGroups.forEach((x) => {
-        const el = document.getElementById(x);
-        if (x !== id && el) el.classList.remove("open");
+    document.querySelectorAll(".sidebar .sub").forEach((el) => {
+        if (el.id !== id) el.classList.remove("open");
     });
     const target = document.getElementById(id);
     if (target) target.classList.toggle("open");

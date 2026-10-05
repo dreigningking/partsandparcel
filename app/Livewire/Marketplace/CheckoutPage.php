@@ -325,6 +325,9 @@ class CheckoutPage extends Component
 
         $cart = Cart::where('buyer_id', $user->id)->where('seller_id', $sellerId)->first();
 
+        $seller = User::with('country')->find($sellerId);
+        $currency = $seller?->country?->currency ?: 'NGN';
+
         // Create the Invoice
         $invoice = Invoice::create([
             'invoice_number' => 'INV-' . strtoupper(Str::random(10)),
@@ -336,6 +339,7 @@ class CheckoutPage extends Component
             'discount' => $discount,
             'tax' => 0.00,
             'total' => $totalPayable,
+            'currency' => $currency,
             'payment_method' => $isPlatform ? 'platform' : 'direct',
             'commission' => $commission,
             'status' => 'issued',

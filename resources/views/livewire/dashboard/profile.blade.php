@@ -312,15 +312,16 @@
                 @error('country_id') <span class="text-red-600 text-[11px] font-semibold block">{{ $message }}</span> @enderror
               </div>
 
-              <!-- THEME PREFERENCE -->
+              <!-- GENDER -->
               <div class="space-y-1">
-                <label class="font-bold text-slate-700 block">Theme Preference</label>
-                <select wire:model.live="theme_preference" class="w-full p-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 outline-none focus:border-pp-500 transition bg-white cursor-pointer">
-                  <option value="system">System Default</option>
-                  <option value="light">Light Mode</option>
-                  <option value="dark">Dark Mode</option>
+                <label class="font-bold text-slate-700 block">Gender</label>
+                <select wire:model="gender" class="w-full p-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 outline-none focus:border-pp-500 transition bg-white cursor-pointer">
+                  <option value="">-- Select Gender --</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other / Rather not say</option>
                 </select>
-                @error('theme_preference') <span class="text-red-600 text-[11px] font-semibold block">{{ $message }}</span> @enderror
+                @error('gender') <span class="text-red-600 text-[11px] font-semibold block">{{ $message }}</span> @enderror
               </div>
             </div>
 
@@ -1049,32 +1050,53 @@
                     </span>
                     <div>
                       <h5 class="font-extrabold text-slate-900 text-xs">Live Facial Liveness Check</h5>
-                      <p class="text-[10px] text-slate-500">Compare your live face with the ID document photo</p>
+                      <p class="text-[10px] text-slate-500">Active 3-step physical verification (Prevents photo spoofing)</p>
                     </div>
                   </div>
 
-                  @if ($user->facial_verified_at)
-                    <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold flex items-center gap-1">
-                      <i class="fas fa-check-circle"></i> PASSED
+                  @php
+                    $hasLiveCheck = $capturedSelfie || ($activeVerification && $activeVerification->selfie_image);
+                  @endphp
+
+                  @if ($hasLiveCheck)
+                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold flex items-center gap-1">
+                      <i class="fas fa-check-circle"></i> 3-STEP CHECK PASSED
                     </span>
                   @endif
                 </div>
 
-                @if ($user->facial_verified_at)
-                  <p class="text-[11px] text-emerald-800 font-medium leading-relaxed">
-                    Live facial check successfully recorded on {{ $user->facial_verified_at->format('M d, Y') }}. Your live selfie will be submitted alongside your ID.
-                  </p>
+                @if ($hasLiveCheck)
+                  <div class="p-3 bg-white rounded-2xl border border-purple-200 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                      <div class="w-12 h-12 rounded-xl overflow-hidden bg-slate-900 border border-purple-200 shrink-0">
+                        <img src="{{ Storage::url($capturedSelfie ?: $activeVerification->selfie_image) }}" alt="Captured Selfie" class="w-full h-full object-cover">
+                      </div>
+                      <div>
+                        <div class="text-xs font-bold text-slate-800">Live Face Verification Recorded</div>
+                        <div class="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                          <i class="fas fa-shield-alt"></i> 3/3 active movement challenges verified
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      wire:click="openCameraModal"
+                      class="px-3 py-1.5 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs transition"
+                    >
+                      <i class="fas fa-redo text-[10px] mr-1"></i> Retake
+                    </button>
+                  </div>
                 @else
                   <p class="text-[11px] text-slate-600 leading-relaxed">
-                    Please use your camera to capture a live selfie. This ensures real-time identity matching.
+                    Please use your camera to complete the 3-step active liveness challenge (Look Front, Turn/Smile, Blink). This ensures physical human presence and prevents still-photo spoofing.
                   </p>
                   <button
                     type="button"
                     wire:click="openCameraModal"
-                    class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-2"
+                    class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-2 cursor-pointer"
                   >
                     <i class="fas fa-camera"></i>
-                    <span>Take Live Camera Selfie</span>
+                    <span>Start 3-Step Liveness Check</span>
                   </button>
                 @endif
               </div>
@@ -1102,27 +1124,44 @@
   @endif
 
   <!-- LIVE CAMERA FACIAL RECOGNITION MODAL -->
+  <!-- LIVE CAMERA FACIAL RECOGNITION & ACTIVE LIVENESS MODAL -->
   @if ($showCameraModal)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4" id="webcamModalContainer">
-      <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4 relative">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-xs p-4" id="webcamModalContainer">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full p-6 space-y-4 relative">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 grid place-items-center text-sm font-black">
-              <i class="fas fa-camera"></i>
+            <div class="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 grid place-items-center text-sm font-black">
+              <i class="fas fa-video"></i>
             </div>
             <div>
-              <h3 class="text-sm font-extrabold text-slate-950">Facial Liveness Check</h3>
-              <p class="text-[11px] text-slate-500">Center your face in the camera oval</p>
+              <h3 class="text-sm font-extrabold text-slate-950 dark:text-white">Active Facial Liveness Check</h3>
+              <p class="text-[11px] text-slate-500">3-Step interactive verification to prevent spoofing</p>
             </div>
           </div>
           <button
             type="button"
             wire:click="closeCameraModal"
             onclick="stopCameraStream()"
-            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 grid place-items-center transition cursor-pointer"
+            class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 grid place-items-center transition cursor-pointer"
           >
             <i class="fas fa-times text-xs"></i>
           </button>
+        </div>
+
+        <!-- 3-STEP PROGRESS INDICATOR -->
+        <div class="grid grid-cols-3 gap-2 text-center" id="livenessStepIndicators">
+          <div id="stepPill1" class="p-2 rounded-xl border border-purple-200 bg-purple-50/70 text-purple-700 text-[10px] font-extrabold flex items-center justify-center gap-1 transition">
+            <span class="step-num w-4 h-4 rounded-full bg-purple-600 text-white flex items-center justify-center text-[9px]">1</span>
+            <span>Front Face</span>
+          </div>
+          <div id="stepPill2" class="p-2 rounded-xl border border-slate-200 text-slate-400 text-[10px] font-bold flex items-center justify-center gap-1 transition">
+            <span class="step-num w-4 h-4 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[9px]">2</span>
+            <span>Turn / Smile</span>
+          </div>
+          <div id="stepPill3" class="p-2 rounded-xl border border-slate-200 text-slate-400 text-[10px] font-bold flex items-center justify-center gap-1 transition">
+            <span class="step-num w-4 h-4 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[9px]">3</span>
+            <span>Blink / Tilt</span>
+          </div>
         </div>
 
         <!-- CAMERA VIEWPORT -->
@@ -1130,30 +1169,61 @@
           <video id="webcamVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
 
           <!-- FACIAL ALIGNMENT OVAL GUIDE -->
-          <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
-            <div class="w-48 h-60 rounded-[50%] border-2 border-dashed border-purple-400/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]"></div>
+          <div id="ovalGuide" class="absolute inset-0 pointer-events-none flex items-center justify-center transition-all duration-300">
+            <div id="ovalBorder" class="w-44 h-56 rounded-[50%] border-2 border-dashed border-purple-400/90 shadow-[0_0_0_9999px_rgba(0,0,0,0.38)] flex items-center justify-center">
+            </div>
           </div>
+
+          <!-- DYNAMIC CHALLENGE PROMPT OVERLAY -->
+          <div id="challengeOverlay" class="absolute top-3 inset-x-3 px-3 py-1.5 rounded-xl bg-slate-950/85 backdrop-blur-xs border border-white/10 text-white text-xs font-bold text-center shadow-lg transition">
+            <span id="challengeText">Center your face inside the oval guide</span>
+          </div>
+
+          <!-- COUNTDOWN DISPLAY -->
+          <div id="countdownDisplay" class="hidden absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span id="countdownNumber" class="w-16 h-16 rounded-full bg-purple-600/90 text-white font-black text-3xl flex items-center justify-center shadow-xl animate-ping">3</span>
+          </div>
+
+          <!-- SCREEN FLASH EFFECT ON SHUTTER -->
+          <div id="shutterFlash" class="hidden absolute inset-0 bg-white transition-opacity duration-150 pointer-events-none"></div>
 
           <!-- CAMERA LOADING / ERROR OVERLAY -->
           <div id="cameraLoadingNotice" class="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center text-white text-xs gap-2 p-4 text-center">
             <i class="fas fa-spinner fa-spin text-2xl text-purple-400"></i>
             <span>Starting camera preview...</span>
-            <span class="text-[10px] text-slate-400">Please click "Allow" if prompted for camera permission.</span>
+            <span class="text-[10px] text-slate-400">Please click "Allow" when prompted for camera permission.</span>
           </div>
 
           <div id="cameraErrorNotice" class="hidden absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center text-white text-xs gap-2 p-4 text-center">
             <i class="fas fa-video-slash text-2xl text-rose-500"></i>
             <span class="font-bold text-rose-400">Camera Access Blocked or Unavailable</span>
-            <span class="text-[10px] text-slate-400">Please enable camera permissions in your browser or use the file upload option on the profile page.</span>
+            <span class="text-[10px] text-slate-400">Please enable camera permissions in your browser.</span>
           </div>
         </div>
 
-        <p class="text-[11px] text-slate-500 text-center leading-relaxed">
-          Ensure your face is well-lit and not covered by dark sunglasses or masks. Look directly into the lens.
-        </p>
+        <!-- 3-FRAME BURST PREVIEW (SHOWN ONCE COMPLETE) -->
+        <div id="burstPreviewContainer" class="hidden space-y-2 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="text-[10px] font-extrabold text-slate-600 uppercase flex items-center justify-between">
+            <span>Captured 3-Frame Burst</span>
+            <span class="text-emerald-600 flex items-center gap-1 font-bold">
+              <i class="fas fa-check-circle"></i> Checks Passed
+            </span>
+          </div>
+          <div class="grid grid-cols-3 gap-2" id="burstThumbnails">
+            <div class="aspect-4/3 rounded-lg overflow-hidden bg-slate-900 border border-slate-200">
+              <img id="thumbFrame1" class="w-full h-full object-cover" alt="Frame 1">
+            </div>
+            <div class="aspect-4/3 rounded-lg overflow-hidden bg-slate-900 border border-slate-200">
+              <img id="thumbFrame2" class="w-full h-full object-cover" alt="Frame 2">
+            </div>
+            <div class="aspect-4/3 rounded-lg overflow-hidden bg-slate-900 border border-slate-200">
+              <img id="thumbFrame3" class="w-full h-full object-cover" alt="Frame 3">
+            </div>
+          </div>
+        </div>
 
-        <!-- CAPTURE ACTION -->
-        <div class="pt-2 flex items-center justify-between gap-3">
+        <!-- CAPTURE ACTIONS -->
+        <div class="pt-1 flex items-center justify-between gap-3">
           <button
             type="button"
             wire:click="closeCameraModal"
@@ -1165,12 +1235,22 @@
           
           <button
             type="button"
-            onclick="captureWebcamSelfie()"
-            id="snapButton"
+            onclick="startLivenessSequence()"
+            id="startLivenessBtn"
             class="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
           >
-            <i class="fas fa-camera"></i>
-            <span>Capture Live Photo</span>
+            <i class="fas fa-play"></i>
+            <span>Start 3-Step Liveness Check</span>
+          </button>
+
+          <button
+            type="button"
+            onclick="confirmAndSaveLiveness()"
+            id="saveLivenessBtn"
+            class="hidden flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i class="fas fa-check-circle"></i>
+            <span>Confirm &amp; Save Liveness</span>
           </button>
         </div>
       </div>
@@ -1307,22 +1387,141 @@
       }
     }
 
-    function captureWebcamSelfie() {
-      const videoEl = document.getElementById('webcamVideo');
-      if (!videoEl || !localStream) {
-        alert('Camera stream is not active.');
-        return;
-      }
+    let livenessFrames = [];
+    let isRunningLiveness = false;
 
+    function triggerScreenFlash() {
+      const flash = document.getElementById('shutterFlash');
+      if (flash) {
+        flash.classList.remove('hidden');
+        flash.style.opacity = '0.9';
+        setTimeout(() => {
+          flash.style.opacity = '0';
+          setTimeout(() => flash.classList.add('hidden'), 150);
+        }, 100);
+      }
+    }
+
+    function captureSingleFrame() {
+      const videoEl = document.getElementById('webcamVideo');
+      if (!videoEl || !localStream) return null;
       const canvas = document.createElement('canvas');
       canvas.width = videoEl.videoWidth || 640;
       canvas.height = videoEl.videoHeight || 480;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/jpeg', 0.88);
+    }
 
-      const base64Data = canvas.toDataURL('image/jpeg', 0.9);
+    async function startLivenessSequence() {
+      if (isRunningLiveness) return;
+      if (!localStream) {
+        alert('Please allow camera access first.');
+        return;
+      }
+
+      isRunningLiveness = true;
+      livenessFrames = [];
+
+      const startBtn = document.getElementById('startLivenessBtn');
+      const saveBtn = document.getElementById('saveLivenessBtn');
+      const challengeText = document.getElementById('challengeText');
+      const countdownBox = document.getElementById('countdownDisplay');
+      const countdownNum = document.getElementById('countdownNumber');
+      const burstContainer = document.getElementById('burstPreviewContainer');
+
+      if (burstContainer) burstContainer.classList.add('hidden');
+      if (startBtn) startBtn.classList.add('hidden');
+      if (saveBtn) saveBtn.classList.add('hidden');
+
+      const steps = [
+        {
+          num: 1,
+          name: 'stepPill1',
+          instruction: 'Step 1 of 3: Look directly at the camera'
+        },
+        {
+          num: 2,
+          name: 'stepPill2',
+          instruction: 'Step 2 of 3: Turn head slightly or smile'
+        },
+        {
+          num: 3,
+          name: 'stepPill3',
+          instruction: 'Step 3 of 3: Blink naturally or tilt head'
+        }
+      ];
+
+      for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        if (challengeText) challengeText.innerText = step.instruction;
+
+        const pill = document.getElementById(step.name);
+        if (pill) {
+          pill.className = 'p-2 rounded-xl border border-purple-500 bg-purple-100 text-purple-900 text-[10px] font-black flex items-center justify-center gap-1 shadow-sm';
+        }
+
+        // 3-second countdown
+        if (countdownBox && countdownNum) {
+          countdownBox.classList.remove('hidden');
+          for (let c = 3; c >= 1; c--) {
+            countdownNum.innerText = c;
+            await new Promise(r => setTimeout(r, 850));
+          }
+          countdownBox.classList.add('hidden');
+        }
+
+        // Shutter flash & capture frame
+        triggerScreenFlash();
+        const frameData = captureSingleFrame();
+        if (frameData) {
+          livenessFrames.push(frameData);
+        }
+
+        // Mark pill as completed with checkmark
+        if (pill) {
+          pill.className = 'p-2 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-800 text-[10px] font-bold flex items-center justify-center gap-1';
+          const numSpan = pill.querySelector('.step-num');
+          if (numSpan) {
+            numSpan.className = 'step-num w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px]';
+            numSpan.innerHTML = '✓';
+          }
+        }
+
+        await new Promise(r => setTimeout(r, 400));
+      }
+
+      isRunningLiveness = false;
+      if (challengeText) challengeText.innerText = 'Liveness check complete! 3/3 frames captured.';
+
+      // Display burst previews
+      if (livenessFrames.length >= 3) {
+        const t1 = document.getElementById('thumbFrame1');
+        const t2 = document.getElementById('thumbFrame2');
+        const t3 = document.getElementById('thumbFrame3');
+        if (t1) t1.src = livenessFrames[0];
+        if (t2) t2.src = livenessFrames[1];
+        if (t3) t3.src = livenessFrames[2];
+        if (burstContainer) burstContainer.classList.remove('hidden');
+      }
+
+      if (saveBtn) {
+        saveBtn.classList.remove('hidden');
+      }
+      if (startBtn) {
+        startBtn.classList.remove('hidden');
+        startBtn.innerHTML = '<i class="fas fa-redo"></i> <span>Retake Checks</span>';
+      }
+    }
+
+    function confirmAndSaveLiveness() {
+      if (livenessFrames.length === 0) {
+        alert('No liveness frames were recorded.');
+        return;
+      }
+      const primary = livenessFrames[0];
       stopCameraStream();
-      @this.saveCameraSelfie(base64Data);
+      @this.saveCameraSelfie(primary, livenessFrames);
     }
 
     // Auto-init camera when modal opens

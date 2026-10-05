@@ -288,7 +288,7 @@
                             $isVerification = $moderation->moderatable_type === 'App\Models\Verification' || $item instanceof \App\Models\Verification;
                         @endphp
                         <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
-                            
+
                             <!-- ITEM / CONTENT -->
                             <td class="px-4 py-3.5 max-w-xs sm:max-w-sm">
                                 <div class="flex items-start gap-3">
@@ -572,20 +572,20 @@
                             </label>
                             <div class="flex flex-wrap gap-1.5">
                                 @foreach([
-                                    'Prohibited or dangerous item/content',
-                                    'Inappropriate or offensive language',
-                                    'Suspected fraud or spam attempt',
-                                    'Inaccurate or misleading information',
-                                    'Low quality images or lack of details',
-                                    'Policy and terms violation'
-                                ] as $chip)
-                                    <button
-                                        type="button"
-                                        wire:click="setPresetReason('{{ $chip }}')"
-                                        class="px-2.5 py-1 rounded-lg text-xs font-medium transition border {{ $rejectionReason === $chip ? 'bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-700' : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 hover:bg-slate-100' }}"
-                                    >
-                                        {{ $chip }}
-                                    </button>
+                                        'Prohibited or dangerous item/content',
+                                        'Inappropriate or offensive language',
+                                        'Suspected fraud or spam attempt',
+                                        'Inaccurate or misleading information',
+                                        'Low quality images or lack of details',
+                                        'Policy and terms violation'
+                                    ] as $chip)
+                                        <button
+                                            type="button"
+                                            wire:click="setPresetReason('{{ $chip }}')"
+                                            class="px-2.5 py-1 rounded-lg text-xs font-medium transition border {{ $rejectionReason === $chip ? 'bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-700' : 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 hover:bg-slate-100' }}"
+                                        >
+                                            {{ $chip }}
+                                        </button>
                                 @endforeach
                             </div>
                         </div>
@@ -651,7 +651,7 @@
 
                 <!-- Modal Dialog -->
                 <div class="relative inline-block align-bottom bg-white dark:bg-slate-900 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-slate-200 dark:border-slate-800">
-                    
+
                     <!-- Preview Header -->
                     <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4">
                         <div class="flex items-center gap-3">
@@ -673,7 +673,7 @@
 
                     <!-- Preview Content Body -->
                     <div class="p-6 max-h-[70vh] overflow-y-auto space-y-5">
-                        
+
                         <!-- Content Title -->
                         <div>
                             <h2 class="text-xl font-black text-slate-950 dark:text-white">
@@ -688,219 +688,219 @@
 
                         <!-- LISTING DETAILS -->
                         @if ($isListing && $target)
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Price</div>
-                                    <div class="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
-                                        ₦{{ number_format((float) ($target->price ?? 0), 2) }}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Quantity</div>
-                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
-                                        {{ $target->quantity ?? 1 }}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Condition</div>
-                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5 capitalize">
-                                        {{ $target->item?->condition_status ?? 'Used' }}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Shipping</div>
-                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
-                                        {{ $target->allow_shipping ? 'Allowed' : 'Local Only' }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            @if($target->item?->description)
-                                <div>
-                                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Item Description</h4>
-                                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                                        {{ $target->item->description }}
-                                    </div>
-                                </div>
-                            @endif
-
-                            @if($target->item?->condition_notes)
-                                <div>
-                                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Condition Notes</h4>
-                                    <div class="p-3.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 leading-relaxed border border-amber-100 dark:border-amber-900/40">
-                                        {{ $target->item->condition_notes }}
-                                    </div>
-                                </div>
-                            @endif
-
-                            <div class="pt-2">
-                                <a 
-                                    href="{{ route('admin.properties.show', $target->id) }}" 
-                                    target="_blank"
-                                    class="inline-flex items-center gap-1.5 text-xs font-bold text-pp-600 hover:text-pp-700 dark:text-pp-400 hover:underline"
-                                >
-                                    <span>Open Full Listing Property Page</span>
-                                    <i class="fas fa-external-link-alt text-[10px]"></i>
-                                </a>
-                            </div>
-
-                        <!-- DISCUSSION DETAILS -->
-                        @elseif ($isDiscussion && $target)
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Type</div>
-                                    <div class="text-sm font-black text-indigo-600 dark:text-indigo-400 mt-0.5 capitalize">
-                                        {{ $target->type ?? 'Item' }}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Budget</div>
-                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
-                                        {{ $target->budget ? '₦' . $target->budget : 'Open' }}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Category</div>
-                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">
-                                        {{ $target->category?->name ?? '—' }}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Urgency</div>
-                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
-                                        {{ $target->urgency }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Discussion Content</h4>
-                                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
-                                    {{ $target->body }}
-                                </div>
-                            </div>
-
-                            <div class="pt-2">
-                                <a 
-                                    href="{{ route('community.request', $target->id) }}" 
-                                    target="_blank"
-                                    class="inline-flex items-center gap-1.5 text-xs font-bold text-pp-600 hover:text-pp-700 dark:text-pp-400 hover:underline"
-                                >
-                                    <span>View on Community Board</span>
-                                    <i class="fas fa-external-link-alt text-[10px]"></i>
-                                </a>
-                            </div>
-
-                        <!-- POST COMMENT DETAILS -->
-                        @elseif ($isComment && $target)
-                            <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
-                                <div class="text-[10px] font-bold text-slate-400 uppercase">Blog Post Reference</div>
-                                <div class="text-sm font-black text-slate-900 dark:text-white mt-1">
-                                    {{ $target->post?->title ?? "Post #{$target->post_id}" }}
-                                </div>
-                                @if($target->post)
-                                    <div class="mt-1">
-                                        <a href="{{ route('admin.blog.show', $target->post_id) }}" target="_blank" class="text-xs font-bold text-pp-600 hover:underline inline-flex items-center gap-1">
-                                            <span>Open Blog Post In Admin</span>
-                                            <i class="fas fa-external-link-alt text-[9px]"></i>
-                                        </a>
-                                    </div>
-                                @endif
-                            </div>
-
-                            <div>
-                                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Submitted Comment Body</h4>
-                                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-800 dark:text-slate-200 leading-relaxed border border-slate-100 dark:border-slate-700/60 whitespace-pre-line">
-                                    {{ $target->comment }}
-                                </div>
-                            </div>
-
-                        <!-- LOCATION DETAILS -->
-                        @elseif ($isLocation && $target)
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Label</div>
-                                    <div class="text-sm font-black text-slate-900 dark:text-white mt-0.5">
-                                        {{ $target->label ?? 'Location' }}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">City & State</div>
-                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
-                                        {{ $target->city }}, {{ $target->state?->name ?? '—' }}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Country</div>
-                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
-                                        {{ $target->country?->name ?? 'Nigeria' }}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Default Location</div>
-                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
-                                        {{ $target->is_default ? 'Yes' : 'No' }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-700 dark:text-slate-300">
-                                <span class="font-bold text-slate-500 uppercase tracking-wider block text-[10px] mb-1">Full Street Address</span>
-                                {{ $target->address_line_1 }}
-                                @if($target->address_line_2)
-                                    <div>{{ $target->address_line_2 }}</div>
-                                @endif
-                                @if($target->postal_code)
-                                    <div class="text-slate-400 mt-1">Postal Code: {{ $target->postal_code }}</div>
-                                @endif
-                            </div>
-
-                            <div>
-                                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
-                                    <span>Utility Bill / Address Proof Document</span>
-                                    <span class="text-[11px] font-semibold text-slate-400">Electricity, Water, or Waste Bill</span>
-                                </h4>
-                                
-                                @if ($target->utility_bill_path)
-                                    @php
-                                        $ext = strtolower(pathinfo($target->utility_bill_path, PATHINFO_EXTENSION));
-                                        $billUrl = Storage::url($target->utility_bill_path);
-                                    @endphp
-
-                                    @if(in_array($ext, ['jpg', 'jpeg', 'png', 'webp']))
-                                        <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-950 flex flex-col items-center">
-                                            <a href="{{ $billUrl }}" target="_blank" title="Click to view full image">
-                                                <img src="{{ $billUrl }}" alt="Utility Bill" class="max-h-96 w-auto object-contain mx-auto">
-                                            </a>
-                                            <div class="w-full bg-slate-900/90 p-2 text-center">
-                                                <a href="{{ $billUrl }}" target="_blank" class="text-xs text-pp-400 hover:underline font-bold inline-flex items-center gap-1">
-                                                    <span>Open full bill image in new tab</span>
-                                                    <i class="fas fa-external-link-alt text-[10px]"></i>
-                                                </a>
-                                            </div>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">Price</div>
+                                        <div class="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                            ₦{{ number_format((float) ($target->price ?? 0), 2) }}
                                         </div>
-                                    @else
-                                        <div class="p-6 rounded-xl border-2 border-dashed border-teal-300 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-950/20 text-center">
-                                            <div class="w-12 h-12 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-600 dark:text-teal-300 flex items-center justify-center mx-auto text-xl mb-2">
-                                                <i class="fas fa-file-pdf"></i>
-                                            </div>
-                                            <h5 class="text-sm font-bold text-slate-800 dark:text-slate-200">PDF Document Uploaded</h5>
-                                            <p class="text-xs text-slate-500 mt-1 mb-3">Address proof submitted as PDF document.</p>
-                                            <a href="{{ $billUrl }}" target="_blank" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs inline-flex items-center gap-2 transition shadow-xs">
-                                                <i class="fas fa-external-link-alt"></i>
-                                                <span>View Utility Bill PDF</span>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">Quantity</div>
+                                        <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                            {{ $target->quantity ?? 1 }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">Condition</div>
+                                        <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5 capitalize">
+                                            {{ $target->item?->condition_status ?? 'Used' }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">Shipping</div>
+                                        <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                            {{ $target->allow_shipping ? 'Allowed' : 'Local Only' }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if($target->item?->description)
+                                    <div>
+                                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Item Description</h4>
+                                        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                                            {{ $target->item->description }}
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if($target->item?->condition_notes)
+                                    <div>
+                                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Condition Notes</h4>
+                                        <div class="p-3.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 leading-relaxed border border-amber-100 dark:border-amber-900/40">
+                                            {{ $target->item->condition_notes }}
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="pt-2">
+                                    <a 
+                                        href="{{ route('admin.listings.show', $target->id) }}" 
+                                        target="_blank"
+                                        class="inline-flex items-center gap-1.5 text-xs font-bold text-pp-600 hover:text-pp-700 dark:text-pp-400 hover:underline"
+                                    >
+                                        <span>Open Full Listing Property Page</span>
+                                        <i class="fas fa-external-link-alt text-[10px]"></i>
+                                    </a>
+                                </div>
+
+                            <!-- DISCUSSION DETAILS -->
+                        @elseif ($isDiscussion && $target)
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">Type</div>
+                                        <div class="text-sm font-black text-indigo-600 dark:text-indigo-400 mt-0.5 capitalize">
+                                            {{ $target->type ?? 'Item' }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">Budget</div>
+                                        <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                            {{ $target->budget ? '₦' . $target->budget : 'Open' }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">Category</div>
+                                        <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5 truncate">
+                                            {{ $target->category?->name ?? '—' }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">Urgency</div>
+                                        <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                            {{ $target->urgency }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Discussion Content</h4>
+                                    <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+                                        {{ $target->body }}
+                                    </div>
+                                </div>
+
+                                <div class="pt-2">
+                                    <a 
+                                        href="{{ route('community.request', $target->id) }}" 
+                                        target="_blank"
+                                        class="inline-flex items-center gap-1.5 text-xs font-bold text-pp-600 hover:text-pp-700 dark:text-pp-400 hover:underline"
+                                    >
+                                        <span>View on Community Board</span>
+                                        <i class="fas fa-external-link-alt text-[10px]"></i>
+                                    </a>
+                                </div>
+
+                            <!-- POST COMMENT DETAILS -->
+                        @elseif ($isComment && $target)
+                                <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Blog Post Reference</div>
+                                    <div class="text-sm font-black text-slate-900 dark:text-white mt-1">
+                                        {{ $target->post?->title ?? "Post #{$target->post_id}" }}
+                                    </div>
+                                    @if($target->post)
+                                        <div class="mt-1">
+                                            <a href="{{ route('admin.blog.show', $target->post_id) }}" target="_blank" class="text-xs font-bold text-pp-600 hover:underline inline-flex items-center gap-1">
+                                                <span>Open Blog Post In Admin</span>
+                                                <i class="fas fa-external-link-alt text-[9px]"></i>
                                             </a>
                                         </div>
                                     @endif
-                                @else
-                                    <div class="p-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 text-center text-slate-400 text-xs">
-                                        <i class="fas fa-exclamation-circle text-amber-500 text-base mb-1 block"></i>
-                                        No utility bill document has been uploaded for this address yet.
-                                    </div>
-                                @endif
-                            </div>
+                                </div>
 
-                        <!-- USER IDENTITY KYC & LIVENESS VERIFICATION -->
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Submitted Comment Body</h4>
+                                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-800 dark:text-slate-200 leading-relaxed border border-slate-100 dark:border-slate-700/60 whitespace-pre-line">
+                                        {{ $target->comment }}
+                                    </div>
+                                </div>
+
+                            <!-- LOCATION DETAILS -->
+                        @elseif ($isLocation && $target)
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">Label</div>
+                                        <div class="text-sm font-black text-slate-900 dark:text-white mt-0.5">
+                                            {{ $target->label ?? 'Location' }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">City & State</div>
+                                        <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                            {{ $target->city }}, {{ $target->state?->name ?? '—' }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">Country</div>
+                                        <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                            {{ $target->country?->name ?? 'Nigeria' }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase">Default Location</div>
+                                        <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                            {{ $target->is_default ? 'Yes' : 'No' }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-700 dark:text-slate-300">
+                                    <span class="font-bold text-slate-500 uppercase tracking-wider block text-[10px] mb-1">Full Street Address</span>
+                                    {{ $target->address_line_1 }}
+                                    @if($target->address_line_2)
+                                        <div>{{ $target->address_line_2 }}</div>
+                                    @endif
+                                    @if($target->postal_code)
+                                        <div class="text-slate-400 mt-1">Postal Code: {{ $target->postal_code }}</div>
+                                    @endif
+                                </div>
+
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+                                        <span>Utility Bill / Address Proof Document</span>
+                                        <span class="text-[11px] font-semibold text-slate-400">Electricity, Water, or Waste Bill</span>
+                                    </h4>
+
+                                    @if ($target->utility_bill_path)
+                                        @php
+                                            $ext = strtolower(pathinfo($target->utility_bill_path, PATHINFO_EXTENSION));
+                                            $billUrl = Storage::url($target->utility_bill_path);
+                                        @endphp
+
+                                        @if(in_array($ext, ['jpg', 'jpeg', 'png', 'webp']))
+                                            <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-950 flex flex-col items-center">
+                                                <a href="{{ $billUrl }}" target="_blank" title="Click to view full image">
+                                                    <img src="{{ $billUrl }}" alt="Utility Bill" class="max-h-96 w-auto object-contain mx-auto">
+                                                </a>
+                                                <div class="w-full bg-slate-900/90 p-2 text-center">
+                                                    <a href="{{ $billUrl }}" target="_blank" class="text-xs text-pp-400 hover:underline font-bold inline-flex items-center gap-1">
+                                                        <span>Open full bill image in new tab</span>
+                                                        <i class="fas fa-external-link-alt text-[10px]"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="p-6 rounded-xl border-2 border-dashed border-teal-300 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-950/20 text-center">
+                                                <div class="w-12 h-12 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-600 dark:text-teal-300 flex items-center justify-center mx-auto text-xl mb-2">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </div>
+                                                <h5 class="text-sm font-bold text-slate-800 dark:text-slate-200">PDF Document Uploaded</h5>
+                                                <p class="text-xs text-slate-500 mt-1 mb-3">Address proof submitted as PDF document.</p>
+                                                <a href="{{ $billUrl }}" target="_blank" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs inline-flex items-center gap-2 transition shadow-xs">
+                                                    <i class="fas fa-external-link-alt"></i>
+                                                    <span>View Utility Bill PDF</span>
+                                                </a>
+                                            </div>
+                                        @endif
+                                    @else
+                                        <div class="p-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 text-center text-slate-400 text-xs">
+                                            <i class="fas fa-exclamation-circle text-amber-500 text-base mb-1 block"></i>
+                                            No utility bill document has been uploaded for this address yet.
+                                        </div>
+                                    @endif
+                                </div>
+
+                            <!-- USER IDENTITY KYC & LIVENESS VERIFICATION -->
                         @elseif ($isVerification && $target)
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
                                 <div>
@@ -997,6 +997,23 @@
                                         @else
                                             <div class="aspect-4/3 rounded-lg border-2 border-dashed border-purple-200 dark:border-purple-800 flex items-center justify-center text-slate-400 text-xs">
                                                 No live selfie captured
+                                            </div>
+                                        @endif
+
+                                        @if(!empty($target->liveness_images) && is_array($target->liveness_images))
+                                            <div class="mt-2.5 pt-2.5 border-t border-purple-200 dark:border-purple-800/60">
+                                                <div class="text-[9px] font-black text-purple-700 dark:text-purple-300 uppercase mb-1.5 flex items-center justify-between">
+                                                    <span>3-Frame Liveness Burst</span>
+                                                    <span class="text-emerald-600 font-bold">Motion Verified</span>
+                                                </div>
+                                                <div class="grid grid-cols-3 gap-1">
+                                                    @foreach($target->liveness_images as $fIdx => $fPath)
+                                                        <a href="{{ Storage::url($fPath) }}" target="_blank" class="aspect-4/3 rounded overflow-hidden bg-slate-900 border border-purple-200 dark:border-purple-800 hover:opacity-85 transition relative block">
+                                                            <img src="{{ Storage::url($fPath) }}" alt="Frame {{ $fIdx + 1 }}" class="w-full h-full object-cover">
+                                                            <span class="absolute bottom-0.5 right-0.5 px-1 py-0.2 bg-black/70 text-white text-[8px] font-bold rounded">#{{ $fIdx + 1 }}</span>
+                                                        </a>
+                                                    @endforeach
+                                                </div>
                                             </div>
                                         @endif
                                     </div>

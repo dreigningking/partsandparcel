@@ -53,7 +53,6 @@ class Register extends Component
             'password' => Hash::make($this->password),
             'role_id' => null, // Standard user (can buy, sell, request, and offer services)
             'country_id' => $this->country_id,
-            'theme_preference' => 'system',
         ]);
 
         Auth::login($user);

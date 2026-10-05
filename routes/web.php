@@ -1,6 +1,7 @@
 <?php
 
 // use App\Livewire\Admin\AdminAdvertisements;
+use App\Livewire\Admin\AdminAnalytics;
 use App\Livewire\Admin\AdminBlog;
 use App\Livewire\Admin\AdminBlogComments;
 use App\Livewire\Admin\AdminBlogPostCreate;
@@ -10,12 +11,20 @@ use App\Livewire\Admin\AdminCouponCreate;
 use App\Livewire\Admin\AdminCouponEdit;
 use App\Livewire\Admin\AdminCoupons;
 use App\Livewire\Admin\AdminDashboard;
-use App\Livewire\Admin\AdminFaqs;
+use App\Livewire\Admin\AdminDiscussions;
+use App\Livewire\Admin\AdminDisputes;
+use App\Livewire\Admin\AdminInvoices;
 use App\Livewire\Admin\AdminListingDetails;
 use App\Livewire\Admin\AdminListings;
 use App\Livewire\Admin\AdminModerations;
+use App\Livewire\Admin\AdminNotifications;
 use App\Livewire\Admin\AdminPayments;
+use App\Livewire\Admin\AdminPayouts;
 use App\Livewire\Admin\AdminPromotions;
+use App\Livewire\Admin\AdminReturns;
+use App\Livewire\Admin\AdminRevenue;
+use App\Livewire\Admin\AdminServices;
+use App\Livewire\Admin\AdminShipments;
 use App\Livewire\Admin\AdminSubscriptions;
 use App\Livewire\Admin\AdminUserDetails;
 use App\Livewire\Admin\AdminUsers;
@@ -159,28 +168,44 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->as('admin.')-
     Route::get('/', AdminDashboard::class)->name('index');
     Route::get('dashboard', AdminDashboard::class)->name('dashboard');
     Route::get('moderations', AdminModerations::class)->name('moderations');
+    Route::get('analytics', AdminAnalytics::class)->name('analytics');
     
+    // MARKETPLACE
     Route::get('users', AdminUsers::class)->name('users');
-    Route::get('users/{user}', AdminUserDetails::class)->whereNumber('user')->name('users.show');
-    //Subscriptions & Promotions
+    Route::get('users/{user}', AdminUserDetails::class)->name('users.show');
     Route::get('subscriptions', AdminSubscriptions::class)->name('subscriptions');
-    Route::get('promotions', AdminPromotions::class)->name('promotions');
-
-    //Marketplace
     Route::get('listings', AdminListings::class)->name('properties');
-    Route::get('listings/{property}', AdminListingDetails::class)->whereNumber('property')->name('properties.show');
-    //Content & Blog
+    Route::get('listings/{property}', AdminListingDetails::class)->name('properties.show');
+    Route::get('manage-listings', AdminListings::class)->name('listings');
+    Route::get('manage-listings/{listing}', AdminListingDetails::class)->name('listings.show');
+    Route::get('services', AdminServices::class)->name('services');
+    Route::get('discussions', AdminDiscussions::class)->name('discussions');
+    Route::get('promotions', AdminPromotions::class)->name('promotions');
+    Route::get('coupons', AdminCoupons::class)->name('coupons');
+    Route::get('coupons/create', AdminCouponCreate::class)->name('coupons.create');
+    Route::get('coupons/{coupon}/edit', AdminCouponEdit::class)->name('coupons.edit');
+    Route::get('shipments', AdminShipments::class)->name('shipments');
+    Route::get('invoices', AdminInvoices::class)->name('invoices');
+
+    // TRUST & RESOLUTION
+    Route::get('disputes', AdminDisputes::class)->name('disputes');
+    Route::get('returns', AdminReturns::class)->name('returns');
+
+    // CONTENT & BLOG
     Route::get('blog', AdminBlog::class)->name('blog');
     Route::get('blog/create', AdminBlogPostCreate::class)->name('blog.create');
     Route::get('blog/comments', AdminBlogComments::class)->name('blog.comments');
-    Route::get('blog/{post}', AdminBlogPostShow::class)->whereNumber('post')->name('blog.show');
-    Route::get('blog/{post}/edit', AdminBlogPostEdit::class)->whereNumber('post')->name('blog.edit');
-    //
+    Route::get('blog/{post}', AdminBlogPostShow::class)->name('blog.show');
+    Route::get('blog/{post}/edit', AdminBlogPostEdit::class)->name('blog.edit');
+
+    // FINANCE & REVENUE
     Route::get('payments', AdminPayments::class)->name('payments');
-    Route::get('coupons', AdminCoupons::class)->name('coupons');
-    Route::get('coupons/create', AdminCouponCreate::class)->name('coupons.create');
-    Route::get('coupons/{coupon}/edit', AdminCouponEdit::class)->whereNumber('coupon')->name('coupons.edit');
-    Route::get('faqs', AdminFaqs::class)->name('faqs');
+    Route::get('revenue', AdminRevenue::class)->name('revenue');
+    Route::get('payouts', AdminPayouts::class)->name('payouts');
+
+    // NOTIFICATIONS
+    Route::get('notifications', AdminNotifications::class)->name('notifications');
+
     // System Settings
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('general', AdminGeneral::class)->name('general');
@@ -192,16 +217,12 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->as('admin.')-
         Route::get('subscription-plans', AdminSubscriptionPlans::class)->name('subscription-plans');
     });
 });
-    // Route::middleware(['admin', 'role.selected'])->prefix('admin')->name('admin.')->group(function () {
-    //     Route::get('dashboard', AdminDashboard::class)->name('dashboard');
-    //     
-    // });
+    
 
 Route::get('clear-cache', function () {
     Artisan::call('cache:clear');
     Artisan::call('config:clear');
     Artisan::call('view:clear');
     Artisan::call('route:clear');
-
     return 'Cache cleared!';
 });

@@ -105,8 +105,34 @@ CartItem
     ConversationMessage
     ConversationParticipant
   }
-============================
 
+User{
+  Done{
+    Notification settings: in-app (notification table & reverb), push (firebase), email
+    DeviceToken{
+      Firebase Cloud Messaging push notification token
+    }
+    Profile{
+      
+    }
+    Password Reset{
+      
+    }
+    
+    Public Profile{
+      ServiceJob
+      ServiceReview
+    }
+  }
+  Test Theme Preference (theme_preference) (system, light, dark)
+  User verification via id card
+}
+============================
+version2{
+  allow switching of country context
+  automatic verification via NIN and the likes
+  
+}
 
 Payment{
   Payout
@@ -146,24 +172,3 @@ Invoice{
 }
 
 
-User{
-  Done{
-    Notification settings: in-app (notification table & reverb), push (firebase), email
-    DeviceToken{
-      Firebase Cloud Messaging push notification token
-    }
-    Profile{
-      
-    }
-    Password Reset{
-      
-    }
-    
-    Public Profile{
-      ServiceJob
-      ServiceReview
-    }
-  }
-  Test Theme Preference (theme_preference) (system, light, dark)
-  User verification via id card
-}

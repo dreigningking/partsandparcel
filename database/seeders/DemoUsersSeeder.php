@@ -134,7 +134,7 @@ class DemoUsersSeeder extends Seeder
                     'role_id' => $staff['role_id'],
                     'phone' => $staff['phone'],
                     'is_verified' => true,
-                    'theme_preference' => 'system',
+                    'gender' => 'other',
                     'country_id' => $nigeria?->id,
                     'email_verified_at' => now(),
                 ]
@@ -196,7 +196,7 @@ class DemoUsersSeeder extends Seeder
                         'role_id' => $role->id,
                         'phone' => '+2348011' . rand(100000, 999999),
                         'is_verified' => true,
-                        'theme_preference' => 'system',
+                        'gender' => 'other',
                         'country_id' => $nigeria?->id,
                         'email_verified_at' => now(),
                     ]
@@ -479,7 +479,7 @@ class DemoUsersSeeder extends Seeder
                     'business_name' => $userData['business_name'],
                     'bio' => $userData['bio'],
                     'is_verified' => true,
-                    'theme_preference' => $userData['theme'],
+                    'gender' => 'male',
                     'country_id' => $nigeria?->id,
                     'email_verified_at' => now(),
                 ]

@@ -158,8 +158,6 @@ class Locations extends Component
         $path = $this->proof_utility_bill->store('locations/utility_bills', 'public');
         $location->update([
             'utility_bill_path' => $path,
-            'verification_status' => 'pending',
-            'rejection_reason' => null,
         ]);
 
         Moderation::create([
@@ -225,8 +223,6 @@ class Locations extends Component
         $uploadedNewBill = false;
         if ($this->utility_bill) {
             $payload['utility_bill_path'] = $this->utility_bill->store('locations/utility_bills', 'public');
-            $payload['verification_status'] = 'pending';
-            $payload['rejection_reason'] = null;
             $uploadedNewBill = true;
         }
 

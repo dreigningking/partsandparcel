@@ -25,6 +25,7 @@ class Invoice extends Model
         'discount',
         'tax',
         'total',
+        'currency',
         'payment_method',
         'commission',
         'status',
@@ -34,6 +35,30 @@ class Invoice extends Model
         'completed_at',
         'due_at',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Invoice $invoice) {
+            if (empty($invoice->currency)) {
+                $seller = $invoice->seller ?: User::with('country')->find($invoice->seller_id);
+                $invoice->currency = $seller?->country?->currency ?: (Country::where('is_default', true)->value('currency') ?: 'NGN');
+            }
+        });
+    }
+
+    public function getCurrencySymbolAttribute(): string
+    {
+        return match (strtoupper($this->currency ?? 'NGN')) {
+            'NGN' => '₦',
+            'USD' => '$',
+            'GBP' => '£',
+            'EUR' => '€',
+            'GHS' => 'GH₵',
+            'KES' => 'KSh',
+            'ZAR' => 'R',
+            default => $this->seller?->country?->currency_symbol ?: ($this->currency ?? '₦'),
+        };
+    }
 
     protected function casts(): array
     {

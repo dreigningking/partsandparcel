@@ -8,13 +8,12 @@ use App\Jobs\ReleasePaymentJob;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
-use App\Models\Revenue;
 use App\Models\Role;
 use App\Models\Settlement;
-use App\Models\Subscription;
-use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Services\Payment\EscrowService;
+use App\Services\Payment\FlutterwaveService;
+use App\Services\Payment\PaystackService;
 use App\Services\PostSale\IssueResolutionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -31,14 +30,25 @@ class EscrowAndPaymentTest extends TestCase
     {
         parent::setUp();
 
+        $country = \App\Models\Country::firstOrCreate(['code' => 'NG'], [
+            'name' => 'Nigeria',
+            'code' => 'NG',
+            'phone_code' => '234',
+            'currency' => 'NGN',
+            'currency_symbol' => '₦',
+            'is_active' => true,
+        ]);
+
         $this->buyer = User::firstOrCreate(['email' => 'buyer_test@example.com'], [
             'name' => 'Test Buyer',
             'password' => bcrypt('password123'),
+            'country_id' => $country->id,
         ]);
 
         $this->seller = User::firstOrCreate(['email' => 'seller_test@example.com'], [
             'name' => 'Test Seller',
             'password' => bcrypt('password123'),
+            'country_id' => $country->id,
         ]);
 
         $adminRole = Role::firstOrCreate(['slug' => 'super_admin'], [
@@ -51,6 +61,7 @@ class EscrowAndPaymentTest extends TestCase
             'name' => 'Test Admin',
             'password' => bcrypt('password123'),
             'role_id' => $adminRole->id,
+            'country_id' => $country->id,
         ]);
     }
 
@@ -75,6 +86,8 @@ class EscrowAndPaymentTest extends TestCase
         $payment = Payment::create([
             'user_id' => $this->buyer->id,
             'invoice_id' => $invoice->id,
+            'paymentable_type' => Invoice::class,
+            'paymentable_id' => $invoice->id,
             'reference' => $payRef,
             'provider' => 'paystack',
             'status' => 'pending',
@@ -132,6 +145,8 @@ class EscrowAndPaymentTest extends TestCase
         $payment = Payment::create([
             'user_id' => $this->buyer->id,
             'invoice_id' => $invoice->id,
+            'paymentable_type' => Invoice::class,
+            'paymentable_id' => $invoice->id,
             'reference' => $payRef,
             'provider' => 'paystack',
             'status' => 'pending',
@@ -140,7 +155,7 @@ class EscrowAndPaymentTest extends TestCase
         ]);
 
         $job = new ConfirmPaymentJob($payRef, 'paystack', ['status' => 'success']);
-        $job->handle(app(EscrowService::class), app(\App\Services\Payment\PaystackService::class), app(\App\Services\Payment\FlutterwaveService::class));
+        $job->handle(app(EscrowService::class), app(PaystackService::class), app(FlutterwaveService::class));
 
         $payment->refresh();
         $this->assertEquals('successful', $payment->status);
@@ -289,7 +304,7 @@ class EscrowAndPaymentTest extends TestCase
 
         // Execute refund job
         $refundJob = new RefundPaymentJob($refund->id);
-        $refundJob->handle($escrowService, app(\App\Services\Payment\PaystackService::class), app(\App\Services\Payment\FlutterwaveService::class));
+        $refundJob->handle($escrowService, app(PaystackService::class), app(FlutterwaveService::class));
 
         $settlement->refresh();
         $this->assertEquals(30000.00, (float) $settlement->refunds);

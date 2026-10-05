@@ -104,22 +104,12 @@ class AdminModerations extends Component
                 }
             }
         } elseif ($item instanceof Location) {
-            $item->update([
-                'verification_status' => 'verified',
-                'verified_at' => now(),
-                'rejection_reason' => null,
-            ]);
+            // Location status and review metadata are stored in moderations table
         } elseif ($item instanceof Verification) {
-            $item->update([
-                'status' => 'verified',
-                'verified_at' => now(),
-                'reviewed_by' => auth()->id(),
-                'rejection_reason' => null,
-            ]);
-            $item->user?->update([
-                'is_verified' => true,
-                'id_verified_at' => now(),
-            ]);
+            // Verification status and review metadata are stored in moderations table
+            if ($item->user && $item->user->is_fully_verified) {
+                $item->user->update(['is_verified' => true]);
+            }
         }
 
         session()->flash('status', __('The item (:type) was approved successfully.', [
@@ -174,16 +164,9 @@ class AdminModerations extends Component
         } elseif ($item instanceof Discussion) {
             $item->updateQuietly(['status' => 'closed']);
         } elseif ($item instanceof Location) {
-            $item->update([
-                'verification_status' => 'rejected',
-                'rejection_reason' => $this->rejectionReason,
-            ]);
+            // Rejection reason and status are recorded on Moderation model
         } elseif ($item instanceof Verification) {
-            $item->update([
-                'status' => 'rejected',
-                'rejection_reason' => $this->rejectionReason,
-                'reviewed_by' => auth()->id(),
-            ]);
+            // Rejection reason and status are recorded on Moderation model
         }
 
         $this->closeRejectModal();

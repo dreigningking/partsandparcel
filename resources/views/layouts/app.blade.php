@@ -24,8 +24,7 @@
 
         (function() {
             try {
-                const userPref = @json(auth()->check() ? auth()->user()->theme_preference : null);
-                const mode = userPref || localStorage.getItem('pp_theme_mode') || 'system';
+                const mode = localStorage.getItem('pp_theme_mode') || 'system';
                 applyAppTheme(mode);
             } catch (e) {}
         })();

@@ -21,6 +21,7 @@ return new class extends Migration {
             $table->decimal('discount', 15, 2)->default(0);
             $table->decimal('tax', 15, 2)->default(0);
             $table->decimal('total', 15, 2);
+            $table->string('currency', 10)->default('NGN');
             $table->enum('payment_method', ['direct','platform',])->default('platform');
             $table->decimal('commission', 15, 2)->default(0);
             $table->enum('status', ['draft','issued','accepted','paid','partially_paid','cancelled','expired'])->default('draft');

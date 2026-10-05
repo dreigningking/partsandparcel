@@ -483,6 +483,9 @@ class NegotiationService
         $total = max(0, $subtotal - $discount);
         $commission = round($total * 0.05, 2); // 5% platform commission
 
+        $seller = User::with('country')->find($sellerId);
+        $currency = $seller?->country?->currency ?: 'NGN';
+
         $invoice = Invoice::create([
             'invoice_number' => 'INV-' . strtoupper(Str::random(10)),
             'buyer_id' => $buyerId,
@@ -494,6 +497,7 @@ class NegotiationService
             'discount' => $discount,
             'tax' => 0.00,
             'total' => $total,
+            'currency' => $currency,
             'payment_method' => 'platform',
             'commission' => $commission,
             'status' => 'issued',

@@ -64,7 +64,7 @@ class AdminListingDetails extends Component
         $this->listing->delete();
         session()->flash('status', __('Listing #:id deleted.', ['id' => $listingId]));
 
-        return redirect()->route('admin.properties');
+        return redirect()->route('admin.listings');
     }
 
     private function logModeration(string $status, string $action): void

@@ -18,7 +18,7 @@ class SearchPage extends Component
     #[Url(as: 'tab')]
     public $tab = 'all'; // 'all', 'devices', 'parts', 'scrap', 'community'
 
-    public function switchTab($tabName)
+    public function switchTab(string $tabName)
     {
         if (in_array($tabName, ['all', 'devices', 'parts', 'scrap', 'community'])) {
             $this->tab = $tabName;
