@@ -6,6 +6,7 @@ use App\Models\Offer;
 use App\Services\Commercial\NegotiationService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 #[Layout('layouts.dash')]
@@ -154,47 +155,26 @@ class OfferView extends Component
         }
     }
 
-    public function openCounterDrawer()
+    public function openCounterDrawer($edit = false)
     {
-        $this->showCounterDrawer = true;
-    }
-
-    public function closeCounterDrawer()
-    {
-        $this->showCounterDrawer = false;
-    }
-
-    public function submitCounterOffer()
-    {
-        $user = Auth::user();
-        if (! $user) {
-            session()->flash('warning', 'Please sign in to submit a counter-offer.');
-            return redirect()->route('login');
-        }
-
         if ($this->offer) {
-            try {
-                $counter = app(NegotiationService::class)->submitCounterOffer($user, $this->offer, [
-                    'price' => (float) $this->counterPrice,
-                    'discount' => (float) $this->counterDiscount,
-                    'warranty_days' => (int) $this->warrantyPeriod,
-                    'warranty_terms' => $this->warrantyTerms,
-                    'terms' => $this->counterNotes,
-                ]);
-
-                $this->offerId = 'OFF-' . $counter->id;
-                $this->loadOffer();
-                $this->showCounterDrawer = false;
-                session()->flash('message', "Counter-offer #OFF-{$counter->id} submitted successfully!");
-                return redirect()->route('offers.view', ['offer_id' => 'OFF-' . $counter->id]);
-            } catch (\Throwable $e) {
-                session()->flash('error', $e->getMessage());
-                return;
-            }
+            $this->dispatch('open-counter-offer', offerId: $this->offer->id, edit: $edit);
         }
+    }
 
-        $this->showCounterDrawer = false;
-        session()->flash('message', 'Counter offer submitted successfully!');
+    #[On('counter-offer-submitted')]
+    public function handleCounterSubmitted($counterId = null)
+    {
+        if ($counterId) {
+            return redirect()->route('offers.view', ['offer_id' => 'OFF-' . $counterId]);
+        }
+        $this->loadOffer();
+    }
+
+    #[On('offer-updated')]
+    public function handleOfferUpdated()
+    {
+        $this->loadOffer();
     }
 
     public function acceptOffer()

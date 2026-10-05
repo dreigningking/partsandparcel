@@ -16,12 +16,14 @@ class ConversationMessage extends Model
         'sender_id',
         'body',
         'attachments',
+        'read_at',
     ];
 
     protected function casts(): array
     {
         return [
             'attachments' => 'array',
+            'read_at' => 'datetime',
         ];
     }
 

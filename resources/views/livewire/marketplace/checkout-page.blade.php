@@ -260,6 +260,59 @@
               @if ($paymentMethod === 'platform') ₦{{ number_format($activeEscrowFee) }} @else NO ESCROW (Direct) @endif
             </span>
           </div>
+
+          @if ($discount > 0)
+            <div class="flex justify-between text-emerald-600 font-bold">
+              <span>Coupon Discount</span>
+              <span>-₦{{ number_format($discount) }}</span>
+            </div>
+          @endif
+        </div>
+
+        <!-- COUPON / PROMO VOUCHER -->
+        <div class="space-y-2 border-b border-slate-100 pb-4">
+          <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+            Have a Promo Voucher / Coupon?
+          </label>
+
+          @if ($couponValid && $appliedCouponId)
+            <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
+              <div class="flex items-center gap-1.5 text-emerald-800 font-extrabold truncate">
+                <i class="fas fa-ticket text-emerald-600"></i>
+                <span class="truncate">{{ $couponMessage }}</span>
+              </div>
+              <button
+                type="button"
+                wire:click="removeCoupon"
+                class="text-xs font-bold text-rose-600 hover:underline shrink-0 ml-2 cursor-pointer"
+              >
+                Remove
+              </button>
+            </div>
+          @else
+            <div class="flex items-center gap-2">
+              <div class="relative w-full">
+                <i class="fas fa-ticket absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input
+                  type="text"
+                  wire:model="couponCode"
+                  wire:keydown.enter.prevent="applyCoupon"
+                  placeholder="Coupon code"
+                  class="w-full text-xs font-bold uppercase rounded-xl border border-slate-200 pl-8 pr-2.5 py-2 focus:border-pp-600 focus:outline-none"
+                />
+              </div>
+              <button
+                type="button"
+                wire:click="applyCoupon"
+                class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition shrink-0 cursor-pointer"
+              >
+                Apply
+              </button>
+            </div>
+            @error('couponCode')
+              <span class="text-[11px] text-rose-500 font-bold block">{{ $message }}</span>
+            @enderror
+          @endif
         </div>
 
         <div class="flex items-baseline justify-between">

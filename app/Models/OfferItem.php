@@ -48,4 +48,29 @@ class OfferItem extends Model
     {
         return (float) ($this->quantity * $this->unit_price);
     }
+
+    public function isShipment(): bool
+    {
+        return in_array($this->type, ['pickup', 'delivery']);
+    }
+
+    public function isPickup(): bool
+    {
+        return $this->type === 'pickup';
+    }
+
+    public function isDelivery(): bool
+    {
+        return $this->type === 'delivery';
+    }
+
+    public function isService(): bool
+    {
+        return $this->type === 'service';
+    }
+
+    public function isItem(): bool
+    {
+        return $this->type === 'item';
+    }
 }

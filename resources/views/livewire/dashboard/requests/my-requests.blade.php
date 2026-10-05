@@ -36,9 +36,25 @@
 
       <div class="bg-white rounded-3xl border-2 {{ $offersCount > 0 ? 'border-pp-500' : 'border-slate-200' }} p-6 space-y-4 shadow-soft">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs border-b border-slate-100 pb-3">
-          <div class="flex items-center gap-2 flex-wrap">
+            @php
+              $modStatus = $req->latestModeration?->status ?? 'approved';
+            @endphp
+            @if ($modStatus === 'pending')
+              <span class="px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 font-bold text-[10px] border border-amber-200">
+                ⏳ PENDING MODERATION
+              </span>
+            @elseif ($modStatus === 'rejected')
+              <span class="px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-800 font-bold text-[10px] border border-rose-200" title="{{ $req->latestModeration?->reason ?? 'Content policy' }}">
+                ❌ REJECTED
+              </span>
+            @else
+              <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-bold text-[10px] border border-emerald-100">
+                ✓ LIVE ON HUB
+              </span>
+            @endif
+
             @if ($isOpen)
-              <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[10px] border border-emerald-100">
+              <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px] border border-slate-200">
                 OPEN FOR PROPOSALS
               </span>
             @else

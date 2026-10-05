@@ -62,7 +62,7 @@ return new class extends Migration {
             $table->foreignId('offer_id')->constrained()->cascadeOnDelete();
             $table->foreignId('listing_id')->nullable()->constrained()->nullOnDelete();
             $table->string('description');
-            $table->enum('type', ['item','service','delivery'])->default('item');
+            $table->enum('type', ['item','service','pickup','delivery'])->default('item');
             $table->unsignedInteger('quantity')->default(1);
             $table->decimal('unit_price', 15, 2)->default(0);
             $table->unsignedInteger('warranty_period_days')->nullable();
@@ -96,7 +96,9 @@ return new class extends Migration {
             $table->foreignId('sender_id')->constrained('users');
             $table->text('body');
             $table->text('attachments')->nullable();
+            $table->timestamp('read_at')->nullable();
             $table->timestamps();
+            $table->index(['conversation_id', 'read_at']);
             $table->index(['conversation_id', 'created_at']);
         });
 

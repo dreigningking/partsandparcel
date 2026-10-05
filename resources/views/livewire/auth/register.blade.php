@@ -12,19 +12,15 @@
         <div class="bg-white py-8 px-6 shadow-xl shadow-slate-200/50 sm:rounded-3xl border border-slate-100 sm:px-10">
             <form wire:submit.prevent="submit" class="space-y-4">
                 <div>
-                    <label for="country_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Country</label>
-                    <div class="input-group">
-                        <i class="ri-map-pin-line input-icon"></i>
-                        <select wire:model.live="country_id" id="country_id" class="w-full p-2 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 bg-slate-50 focus:bg-white focus:border-pp-600 outline-none transition">
-                            <option value="">Select your country</option>
-                            @foreach ($countries as $country)
-                                <option value="{{ $country->id }}">{{ $country->flag }} {{ $country->name }}</option>
-                            @endforeach
-                        </select>
-                       
-                    </div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Country <span class="text-rose-500">*</span></label>
+                    <x-searchable-select
+                        wire:model.live="country_id"
+                        :options="$countries->map(fn($c) => ['value' => $c->id, 'label' => ($c->flag ? $c->flag . ' ' : '') . $c->name])"
+                        placeholder="Select your country"
+                        search-placeholder="Search countries..."
+                    />
                     @error('country_id')
-                        <p style="color:red;" class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                        <p class="text-xs text-rose-600 font-bold mt-1">{{ $message }}</p>
                     @enderror
                 </div>
                 <div>

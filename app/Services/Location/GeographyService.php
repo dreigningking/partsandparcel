@@ -69,12 +69,20 @@ class GeographyService
                 continue;
             }
 
+            $payload = [
+                'code'      => $stateData['iso2'] ?? strtoupper(substr(Str::slug($stateName), 0, 4)),
+                'is_active' => true,
+            ];
+            if (!empty($stateData['latitude'])) {
+                $payload['latitude'] = $stateData['latitude'];
+            }
+            if (!empty($stateData['longitude'])) {
+                $payload['longitude'] = $stateData['longitude'];
+            }
+
             State::query()->updateOrCreate(
                 ['country_id' => $country->id, 'name' => $stateName],
-                [
-                    'code'      => $stateData['iso2'] ?? strtoupper(substr(Str::slug($stateName), 0, 4)),
-                    'is_active' => true,
-                ]
+                $payload
             );
         }
     }

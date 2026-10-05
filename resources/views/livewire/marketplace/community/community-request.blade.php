@@ -76,7 +76,6 @@
             $modelName = $discussion?->deviceModel?->name ?? '';
             $typeLabel = match ($discussion?->type) {
               'service' => 'Repair / Service',
-              'delivery' => 'Delivery / Logistics',
               'advice' => 'Question / Advice',
               default => 'Product / Part',
             };
@@ -201,7 +200,7 @@
         </template>
 
         <!-- SOCIAL ENGAGEMENT & ACTION BAR -->
-        <div class="flex items-center justify-between pt-4 border-t border-slate-100 text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-100 text-xs">
           
           <div class="flex items-center gap-4 text-slate-600">
             <!-- ENGAGEMENT STATS -->
@@ -216,7 +215,20 @@
             </span> 
           </div>
 
-          <div class="flex items-center gap-4">
+          <div class="flex items-center gap-3.5 flex-wrap">
+            <!-- WATCHLIST BUTTON -->
+            <button wire:click="toggleWatch" class="flex items-center gap-1.5 font-bold transition cursor-pointer {{ $isWatched ? 'text-pp-600' : 'text-slate-600 hover:text-pp-600' }}" title="{{ $isWatched ? 'Stop watching this discussion' : 'Watch this discussion for updates' }}">
+              <i class="fas {{ $isWatched ? 'fa-eye text-pp-600' : 'fa-eye text-slate-400' }}"></i>
+              <span>{{ $isWatched ? 'Watching' : 'Watch' }} ({{ $watchersCount }})</span>
+            </button>
+
+            @if($isOwner)
+              <!-- EDIT DISCUSSION BUTTON -->
+              <button wire:click="openEditModal" class="flex items-center gap-1.5 font-extrabold text-pp-700 hover:text-pp-800 transition cursor-pointer">
+                <i class="fas fa-edit text-pp-600"></i> Edit Request
+              </button>
+            @endif
+
             <!-- SHARE BUTTON -->
             <button @click="copyShareLink()" class="flex items-center gap-1.5 font-bold hover:text-pp-600 transition cursor-pointer">
               <i class="fas fa-share-alt text-slate-400 text-sm"></i>
@@ -224,80 +236,230 @@
             </button>
 
             <!-- REPORT BUTTON -->
-            <button class="text-slate-400 hover:text-rose-600 font-bold transition flex items-center gap-1 text-[11px] cursor-pointer">
-              <i class="fas fa-flag"></i> Report
+            <button wire:click="openReportModal('discussion', {{ $discussion?->id ?? 0 }})" class="font-bold transition flex items-center gap-1 text-[11px] cursor-pointer {{ $isDiscussionReported ? 'text-amber-600' : 'text-slate-400 hover:text-rose-600' }}">
+              <i class="fas {{ $isDiscussionReported ? 'fa-flag-checkered text-amber-600' : 'fa-flag' }}"></i>
+              <span>{{ $isDiscussionReported ? 'Reported' : 'Report' }}</span>
             </button>
           </div>
         </div>
 
       </div>
 
-      <!-- RESPONSE COMPOSER CARD -->
-      <div id="composerCard" class="bg-white rounded-3xl border-2 border-pp-500 p-6 space-y-4 shadow-soft">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-            <i class="fas fa-pen text-pp-600"></i> Write a Response
-          </h3>
-          <span class="text-xs text-slate-400 font-medium">Community responses remaining: <strong>7</strong> of 10</span>
-        </div>
-
-        <div class="space-y-3 text-xs">
-          <div>
-            <textarea wire:model="responseText" rows="3" class="w-full p-3 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600" placeholder="Write details about your available parts or repair service offer..."></textarea>
+      <!-- RESPONSE COMPOSER / AUTHOR BANNER / GUEST NOTICE -->
+      @guest
+        <!-- GUEST PROMPT -->
+        <div class="bg-white rounded-3xl border border-slate-200 p-8 text-center space-y-4 shadow-soft">
+          <div class="w-14 h-14 rounded-2xl bg-pp-50 text-pp-600 grid place-items-center text-xl font-bold mx-auto border border-pp-100">
+            <i class="fas fa-lock"></i>
           </div>
-
-          <!-- TOGGLE ATTACH OFFER FORM -->
-          <div class="p-3.5 rounded-2xl bg-pp-50/70 border border-pp-200 space-y-3">
-            <div class="flex items-center justify-between">
-              <label class="flex items-center gap-2 text-xs font-extrabold text-slate-900 cursor-pointer">
-                <input type="checkbox" wire:click="toggleOfferComposer" {{ $isOfferActive ? 'checked' : '' }} class="rounded text-pp-600 focus:ring-pp-500" />
-                <i class="fas fa-handshake text-pp-600"></i> Attach a Private Price Offer / Proposal to this response
-              </label>
-              <span class="text-[10px] uppercase font-bold text-pp-700 bg-pp-100 px-2 py-0.5 rounded-full">Optional</span>
-            </div>
-
-            @if ($isOfferActive)
-              <div class="space-y-3 pt-2 border-t border-pp-200/60">
-                <div class="grid sm:grid-cols-3 gap-3">
-                  <div>
-                    <label class="text-[11px] font-bold text-slate-700 block mb-1">Offered Price (₦) <span class="text-rose-500">*</span></label>
-                    <input type="number" wire:model="composerOfferPrice" placeholder="e.g. 80000" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 outline-none focus:border-pp-600" />
-                  </div>
-
-                  <div>
-                    <label class="text-[11px] font-bold text-slate-700 block mb-1">Warranty Term</label>
-                    <select wire:model="composerOfferWarranty" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600">
-                      <option value="7 days">7-Day Warranty</option>
-                      <option value="14 days">14-Day Warranty</option>
-                      <option value="30 days">30-Day Warranty</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label class="text-[11px] font-bold text-slate-700 block mb-1">Fulfillment Option</label>
-                    <select wire:model="composerOfferDelivery" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600">
-                      <option value="Buyer pickup">Buyer pickup ("I'll collect this from the seller")</option>
-                      <option value="Seller delivery">Seller delivery ("The seller will deliver this to me")</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="text-[11px] font-bold text-slate-700 block mb-1">Custom Offer Terms / Note</label>
-                  <textarea wire:model="composerOfferMessage" rows="2" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600" placeholder="e.g. Original motherboard, clean condition. Tested working."></textarea>
-                </div>
+          <div class="space-y-1">
+            <h3 class="font-extrabold text-slate-900 text-base">Sign in to Join the Discussion</h3>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+              You must be logged in to submit a response, share technical advice, or attach a commercial offer.
+            </p>
+          </div>
+          <div class="flex items-center justify-center gap-3 pt-1">
+            <a href="{{ route('login') }}" class="px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition">
+              Log In
+            </a>
+            <a href="{{ route('register') }}" class="px-5 py-2.5 rounded-xl border border-slate-200 hover:border-pp-300 text-slate-700 font-extrabold text-xs transition">
+              Create Account
+            </a>
+          </div>
+        </div>
+      @elseif($isOwner)
+        <!-- AUTHOR NOTICE CARD -->
+        <div class="bg-gradient-to-r from-pp-50 via-white to-pp-50/40 rounded-3xl border border-pp-200 p-6 space-y-4 shadow-soft">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl bg-pp-600 text-white grid place-items-center text-base shrink-0 shadow-2xs">
+                <i class="fas fa-user-check"></i>
               </div>
-            @endif
-          </div>
-
-          <div class="flex items-center justify-end pt-2">
-            <button wire:click="submitResponse" class="px-6 py-3 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-2 cursor-pointer">
-              <i class="fas fa-paper-plane"></i>
-              <span>Send Response {{ $isOfferActive ? '& Offer' : '' }}</span>
+              <div>
+                <h3 class="text-sm font-extrabold text-slate-950">Author Management Control</h3>
+                <p class="text-xs text-slate-500">You are the author of this community request.</p>
+              </div>
+            </div>
+            <button wire:click="openEditModal" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0">
+              <i class="fas fa-edit"></i> Edit Request
             </button>
           </div>
+          <p class="text-xs text-slate-600 leading-relaxed border-t border-pp-100 pt-3">
+            Discussion authors cannot submit responses to their own request. You can edit the request specifications at any time, review vendor proposals below, or open quick view offers.
+          </p>
         </div>
-      </div>
+      @else
+        <!-- RESPONSE COMPOSER CARD -->
+        <div id="composerCard" class="bg-white rounded-3xl border-2 border-pp-500 p-6 space-y-4 shadow-soft">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <i class="fas fa-pen text-pp-600"></i> Write a Response
+            </h3>
+            <span class="text-xs text-slate-400 font-medium">
+              Community responses remaining today: <strong class="text-slate-900">{{ $dailyResponsesRemaining }}</strong> of {{ $dailyResponseLimit }}
+            </span>
+          </div>
+
+          @if($dailyResponsesRemaining <= 0)
+            <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-exclamation-triangle text-amber-600"></i>
+                <span>You have reached your daily response limit. Upgrade your subscription plan for higher quotas.</span>
+              </div>
+              <a href="{{ route('subscriptions') }}" class="px-3.5 py-1.5 rounded-lg bg-amber-600 text-white text-xs hover:bg-amber-700 transition">Upgrade</a>
+            </div>
+          @else
+            <div class="space-y-3 text-xs">
+              <div>
+                <textarea wire:model="responseText" rows="3" class="w-full p-3 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600" placeholder="Write details about your available parts or repair service offer..."></textarea>
+              </div>
+
+              <!-- TOGGLE ATTACH OFFER FORM -->
+              <div class="p-4 rounded-2xl bg-pp-50/70 border border-pp-200 space-y-4">
+                <div class="flex items-center justify-between">
+                  <label class="flex items-center gap-2 text-xs font-extrabold text-slate-900 cursor-pointer">
+                    <input type="checkbox" wire:click="toggleOfferComposer" {{ $isOfferActive ? 'checked' : '' }} class="rounded text-pp-600 focus:ring-pp-500" />
+                    <i class="fas fa-handshake text-pp-600"></i> Attach an Itemized Price Offer / Proposal to this response
+                  </label>
+                  <span class="text-[10px] uppercase font-bold text-pp-700 bg-pp-100 px-2.5 py-0.5 rounded-full">Commercial Proposal</span>
+                </div>
+
+                @if ($isOfferActive)
+                  <div class="space-y-4 pt-3 border-t border-pp-200/60 text-xs">
+                    
+                    <!-- 1. PART / ITEM SOURCE -->
+                    <div class="p-3 bg-white rounded-xl border border-slate-200/80 space-y-3">
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                          <i class="fas fa-box text-pp-600"></i> Part or Hardware Item
+                        </span>
+                        <span class="text-[10px] text-slate-400">Select listing or type description</span>
+                      </div>
+
+                      @if ($this->myListings->isNotEmpty())
+                        <div>
+                          <label class="text-[11px] font-bold text-slate-700 block mb-1">Select from Your Active Listings (Optional)</label>
+                          <select wire:model.live="composerListingId" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600">
+                            <option value="">-- Custom Item / Enter Details Manually --</option>
+                            @foreach ($this->myListings as $lst)
+                              <option value="{{ $lst->id }}">{{ $lst->title }} (₦{{ number_format($lst->price) }})</option>
+                            @endforeach
+                          </select>
+                        </div>
+                      @endif
+
+                      <div class="grid sm:grid-cols-3 gap-2.5">
+                        <div class="sm:col-span-1">
+                          <label class="text-[11px] font-bold text-slate-700 block mb-1">Item Title / Description</label>
+                          <input type="text" wire:model="composerItemDescription" placeholder="e.g. Original Motherboard" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600" />
+                        </div>
+                        <div>
+                          <label class="text-[11px] font-bold text-slate-700 block mb-1">Item Price (₦)</label>
+                          <input type="number" wire:model="composerItemPrice" placeholder="e.g. 75000" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 outline-none focus:border-pp-600" />
+                        </div>
+                        <div>
+                          <label class="text-[11px] font-bold text-slate-700 block mb-1">Item Warranty (Days)</label>
+                          <input type="number" wire:model="composerItemWarranty" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 2. SERVICE / LABOR LINE -->
+                    <div class="p-3 bg-white rounded-xl border border-slate-200/80 space-y-3">
+                      <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 font-bold text-slate-900 text-xs cursor-pointer">
+                          <input type="checkbox" wire:model.live="composerIncludeService" class="rounded text-pp-600 focus:ring-pp-500" />
+                          <i class="fas fa-wrench text-pp-600"></i> Include Repair / Installation Service
+                        </label>
+                        <span class="text-[10px] text-slate-400">Labor &amp; workmanship</span>
+                      </div>
+
+                      @if ($composerIncludeService)
+                        <div class="grid sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-100">
+                          <div class="sm:col-span-1">
+                            <label class="text-[11px] font-bold text-slate-700 block mb-1">Service Description</label>
+                            <input type="text" wire:model="composerServiceDescription" placeholder="e.g. Installation & Testing" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600" />
+                          </div>
+                          <div>
+                            <label class="text-[11px] font-bold text-slate-700 block mb-1">Service Fee (₦)</label>
+                            <input type="number" wire:model="composerServicePrice" placeholder="e.g. 10000" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-900 outline-none focus:border-pp-600" />
+                          </div>
+                          <div>
+                            <label class="text-[11px] font-bold text-slate-700 block mb-1">Workmanship Warranty (Days)</label>
+                            <input type="number" wire:model="composerServiceWarranty" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600" />
+                          </div>
+                        </div>
+                      @endif
+                    </div>
+
+                    <!-- 3. DIRECTIONAL SHIPMENTS (PICKUP & DELIVERY) -->
+                    <div class="p-3 bg-white rounded-xl border border-slate-200/80 space-y-3">
+                      <span class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                        <i class="fas fa-truck-fast text-emerald-600"></i> Directional Delivery &amp; Pickup Options
+                      </span>
+
+                      <div class="grid sm:grid-cols-2 gap-3 pt-1">
+                        <!-- Pickup Shipment (Buyer to Seller/Technician) -->
+                        <div class="p-2.5 rounded-lg border border-slate-100 bg-slate-50 space-y-2">
+                          <label class="flex items-center gap-2 font-bold text-slate-800 text-[11px] cursor-pointer">
+                            <input type="checkbox" wire:model.live="composerIncludePickup" class="rounded text-pp-600 focus:ring-pp-500" />
+                            <span>Pickup from Buyer (Customer device to Technician)</span>
+                          </label>
+                          @if ($composerIncludePickup)
+                            <div class="pt-1">
+                              <label class="text-[10px] font-bold text-slate-600 block mb-0.5">Pickup Dispatch Fee (₦)</label>
+                              <input type="number" wire:model="composerPickupFee" placeholder="e.g. 3500" class="w-full p-2 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-900 outline-none focus:border-pp-600" />
+                            </div>
+                          @endif
+                        </div>
+
+                        <!-- Delivery Shipment (Seller/Technician to Buyer) -->
+                        <div class="p-2.5 rounded-lg border border-slate-100 bg-slate-50 space-y-2">
+                          <label class="flex items-center gap-2 font-bold text-slate-800 text-[11px] cursor-pointer">
+                            <input type="checkbox" wire:model.live="composerIncludeDelivery" class="rounded text-pp-600 focus:ring-pp-500" />
+                            <span>Delivery to Buyer (Technician to Customer)</span>
+                          </label>
+                          @if ($composerIncludeDelivery)
+                            <div class="pt-1">
+                              <label class="text-[10px] font-bold text-slate-600 block mb-0.5">Delivery Dispatch Fee (₦)</label>
+                              <input type="number" wire:model="composerDeliveryFee" placeholder="e.g. 4000" class="w-full p-2 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-900 outline-none focus:border-pp-600" />
+                            </div>
+                          @endif
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 4. FULFILLMENT & CUSTOM NOTES -->
+                    <div class="grid sm:grid-cols-3 gap-3">
+                      <div>
+                        <label class="text-[11px] font-bold text-slate-700 block mb-1">General Fulfillment Method</label>
+                        <select wire:model="composerOfferDelivery" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600">
+                          <option value="flexible">Flexible / Mutually Agreed</option>
+                          <option value="seller_delivery">Seller Responsible Dispatch</option>
+                          <option value="buyer_pickup">Buyer Pickup at Workshop</option>
+                        </select>
+                      </div>
+
+                      <div class="sm:col-span-2">
+                        <label class="text-[11px] font-bold text-slate-700 block mb-1">Custom Proposal Terms / Notes</label>
+                        <input type="text" wire:model="composerOfferMessage" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600" placeholder="e.g. Bench tested with 14-day replacement assurance." />
+                      </div>
+                    </div>
+
+                  </div>
+                @endif
+              </div>
+
+              <div class="flex items-center justify-end pt-2">
+                <button wire:click="submitResponse" class="px-6 py-3 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-2 cursor-pointer">
+                  <i class="fas fa-paper-plane"></i>
+                  <span>Send Response {{ $isOfferActive ? '& Offer' : '' }}</span>
+                </button>
+              </div>
+            </div>
+          @endif
+        </div>
+      @endguest
 
       <!-- COMMUNITY RESPONSES / COMMENTS STREAM -->
       <div class="space-y-4">
@@ -375,7 +537,7 @@
               <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                 <!-- LEFT SIDE: ONLY MESSAGE VENDOR -->
                 <div>
-                  <button wire:click="openVendorChat('{{ $resp['author'] }}')" class="flex items-center gap-1.5 font-extrabold text-pp-700 hover:underline transition cursor-pointer">
+                  <button wire:click="openVendorConversation({{ $resp['id'] }})" class="flex items-center gap-1.5 font-extrabold text-pp-700 hover:underline transition cursor-pointer">
                     <i class="fas fa-envelope text-pp-600 text-xs"></i> Message Vendor
                   </button>
                 </div>
@@ -386,8 +548,12 @@
                     <i class="far fa-thumbs-up text-slate-400 text-xs"></i> Helpful
                   </button>
 
-                  <button class="text-slate-400 hover:text-rose-600 font-semibold transition flex items-center gap-1 text-[11px] cursor-pointer">
-                    <i class="fas fa-flag"></i> Report
+                  @php
+                    $isRespReported = in_array($resp['id'], $reportedResponseIds ?? []);
+                  @endphp
+                  <button wire:click="openReportModal('response', {{ $resp['id'] }})" class="font-semibold transition flex items-center gap-1 text-[11px] cursor-pointer {{ $isRespReported ? 'text-amber-600' : 'text-slate-400 hover:text-rose-600' }}">
+                    <i class="fas {{ $isRespReported ? 'fa-flag-checkered text-amber-600' : 'fa-flag' }}"></i>
+                    <span>{{ $isRespReported ? 'Reported' : 'Report' }}</span>
                   </button>
                 </div>
               </div>
@@ -582,5 +748,114 @@
     </div>
 
   </div>
+
+  <!-- EDIT REQUEST MODAL -->
+  @if($showEditModal)
+    <div class="fixed inset-0 z-[150] overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="relative bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-pp-50 text-pp-600 grid place-items-center text-lg">
+              <i class="fas fa-edit"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-extrabold text-slate-900">Edit Discussion Request</h3>
+              <p class="text-xs text-slate-500">Update your community request details</p>
+            </div>
+          </div>
+          <button wire:click="closeEditModal" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 grid place-items-center transition cursor-pointer">
+            <i class="fas fa-times text-xs"></i>
+          </button>
+        </div>
+
+        <form wire:submit.prevent="updateDiscussion" class="space-y-4 text-xs">
+          <!-- TITLE -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Request Title *</label>
+            <input type="text" wire:model.defer="editTitle" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-pp-500 focus:ring-1 focus:ring-pp-500 outline-none text-xs font-semibold" placeholder="e.g. Need OEM iPhone 13 Pro Max Display Screen">
+            @error('editTitle') <span class="text-rose-500 text-[11px] font-bold block mt-1">{{ $message }}</span> @enderror
+          </div>
+
+          <!-- DESCRIPTION / BODY -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Details &amp; Specifications *</label>
+            <textarea rows="4" wire:model.defer="editBody" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-pp-500 focus:ring-1 focus:ring-pp-500 outline-none text-xs" placeholder="Describe the item condition, exact part numbers, specific requirements..."></textarea>
+            @error('editBody') <span class="text-rose-500 text-[11px] font-bold block mt-1">{{ $message }}</span> @enderror
+          </div>
+
+          <!-- GRID ROW 1: BUDGET & STATUS -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Target Budget (₦)</label>
+              <input type="number" step="0.01" wire:model.defer="editBudget" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:border-pp-500 focus:ring-1 focus:ring-pp-500 outline-none text-xs font-semibold" placeholder="Leave empty for Flexible">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Request Status</label>
+              <select wire:model.defer="editStatus" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:border-pp-500 focus:ring-1 focus:ring-pp-500 outline-none text-xs font-semibold">
+                <option value="open">Open (Accepting Offers)</option>
+                <option value="closed">Closed</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- GRID ROW 2: CATEGORY & BRAND -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Category</label>
+              <select wire:model.live="editCategoryId" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:border-pp-500 focus:ring-1 focus:ring-pp-500 outline-none text-xs font-semibold">
+                <option value="">Select Category</option>
+                @foreach($allCategories as $cat)
+                  <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Brand</label>
+              <select wire:model.defer="editBrandId" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:border-pp-500 focus:ring-1 focus:ring-pp-500 outline-none text-xs font-semibold">
+                <option value="">Select Brand</option>
+                @foreach($allBrands as $brand)
+                  <option value="{{ $brand->id }}">{{ $brand->name }}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+
+          <!-- GRID ROW 3: URGENCY & FULFILLMENT -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Urgency</label>
+              <select wire:model.defer="editUrgency" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:border-pp-500 focus:ring-1 focus:ring-pp-500 outline-none text-xs font-semibold">
+                <option value="standard">Flexible</option>
+                <option value="urgent">Urgent (Today)</option>
+                <option value="within_48h">Within 24–48 hours</option>
+                <option value="this_week">This week</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Fulfilment Preference</label>
+              <select wire:model.defer="editFulfillment" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 focus:border-pp-500 focus:ring-1 focus:ring-pp-500 outline-none text-xs font-semibold">
+                <option value="flexible">Pickup / Delivery</option>
+                <option value="buyer_pickup">Buyer pickup</option>
+                <option value="seller_delivery">Seller delivery</option>
+                <option value="shop_pickup">Pickup in Shop</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ACTIONS -->
+          <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+            <button type="button" wire:click="closeEditModal" class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition cursor-pointer">
+              Cancel
+            </button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold shadow-sm transition cursor-pointer flex items-center gap-1.5">
+              <i class="fas fa-check"></i>
+              <span>Save Changes</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  @endif
 
 </main>

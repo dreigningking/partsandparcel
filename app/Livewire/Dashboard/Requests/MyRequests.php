@@ -30,7 +30,7 @@ class MyRequests extends Component
             $counts['closed'] = (clone $base)->where('status', 'closed')->count();
             $counts['all'] = (clone $base)->count();
 
-            $query = Discussion::with(['category', 'responses', 'offers'])
+            $query = Discussion::with(['category', 'responses', 'offers', 'latestModeration'])
                 ->where('user_id', $user->id);
 
             match ($this->activeTab) {

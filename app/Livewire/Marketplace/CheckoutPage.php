@@ -3,6 +3,7 @@
 namespace App\Livewire\Marketplace;
 
 use App\Models\Cart;
+use App\Models\Coupon;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Listing;
@@ -42,6 +43,13 @@ class CheckoutPage extends Component
 
     // Fee Configuration
     public $escrowFee = 1500;
+
+    // Coupon / Promo Code State
+    public string $couponCode = '';
+    public ?int $appliedCouponId = null;
+    public float $couponDiscount = 0.0;
+    public string $couponMessage = '';
+    public bool $couponValid = false;
 
     // Seller Bank Details for Direct Transfer
     public $sellerBank = [
@@ -180,6 +188,53 @@ class CheckoutPage extends Component
         $this->paymentMethod = in_array($method, ['platform', 'direct']) ? $method : 'platform';
     }
 
+    public function applyCoupon()
+    {
+        $this->resetErrorBag('couponCode');
+        $this->couponMessage = '';
+
+        $code = strtoupper(trim($this->couponCode));
+        if (empty($code)) {
+            $this->addError('couponCode', 'Please enter a coupon code.');
+            return;
+        }
+
+        $coupon = Coupon::where('code', $code)->first();
+        if (! $coupon) {
+            $this->appliedCouponId = null;
+            $this->couponDiscount = 0.0;
+            $this->couponValid = false;
+            $this->addError('couponCode', "Coupon '{$code}' is invalid or does not exist.");
+            return;
+        }
+
+        $itemSubtotal = collect($this->cartItems)->sum(fn ($i) => $i['price'] * $i['quantity']);
+        $eligibility = $coupon->validateEligibility($itemSubtotal);
+
+        if (! $eligibility['valid']) {
+            $this->appliedCouponId = null;
+            $this->couponDiscount = 0.0;
+            $this->couponValid = false;
+            $this->addError('couponCode', $eligibility['message']);
+            return;
+        }
+
+        $this->appliedCouponId = $coupon->id;
+        $this->couponDiscount = $coupon->calculateDiscount($itemSubtotal);
+        $this->couponValid = true;
+        $this->couponMessage = "Coupon '{$coupon->code}' applied: " . ($coupon->type === 'percentage' ? "{$coupon->value}% off" : "₦" . number_format($coupon->value, 2) . " off");
+    }
+
+    public function removeCoupon()
+    {
+        $this->appliedCouponId = null;
+        $this->couponDiscount = 0.0;
+        $this->couponCode = '';
+        $this->couponMessage = '';
+        $this->couponValid = false;
+        $this->resetErrorBag('couponCode');
+    }
+
     public function placeOrder()
     {
         $user = Auth::user();
@@ -193,8 +248,9 @@ class CheckoutPage extends Component
         $itemSubtotal = collect($this->cartItems)->sum(fn ($i) => $i['price'] * $i['quantity']);
         $isPlatform = ($this->paymentMethod === 'platform');
         $activeEscrowFee = $isPlatform ? $this->escrowFee : 0;
-        $totalPayable = $itemSubtotal + $activeEscrowFee;
-        $commission = round($itemSubtotal * 0.05, 2);
+        $discount = $this->couponDiscount;
+        $totalPayable = max(0.00, round($itemSubtotal + $activeEscrowFee - $discount, 2));
+        $commission = round(max(0.00, $itemSubtotal - $discount) * 0.05, 2);
 
         $cart = Cart::where('buyer_id', $user->id)->where('seller_id', $sellerId)->first();
 
@@ -206,7 +262,7 @@ class CheckoutPage extends Component
             'cart_id' => $cart?->id,
             'delivery_method' => $deliveryMethodMapped,
             'subtotal' => $itemSubtotal,
-            'discount' => 0.00,
+            'discount' => $discount,
             'tax' => 0.00,
             'total' => $totalPayable,
             'payment_method' => $isPlatform ? 'platform' : 'direct',
@@ -230,6 +286,12 @@ class CheckoutPage extends Component
                 'warranty_period_days' => 14,
                 'warranty_terms' => 'Standard seller inspection warranty',
             ]);
+        }
+
+        // Record coupon usage if applied
+        if ($this->appliedCouponId) {
+            $coupon = Coupon::find($this->appliedCouponId);
+            $coupon?->recordUsage();
         }
 
         // Clear cart for this seller
@@ -257,6 +319,11 @@ class CheckoutPage extends Component
                 'status' => 'pending',
                 'amount' => $totalPayable,
                 'currency' => $user->currency ?? 'NGN',
+                'metadata' => [
+                    'invoice_id' => $invoice->id,
+                    'coupon_code' => $this->appliedCouponId ? Coupon::find($this->appliedCouponId)?->code : null,
+                    'discount' => $discount,
+                ],
             ]);
 
             session()->flash('message', "Invoice {$invoice->invoice_number} created with Parts & Parcel Escrow protection! {$deliveryText}");
@@ -273,12 +340,14 @@ class CheckoutPage extends Component
         $itemSubtotal = collect($this->cartItems)->sum(fn($i) => $i['price'] * $i['quantity']);
         $deliveryFee = 0;
         $activeEscrowFee = ($this->paymentMethod === 'platform') ? $this->escrowFee : 0;
-        $totalPayable = $itemSubtotal + $deliveryFee + $activeEscrowFee;
+        $discount = $this->couponDiscount;
+        $totalPayable = max(0.00, round($itemSubtotal + $deliveryFee + $activeEscrowFee - $discount, 2));
 
         return view('livewire.marketplace.checkout-page', [
             'itemSubtotal' => $itemSubtotal,
             'deliveryFee' => $deliveryFee,
             'activeEscrowFee' => $activeEscrowFee,
+            'discount' => $discount,
             'totalPayable' => $totalPayable
         ]);
     }

@@ -70,28 +70,40 @@
         <!-- 2. CATEGORY FILTER (WITH SUBCATEGORIES) -->
         <div>
           <label class="block font-bold text-slate-700 mb-1">Category</label>
-          <select wire:model.live="selectedCategory" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
-            <option value="">All Categories</option>
-            @foreach($categories as $cat)
-              <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-              @if($cat->children && $cat->children->isNotEmpty())
-                @foreach($cat->children as $child)
-                  <option value="{{ $child->id }}">&nbsp;&nbsp;↳ {{ $child->name }}</option>
-                @endforeach
-              @endif
-            @endforeach
-          </select>
+          @php
+            $catOptions = collect([['value' => '', 'label' => 'All Categories']]);
+            foreach($categories as $cat) {
+              $catOptions->push(['value' => (string)$cat->id, 'label' => $cat->name]);
+              if($cat->children && $cat->children->isNotEmpty()) {
+                foreach($cat->children as $child) {
+                  $catOptions->push(['value' => (string)$child->id, 'label' => '  ↳ ' . $child->name]);
+                }
+              }
+            }
+          @endphp
+          <x-searchable-select
+            wire:model.live="selectedCategory"
+            :options="$catOptions"
+            placeholder="All Categories"
+            search-placeholder="Search categories..."
+          />
         </div>
 
         <!-- 3. BRAND FILTER -->
         <div>
           <label class="block font-bold text-slate-700 mb-1">Brand</label>
-          <select wire:model.live="selectedBrand" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
-            <option value="">All Brands</option>
-            @foreach($brands as $brand)
-              <option value="{{ $brand->id }}">{{ $brand->name }}</option>
-            @endforeach
-          </select>
+          @php
+            $brandOptions = collect([['value' => '', 'label' => 'All Brands']]);
+            foreach($brands as $brand) {
+              $brandOptions->push(['value' => (string)$brand->id, 'label' => $brand->name]);
+            }
+          @endphp
+          <x-searchable-select
+            wire:model.live="selectedBrand"
+            :options="$brandOptions"
+            placeholder="All Brands"
+            search-placeholder="Search brands..."
+          />
         </div>
 
       </div>
@@ -113,12 +125,18 @@
         <!-- 5. LOCATION FILTER -->
         <div>
           <label class="block font-bold text-slate-700 mb-1">Location</label>
-          <select wire:model.live="selectedLocation" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
-            <option value="">All Locations</option>
-            @foreach($locations as $loc)
-              <option value="{{ $loc->id }}">{{ $loc->label }} ({{ $loc->city }})</option>
-            @endforeach
-          </select>
+          @php
+            $locOptions = collect([['value' => '', 'label' => 'All Locations']]);
+            foreach($locations as $loc) {
+              $locOptions->push(['value' => (string)$loc->id, 'label' => $loc->label . ' (' . $loc->city . ')']);
+            }
+          @endphp
+          <x-searchable-select
+            wire:model.live="selectedLocation"
+            :options="$locOptions"
+            placeholder="All Locations"
+            search-placeholder="Search locations..."
+          />
         </div>
 
         <!-- 6. SORT BY (NAME, DATE ADDED, LISTED) -->

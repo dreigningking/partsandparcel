@@ -225,10 +225,10 @@
 
         <button type="button" 
                 wire:click="openReportModal" 
-                class="h-11 border border-slate-200 rounded-lg font-bold text-xs hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition cursor-pointer shadow-2xs text-slate-600 flex items-center justify-center gap-1.5"
-                title="Report issues with this listing">
-          <i class="fas fa-flag text-rose-500 text-xs"></i>
-          <span>Report Listing</span>
+                class="h-11 border {{ $isReported ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-slate-200 text-slate-600 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200' }} rounded-lg font-bold text-xs transition cursor-pointer shadow-2xs flex items-center justify-center gap-1.5"
+                title="{{ $isReported ? 'View your submitted report' : 'Report issues with this listing' }}">
+          <i class="fas {{ $isReported ? 'fa-flag-checkered text-amber-600' : 'fa-flag text-rose-500' }} text-xs"></i>
+          <span>{{ $isReported ? 'Reported' : 'Report Listing' }}</span>
         </button>
       </div>
 

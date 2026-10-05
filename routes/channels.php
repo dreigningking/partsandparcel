@@ -11,5 +11,11 @@ Broadcast::channel('user.{id}', function ($user, $id) {
 });
 
 Broadcast::channel('conversation.{id}', function ($user, $id) {
-    return $user !== null;
+    if (! $user) {
+        return false;
+    }
+
+    return \App\Models\ConversationParticipant::where('conversation_id', $id)
+        ->where('user_id', $user->id)
+        ->exists();
 });

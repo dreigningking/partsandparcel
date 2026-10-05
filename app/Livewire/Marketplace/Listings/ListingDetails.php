@@ -6,13 +6,14 @@ use App\Models\CartItem;
 use App\Models\Discussion;
 use App\Models\Item;
 use App\Models\Listing;
-use App\Models\ListingReport;
+use App\Models\Report;
 use App\Models\ViewedEntity;
 use App\Models\Wishlist;
 use App\Notifications\ListingReportedNotification;
 use App\Services\Commercial\CartService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -25,6 +26,7 @@ class ListingDetails extends Component
     public $reviews;
     public array $allMedia = [];
     public bool $isWishlisted = false;
+    public bool $isReported = false;
     public string $title = 'Listing Details — Parts & Parcel';
 
     // Report Listing Modal Properties
@@ -63,6 +65,11 @@ class ListingDetails extends Component
         if (Auth::check()) {
             $this->isWishlisted = Wishlist::where('user_id', Auth::id())
                 ->where('listing_id', $this->listing->id)
+                ->exists();
+
+            $this->isReported = Report::where('user_id', Auth::id())
+                ->where('reportable_type', Listing::class)
+                ->where('reportable_id', $this->listing->id)
                 ->exists();
         }
 
@@ -202,53 +209,15 @@ class ListingDetails extends Component
             return;
         }
 
-        $this->reportTitle = '';
-        $this->reportDescription = '';
-        $this->presetReportReason = '';
-        $this->resetErrorBag();
-        $this->showReportModal = true;
+        $this->dispatch('open-report-modal', type: 'listing', id: $this->listing->id);
     }
 
-    public function closeReportModal(): void
+    #[On('report-submitted')]
+    public function onReportSubmitted($payload = null): void
     {
-        $this->showReportModal = false;
-        $this->reportTitle = '';
-        $this->reportDescription = '';
-        $this->presetReportReason = '';
-        $this->resetErrorBag();
-    }
-
-    public function setPresetReportReason(string $reason): void
-    {
-        $this->presetReportReason = $reason;
-        $this->reportTitle = $reason;
-    }
-
-    public function submitReport(): void
-    {
-        $this->validate([
-            'reportTitle' => ['required', 'string', 'min:3', 'max:150'],
-            'reportDescription' => ['nullable', 'string', 'max:2000'],
-        ], [
-            'reportTitle.required' => 'Please select a reason or provide a title for your report.',
-        ]);
-
-        $report = ListingReport::create([
-            'listing_id' => $this->listing->id,
-            'user_id' => Auth::id(),
-            'title' => $this->reportTitle,
-            'description' => $this->reportDescription,
-            'status' => 'pending',
-        ]);
-
-        // Send email notification to the seller
-        $seller = $this->listing->seller ?? $this->listing->user;
-        if ($seller) {
-            $seller->notify(new ListingReportedNotification($this->listing, $report));
+        if (is_array($payload) && ($payload['type'] ?? '') === 'listing' && (int) ($payload['id'] ?? 0) === $this->listing->id) {
+            $this->isReported = true;
         }
-
-        $this->closeReportModal();
-        session()->flash('report_success', 'Thank you for your feedback. Your report has been submitted for review.');
     }
 
     public function render()

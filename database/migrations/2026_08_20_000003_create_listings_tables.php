@@ -41,18 +41,7 @@ return new class extends Migration {
             $table->index(['listing_id', 'created_at']);
         });
 
-        Schema::create('listing_reports', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('listing_id')->constrained('listings')->cascadeOnDelete();
-            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete(); // Optional if guest can report
-            $table->string('title');
-            $table->text('description')->nullable();
-            $table->string('status')->default('pending'); // pending, reviewed, resolved
-            $table->foreignId('resolved_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->text('resolution_notes')->nullable();
-            $table->softDeletes();
-            $table->timestamps();
-        });
+        
 
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
@@ -87,7 +76,6 @@ return new class extends Migration {
         Schema::dropIfExists('wishlists');
         Schema::dropIfExists('cart_items');
         Schema::dropIfExists('carts');
-        Schema::dropIfExists('listing_reports');
         Schema::dropIfExists('listing_reviews');
         Schema::dropIfExists('listings');
     }

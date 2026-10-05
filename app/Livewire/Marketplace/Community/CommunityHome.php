@@ -39,19 +39,25 @@ class CommunityHome extends Component
     public $showMobileDrawer = false;
 
     // Form fields corresponding to Discussion model & migration
-    public $formType = 'item'; // 'item', 'service', 'advice', 'delivery'
-    public $formCategory = ''; // category_id
-    public $formBrand = '';    // brand_id
-    public $formModel = '';    // model_id
+    public $formType = 'item'; // 'item', 'service', 'advice'
+    public $formCategory = ''; // category_id (mandatory)
+    public $formBrand = '';    // brand_id (optional)
+    public $formModel = '';    // model_id (optional)
     public $formLocation = ''; // location_id or location string
     public $formBudget = '';   // budget string
     public $formFulfillment = 'flexible'; // 'flexible', 'buyer_pickup', 'seller_delivery', 'shop_pickup'
-    public $formUrgency = 'standard';     // 'standard', 'urgent', 'within_48h', 'this_week'
-    public $formTitle = '';    // title
-    public $formDesc = '';     // body
+    public $formTitle = '';    // title (mandatory)
+    public $formDesc = '';     // body (mandatory)
     public $formMedia = [];    // array of TemporaryUploadedFile
 
     public $postSuccessMessage = false;
+
+    #[On('location-created')]
+    public function onLocationCreated($id, $label = null, $city = null)
+    {
+        $this->formLocation = (string) $id;
+        session()->flash('location_success', "Location '{$label}' saved and selected!");
+    }
 
     public function updatedFormCategory($value)
     {
@@ -70,6 +76,7 @@ class CommunityHome extends Component
     public function getRequestsData()
     {
         $dbDiscussions = Discussion::with(['user.primaryLocation', 'category', 'brand', 'deviceModel', 'location', 'responses', 'offers', 'media'])
+            ->approved()
             ->inCurrentCountry()
             ->latest()
             ->get();
@@ -78,7 +85,6 @@ class CommunityHome extends Component
         foreach ($dbDiscussions as $d) {
             $typeLabel = match ($d->type) {
                 'service' => 'Repair / Service',
-                'delivery' => 'Delivery / Logistics',
                 'advice' => 'Question / Advice',
                 default => 'Product / Part',
             };
@@ -271,11 +277,16 @@ class CommunityHome extends Component
         }
 
         $this->validate([
-            'formType' => 'required',
+            'formType' => 'required|in:item,service,advice',
+            'formCategory' => 'required',
             'formTitle' => 'required|min:5|max:180',
             'formDesc' => 'required|min:10',
             'formMedia.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,mov,webm,pdf,doc,docx|max:25600',
         ], [
+            'formType.in' => 'Please select a valid request type: Product/Part, Repair/Service, or Question/Advice.',
+            'formCategory.required' => 'Please select a category for your request.',
+            'formTitle.required' => 'Please enter a request title.',
+            'formDesc.required' => 'Please describe what you are looking for.',
             'formMedia.*.max' => 'Each file must not exceed 25MB.',
             'formMedia.*.mimes' => 'Accepted file formats: JPG, PNG, WEBP, MP4, MOV, WEBM, PDF, DOC, DOCX.',
         ]);
@@ -291,15 +302,14 @@ class CommunityHome extends Component
             return;
         }
 
-        // Resolve enum type
+        // Resolve enum type (only item, service, advice)
         $typeEnum = match ($this->formType) {
             'Repair / Service', 'service' => 'service',
-            'Delivery / Logistics', 'delivery' => 'delivery',
             'Question / Advice', 'advice' => 'advice',
             default => 'item',
         };
 
-        // Resolve category_id (supports both numeric ID and name string)
+        // Resolve category_id (mandatory)
         $catId = null;
         if (is_numeric($this->formCategory)) {
             $catId = (int) $this->formCategory;
@@ -307,7 +317,7 @@ class CommunityHome extends Component
             $catId = Category::where('name', 'like', "%{$this->formCategory}%")->value('id');
         }
 
-        // Resolve brand_id
+        // Resolve brand_id (optional)
         $brandId = null;
         if (is_numeric($this->formBrand)) {
             $brandId = (int) $this->formBrand;
@@ -315,7 +325,7 @@ class CommunityHome extends Component
             $brandId = Brand::where('name', 'like', "%{$this->formBrand}%")->value('id');
         }
 
-        // Resolve model_id
+        // Resolve model_id (optional)
         $modelId = null;
         if (is_numeric($this->formModel)) {
             $modelId = (int) $this->formModel;
@@ -323,7 +333,7 @@ class CommunityHome extends Component
             $modelId = DeviceModel::where('name', 'like', "%{$this->formModel}%")->value('id');
         }
 
-        // Resolve location_id
+        // Resolve location_id (optional)
         $locId = null;
         $locationStr = $this->formLocation;
         if (is_numeric($this->formLocation)) {
@@ -334,19 +344,12 @@ class CommunityHome extends Component
             }
         }
 
-        // Map fulfillment and urgency labels
+        // Map fulfillment label
         $fulfillmentLabel = match ($this->formFulfillment) {
             'buyer_pickup' => 'Buyer pickup',
             'seller_delivery' => 'Seller delivery',
             'shop_pickup' => 'Pickup in Shop',
             default => 'Pickup / Delivery',
-        };
-
-        $urgencyLabel = match ($this->formUrgency) {
-            'urgent' => 'Urgent (Today)',
-            'within_48h' => 'Within 24–48 hours',
-            'this_week' => 'This week',
-            default => 'Flexible',
         };
 
         $discussion = Discussion::create([
@@ -363,7 +366,6 @@ class CommunityHome extends Component
                 'location' => $locationStr,
                 'budget' => $this->formBudget ?: 'Flexible',
                 'fulfillment' => $fulfillmentLabel,
-                'urgency' => $urgencyLabel,
                 'views' => 1,
             ],
             'status' => 'open',
@@ -379,7 +381,7 @@ class CommunityHome extends Component
         $this->postSuccessMessage = true;
         $this->reset([
             'formType', 'formCategory', 'formBrand', 'formModel',
-            'formLocation', 'formBudget', 'formFulfillment', 'formUrgency',
+            'formLocation', 'formBudget', 'formFulfillment',
             'formTitle', 'formDesc', 'formMedia'
         ]);
 
@@ -405,7 +407,6 @@ class CommunityHome extends Component
             // Tab filter
             if ($this->tab === 'products' && $r['type'] !== 'Product / Part') return false;
             if ($this->tab === 'repairs' && $r['type'] !== 'Repair / Service') return false;
-            if ($this->tab === 'delivery' && $r['type'] !== 'Delivery / Logistics') return false;
             if ($this->tab === 'questions' && $r['type'] !== 'Question / Advice') return false;
 
             // Search filter
@@ -479,7 +480,7 @@ class CommunityHome extends Component
             : DeviceModel::orderBy('name')->take(100)->get();
 
         $allLocations = Auth::check()
-            ? Location::where('user_id', Auth::id())->orderBy('is_primary', 'desc')->get()
+            ? Location::where('user_id', Auth::id())->orderBy('is_default', 'desc')->get()
             : Location::orderBy('city')->get();
 
         // Dynamic stats counters (with baseline fallbacks so they always look impressive)

@@ -14,7 +14,9 @@ class ServiceJob extends Model
     protected $fillable = [
         'customer_id',
         'provider_id',
-        'item_id',
+        'category_id',
+        'brand_id',
+        'model_id',
         'external_item_description',
         'offer_id',
         'invoice_id',
@@ -56,9 +58,19 @@ class ServiceJob extends Model
         return $this->belongsTo(User::class, 'provider_id');
     }
 
-    public function item(): BelongsTo
+    public function category(): BelongsTo
     {
-        return $this->belongsTo(Item::class);
+        return $this->belongsTo(Category::class);
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function deviceModel(): BelongsTo
+    {
+        return $this->belongsTo(DeviceModel::class, 'model_id');
     }
 
     public function offer(): BelongsTo

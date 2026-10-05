@@ -11,35 +11,22 @@ return new class extends Migration {
             $table->id();
 
             // The customer and the person performing the service
-            $table->foreignId('customer_id')
-                ->constrained('users')
-                ->cascadeOnDelete();
+            $table->foreignId('customer_id')->constrained('users')->cascadeOnDelete();
 
-            $table->foreignId('provider_id')
-                ->constrained('users')
-                ->cascadeOnDelete();
-
-            // The platform item being serviced, if it exists.
-            // Nullable because the item may not be registered on Parts & Parcel.
-            $table->foreignId('item_id')
-                ->nullable()
-                ->constrained('items')
-                ->nullOnDelete();
+            $table->foreignId('provider_id')->constrained('users')->cascadeOnDelete();
 
             // Used when the serviced item does not exist in the platform catalog.
             $table->text('external_item_description')->nullable();
 
+            $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
+            $table->foreignId('brand_id')->nullable()->constrained('brands')->nullOnDelete();
+            $table->foreignId('model_id')->nullable()->constrained('models')->nullOnDelete();
+
             // Commercial records that led to this service.
             // A service may originate from an accepted offer.
-            $table->foreignId('offer_id')
-                ->nullable()
-                ->constrained('offers')
-                ->nullOnDelete();
+            $table->foreignId('offer_id')->nullable()->constrained('offers')->nullOnDelete();
 
-            $table->foreignId('invoice_id')
-                ->nullable()
-                ->constrained('invoices')
-                ->nullOnDelete();
+            $table->foreignId('invoice_id')->nullable()->constrained('invoices')->nullOnDelete();
 
             // What is actually being done.
             $table->string('title');
@@ -49,10 +36,7 @@ return new class extends Migration {
             // pending | scheduled | in_progress | completed | cancelled | disputed
 
             // Where/when the service is expected to happen.
-            $table->foreignId('location_id')
-                ->nullable()
-                ->constrained('locations')
-                ->nullOnDelete();
+            $table->foreignId('location_id')->nullable()->constrained('locations')->nullOnDelete();
 
             $table->timestamp('scheduled_at')->nullable();
             $table->timestamp('started_at')->nullable();
@@ -71,7 +55,6 @@ return new class extends Migration {
 
             $table->index(['provider_id', 'status']);
             $table->index(['customer_id', 'status']);
-            $table->index(['item_id', 'status']);
             $table->index(['offer_id']);
             $table->index(['invoice_id']);
         });
@@ -79,17 +62,11 @@ return new class extends Migration {
         Schema::create('service_reviews', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('service_job_id')
-                ->constrained('service_jobs')
-                ->cascadeOnDelete();
+            $table->foreignId('service_job_id')->constrained('service_jobs')->cascadeOnDelete();
 
-            $table->foreignId('reviewer_id')
-                ->constrained('users')
-                ->cascadeOnDelete();
+            $table->foreignId('reviewer_id')->constrained('users')->cascadeOnDelete();
 
-            $table->foreignId('provider_id')
-                ->constrained('users')
-                ->cascadeOnDelete();
+            $table->foreignId('provider_id')->constrained('users')->cascadeOnDelete();
 
             $table->unsignedTinyInteger('rating');
 

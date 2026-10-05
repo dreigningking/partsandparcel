@@ -110,6 +110,25 @@ class Discussion extends Model
         return $this->morphMany(Moderation::class, 'moderatable');
     }
 
+    public function reports(): MorphMany
+    {
+        return $this->morphMany(Report::class, 'reportable');
+    }
+
+    public function watchlists(): MorphMany
+    {
+        return $this->morphMany(Watchlist::class, 'watchable');
+    }
+
+    public function isWatchedBy(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        return $this->watchlists()->where('user_id', $user->id)->exists();
+    }
+
     public function latestModeration(): MorphOne
     {
         return $this->morphOne(Moderation::class, 'moderatable')->latestOfMany();

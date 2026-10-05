@@ -295,57 +295,88 @@
                                 <option value="item">Product / Part (Looking to buy)</option>
                                 <option value="service">Repair / Service (Looking for a technician)</option>
                                 <option value="advice">Question / Advice (Need technical troubleshooting)</option>
-                                <option value="delivery">Delivery / Logistics (Need item transported)</option>
                             </select>
                             @error('formType') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                         </div>
 
-                        <!-- CATEGORY & BRAND ROW -->
+                        <!-- REQUEST TITLE (FULL WIDTH) -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Request Title <span class="text-rose-500">*</span></label>
+                            <input type="text" wire:model="formTitle" required placeholder="e.g. Looking for HP EliteBook 840 G5 motherboard in Lagos" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                            @error('formTitle') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <!-- CATEGORY & BRAND ROW (CATEGORY MANDATORY, BRAND OPTIONAL) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Category</label>
-                                <select wire:model.live="formCategory" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                                    <option value="">Select Category</option>
-                                    @foreach($allCategories as $cat)
-                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                    @endforeach
-                                </select>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Category <span class="text-rose-500">*</span></label>
+                                <x-searchable-select
+                                    wire:model.live="formCategory"
+                                    :options="$allCategories->map(fn($c) => ['value' => $c->id, 'label' => $c->name])"
+                                    placeholder="Select Category"
+                                    search-placeholder="Search categories..."
+                                />
+                                @error('formCategory') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Brand</label>
-                                <select wire:model="formBrand" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                                    <option value="">Select Brand</option>
-                                    @foreach($allBrands as $brand)
-                                        <option value="{{ $brand->id }}">{{ $brand->name }}</option>
-                                    @endforeach
-                                </select>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Brand <span class="text-slate-400 font-normal">(Optional)</span></label>
+                                <x-searchable-select
+                                    wire:model="formBrand"
+                                    :options="$allBrands->map(fn($b) => ['value' => $b->id, 'label' => $b->name])"
+                                    placeholder="Select Brand"
+                                    search-placeholder="Search brands..."
+                                />
                             </div>
                         </div>
 
-                        <!-- MODEL & LOCATION ROW -->
+                        <!-- MODEL & REFERENCED LOCATION ROW -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Device / Part Model</label>
-                                <select wire:model="formModel" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                                    <option value="">Select Model</option>
-                                    @foreach($allModels as $mod)
-                                        <option value="{{ $mod->id }}">{{ $mod->name }}</option>
-                                    @endforeach
-                                </select>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Device / Part Model <span class="text-slate-400 font-normal">(Optional)</span></label>
+                                <x-searchable-select
+                                    wire:model="formModel"
+                                    :options="$allModels->map(fn($m) => ['value' => $m->id, 'label' => $m->name])"
+                                    placeholder="Select Model"
+                                    search-placeholder="Search models..."
+                                />
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Store / Target Location</label>
-                                <select wire:model="formLocation" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                                    <option value="">Select Location</option>
-                                    @foreach($allLocations as $loc)
-                                        <option value="{{ $loc->id }}">{{ $loc->name ?? $loc->city }} ({{ $loc->city }}, {{ $loc->state }})</option>
-                                    @endforeach
-                                </select>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-xs font-bold text-slate-700">Referenced Location</label>
+                                    <button type="button" @click="$dispatch('open-location-modal')" class="text-xs font-bold text-pp-600 hover:underline flex items-center gap-1 cursor-pointer">
+                                        <i class="fas fa-plus text-[10px]"></i> Add New Location
+                                    </button>
+                                </div>
+                                @if($allLocations->isEmpty())
+                                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between gap-3 text-xs text-amber-800">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-map-marker-alt text-amber-500"></i>
+                                            <span>No saved location found</span>
+                                        </div>
+                                        <button type="button" @click="$dispatch('open-location-modal')" class="px-2.5 py-1 bg-amber-600 text-white rounded-lg font-bold text-[11px] hover:bg-amber-700 transition">
+                                            + Add Location
+                                        </button>
+                                    </div>
+                                @else
+                                    <x-searchable-select
+                                        wire:model="formLocation"
+                                        :options="$allLocations->map(fn($l) => ['value' => $l->id, 'label' => ($l->label ?? $l->name ?? $l->city) . ' (' . $l->city . ($l->state ? ', ' . (is_object($l->state) ? $l->state->name : $l->state) : '') . ')' . ($l->is_default ? ' ★ Default' : '')])"
+                                        placeholder="Select Location"
+                                        search-placeholder="Search locations..."
+                                    />
+                                @endif
+                                @if(session()->has('location_success'))
+                                    <span class="text-[11px] text-emerald-600 font-bold mt-1 block">✅ {{ session('location_success') }}</span>
+                                @endif
                             </div>
                         </div>
 
-                        <!-- PREFERRED FULFILMENT & URGENCY ROW -->
+                        <!-- BUDGET & PREFERRED FULFILMENT ROW (SAME LINE) -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Budget (₦) <span class="text-slate-400 font-normal">(Optional)</span></label>
+                                <input type="text" wire:model="formBudget" placeholder="e.g. 70,000 – 90,000 or Flexible" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
+                            </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Preferred Fulfilment</label>
                                 <select wire:model="formFulfillment" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
@@ -354,28 +385,6 @@
                                     <option value="seller_delivery">Seller delivery ("Deliver to my address")</option>
                                     <option value="shop_pickup">Pickup in Shop / On-site inspection</option>
                                 </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Urgency / Timeline</label>
-                                <select wire:model="formUrgency" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                                    <option value="standard">Flexible / Standard</option>
-                                    <option value="urgent">⚡ Urgent (Needed Today)</option>
-                                    <option value="within_48h">Within 24–48 Hours</option>
-                                    <option value="this_week">This Week</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- BUDGET & TITLE ROW -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Budget (₦)</label>
-                                <input type="text" wire:model="formBudget" placeholder="e.g. 70,000 – 90,000 or Flexible" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Request Title <span class="text-rose-500">*</span></label>
-                                <input type="text" wire:model="formTitle" required placeholder="e.g. Looking for HP EliteBook 840 G5 motherboard in Lagos" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-medium text-slate-800 focus:bg-white focus:border-pp-600 outline-none transition">
-                                @error('formTitle') <span class="text-rose-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                             </div>
                         </div>
 

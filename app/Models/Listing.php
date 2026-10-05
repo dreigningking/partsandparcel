@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\ListingReport;
+use App\Models\Report;
 use App\Observers\ListingObserver;
 use App\Traits\HasMedia;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -184,9 +184,9 @@ class Listing extends Model
     }
 
     
-    public function reports(): HasMany
+    public function reports(): MorphMany
     {
-        return $this->hasMany(ListingReport::class);
+        return $this->morphMany(Report::class, 'reportable');
     }
 
 

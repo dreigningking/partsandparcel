@@ -46,13 +46,19 @@ class DiscussionObserver
             return;
         }
 
+        $autoApprove = false;
+        if ($action === 'created') {
+            $settingVal = \App\Models\Setting::where('name', 'auto_approve_discussion')->value('value');
+            $autoApprove = in_array((string) $settingVal, ['1', 'true', 'yes'], true);
+        }
+
         Moderation::create([
             'moderatable_type' => Discussion::class,
             'moderatable_id' => $discussion->id,
             'action' => $action,
-            'status' => 'pending',
+            'status' => $autoApprove ? 'approved' : 'pending',
             'reason' => null,
-            'moderated_by' => null,
+            'moderated_by' => $autoApprove ? ($discussion->user_id ?? null) : null,
         ]);
     }
 }

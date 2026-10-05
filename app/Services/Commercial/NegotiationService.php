@@ -11,6 +11,9 @@ use App\Models\Listing;
 use App\Models\Offer;
 use App\Models\OfferItem;
 use App\Models\Response;
+use App\Models\ServiceJob;
+use App\Models\Shipment;
+use App\Models\ShipmentItem;
 use App\Models\User;
 use Illuminate\Support\Str;
 
@@ -26,6 +29,60 @@ class NegotiationService
             'platform_delivery', 'platform_responsible' => 'platform_responsible',
             default => 'buyer_responsible',
         };
+    }
+
+    /**
+     * Create an offer originating directly from a listing.
+     */
+    public function createOfferFromListing(User $buyer, Listing $listing, array $data): Offer
+    {
+        $deliveryMethod = $this->mapDeliveryMethod($data['delivery_method'] ?? 'buyer_responsible');
+        $discount = (float) ($data['discount'] ?? 0);
+        $terms = $data['terms'] ?? $data['message'] ?? null;
+        $price = isset($data['price']) ? (float) $data['price'] : (float) $listing->price;
+        $warrantyPeriod = (int) ($data['warranty_days'] ?? $listing->warranty_period_days ?? 14);
+        $warrantyTerms = $data['warranty_terms'] ?? $listing->warranty_terms ?? "{$warrantyPeriod}-day warranty";
+
+        $offer = Offer::create([
+            'sender_id' => $buyer->id,
+            'recipient_id' => $listing->user_id,
+            'delivery_method' => $deliveryMethod,
+            'discount' => $discount,
+            'terms' => $terms,
+            'status' => 'pending',
+            'expires_at' => now()->addHours(48),
+        ]);
+
+        OfferItem::create([
+            'offer_id' => $offer->id,
+            'listing_id' => $listing->id,
+            'description' => $listing->title ?? 'Listing Item',
+            'type' => 'item',
+            'quantity' => (int) ($data['quantity'] ?? 1),
+            'unit_price' => $price,
+            'warranty_period_days' => $warrantyPeriod,
+            'warranty_terms' => $warrantyTerms,
+        ]);
+
+        if (! empty($data['request_repair'])) {
+            OfferItem::create([
+                'offer_id' => $offer->id,
+                'listing_id' => null,
+                'description' => $data['repair_service_type'] ?? 'Installation & Testing Service',
+                'type' => 'service',
+                'quantity' => 1,
+                'unit_price' => (float) ($data['repair_price'] ?? 0),
+                'warranty_period_days' => 14,
+                'warranty_terms' => 'Workmanship warranty',
+            ]);
+        }
+
+        $seller = User::find($listing->user_id);
+        if ($seller && $seller->id !== $buyer->id) {
+            $seller->notify(new \App\Notifications\NewOfferNotification($offer));
+        }
+
+        return $offer->load('items');
     }
 
     /**
@@ -131,9 +188,9 @@ class NegotiationService
     {
         $discussion = Discussion::findOrFail($discussionId);
         $deliveryMethod = $this->mapDeliveryMethod($data['delivery_method'] ?? 'buyer_responsible');
-        $price = (float) ($data['price'] ?? 0);
-        $warrantyPeriod = (int) ($data['warranty_days'] ?? 14);
-        $warrantyTerms = $data['warranty_terms'] ?? ($warrantyPeriod > 0 ? "{$warrantyPeriod}-day vendor warranty" : null);
+        $discount = (float) ($data['discount'] ?? 0);
+        $terms = $data['terms'] ?? $data['message'] ?? null;
+        $expiresAt = ! empty($data['expires_at']) ? \Carbon\Carbon::parse($data['expires_at']) : now()->addHours(48);
 
         $offer = Offer::create([
             'sender_id' => $responder->id,
@@ -141,26 +198,68 @@ class NegotiationService
             'discussion_id' => $discussionId,
             'response_id' => $responseId,
             'delivery_method' => $deliveryMethod,
-            'discount' => (float) ($data['discount'] ?? 0),
-            'terms' => $data['terms'] ?? $data['message'] ?? null,
+            'discount' => $discount,
+            'terms' => $terms,
             'status' => 'pending',
-            'expires_at' => now()->addHours(48),
+            'expires_at' => $expiresAt,
         ]);
 
-        $itemDescription = ! empty($data['description'])
-            ? $data['description']
-            : "Proposal for: {$discussion->title}";
+        if (! empty($data['items']) && is_array($data['items'])) {
+            foreach ($data['items'] as $itemData) {
+                OfferItem::create([
+                    'offer_id' => $offer->id,
+                    'listing_id' => $itemData['listing_id'] ?? null,
+                    'description' => $itemData['description'] ?? 'Offer Item',
+                    'type' => $itemData['type'] ?? 'service',
+                    'quantity' => (int) ($itemData['quantity'] ?? 1),
+                    'unit_price' => (float) ($itemData['unit_price'] ?? $itemData['price'] ?? 0),
+                    'warranty_period_days' => $itemData['warranty_period_days'] ?? $itemData['warranty_days'] ?? null,
+                    'warranty_terms' => $itemData['warranty_terms'] ?? null,
+                ]);
+            }
+        } else {
+            $price = (float) ($data['price'] ?? 0);
+            $warrantyPeriod = (int) ($data['warranty_days'] ?? 14);
+            $warrantyTerms = $data['warranty_terms'] ?? ($warrantyPeriod > 0 ? "{$warrantyPeriod}-day vendor warranty" : null);
+            $itemDescription = ! empty($data['description'])
+                ? $data['description']
+                : "Proposal for: {$discussion->title}";
 
-        OfferItem::create([
-            'offer_id' => $offer->id,
-            'listing_id' => $data['listing_id'] ?? null,
-            'description' => $itemDescription,
-            'type' => $data['type'] ?? ($discussion->type === 'service' ? 'service' : 'item'),
-            'quantity' => (int) ($data['quantity'] ?? 1),
-            'unit_price' => $price,
-            'warranty_period_days' => $warrantyPeriod,
-            'warranty_terms' => $warrantyTerms,
-        ]);
+            OfferItem::create([
+                'offer_id' => $offer->id,
+                'listing_id' => $data['listing_id'] ?? null,
+                'description' => $itemDescription,
+                'type' => $data['type'] ?? ($discussion->type === 'service' ? 'service' : 'item'),
+                'quantity' => (int) ($data['quantity'] ?? 1),
+                'unit_price' => $price,
+                'warranty_period_days' => $warrantyPeriod,
+                'warranty_terms' => $warrantyTerms,
+            ]);
+
+            // Add pickup shipment if specified
+            if (! empty($data['pickup_fee']) && (float) $data['pickup_fee'] > 0) {
+                OfferItem::create([
+                    'offer_id' => $offer->id,
+                    'listing_id' => null,
+                    'description' => 'Pickup from Customer to Technician',
+                    'type' => 'pickup',
+                    'quantity' => 1,
+                    'unit_price' => (float) $data['pickup_fee'],
+                ]);
+            }
+
+            // Add delivery shipment if specified
+            if (! empty($data['delivery_fee']) && (float) $data['delivery_fee'] > 0) {
+                OfferItem::create([
+                    'offer_id' => $offer->id,
+                    'listing_id' => null,
+                    'description' => 'Delivery from Technician to Customer',
+                    'type' => 'delivery',
+                    'quantity' => 1,
+                    'unit_price' => (float) $data['delivery_fee'],
+                ]);
+            }
+        }
 
         return $offer->load('items');
     }
@@ -175,15 +274,21 @@ class NegotiationService
             throw new \InvalidArgumentException('Unauthorized: Only the recipient can counter an active offer.');
         }
 
-        // Mark previous offer countered
+        if ($previousOffer->status !== 'pending') {
+            throw new \InvalidArgumentException('Cannot counter an offer that is not in pending status.');
+        }
+
+        // Mark previous offer countered (immutable)
         $previousOffer->update(['status' => 'countered']);
 
         $deliveryMethod = ! empty($counterData['delivery_method'])
             ? $this->mapDeliveryMethod($counterData['delivery_method'])
             : $previousOffer->delivery_method;
 
+        $rootOfferId = $previousOffer->parent_id ?: $previousOffer->id;
+
         $newOffer = Offer::create([
-            'parent_id' => $previousOffer->id,
+            'parent_id' => $rootOfferId,
             'sender_id' => $user->id,
             'recipient_id' => $previousOffer->sender_id,
             'cart_id' => $previousOffer->cart_id,
@@ -202,11 +307,11 @@ class NegotiationService
                 OfferItem::create([
                     'offer_id' => $newOffer->id,
                     'listing_id' => $itemData['listing_id'] ?? null,
-                    'description' => $itemData['description'],
+                    'description' => $itemData['description'] ?? $itemData['title'] ?? 'Counter offer item',
                     'type' => $itemData['type'] ?? 'item',
-                    'quantity' => $itemData['quantity'] ?? 1,
-                    'unit_price' => (float) $itemData['unit_price'],
-                    'warranty_period_days' => $itemData['warranty_period_days'] ?? 14,
+                    'quantity' => (int) ($itemData['quantity'] ?? 1),
+                    'unit_price' => (float) ($itemData['unit_price'] ?? 0),
+                    'warranty_period_days' => $itemData['warranty_period_days'] ?? $itemData['warranty_days'] ?? null,
                     'warranty_terms' => $itemData['warranty_terms'] ?? null,
                 ]);
             }
@@ -221,7 +326,7 @@ class NegotiationService
                     'description' => $item->description,
                     'type' => $item->type,
                     'quantity' => $item->quantity,
-                    'unit_price' => $newUnitPrice !== null ? $newUnitPrice : $item->unit_price,
+                    'unit_price' => $newUnitPrice !== null && $item->type !== 'pickup' && $item->type !== 'delivery' ? $newUnitPrice : $item->unit_price,
                     'warranty_period_days' => $counterData['warranty_days'] ?? $item->warranty_period_days,
                     'warranty_terms' => $counterData['warranty_terms'] ?? $item->warranty_terms,
                 ]);
@@ -236,7 +341,41 @@ class NegotiationService
     }
 
     /**
-     * Accept an offer and automatically generate an Invoice.
+     * Edit an active pending offer before it has been countered or accepted.
+     */
+    public function editOffer(User $user, Offer $offer, array $data): Offer
+    {
+        if (! $offer->canBeEditedBy($user)) {
+            throw new \InvalidArgumentException('Unauthorized: This offer cannot be edited because a counter-offer exists or it is not pending.');
+        }
+
+        $offer->update([
+            'discount' => isset($data['discount']) ? (float) $data['discount'] : $offer->discount,
+            'terms' => $data['terms'] ?? $data['message'] ?? $offer->terms,
+            'delivery_method' => ! empty($data['delivery_method']) ? $this->mapDeliveryMethod($data['delivery_method']) : $offer->delivery_method,
+        ]);
+
+        if (! empty($data['items']) && is_array($data['items'])) {
+            $offer->items()->delete();
+            foreach ($data['items'] as $itemData) {
+                OfferItem::create([
+                    'offer_id' => $offer->id,
+                    'listing_id' => $itemData['listing_id'] ?? null,
+                    'description' => $itemData['description'] ?? 'Offer Item',
+                    'type' => $itemData['type'] ?? 'item',
+                    'quantity' => (int) ($itemData['quantity'] ?? 1),
+                    'unit_price' => (float) ($itemData['unit_price'] ?? 0),
+                    'warranty_period_days' => $itemData['warranty_period_days'] ?? $itemData['warranty_days'] ?? null,
+                    'warranty_terms' => $itemData['warranty_terms'] ?? null,
+                ]);
+            }
+        }
+
+        return $offer->load('items');
+    }
+
+    /**
+     * Accept an offer, generate directional shipments, and create an Invoice.
      */
     public function acceptOffer(User $user, Offer $offer): Invoice
     {
@@ -251,8 +390,6 @@ class NegotiationService
         $offer->update(['status' => 'accepted']);
 
         // Determine Buyer and Seller
-        // If from cart: cart buyer is buyer, cart seller is seller
-        // If from discussion: discussion author is buyer/requester, responder is seller/provider
         if ($offer->cart_id && $offer->cart) {
             $buyerId = $offer->cart->buyer_id;
             $sellerId = $offer->cart->seller_id;
@@ -260,9 +397,85 @@ class NegotiationService
             $buyerId = $offer->discussion->user_id;
             $sellerId = ($offer->sender_id === $buyerId) ? $offer->recipient_id : $offer->sender_id;
         } else {
-            // Recipient accepted: if sender initiated request, determine roles by discussion or fallback
             $buyerId = $offer->recipient_id;
             $sellerId = $offer->sender_id;
+        }
+
+        $buyer = User::with('primaryLocation')->find($buyerId);
+        $seller = User::with('primaryLocation')->find($sellerId);
+
+        // Process Shipments for pickup and delivery offer items
+        $shipmentsMap = []; // maps offer_item id => Shipment
+        $itemItems = $offer->items->where('type', 'item');
+        $serviceItems = $offer->items->where('type', 'service');
+        $shipmentOfferItems = $offer->items->filter(fn($i) => in_array($i->type, ['pickup', 'delivery']));
+
+        foreach ($shipmentOfferItems as $sItem) {
+            // pickup: Buyer to Seller (customer device to technician)
+            // delivery: Seller to Buyer (technician/seller returning or delivering to customer)
+            if ($sItem->type === 'pickup') {
+                $senderUser = $buyer;
+                $receiverUser = $seller;
+                $originLoc = $buyer?->primaryLocation;
+                $destLoc = $seller?->primaryLocation;
+            } else {
+                $senderUser = $seller;
+                $receiverUser = $buyer;
+                $originLoc = $seller?->primaryLocation;
+                $destLoc = $buyer?->primaryLocation;
+            }
+
+            $shipment = Shipment::create([
+                'sender_id' => $senderUser?->id,
+                'receiver_id' => $receiverUser?->id,
+                'provider_name' => 'Parts & Parcel Logistics',
+                'tracking_number' => 'TRK-' . strtoupper(Str::random(10)),
+                'status' => 'pending',
+                'origin_location_id' => $originLoc?->id,
+                'origin_contact_name' => $originLoc?->contact_name ?: $senderUser?->name,
+                'origin_contact_phone' => $originLoc?->phone ?: $senderUser?->phone,
+                'origin_address_line_1' => $originLoc?->address_line_1 ?: 'Origin Address',
+                'origin_city' => $originLoc?->city ?: 'Lagos',
+                'origin_state' => $originLoc?->state?->name ?? (is_string($originLoc?->state) ? $originLoc->state : 'Lagos'),
+                'destination_location_id' => $destLoc?->id,
+                'destination_contact_name' => $destLoc?->contact_name ?: $receiverUser?->name,
+                'destination_contact_phone' => $destLoc?->phone ?: $receiverUser?->phone,
+                'destination_address_line_1' => $destLoc?->address_line_1 ?: 'Destination Address',
+                'destination_city' => $destLoc?->city ?: 'Lagos',
+                'destination_state' => $destLoc?->state?->name ?? (is_string($destLoc?->state) ? $destLoc->state : 'Lagos'),
+                'fee' => $sItem->subtotal(),
+                'notes' => $sItem->description,
+            ]);
+
+            // Populate ShipmentItems matching business rules:
+            // 1. If offer contains item, service, and shipment -> use item
+            // 2. If offer contains service and shipment (no item) -> use service
+            // 3. If offer contains item and shipment (no service) -> use item
+            if ($itemItems->isNotEmpty()) {
+                foreach ($itemItems as $it) {
+                    ShipmentItem::create([
+                        'shipment_id' => $shipment->id,
+                        'itemable_type' => $it->listing_id ? Listing::class : null,
+                        'itemable_id' => $it->listing_id,
+                        'description' => $it->description,
+                        'quantity' => $it->quantity,
+                        'instruction' => 'Part/Component for shipment',
+                    ]);
+                }
+            } elseif ($serviceItems->isNotEmpty()) {
+                foreach ($serviceItems as $st) {
+                    ShipmentItem::create([
+                        'shipment_id' => $shipment->id,
+                        'itemable_type' => null,
+                        'itemable_id' => null,
+                        'description' => $st->description,
+                        'quantity' => $st->quantity,
+                        'instruction' => 'Device/Equipment for service',
+                    ]);
+                }
+            }
+
+            $shipmentsMap[$sItem->id] = $shipment;
         }
 
         $subtotal = $offer->subtotal();
@@ -290,10 +503,21 @@ class NegotiationService
 
         // Create invoice items
         foreach ($offer->items as $oItem) {
+            if (in_array($oItem->type, ['pickup', 'delivery'])) {
+                $itemableType = Shipment::class;
+                $itemableId = isset($shipmentsMap[$oItem->id]) ? $shipmentsMap[$oItem->id]->id : null;
+            } elseif ($oItem->type === 'item') {
+                $itemableType = $oItem->listing_id ? Listing::class : null;
+                $itemableId = $oItem->listing_id;
+            } else {
+                $itemableType = null;
+                $itemableId = null;
+            }
+
             InvoiceItem::create([
                 'invoice_id' => $invoice->id,
-                'itemable_id' => $oItem->listing_id,
-                'itemable_type' => $oItem->listing_id ? Listing::class : null,
+                'itemable_id' => $itemableId,
+                'itemable_type' => $itemableType,
                 'type' => $oItem->type,
                 'description' => $oItem->description,
                 'quantity' => $oItem->quantity,
@@ -318,5 +542,47 @@ class NegotiationService
         }
 
         return $invoice->load('items');
+    }
+
+    /**
+     * Handle invoice payment confirmation: creates a ServiceJob if discussion is a service request.
+     */
+    public function handleInvoicePaid(Invoice $invoice): ?ServiceJob
+    {
+        if (! $invoice->offer_id) {
+            return null;
+        }
+
+        $offer = $invoice->offer ?? Offer::find($invoice->offer_id);
+        if (! $offer || ! $offer->discussion_id) {
+            return null;
+        }
+
+        $discussion = $offer->discussion ?? Discussion::find($offer->discussion_id);
+        if (! $discussion || $discussion->type !== 'service') {
+            return null;
+        }
+
+        $serviceItem = $offer->items()->where('type', 'service')->first();
+
+        return ServiceJob::firstOrCreate(
+            [
+                'invoice_id' => $invoice->id,
+                'offer_id' => $offer->id,
+            ],
+            [
+                'customer_id' => $invoice->buyer_id,
+                'provider_id' => $invoice->seller_id,
+                'category_id' => $discussion->category_id,
+                'brand_id' => $discussion->brand_id,
+                'model_id' => $discussion->model_id,
+                'title' => $serviceItem?->description ?: $discussion->title,
+                'description' => $discussion->body,
+                'status' => 'in_progress',
+                'location_id' => $discussion->location_id,
+                'warranty_period_days' => $serviceItem?->warranty_period_days ?? 14,
+                'warranty_terms' => $serviceItem?->warranty_terms ?? 'Standard service warranty',
+            ]
+        );
     }
 }

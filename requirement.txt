@@ -38,17 +38,30 @@ Post{
 }
 
 Moderation
-============================
 Coupon{
   These coupons will be used when purchasing subscriptions, promotions, and listings
 }
+Discussion{
+  Response
+  Watchlist
+  Offer
+  OfferItem
+}
+
+
+Conversation{
+  ConversationMessage
+  ConversationParticipant
+}
+============================
+
 
 Payment{
-Payout
-PayoutSettlement
-Revenue
-Settlement
-BankAccount
+  Payout
+  PayoutSettlement
+  Revenue
+  Settlement
+  BankAccount
 }
 
 Dispute{
@@ -81,27 +94,19 @@ Cart{
   }
 }
 
-Conversation{
-  ConversationMessage
-  ConversationParticipant
-}
 
 
-Discussion{
-  Response
-  Watchlist
-  Offer
-  OfferItem
-    Conversation{
-      ConversationMessage
-      ConversationParticipant
-    }
-  ServiceJob
-  ServiceReview
+ServiceJob{
+  When creating discussion: 
+  User selects type: device, parts, advice, service
+  For Parts and Service: we allow users to add items they need the part/service for. these items are added to discussion  
 }
+ServiceReview
 
 Invoice{
   InvoiceItem
+}
+
   Issue
   IssueItem
   Dispute
@@ -160,4 +165,58 @@ Location{
  
 }
 
+Offers and service plan
+counter offers can be for a listing offer, a cart offer and a response offer. 
+because the three scenarios do not contain the same things, 
+I don't think a single counter offer will also work for the three. 
 
+1a. Listing offers Buyer side:  x number of wizard steps. 
+step1: 
+show item details
+if price is negotiable, show price input
+if warranty is negotiable, show warranty input
+if shipment is allowed, 
+step2:
+show shipment request  input and allow user to select address.
+step 3:
+lastly, show add special request like installation, repair etc and let user type in description.
+
+1b. Listing offers Seller side: this happens after seller received notification of the offer, clicks on it and it opens the offer-view page. Seller makes counter offer on the drawer in steps.
+Step 1 item 1 with price offer, counter offer input & warranty offer with counter offer input if applicable. 
+Step2 item 2 with price offer, counter offer input & warranty offer with counter offer input if applicable. 
+Step 3 item x with price offer, counter offer input & warranty offer with counter offer input if applicable. 
+Step 4 shows shipment request with field to offer shipping cost. 
+Step 5 shows input box to add any other offer item service related. 
+
+2a. Cart Offer buyer side: wizard. each item has its own step.
+step1: 
+show item 1 details, if price is negotiable, show price input. if warranty is negotiable, show warranty input
+step2: show item 2 details, if price is negotiable, show price input. if warranty is negotiable, show warranty input
+step 3: show item 3 details, if price is negotiable, show price input. if warranty is negotiable, show warranty input
+step x: show item x details, if price is negotiable, show price input. if warranty is negotiable, show warranty input
+step x+1: 
+if shipment is allowed for any item
+show shipment request with input and allow user to select address.
+step x+2:
+lastly, show add special request like installation, repair etc and let user type in description.
+
+2b. Cart offers Seller side: when viewing offer in offer-view, making a counter offer 
+Step 1 item 1 with price offer, counter offer input. warranty offer with counter offer input if applicable. 
+Step2 item 2 with price offer, counter offer input & warranty offer with counter offer input if applicable. 
+Step 3 item x with price offer, counter offer input & warranty offer with counter offer input if applicable. 
+Step 4 shows shipment request with field to offer shipping cost. 
+Step 5 shows input box to add any other offer item service related. 
+
+3a. Response Offer Seller Side: 
+After typing response and indicating to add offer, the offer area shows (this one is not a drawer). 
+Seller/Technician will type in terms, select offer expiry datetime (optional). Then he will add offer items. 
+Each offer item can either be an existing listing, a service description, pickup or delivery.
+Each item has a selected item or description field, price field, warranty (period,negotiable,terms) field
+Adding a listing will populate the warranty field with the listing item's warranty field. If its service or delivery, leave warranty period and terms field empty for user to type in. 
+
+3b. Response offers Buyer side counter offer
+each step is an offer item.
+step 1 each item in the last offer with their offer price, and input to counter offer. 
+Step 2 each item in the last offer with their warranty offer, and input to counter offer. 
+Step 3. Shipment request and shipping fee and input to counter offer shipping fee.
+step 4 show special requests and let user add multiple items with price, warranty

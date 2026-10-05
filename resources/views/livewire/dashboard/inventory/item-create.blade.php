@@ -107,32 +107,32 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1.5">Category <span class="text-rose-500">*</span></label>
-          <select wire:model.live="category_id" class="w-full p-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 transition">
-            <option value="">Select Category</option>
-            @foreach($categories as $cat)
-              <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-            @endforeach
-          </select>
+          <x-searchable-select
+            wire:model.live="category_id"
+            :options="$categories->map(fn($c) => ['value' => $c->id, 'label' => $c->name])"
+            placeholder="Select Category"
+            search-placeholder="Search categories..."
+          />
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1.5">Brand / Make <span class="text-rose-500">*</span></label>
-          <select wire:model.live="brand_id" class="w-full p-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 transition">
-            <option value="">Select Brand</option>
-            @foreach($brands as $brand)
-              <option value="{{ $brand->id }}">{{ $brand->name }}</option>
-            @endforeach
-          </select>
+          <x-searchable-select
+            wire:model.live="brand_id"
+            :options="$brands->map(fn($b) => ['value' => $b->id, 'label' => $b->name])"
+            placeholder="Select Brand"
+            search-placeholder="Search brands..."
+          />
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1.5">Device Model</label>
-          <select wire:model.live="model_id" class="w-full p-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 transition">
-            <option value="">Select Model (or general)</option>
-            @foreach($models as $m)
-              <option value="{{ $m->id }}">{{ $m->name }}</option>
-            @endforeach
-          </select>
+          <x-searchable-select
+            wire:model.live="model_id"
+            :options="$models->map(fn($m) => ['value' => $m->id, 'label' => $m->name])"
+            placeholder="Select Model (or general)"
+            search-placeholder="Search models..."
+          />
         </div>
       </div>
 
@@ -152,12 +152,12 @@
             </button>
           </div>
 
-          <select wire:model="location_id" class="w-full p-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 transition">
-            <option value="">Select Store / Workshop Location</option>
-            @foreach($locations as $loc)
-              <option value="{{ $loc->id }}">{{ $loc->label }} ({{ $loc->city }}, {{ $loc->state }})</option>
-            @endforeach
-          </select>
+          <x-searchable-select
+            wire:model="location_id"
+            :options="$locations->map(fn($l) => ['value' => $l->id, 'label' => $l->label . ' (' . $l->city . ($l->state ? ', ' . $l->state->name : '') . ')' . ($l->is_default ? ' ★ Default' : '')])"
+            placeholder="Select Store / Workshop Location"
+            search-placeholder="Search saved locations..."
+          />
           @error('location_id') <span class="text-[11px] text-rose-600 font-bold mt-1 block">{{ $message }}</span> @enderror
 
           @if(session()->has('location_success'))
@@ -811,8 +811,13 @@
             </div>
             <div>
               <label class="block font-bold text-slate-700 mb-1">State <span class="text-rose-500">*</span></label>
-              <input type="text" wire:model="newLocationState" placeholder="Lagos" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 outline-none focus:border-pp-500 transition" />
-              @error('newLocationState') <span class="text-[10px] text-rose-600 font-bold block mt-1">{{ $message }}</span> @enderror
+              <x-searchable-select
+                wire:model="newLocationStateId"
+                :options="$states->map(fn($s) => ['value' => $s->id, 'label' => $s->name])"
+                placeholder="Select State"
+                search-placeholder="Search states..."
+              />
+              @error('newLocationStateId') <span class="text-[10px] text-rose-600 font-bold block mt-1">{{ $message }}</span> @enderror
             </div>
           </div>
 

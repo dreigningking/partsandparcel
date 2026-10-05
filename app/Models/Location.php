@@ -54,14 +54,24 @@ class Location extends Model
         return $this->hasManyThrough(Listing::class, Item::class);
     }
 
+    public function state(): BelongsTo
+    {
+        return $this->belongsTo(State::class);
+    }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class);
+    }
+
     public function fullAddress(): string
     {
         return collect([
             $this->address_line_1,
             $this->address_line_2,
             $this->city,
-            $this->state->name,
-            $this->country->name,
+            $this->state?->name,
+            $this->country?->name,
         ])->filter()->implode(', ');
     }
 }

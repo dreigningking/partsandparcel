@@ -38,7 +38,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
             $table->nullableMorphs('itemable'); //listing, shipment
-            $table->enum('type', ['item','service','delivery'])->default('item');
+            $table->enum('type', ['item','service','pickup','delivery'])->default('item');
             $table->string('description'); //listing name, shipping description, service description, platform fee description, others
             $table->unsignedInteger('quantity')->default(1);
             $table->decimal('unit_price', 15, 2);

@@ -59,6 +59,8 @@ class EscrowService
             'paid_at' => now(),
         ]);
 
+        app(\App\Services\Commercial\NegotiationService::class)->handleInvoicePaid($invoice);
+
         // Record platform commission revenue
         if ((float) $invoice->commission > 0) {
             Revenue::firstOrCreate(

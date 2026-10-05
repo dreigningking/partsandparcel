@@ -4,12 +4,15 @@ namespace App\Livewire\Dashboard\Inventory;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Country;
 use App\Models\DeviceModel;
 use App\Models\Item;
 use App\Models\Listing;
 use App\Models\Location;
+use App\Models\State;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -55,8 +58,7 @@ class ItemCreate extends Component
     public string $newLocationPhone = '';
     public string $newLocationAddress = '';
     public string $newLocationCity = '';
-    public string $newLocationState = '';
-    public string $newLocationCountry = 'NG';
+    public ?int $newLocationStateId = null;
 
     public function mount()
     {
@@ -65,9 +67,16 @@ class ItemCreate extends Component
         $this->location_id = $defaultLocation?->id;
     }
 
+    #[On('location-created')]
+    public function onLocationCreated($id, $label = null, $city = null)
+    {
+        $this->location_id = (int) $id;
+        session()->flash('location_success', "Location '{$label}' saved and selected!");
+    }
+
     public function openLocationModal()
     {
-        $this->showLocationModal = true;
+        $this->dispatch('open-location-modal');
     }
 
     public function closeLocationModal()
@@ -81,11 +90,13 @@ class ItemCreate extends Component
             'newLocationLabel' => 'required|string|max:100',
             'newLocationAddress' => 'required|string|max:255',
             'newLocationCity' => 'required|string|max:100',
-            'newLocationState' => 'required|string|max:100',
+            'newLocationStateId' => 'required|exists:states,id',
             'newLocationPhone' => 'nullable|string|max:50',
         ]);
 
         $user = Auth::user();
+        $state = State::find($this->newLocationStateId);
+        $isFirst = $user->locations()->count() === 0;
 
         $loc = Location::create([
             'user_id' => $user->id,
@@ -94,14 +105,16 @@ class ItemCreate extends Component
             'phone' => $this->newLocationPhone ?: $user->phone,
             'address_line_1' => $this->newLocationAddress,
             'city' => $this->newLocationCity,
-            'state' => $this->newLocationState,
-            'country' => $this->newLocationCountry ?: 'NG',
-            'is_default' => $user->locations()->count() === 0,
+            'state_id' => $state?->id,
+            'country_id' => $state?->country_id ?? Country::where('is_default', true)->value('id'),
+            'latitude' => $state?->latitude,
+            'longitude' => $state?->longitude,
+            'is_default' => $isFirst,
         ]);
 
         $this->location_id = $loc->id;
         $this->showLocationModal = false;
-        $this->reset(['newLocationLabel', 'newLocationContactName', 'newLocationPhone', 'newLocationAddress', 'newLocationCity', 'newLocationState']);
+        $this->reset(['newLocationLabel', 'newLocationContactName', 'newLocationPhone', 'newLocationAddress', 'newLocationCity', 'newLocationStateId']);
         
         session()->flash('location_success', 'New location added and selected!');
     }
@@ -483,13 +496,15 @@ class ItemCreate extends Component
             ->orderBy('name')
             ->get();
 
-        $locations = Auth::user()?->locations ?? collect();
+        $locations = Auth::user()?->locations()->with(['state', 'country'])->get() ?? collect();
+        $states = State::where('is_active', true)->orderBy('name')->get();
 
         return view('livewire.dashboard.inventory.item-create', [
             'categories' => $categories,
             'brands' => $brands,
             'models' => $models,
             'locations' => $locations,
+            'states' => $states,
         ]);
     }
 }

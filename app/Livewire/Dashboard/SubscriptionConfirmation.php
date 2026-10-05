@@ -28,7 +28,7 @@ class SubscriptionConfirmation extends Component
         $this->plan = SubscriptionPlan::with('prices')->findOrFail($this->planId);
 
         // If Starter Free plan, redirect directly to subscriptions overview
-        if ((float) $this->plan->price <= 0) {
+        if ($this->plan->getMonthlyPrice() <= 0) {
             $user = Auth::user();
             if ($user) {
                 app(SubscriptionService::class)->activateFreeSubscription($user, $this->plan);

@@ -39,6 +39,9 @@ class SettingsSeeder extends Seeder
             ['name' => 'auto_approve_promotions', 'value' => '1', 'type' => 'boolean', 'segment' => 'promotions'],
             ['name' => 'minimum_promotion_clicks', 'value' => '10', 'type' => 'integer', 'segment' => 'promotions'],
             ['name' => 'minimum_promotion_views', 'value' => '10000', 'type' => 'integer', 'segment' => 'promotions'],
+
+            // Community Settings (tab: community)
+            ['name' => 'auto_approve_discussion', 'value' => '1', 'type' => 'boolean', 'segment' => 'community'],
             
             ['name' => 'order_processing_to_cancel_hours', 'value' => '6', 'type' => 'integer', 'segment' => 'timelines'],//time between when buyer can cancel
             ['name' => 'order_processing_to_idle_cancel_hours', 'value' => '12', 'type' => 'integer', 'segment' => 'timelines'], //if vendor doesnt fulfil the order before time

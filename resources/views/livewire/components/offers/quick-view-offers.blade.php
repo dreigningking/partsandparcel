@@ -20,6 +20,21 @@
                 </button>
             </div>
 
+            <!-- FLASH NOTIFICATIONS -->
+            @if (session()->has('message'))
+                <div class="mx-6 mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+                    <i class="fas fa-check-circle text-emerald-600"></i>
+                    <span>{{ session('message') }}</span>
+                </div>
+            @endif
+
+            @if (session()->has('error'))
+                <div class="mx-6 mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+                    <i class="fas fa-exclamation-circle text-rose-600"></i>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+
             <!-- PAGINATION / SLIDER HEADER -->
             @if (count($rounds) > 0)
                 @php
@@ -29,7 +44,7 @@
 
                 <div class="px-6 py-3 bg-pp-50/70 border-b border-pp-100 flex items-center justify-between text-xs">
                     <button wire:click="previousRound" @disabled($currentRoundIndex === 0) class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer">
-                        <i class="fas fa-chevron-left text-[10px]"></i> Previous Round
+                        <i class="fas fa-chevron-left text-[10px]"></i> Prev
                     </button>
 
                     <div class="text-center font-extrabold text-pp-800">
@@ -37,12 +52,12 @@
                     </div>
 
                     <button wire:click="nextRound" @disabled($currentRoundIndex === $totalRounds - 1) class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer">
-                        Next Round <i class="fas fa-chevron-right text-[10px]"></i>
+                        Next <i class="fas fa-chevron-right text-[10px]"></i>
                     </button>
                 </div>
 
                 <!-- DRAWER BODY - ACTIVE SLIDE CONTENT -->
-                <div class="flex-1 min-h-0 overflow-y-auto p-6 space-y-5 text-xs">
+                <div class="flex-1 min-h-0 overflow-y-auto p-6 space-y-4 text-xs">
                     
                     <div class="p-4 rounded-2xl bg-white border-2 border-pp-500 space-y-3 shadow-2xs">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -52,7 +67,7 @@
                                     <span class="text-slate-400 text-[10px] block">to {{ $currentRound['to'] }}</span>
                                 @endif
                             </div>
-                            <span class="px-2.5 py-0.5 rounded-full bg-pp-100 text-pp-800 font-extrabold text-[10px] uppercase">
+                            <span class="px-2.5 py-0.5 rounded-full {{ strtolower($currentRound['status']) === 'accepted' ? 'bg-emerald-100 text-emerald-800' : 'bg-pp-100 text-pp-800' }} font-extrabold text-[10px] uppercase">
                                 {{ $currentRound['status'] }}
                             </span>
                         </div>
@@ -78,8 +93,9 @@
                             "{{ $currentRound['message'] }}"
                         </div>
 
-                        <div class="text-[10px] text-slate-400 text-right">
-                            <i class="fas fa-clock mr-1"></i> {{ $currentRound['time'] }}
+                        <div class="text-[10px] text-slate-400 flex items-center justify-between">
+                            <span>Root Parent ID: <strong class="text-slate-600">{{ $currentRound['parent_id'] ?? 'Main Offer' }}</strong></span>
+                            <span><i class="fas fa-clock mr-1"></i> {{ $currentRound['time'] }}</span>
                         </div>
                     </div>
 
@@ -90,12 +106,26 @@
                     @if (!empty($currentRound['can_accept']))
                         <button wire:click="acceptCurrentOffer({{ $currentRound['id'] }})" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs text-center shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
                             <i class="fas fa-check-circle"></i>
-                            <span>Accept Round {{ $currentRoundIndex + 1 }} Offer ({{ $currentRound['price'] }})</span>
+                            <span>Accept Offer ({{ $currentRound['price'] }})</span>
                         </button>
                     @endif
 
-                    <a href="{{ route('offers.view', ['offer_id' => 'OFF-' . $currentRound['id']]) }}" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs text-center shadow-xs transition block">
-                        Open Full Offer Thread &amp; Counter →
+                    @if (!empty($currentRound['can_edit']))
+                        <button wire:click="launchCounterDrawer({{ $currentRound['id'] }}, true)" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs text-center shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i class="fas fa-edit"></i>
+                            <span>Edit My Offer</span>
+                        </button>
+                    @endif
+
+                    @if (!empty($currentRound['can_counter']))
+                        <button wire:click="launchCounterDrawer({{ $currentRound['id'] }}, false)" class="w-full py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs text-center shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Make Counter Offer</span>
+                        </button>
+                    @endif
+
+                    <a href="{{ route('offers.view', ['offer_id' => 'OFF-' . $currentRound['id']]) }}" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs text-center transition block">
+                        Open Full Offer Thread →
                     </a>
                 </div>
             @endif

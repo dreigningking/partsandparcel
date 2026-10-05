@@ -33,4 +33,9 @@ class Response extends Model
     {
         return $this->hasMany(Offer::class);
     }
+
+    public function reports(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Report::class, 'reportable');
+    }
 }

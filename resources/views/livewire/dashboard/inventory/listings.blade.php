@@ -66,23 +66,35 @@
       <!-- 2. CATEGORY (DROPDOWN) -->
       <div>
         <label class="block font-bold text-slate-700 mb-1">Category</label>
-        <select wire:model.live="selectedCategory" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
-          <option value="">All Categories</option>
-          @foreach($categories as $cat)
-            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-          @endforeach
-        </select>
+        @php
+          $catListOptions = collect([['value' => '', 'label' => 'All Categories']]);
+          foreach($categories as $cat) {
+            $catListOptions->push(['value' => (string)$cat->id, 'label' => $cat->name]);
+          }
+        @endphp
+        <x-searchable-select
+          wire:model.live="selectedCategory"
+          :options="$catListOptions"
+          placeholder="All Categories"
+          search-placeholder="Search categories..."
+        />
       </div>
 
       <!-- 3. BRAND (DROPDOWN) -->
       <div>
         <label class="block font-bold text-slate-700 mb-1">Brand</label>
-        <select wire:model.live="selectedBrand" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 bg-slate-50/50 transition">
-          <option value="">All Brands</option>
-          @foreach($brands as $b)
-            <option value="{{ $b->id }}">{{ $b->name }}</option>
-          @endforeach
-        </select>
+        @php
+          $brandListOptions = collect([['value' => '', 'label' => 'All Brands']]);
+          foreach($brands as $b) {
+            $brandListOptions->push(['value' => (string)$b->id, 'label' => $b->name]);
+          }
+        @endphp
+        <x-searchable-select
+          wire:model.live="selectedBrand"
+          :options="$brandListOptions"
+          placeholder="All Brands"
+          search-placeholder="Search brands..."
+        />
       </div>
 
       <!-- 4. STATUS (DROPDOWN: Live | Inactive | Draft | Rejected | Sold Out) -->

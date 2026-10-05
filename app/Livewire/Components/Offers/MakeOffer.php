@@ -18,6 +18,10 @@ class MakeOffer extends Component
     public string $sellerName = 'Seller';
     public ?int $listingId = null;
 
+    // Wizard state
+    public int $currentStep = 1;
+    public int $totalSteps = 3;
+
     // Delivery mode ('pickup' vs 'seller_delivery')
     public string $deliveryMode = 'pickup';
     public ?int $deliveryAddressId = null;
@@ -78,6 +82,7 @@ class MakeOffer extends Component
         // Load items: from single listing OR from buyer's split-cart
         $this->loadItems();
 
+        $this->currentStep = 1;
         $this->isOpen = true;
     }
 
@@ -215,6 +220,42 @@ class MakeOffer extends Component
             ->sum(fn ($i) => $i['price'] * $i['quantity']);
 
         $this->proposedPrice = (string) $newSubtotal;
+    }
+
+    public function nextStep()
+    {
+        if ($this->currentStep === 1) {
+            if (empty($this->selectedItemIds)) {
+                session()->flash('error', 'Please select at least one item to proceed.');
+                return;
+            }
+            if ($this->isNegotiable && ((float) str_replace(',', '', $this->proposedPrice) <= 0)) {
+                session()->flash('error', 'Please enter a valid proposed price.');
+                return;
+            }
+        }
+
+        if ($this->currentStep < $this->totalSteps) {
+            $this->currentStep++;
+        }
+    }
+
+    public function previousStep()
+    {
+        if ($this->currentStep > 1) {
+            $this->currentStep--;
+        }
+    }
+
+    public function goToStep(int $step)
+    {
+        if ($step >= 1 && $step <= $this->totalSteps) {
+            if ($step > 1 && empty($this->selectedItemIds)) {
+                session()->flash('error', 'Please select at least one item first.');
+                return;
+            }
+            $this->currentStep = $step;
+        }
     }
 
     public function saveNewAddress()

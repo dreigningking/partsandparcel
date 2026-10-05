@@ -89,6 +89,8 @@ class InvoiceView extends Component
             'paid_at' => now(),
         ]);
 
+        app(\App\Services\Commercial\NegotiationService::class)->handleInvoicePaid($this->invoice);
+
         $this->invoice->refresh();
 
         session()->flash('seller_success', 'Payment confirmed! This invoice is now marked as PAID. Your verified sales count and seller reputation have been updated.');

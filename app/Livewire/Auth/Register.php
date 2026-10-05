@@ -23,6 +23,11 @@ class Register extends Component
     public bool $terms = false;
     public ?int $country_id = null;
 
+    public function mount(): void
+    {
+        $this->country_id = Country::where('is_default', true)->value('id') ?? Country::first()?->id;
+    }
+
     protected function rules(): array
     {
         return [

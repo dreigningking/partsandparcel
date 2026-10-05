@@ -247,12 +247,12 @@
               <!-- COUNTRY -->
               <div class="space-y-1">
                 <label class="font-bold text-slate-700 block">Operating Country</label>
-                <select wire:model="country_id" class="w-full p-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 outline-none focus:border-pp-500 transition bg-white cursor-pointer">
-                  <option value="">-- Select Country --</option>
-                  @foreach ($countries as $c)
-                    <option value="{{ $c->id }}">{{ $c->name }} ({{ $c->currency }})</option>
-                  @endforeach
-                </select>
+                <x-searchable-select
+                  wire:model="country_id"
+                  :options="$countries->map(fn($c) => ['value' => $c->id, 'label' => $c->name . ' (' . $c->currency . ')'])"
+                  placeholder="-- Select Country --"
+                  search-placeholder="Search countries..."
+                />
                 @error('country_id') <span class="text-red-600 text-[11px] font-semibold block">{{ $message }}</span> @enderror
               </div>
 
@@ -669,12 +669,12 @@
                 </label>
 
                 @if (! empty($banks))
-                  <select wire:model.live="bank_code" class="w-full p-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 outline-none focus:border-pp-500 transition bg-white cursor-pointer">
-                    <option value="">-- Choose your bank --</option>
-                    @foreach ($banks as $b)
-                      <option value="{{ $b['code'] }}">{{ $b['name'] }}</option>
-                    @endforeach
-                  </select>
+                  <x-searchable-select
+                    wire:model.live="bank_code"
+                    :options="collect($banks)->map(fn($b) => ['value' => $b['code'], 'label' => $b['name']])"
+                    placeholder="-- Choose your bank --"
+                    search-placeholder="Search bank name..."
+                  />
                   <div class="flex items-center justify-between text-[10px] text-slate-400 mt-1">
                     <span>{{ count($banks) }} banks available via payment gateway</span>
                     @if (! empty($bank_name))

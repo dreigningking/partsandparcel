@@ -107,6 +107,27 @@
     @livewire('components.messaging.conversation-drawer')
     @livewire('components.offers.quick-view-offers')
     @livewire('components.offers.make-offer')
+    @livewire('components.offers.counter-offer-drawer')
+    @livewire('components.report-modal')
+    @livewire('components.add-location-modal')
+
+    <!-- REVERB & LARAVEL ECHO CLIENT -->
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
+    <script>
+        if (typeof Pusher !== 'undefined' && typeof Echo !== 'undefined') {
+            window.Pusher = Pusher;
+            window.Echo = new Echo({
+                broadcaster: 'reverb',
+                key: '{{ config('broadcasting.connections.reverb.key') ?? env('REVERB_APP_KEY', 'partsandparcelkey') }}',
+                wsHost: '{{ config('broadcasting.connections.reverb.options.host') ?? env('REVERB_HOST', '127.0.0.1') }}',
+                wsPort: {{ config('broadcasting.connections.reverb.options.port') ?? env('REVERB_PORT', 8080) }},
+                wssPort: {{ config('broadcasting.connections.reverb.options.port') ?? env('REVERB_PORT', 8080) }},
+                forceTLS: false,
+                enabledTransports: ['ws', 'wss'],
+            });
+        }
+    </script>
 
     @livewireScripts
 
