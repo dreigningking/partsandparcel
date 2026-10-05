@@ -183,12 +183,19 @@
                                 </div>
                             </td>
 
-                            <!-- ESCROW FEE -->
+                            <!-- ESCROW FEE & CAP -->
                             <td class="px-5 py-4 whitespace-nowrap">
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-pp-50 dark:bg-pp-950/60 text-pp-700 dark:text-pp-300 font-extrabold text-xs">
-                                    <i class="fas fa-shield-alt text-[10px]"></i>
-                                    <span>{{ rtrim(rtrim((string)$plan->escrow_percentage, '0'), '.') }}%</span>
-                                </span>
+                                <div class="flex flex-col gap-1 items-start">
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-pp-50 dark:bg-pp-950/60 text-pp-700 dark:text-pp-300 font-extrabold text-xs">
+                                        <i class="fas fa-shield-alt text-[10px]"></i>
+                                        <span>{{ rtrim(rtrim((string)$plan->escrow_percentage, '0'), '.') }}%</span>
+                                    </span>
+                                    @if ($plan->escrow_cap)
+                                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                                            Cap: ₦{{ number_format($plan->escrow_cap) }}
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
 
                             <!-- PRICING -->
@@ -344,7 +351,7 @@
                     <!-- LIMITS & ENTITLEMENTS -->
                     <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-3">
                         <h4 class="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">Marketplace Entitlements &amp; Caps</h4>
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Daily Requests</label>
                                 <input
@@ -389,6 +396,19 @@
                                     class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-pp-500"
                                 />
                                 @error('escrow_percentage') <p class="text-[10px] text-rose-500 mt-1">{{ $message }}</p> @enderror
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Escrow Cap (₦)</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="No cap"
+                                    wire:model="escrow_cap"
+                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-pp-500"
+                                />
+                                @error('escrow_cap') <p class="text-[10px] text-rose-500 mt-1">{{ $message }}</p> @enderror
                             </div>
                         </div>
                     </div>

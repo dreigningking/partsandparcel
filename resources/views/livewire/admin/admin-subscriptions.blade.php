@@ -238,6 +238,9 @@
                                     </div>
                                     <div class="text-[10px] text-slate-400 mt-1">
                                         {{ rtrim(rtrim((string)$sub->plan->escrow_percentage, '0'), '.') }}% Escrow Fee
+                                        @if ($sub->plan->escrow_cap)
+                                            · Cap: ₦{{ number_format($sub->plan->escrow_cap) }}
+                                        @endif
                                     </div>
                                 @else
                                     <span class="text-slate-400 italic">Custom / Deleted Plan</span>

@@ -4,7 +4,7 @@
         <div wire:click="closeDrawer" class="fixed inset-0 z-[98] bg-slate-950/60 backdrop-blur-xs transition"></div>
 
         <!-- MAKE PACKAGE OFFER SIDE-DRAWER -->
-        <div class="fixed top-0 right-0 bottom-0 z-[99] w-full sm:w-[500px] bg-white shadow-2xl flex flex-col transition">
+        <div class="fixed top-0 right-0 bottom-0 z-[99] w-full sm:w-[540px] bg-white shadow-2xl flex flex-col transition">
             
             <!-- DRAWER HEADER -->
             <div class="h-16 px-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
@@ -13,7 +13,7 @@
                         <i class="fas fa-handshake text-pp-600"></i>
                     </div>
                     <div>
-                        <h3 class="font-extrabold text-slate-900 text-sm">Make Custom Offer &amp; Proposal</h3>
+                        <h3 class="font-extrabold text-slate-900 text-sm">Make Custom Offer</h3>
                         <p class="text-[11px] text-slate-500">Submitting to <strong class="text-slate-900">{{ $sellerName }}</strong></p>
                     </div>
                 </div>
@@ -22,121 +22,187 @@
                 </button>
             </div>
 
-            <!-- STEP INDICATOR WIZARD BAR -->
-            <div class="px-6 py-2.5 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between text-[11px] font-bold">
-                <button type="button" wire:click="goToStep(1)" class="flex items-center gap-1.5 cursor-pointer {{ $currentStep === 1 ? 'text-pp-700 font-extrabold' : ($currentStep > 1 ? 'text-emerald-700' : 'text-slate-400') }}">
-                    <span class="w-5 h-5 rounded-full text-[10px] grid place-items-center {{ $currentStep === 1 ? 'bg-pp-600 text-white' : ($currentStep > 1 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600') }}">1</span>
-                    <span>Items &amp; Terms</span>
-                </button>
-                <i class="fas fa-chevron-right text-[9px] text-slate-300"></i>
-                <button type="button" wire:click="goToStep(2)" class="flex items-center gap-1.5 cursor-pointer {{ $currentStep === 2 ? 'text-pp-700 font-extrabold' : ($currentStep > 2 ? 'text-emerald-700' : 'text-slate-400') }}">
-                    <span class="w-5 h-5 rounded-full text-[10px] grid place-items-center {{ $currentStep === 2 ? 'bg-pp-600 text-white' : ($currentStep > 2 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600') }}">2</span>
-                    <span>Delivery</span>
-                </button>
-                <i class="fas fa-chevron-right text-[9px] text-slate-300"></i>
-                <button type="button" wire:click="goToStep(3)" class="flex items-center gap-1.5 cursor-pointer {{ $currentStep === 3 ? 'text-pp-700 font-extrabold' : 'text-slate-400' }}">
-                    <span class="w-5 h-5 rounded-full text-[10px] grid place-items-center {{ $currentStep === 3 ? 'bg-pp-600 text-white' : 'bg-slate-200 text-slate-600') }}">3</span>
-                    <span>Special Requests</span>
-                </button>
+            <!-- DYNAMIC STEP INDICATOR WIZARD BAR -->
+            <div class="px-6 py-2.5 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between text-[11px] font-bold overflow-x-auto gap-2">
+                @for ($stepIndex = 1; $stepIndex <= $totalSteps; $stepIndex++)
+                    @php
+                        $isCurrent = ($currentStep === $stepIndex);
+                        $isCompleted = ($currentStep > $stepIndex);
+                        
+                        if ($stepIndex <= $itemCount) {
+                            $stepLabel = $itemCount === 1 ? 'Item Details' : "Item {$stepIndex}";
+                        } elseif ($stepIndex === $itemCount + 1) {
+                            $stepLabel = 'Shipment';
+                        } else {
+                            $stepLabel = 'Review';
+                        }
+                    @endphp
+
+                    <button type="button" 
+                            wire:click="goToStep({{ $stepIndex }})" 
+                            class="flex items-center gap-1.5 shrink-0 cursor-pointer {{ $isCurrent ? 'text-pp-700 font-extrabold' : ($isCompleted ? 'text-emerald-700 font-bold' : 'text-slate-400') }}">
+                        <span class="w-5 h-5 rounded-full text-[10px] grid place-items-center shrink-0 {{ $isCurrent ? 'bg-pp-600 text-white' : ($isCompleted ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600') }}">
+                            {{ $isCompleted ? '✓' : $stepIndex }}
+                        </span>
+                        <span class="whitespace-nowrap">{{ $stepLabel }}</span>
+                    </button>
+
+                    @if ($stepIndex < $totalSteps)
+                        <i class="fas fa-chevron-right text-[8px] text-slate-300 shrink-0"></i>
+                    @endif
+                @endfor
             </div>
 
             <!-- DRAWER FORM BODY (SCROLLABLE) -->
             <div class="flex-1 min-h-0 overflow-y-auto p-6 space-y-5 text-xs">
 
                 @if (session()->has('error'))
-                    <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs">
-                        {{ session('error') }}
+                    <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs flex items-center gap-2">
+                        <i class="fas fa-exclamation-circle text-rose-600"></i>
+                        <span>{{ session('error') }}</span>
                     </div>
                 @endif
 
-                <!-- STEP 1: ITEM DETAILS, PRICE & WARRANTY TERMS -->
-                @if ($currentStep === 1)
-                    <div class="space-y-4">
-                        <!-- ITEMS INCLUDED IN OFFER -->
-                        <div class="space-y-2">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                                    <i class="fas fa-boxes text-pp-600"></i> Items to Include ({{ count($selectedItemIds) }}/{{ count($cartItems) }})
-                                </span>
-                                <span class="text-[11px] text-slate-500">Select items for offer</span>
-                            </div>
+                <!-- STEPS 1 TO N: ITEM SPECIFIC PRICE & WARRANTY NEGOTIATION -->
+                @if ($currentStep <= $itemCount)
+                    @php
+                        $currIdx = $currentStep - 1;
+                        $currItem = $offerItems[$currIdx] ?? null;
+                    @endphp
 
-                            <div class="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-slate-50/50 p-2 space-y-1">
-                                @foreach ($cartItems as $item)
-                                    @php
-                                        $isSelected = in_array($item['id'], $selectedItemIds);
-                                    @endphp
-                                    <div wire:click="toggleItem({{ $item['id'] }})" class="p-2.5 rounded-xl cursor-pointer flex items-center justify-between gap-3 transition {{ $isSelected ? 'bg-white border border-pp-200 shadow-2xs' : 'opacity-60 hover:opacity-100' }}">
-                                        <div class="flex items-center gap-3">
-                                            <input type="checkbox" @checked($isSelected) class="accent-pp-600 rounded cursor-pointer pointer-events-none" />
-                                            <div>
-                                                <div class="font-extrabold text-slate-900 text-xs">{{ $item['title'] }}</div>
-                                                <div class="text-[10px] text-slate-500">Qty: {{ $item['quantity'] }} · {{ $item['specs'] ?? 'Standard' }}</div>
-                                            </div>
-                                        </div>
-                                        <span class="font-bold text-slate-900 text-xs">₦{{ number_format($item['price'] * $item['quantity']) }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <!-- PROPOSED PRICE & SAVINGS PREVIEW -->
-                        <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
-                            <div class="flex items-center justify-between">
-                                <label class="text-xs font-extrabold text-slate-900">
-                                    {{ $isNegotiable ? 'Your Proposed Price (₦)' : 'Listing Price (₦)' }}
-                                    <span class="text-rose-500">*</span>
-                                </label>
-                                <span class="text-[11px] text-slate-500">Original Subtotal: <strong>₦{{ number_format($selectedSubtotal) }}</strong></span>
-                            </div>
+                    @if ($currItem)
+                        <div class="space-y-4">
                             
-                            @if ($isNegotiable)
-                                <div class="relative">
-                                    <span class="absolute left-3.5 top-3 text-sm font-bold text-slate-400">₦</span>
-                                    <input type="number" wire:model.live="proposedPrice" placeholder="e.g. 260000" class="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white text-base font-black text-pp-700 outline-none focus:border-pp-600" />
+                            <!-- ITEM DETAILS CARD -->
+                            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] font-extrabold text-pp-700 uppercase tracking-wider bg-pp-100 px-2 py-0.5 rounded-full">
+                                        Item {{ $currentStep }} of {{ $itemCount }}
+                                    </span>
+                                    <span class="text-xs font-bold text-slate-600">Qty: {{ $currItem['quantity'] }}</span>
                                 </div>
 
-                                @if ($savings > 0)
-                                    <div class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100 flex items-center justify-between">
-                                        <span>Requested Discount:</span>
-                                        <span>-₦{{ number_format($savings) }} ({{ round(($savings / max(1, $selectedSubtotal)) * 100) }}% off)</span>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-12 h-12 rounded-2xl bg-white border border-slate-200 grid place-items-center text-xl shrink-0 shadow-2xs">
+                                        {{ $currItem['icon'] ?? '📦' }}
+                                    </div>
+                                    <div>
+                                        <h4 class="font-extrabold text-sm text-slate-900 leading-snug">{{ $currItem['title'] }}</h4>
+                                        <p class="text-[11px] text-slate-500 mt-0.5">Condition: {{ $currItem['specs'] ?? 'Standard' }}</p>
+                                        <p class="text-xs font-bold text-slate-700 mt-1">Listing Price: <strong class="text-slate-950">₦{{ number_format($currItem['price']) }}</strong> each</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PROPOSED PRICE INPUT FOR THIS ITEM -->
+                            <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-3 shadow-2xs">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-xs font-extrabold text-slate-900">
+                                        {{ $currItem['is_negotiable'] ? 'Your Proposed Unit Price (₦)' : 'Listing Price (₦)' }}
+                                        <span class="text-rose-500">*</span>
+                                    </label>
+                                    <span class="text-[11px] text-slate-500">Original: <strong>₦{{ number_format($currItem['price']) }}</strong></span>
+                                </div>
+
+                                @if ($currItem['is_negotiable'])
+                                    <div class="relative">
+                                        <span class="absolute left-3.5 top-3 text-sm font-bold text-slate-400">₦</span>
+                                        <input type="number" 
+                                               wire:model.live="offerItems.{{ $currIdx }}.proposed_price" 
+                                               placeholder="e.g. {{ $currItem['price'] }}" 
+                                               class="w-full pl-8 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white text-base font-black text-pp-700 outline-none focus:border-pp-600" />
+                                    </div>
+
+                                    @php
+                                        $numProposed = (float) str_replace(',', '', (string) ($currItem['proposed_price'] ?? 0));
+                                        $itemSavings = max(0, (float) $currItem['price'] - $numProposed);
+                                    @endphp
+
+                                    @if ($itemSavings > 0)
+                                        <div class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100 flex items-center justify-between">
+                                            <span>Requested Discount:</span>
+                                            <span>-₦{{ number_format($itemSavings) }} ({{ round(($itemSavings / max(1, $currItem['price'])) * 100) }}% off)</span>
+                                        </div>
+                                    @endif
+                                @else
+                                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                                        <div>
+                                            <div class="text-base font-black text-slate-900">₦{{ number_format($currItem['price']) }}</div>
+                                            <div class="text-[10px] text-slate-500 font-medium">Fixed Price Listing · Price is non-negotiable</div>
+                                        </div>
+                                        <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-slate-200 text-slate-700 rounded-md">Fixed Price</span>
                                     </div>
                                 @endif
-                            @else
-                                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
-                                    <div>
-                                        <div class="text-base font-black text-slate-900">₦{{ number_format($selectedSubtotal) }}</div>
-                                        <div class="text-[10px] text-slate-500 font-medium">Fixed Price Listing · Price cannot be negotiated</div>
-                                    </div>
-                                    <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-slate-200 text-slate-700 rounded-md">Fixed Price</span>
-                                </div>
-                            @endif
-                        </div>
+                            </div>
 
-                        <!-- WARRANTY TERM SELECTION -->
-                        <div class="space-y-2">
-                            <label class="text-xs font-extrabold text-slate-900 block">Requested Warranty Term</label>
-                            @if ($isWarrantyNegotiable)
-                                <div class="grid grid-cols-3 gap-2">
-                                    <button type="button" wire:click="setWarrantyDays(7)" class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ $warrantyDays === 7 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">7 Days</button>
-                                    <button type="button" wire:click="setWarrantyDays(14)" class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ $warrantyDays === 14 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">14 Days</button>
-                                    <button type="button" wire:click="setWarrantyDays(30)" class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ $warrantyDays === 30 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">30 Days</button>
+                            <!-- WARRANTY TERMS SELECTION FOR THIS ITEM -->
+                            <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-3 shadow-2xs">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-xs font-extrabold text-slate-900">Warranty Term for this Item</label>
+                                    @if ($currItem['is_warranty_negotiable'])
+                                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Negotiable</span>
+                                    @else
+                                        <span class="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">Fixed</span>
+                                    @endif
                                 </div>
-                            @else
-                                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                                    <div class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                                        <i class="fas fa-shield-alt text-pp-600"></i>
-                                        <span>{{ $warrantyDays }} Days ({{ $warrantyTerms }})</span>
+
+                                @if ($currItem['is_warranty_negotiable'])
+                                    <p class="text-[11px] text-slate-500 leading-snug">The seller allows negotiating warranty duration. Select or enter requested days:</p>
+
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <button type="button" 
+                                                wire:click="setItemWarrantyDays({{ $currIdx }}, 7)" 
+                                                class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ (int)($currItem['proposed_warranty_days'] ?? 0) === 7 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">
+                                            7 Days
+                                        </button>
+                                        <button type="button" 
+                                                wire:click="setItemWarrantyDays({{ $currIdx }}, 14)" 
+                                                class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ (int)($currItem['proposed_warranty_days'] ?? 0) === 14 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">
+                                            14 Days
+                                        </button>
+                                        <button type="button" 
+                                                wire:click="setItemWarrantyDays({{ $currIdx }}, 30)" 
+                                                class="py-2 rounded-xl border text-center font-bold transition cursor-pointer {{ (int)($currItem['proposed_warranty_days'] ?? 0) === 30 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700' : 'border-slate-200 text-slate-700 hover:bg-slate-50' }}">
+                                            30 Days
+                                        </button>
                                     </div>
-                                    <p class="text-[10px] text-slate-500 mt-1">Warranty terms are fixed by seller and cannot be negotiated.</p>
-                                </div>
-                            @endif
+
+                                    <div class="space-y-1 pt-1">
+                                        <label class="text-[11px] font-bold text-slate-700">Custom Days &amp; Specifications</label>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            <input type="number" 
+                                                   wire:model.live="offerItems.{{ $currIdx }}.proposed_warranty_days" 
+                                                   placeholder="Days" 
+                                                   class="p-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-800" />
+                                            <input type="text" 
+                                                   wire:model="offerItems.{{ $currIdx }}.proposed_warranty_terms" 
+                                                   placeholder="e.g. Testing &amp; replacement terms" 
+                                                   class="col-span-2 p-2 border border-slate-200 rounded-xl text-xs text-slate-800" />
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                                        <div class="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                                            <i class="fas fa-shield-alt text-pp-600"></i>
+                                            @if (($currItem['listing_warranty_days'] ?? 0) > 0)
+                                                <span>{{ $currItem['listing_warranty_days'] }} Days Warranty</span>
+                                            @else
+                                                <span>No Warranty (Sold As-Is)</span>
+                                            @endif
+                                        </div>
+                                        <p class="text-[10px] text-slate-500 mt-1">
+                                            {{ $currItem['listing_warranty_terms'] ?: 'Warranty terms are set by the seller and cannot be negotiated for this listing.' }}
+                                        </p>
+                                    </div>
+                                @endif
+                            </div>
+
                         </div>
-                    </div>
+                    @endif
                 @endif
 
-                <!-- STEP 2: SHIPMENT REQUEST & ADDRESS SELECTION -->
-                @if ($currentStep === 2)
+                <!-- STEP N + 1: SHIPMENT REQUEST & DESTINATION ADDRESS -->
+                @if ($currentStep === $itemCount + 1)
                     <div class="space-y-4">
                         <div class="p-4 rounded-2xl bg-pp-50/70 border border-pp-200 space-y-3">
                             <span class="text-xs font-extrabold text-slate-900 block border-b border-pp-200/60 pb-2">
@@ -149,11 +215,11 @@
                                     <span>Buyer Pickup</span>
                                 </label>
                                 <p class="text-[11px] text-slate-600 pl-5 leading-relaxed">
-                                    "I'll collect this from the seller." Collect directly from {{ $sellerName }}. No shipping charge.
+                                    "I'll collect this from the seller." Collect directly from {{ $sellerName }}. No shipping fee.
                                 </p>
 
                                 @if ($allowShipping)
-                                    <label class="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-900 pt-1">
+                                    <label class="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-900 pt-2">
                                         <input type="radio" wire:model.live="deliveryMode" value="seller_delivery" class="accent-pp-600" />
                                         <span>Seller Delivery</span>
                                     </label>
@@ -163,7 +229,7 @@
                                 @else
                                     <div class="mt-2 p-2.5 rounded-xl bg-amber-50/90 border border-amber-200 text-[11px] text-amber-800 flex items-start gap-2">
                                         <i class="fas fa-info-circle text-amber-600 mt-0.5 shrink-0"></i>
-                                        <span><strong>Local Pickup Only:</strong> Shipping is not offered for this listing; buyer pickup is required.</span>
+                                        <span><strong>Local Pickup Only:</strong> Shipping is not offered for item(s) in this offer; buyer pickup is required.</span>
                                     </div>
                                 @endif
                             </div>
@@ -206,9 +272,10 @@
                     </div>
                 @endif
 
-                <!-- STEP 3: SPECIAL REQUESTS & NOTES -->
-                @if ($currentStep === 3)
+                <!-- STEP N + 2: SPECIAL REQUESTS, NOTES & FINAL PACKAGE REVIEW -->
+                @if ($currentStep === $itemCount + 2)
                     <div class="space-y-4">
+                        
                         <!-- OPTIONAL REPAIR / WORKMANSHIP SERVICE -->
                         <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
                             <label class="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-900">
@@ -236,64 +303,73 @@
                             <textarea wire:model="offerNote" placeholder="Add custom terms, questions, or timing preferences for {{ $sellerName }}..." rows="3" class="w-full p-3 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 outline-none focus:border-pp-600"></textarea>
                         </div>
 
-                        <!-- SUMMARY REVIEW CARD -->
-                        <div class="p-3.5 rounded-2xl bg-pp-50 border border-pp-200 space-y-2 text-xs">
-                            <span class="font-extrabold text-pp-900 block">Offer Proposal Summary:</span>
-                            <div class="flex justify-between text-slate-600">
-                                <span>Selected Items:</span>
-                                <span class="font-bold text-slate-900">{{ count($selectedItemIds) }} item(s)</span>
+                        <!-- COMPREHENSIVE PACKAGE REVIEW CARD -->
+                        <div class="p-4 rounded-2xl bg-pp-50 border border-pp-200 space-y-3 text-xs">
+                            <span class="font-extrabold text-slate-900 uppercase tracking-wider block border-b border-pp-200/60 pb-2">
+                                Offer Package Summary
+                            </span>
+
+                            <div class="divide-y divide-pp-100 space-y-2">
+                                @foreach ($offerItems as $idx => $it)
+                                    <div class="pt-2 first:pt-0 flex items-center justify-between">
+                                        <div>
+                                            <div class="font-extrabold text-slate-900">{{ $it['title'] }} (x{{ $it['quantity'] }})</div>
+                                            <div class="text-[10px] text-slate-500">
+                                                Warranty: <strong>{{ $it['proposed_warranty_days'] ?? 0 }} Days</strong>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="font-black text-slate-900">₦{{ number_format((float) str_replace(',', '', (string) $it['proposed_price']) * (int) $it['quantity']) }}</div>
+                                            @if ((float) $it['price'] > (float) str_replace(',', '', (string) $it['proposed_price']))
+                                                <div class="text-[10px] text-emerald-700 font-bold">Orig: ₦{{ number_format($it['price'] * $it['quantity']) }}</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
-                            <div class="flex justify-between text-slate-600">
-                                <span>Proposed Items Net Total:</span>
-                                <span class="font-black text-pp-700 text-sm">₦{{ number_format((float) str_replace(',', '', $proposedPrice ?: '0')) }}</span>
+
+                            <div class="pt-2 border-t border-pp-200 flex justify-between items-baseline font-extrabold">
+                                <span class="text-slate-700">Total Proposed Offer:</span>
+                                <span class="text-lg text-pp-700 font-black">₦{{ number_format($proposedSubtotal) }}</span>
                             </div>
-                            <div class="flex justify-between text-slate-600">
-                                <span>Fulfillment:</span>
-                                <span class="font-bold text-slate-900">{{ $deliveryMode === 'seller_delivery' ? 'Seller Delivery Dispatch' : 'Buyer Pickup' }}</span>
-                            </div>
-                            <div class="flex justify-between text-slate-600">
-                                <span>Requested Warranty:</span>
-                                <span class="font-bold text-slate-900">{{ $warrantyDays }} Days</span>
-                            </div>
-                            @if ($requestRepair)
-                                <div class="flex justify-between text-slate-600">
-                                    <span>Special Labor Service:</span>
-                                    <span class="font-bold text-slate-900">{{ $repairServiceType }}</span>
+
+                            @if ($savings > 0)
+                                <div class="text-[11px] font-bold text-emerald-800 bg-emerald-100/70 p-2 rounded-xl flex justify-between">
+                                    <span>Total Requested Savings:</span>
+                                    <span>-₦{{ number_format($savings) }}</span>
                                 </div>
                             @endif
+
+                            <div class="text-[11px] text-slate-600 pt-1 border-t border-pp-100 flex items-center justify-between">
+                                <span>Fulfillment Method:</span>
+                                <span class="font-bold text-slate-900">{{ $deliveryMode === 'seller_delivery' ? 'Seller Delivery' : 'Buyer Pickup' }}</span>
+                            </div>
                         </div>
+
                     </div>
                 @endif
 
             </div>
 
-            <!-- DRAWER FOOTER WITH WIZARD NAVIGATION -->
-            <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3 shrink-0">
-                @if ($currentStep === 1)
-                    <button wire:click="closeDrawer" class="py-2.5 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-xs hover:bg-slate-100 transition cursor-pointer">
-                        Cancel
-                    </button>
-                    <button wire:click="nextStep" class="flex-1 py-2.5 px-4 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                        <span>Continue to Delivery</span>
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-                @elseif ($currentStep === 2)
-                    <button wire:click="previousStep" class="py-2.5 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-xs hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Back</span>
-                    </button>
-                    <button wire:click="nextStep" class="flex-1 py-2.5 px-4 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
-                        <span>Continue to Special Requests</span>
-                        <i class="fas fa-arrow-right"></i>
+            <!-- DRAWER FOOTER NAVIGATION -->
+            <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3 shrink-0">
+                @if ($currentStep > 1)
+                    <button type="button" wire:click="previousStep" class="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition cursor-pointer">
+                        ← Back
                     </button>
                 @else
-                    <button wire:click="previousStep" class="py-2.5 px-4 rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-xs hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer">
-                        <i class="fas fa-arrow-left"></i>
-                        <span>Back</span>
+                    <div></div>
+                @endif
+
+                @if ($currentStep < $totalSteps)
+                    <button type="button" wire:click="nextStep" class="px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5">
+                        <span>Next Step</span>
+                        <i class="fas fa-arrow-right text-[10px]"></i>
                     </button>
-                    <button wire:click="submitPackageOffer" class="flex-1 py-2.5 px-4 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="fas fa-paper-plane"></i>
-                        <span>Submit Offer Proposal</span>
+                @else
+                    <button type="button" wire:click="submitPackageOffer" class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow-xs transition cursor-pointer flex items-center gap-2">
+                        <i class="fas fa-paper-plane text-pp-400"></i>
+                        <span>Submit Custom Offer</span>
                     </button>
                 @endif
             </div>

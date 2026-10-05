@@ -6,9 +6,11 @@ use App\Jobs\ModerationNotifierJob;
 use App\Models\Discussion;
 use App\Models\Item;
 use App\Models\Listing;
+use App\Models\Location;
 use App\Models\Moderation;
 use App\Models\Post;
 use App\Models\PostComment;
+use App\Models\Verification;
 use App\Models\Watchlist;
 use App\Notifications\PostCommentApprovedNotification;
 use Illuminate\Database\Eloquent\Builder;
@@ -101,6 +103,23 @@ class AdminModerations extends Component
                     }
                 }
             }
+        } elseif ($item instanceof Location) {
+            $item->update([
+                'verification_status' => 'verified',
+                'verified_at' => now(),
+                'rejection_reason' => null,
+            ]);
+        } elseif ($item instanceof Verification) {
+            $item->update([
+                'status' => 'verified',
+                'verified_at' => now(),
+                'reviewed_by' => auth()->id(),
+                'rejection_reason' => null,
+            ]);
+            $item->user?->update([
+                'is_verified' => true,
+                'id_verified_at' => now(),
+            ]);
         }
 
         session()->flash('status', __('The item (:type) was approved successfully.', [
@@ -154,6 +173,17 @@ class AdminModerations extends Component
             $item->updateQuietly(['is_published' => false]);
         } elseif ($item instanceof Discussion) {
             $item->updateQuietly(['status' => 'closed']);
+        } elseif ($item instanceof Location) {
+            $item->update([
+                'verification_status' => 'rejected',
+                'rejection_reason' => $this->rejectionReason,
+            ]);
+        } elseif ($item instanceof Verification) {
+            $item->update([
+                'status' => 'rejected',
+                'rejection_reason' => $this->rejectionReason,
+                'reviewed_by' => auth()->id(),
+            ]);
         }
 
         $this->closeRejectModal();
@@ -196,6 +226,14 @@ class AdminModerations extends Component
             ->where('moderatable_type', PostComment::class)
             ->count();
 
+        $pendingLocationsCount = Moderation::where('status', 'pending')
+            ->where('moderatable_type', Location::class)
+            ->count();
+
+        $pendingVerificationsCount = Moderation::where('status', 'pending')
+            ->where('moderatable_type', Verification::class)
+            ->count();
+
         $pendingCount = Moderation::where('status', 'pending')->count();
         $approvedCount = Moderation::where('status', 'approved')->count();
         $rejectedCount = Moderation::where('status', 'rejected')->count();
@@ -209,6 +247,8 @@ class AdminModerations extends Component
                     Listing::class => ['user', 'item.deviceModel.brand', 'item.deviceModel.category', 'media'],
                     Discussion::class => ['user', 'category', 'brand', 'deviceModel', 'location'],
                     PostComment::class => ['post'],
+                    Location::class => ['user', 'state', 'country'],
+                    Verification::class => ['user'],
                 ]);
             }]);
 
@@ -230,6 +270,10 @@ class AdminModerations extends Component
             $query->where('moderatable_type', Discussion::class);
         } elseif ($this->type === 'post_comment') {
             $query->where('moderatable_type', PostComment::class);
+        } elseif ($this->type === 'location') {
+            $query->where('moderatable_type', Location::class);
+        } elseif ($this->type === 'verification') {
+            $query->where('moderatable_type', Verification::class);
         }
 
         // Search Filter
@@ -246,6 +290,17 @@ class AdminModerations extends Component
                     ->orWhereHasMorph('moderatable', [Discussion::class], function (Builder $dq) use ($searchTerm) {
                         $dq->where('title', 'like', $searchTerm)
                             ->orWhere('body', 'like', $searchTerm)
+                            ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', $searchTerm)->orWhere('email', 'like', $searchTerm));
+                    })
+                    ->orWhereHasMorph('moderatable', [Location::class], function (Builder $locQ) use ($searchTerm) {
+                        $locQ->where('label', 'like', $searchTerm)
+                            ->orWhere('city', 'like', $searchTerm)
+                            ->orWhere('address_line_1', 'like', $searchTerm)
+                            ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', $searchTerm)->orWhere('email', 'like', $searchTerm));
+                    })
+                    ->orWhereHasMorph('moderatable', [Verification::class], function (Builder $vq) use ($searchTerm) {
+                        $vq->where('document_type', 'like', $searchTerm)
+                            ->orWhere('document_number', 'like', $searchTerm)
                             ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', $searchTerm)->orWhere('email', 'like', $searchTerm));
                     })
                     ->orWhereHasMorph('moderatable', [PostComment::class], function (Builder $cq) use ($searchTerm) {
@@ -270,6 +325,8 @@ class AdminModerations extends Component
                         Listing::class => ['user', 'item.deviceModel.brand', 'item.deviceModel.category', 'media'],
                         Discussion::class => ['user', 'category', 'brand', 'deviceModel', 'location'],
                         PostComment::class => ['post'],
+                        Location::class => ['user', 'state', 'country'],
+                        Verification::class => ['user'],
                     ]);
                 }])
                 ->find($this->previewModerationId);
@@ -290,6 +347,8 @@ class AdminModerations extends Component
             'pendingListingsCount' => $pendingListingsCount,
             'pendingDiscussionsCount' => $pendingDiscussionsCount,
             'pendingCommentsCount' => $pendingCommentsCount,
+            'pendingLocationsCount' => $pendingLocationsCount,
+            'pendingVerificationsCount' => $pendingVerificationsCount,
             'approvedCount' => $approvedCount,
             'rejectedCount' => $rejectedCount,
             'totalCount' => $totalCount,

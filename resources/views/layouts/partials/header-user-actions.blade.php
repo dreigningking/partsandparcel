@@ -21,75 +21,15 @@
         <span>Blog</span>
     </a>
 
-    <!-- CART -->
-    @php
-        $navCartCount = app(\App\Services\Commercial\CartService::class)->getCartCount(auth()->user());
-    @endphp
-    <a href="{{ route('cart') }}" aria-label="Cart" class="hidden sm:flex relative p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 transition" title="Shopping Cart">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/></svg>
-        @if($navCartCount > 0)
-            <span class="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-pp-600 text-white text-[10px] font-bold grid place-items-center">
-                {{ $navCartCount > 99 ? '99+' : $navCartCount }}
-            </span>
-        @endif
-    </a>
+    <!-- CART (LIVEWIRE REACTIVE COUNTER) -->
+    @livewire('components.header.cart-counter')
 
     @auth
         <!-- MESSAGES BUTTON & REAL-TIME BADGE -->
         @livewire('components.messaging.message-counter-badge')
 
-        <!-- NOTIFICATIONS BUTTON & DROPDOWN -->
-        @php
-            $unreadCount = auth()->user()?->unreadNotifications()->count() ?? 0;
-            $recentNotifications = auth()->user()?->notifications()->latest()->take(5)->get() ?? collect();
-        @endphp
-        <div class="relative">
-            <button onclick="toggleNotificationsDropdown()" aria-label="Notifications" class="relative p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 transition cursor-pointer" title="Notifications">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                @if($unreadCount > 0)
-                    <span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold grid place-items-center">
-                        {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-                    </span>
-                @endif
-            </button>
-
-            <!-- NOTIFICATIONS DROPDOWN PANEL -->
-            <div id="notifications" class="dropdown absolute right-0 top-12 w-[350px] max-w-[calc(100vw-24px)] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-[80]">
-                <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <div>
-                        <div class="font-extrabold text-slate-900 text-sm">Notifications</div>
-                        <div class="text-[11px] text-slate-500">{{ $unreadCount }} unread alerts</div>
-                    </div>
-                    <a href="{{ route('notifications') }}" class="text-xs font-bold text-pp-600 hover:underline">See all</a>
-                </div>
-                <div class="max-h-[360px] overflow-y-auto custom-scrollbar divide-y divide-slate-100 bg-white">
-                    @forelse($recentNotifications as $rNotif)
-                        @php
-                            $rData = $rNotif->data;
-                            $rIcon = $rData['icon'] ?? 'fas fa-bell';
-                            $rTitle = $rData['title'] ?? 'Notification';
-                            $rAction = $rData['action_url'] ?? route('notifications');
-                            $rUnread = $rNotif->unread();
-                        @endphp
-                        <a href="{{ $rAction }}" class="flex gap-3 p-4 {{ $rUnread ? 'bg-pp-50/60' : 'hover:bg-slate-50' }} transition">
-                            <span class="w-9 h-9 rounded-lg bg-pp-100 text-pp-700 grid place-items-center shrink-0 font-bold text-xs">
-                                <i class="{{ $rIcon }}"></i>
-                            </span>
-                            <div class="flex-1 min-w-0">
-                                <div class="text-xs font-bold text-slate-900 truncate">{{ $rTitle }}</div>
-                                <div class="text-[11px] text-slate-500 mt-0.5 truncate">{{ $rData['message'] ?? '' }}</div>
-                                <div class="text-[10px] text-slate-400 mt-0.5">{{ $rNotif->created_at->diffForHumans() }}</div>
-                            </div>
-                        </a>
-                    @empty
-                        <div class="p-8 text-center text-slate-400 text-xs font-semibold">
-                            No notifications yet.
-                        </div>
-                    @endforelse
-                </div>
-                <a href="{{ route('notifications') }}" class="block text-center p-3 text-xs font-bold text-pp-600 hover:bg-slate-50 border-t border-slate-100 bg-white">View all notifications →</a>
-            </div>
-        </div>
+        <!-- NOTIFICATIONS BUTTON & DROPDOWN (LIVEWIRE COMPONENT) -->
+        @livewire('components.header.notification-dropdown')
 
         <!-- ACCOUNT DROPDOWN MENU -->
         <div class="relative inline-block text-left account-menu-wrapper">

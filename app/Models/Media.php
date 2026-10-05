@@ -97,4 +97,22 @@ class Media extends Model
     {
         return $query->orderBy('sort_order')->orderBy('id');
     }
+
+    public function scopePrimary(Builder $query): Builder
+    {
+        return $query->where('media_type', 'image')->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * Get the primary image media record for a given mediable model.
+     */
+    public static function getPrimaryFor(Model $mediable): ?self
+    {
+        return static::where('mediable_type', $mediable->getMorphClass())
+            ->where('mediable_id', $mediable->getKey())
+            ->where('media_type', 'image')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->first();
+    }
 }

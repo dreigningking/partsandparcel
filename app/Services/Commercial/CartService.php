@@ -214,7 +214,7 @@ class CartService
             // First merge any guest items they may have added before signing in
             $this->mergeGuestCart($buyer);
 
-            $carts = Cart::with(['seller.primaryLocation', 'items.listing.item', 'items.listing.media'])
+            $carts = Cart::with(['seller.primaryLocation.state', 'items.listing.item', 'items.listing.media'])
                 ->where('buyer_id', $buyer->id)
                 ->where('status', 'active')
                 ->get();
@@ -227,9 +227,15 @@ class CartService
                 }
 
                 $seller = $cart->seller;
-                $locationName = $seller?->primaryLocation?->city
-                    ? "{$seller->primaryLocation->city}, {$seller->primaryLocation->state}"
+                $loc = $seller?->primaryLocation;
+                $stateName = $loc?->state?->name ?? (is_string($loc?->state) ? $loc?->state : null);
+                $locationName = $loc
+                    ? collect([$loc->city, $stateName])->filter()->implode(', ')
                     : ($seller?->country_code === 'US' ? 'United States' : 'Computer Village, Ikeja, Lagos');
+
+                if (empty($locationName)) {
+                    $locationName = 'Computer Village, Ikeja, Lagos';
+                }
 
                 $items = [];
                 foreach ($cart->items as $cartItem) {
@@ -248,6 +254,8 @@ class CartService
 
                 $grouped[] = [
                     'id' => (string) $cart->seller_id,
+                    'seller_id' => $cart->seller_id,
+                    'seller_slug' => $seller?->slug ?: (string) $cart->seller_id,
                     'cart_id' => $cart->id,
                     'name' => $seller?->business_name ?: ($seller?->name ?: 'Seller #' . $cart->seller_id),
                     'avatar' => strtoupper(substr($seller?->business_name ?: ($seller?->name ?? 'S'), 0, 1)),
@@ -275,10 +283,16 @@ class CartService
                 continue;
             }
 
-            $seller = User::with('primaryLocation')->find($sellerId);
-            $locationName = $seller?->primaryLocation?->city
-                ? "{$seller->primaryLocation->city}, {$seller->primaryLocation->state}"
+            $seller = User::with('primaryLocation.state')->find($sellerId);
+            $loc = $seller?->primaryLocation;
+            $stateName = $loc?->state?->name ?? (is_string($loc?->state) ? $loc?->state : null);
+            $locationName = $loc
+                ? collect([$loc->city, $stateName])->filter()->implode(', ')
                 : 'Computer Village, Ikeja, Lagos';
+
+            if (empty($locationName)) {
+                $locationName = 'Computer Village, Ikeja, Lagos';
+            }
 
             $listingIds = array_keys($cartItems);
             $listings = Listing::with(['item', 'media'])->whereIn('id', $listingIds)->get()->keyBy('id');

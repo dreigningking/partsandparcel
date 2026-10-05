@@ -69,7 +69,7 @@
         <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
           <tr class="hover:bg-slate-50/80 transition">
             <td class="p-3.5 font-bold text-slate-900">
-              <a href="{{ route('invoices.view', ['id' => 'INV-9082']) }}" class="text-pp-600 hover:underline">#INV-9082</a>
+              <a href="{{ route('invoices.view', 'INV-9082') }}" class="text-pp-600 hover:underline">#INV-9082</a>
             </td>
             <td class="p-3.5 font-bold text-slate-900">HP EliteBook 840 G5 Package</td>
             <td class="p-3.5 text-slate-600">TechSam (Buyer)</td>
@@ -78,13 +78,13 @@
             <td class="p-3.5"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">Escrow Protected</span></td>
             <td class="p-3.5"><span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">PAID</span></td>
             <td class="p-3.5 text-right">
-              <a href="{{ route('invoices.view', ['id' => 'INV-9082']) }}" class="px-3 py-1.5 rounded-lg bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-[11px] transition">View Invoice →</a>
+              <a href="{{ route('invoices.view', 'INV-9082') }}" class="px-3 py-1.5 rounded-lg bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-[11px] transition">View Invoice →</a>
             </td>
           </tr>
 
           <tr class="hover:bg-slate-50/80 transition">
             <td class="p-3.5 font-bold text-slate-900">
-              <a href="{{ route('invoices.view', ['id' => 'INV-9081']) }}" class="text-pp-600 hover:underline">#INV-9081</a>
+              <a href="{{ route('invoices.view', 'INV-9081') }}" class="text-pp-600 hover:underline">#INV-9081</a>
             </td>
             <td class="p-3.5 font-bold text-slate-900">Dell Latitude 5420 Scrap Unit</td>
             <td class="p-3.5 text-slate-600">Abel Tech Parts (Buyer)</td>
@@ -93,13 +93,13 @@
             <td class="p-3.5"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">Escrow Protected</span></td>
             <td class="p-3.5"><span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">PAID</span></td>
             <td class="p-3.5 text-right">
-              <a href="{{ route('invoices.view', ['id' => 'INV-9081']) }}" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] transition">View Invoice →</a>
+              <a href="{{ route('invoices.view','INV-9081') }}" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] transition">View Invoice →</a>
             </td>
           </tr>
 
           <tr class="hover:bg-slate-50/80 transition">
             <td class="p-3.5 font-bold text-slate-900">
-              <a href="{{ route('invoices.view', ['id' => 'INV-9079']) }}" class="text-pp-600 hover:underline">#INV-9079</a>
+              <a href="{{ route('invoices.view','INV-9079') }}" class="text-pp-600 hover:underline">#INV-9079</a>
             </td>
             <td class="p-3.5 font-bold text-slate-900">Dell Latitude Motherboard (Tested)</td>
             <td class="p-3.5 text-slate-600">Abel Electronics (Seller)</td>
@@ -108,7 +108,7 @@
             <td class="p-3.5"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-bold">Direct Seller Transfer</span></td>
             <td class="p-3.5"><span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-extrabold">PENDING SELLER CONFIRM</span></td>
             <td class="p-3.5 text-right">
-              <a href="{{ route('invoices.view', ['id' => 'INV-9079']) }}" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-[11px] transition">View Invoice →</a>
+              <a href="{{ route('invoices.view', 'INV-9079') }}" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 font-bold text-[11px] transition">View Invoice →</a>
             </td>
           </tr>
         </tbody>

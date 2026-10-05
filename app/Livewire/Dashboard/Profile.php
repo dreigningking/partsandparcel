@@ -6,6 +6,8 @@ use App\Models\BankAccount;
 use App\Models\Country;
 use App\Models\DeviceToken;
 use App\Models\Location;
+use App\Models\Moderation;
+use App\Models\Verification;
 use App\Services\Notification\FcmService;
 use App\Services\Payment\PaystackService;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +24,18 @@ class Profile extends Component
     use WithFileUploads;
 
     // Active Navigation Subtab
-    public string $activeSection = 'profile'; // profile, security, notifications, banking
+    public string $activeSection = 'profile'; // profile, security, notifications, banking, verification
+
+    // Camera & Liveness / Facial Verification Modal State
+    public bool $showCameraModal = false;
+
+    // KYC Identity Verification Fields
+    public string $kyc_document_type = 'national_id'; // national_id, drivers_license, international_passport, voters_card
+    public string $kyc_document_number = '';
+    public $kyc_front_image = null;
+    public $kyc_back_image = null;
+    public $kyc_selfie_image = null;
+    public ?Verification $activeVerification = null;
 
     // User Profile Fields
     public string $name = '';
@@ -84,6 +97,13 @@ class Profile extends Component
             $this->notify_push = $user->notificationPreference('push');
             $this->notify_email = $user->notificationPreference('email');
 
+            // Identity verification record
+            $this->activeVerification = $user->latestVerification;
+            if ($this->activeVerification) {
+                $this->kyc_document_type = $this->activeVerification->document_type ?? 'national_id';
+                $this->kyc_document_number = $this->activeVerification->document_number ?? '';
+            }
+
             // Bank details
             $this->savedBank = $user->bankAccounts()->where('is_default', true)->first() 
                 ?: $user->bankAccounts()->first();
@@ -102,7 +122,7 @@ class Profile extends Component
 
     public function setSection(string $section)
     {
-        if (in_array($section, ['profile', 'security', 'notifications', 'banking'])) {
+        if (in_array($section, ['profile', 'security', 'notifications', 'banking', 'verification'])) {
             $this->activeSection = $section;
         }
     }
@@ -143,7 +163,20 @@ class Profile extends Component
 
         $user->update($data);
 
+        $this->dispatch('pp-theme-changed', theme: $this->theme_preference);
+
         session()->flash('profile_success', 'Profile information updated successfully.');
+    }
+
+    public function updatedThemePreference(string $value): void
+    {
+        if (in_array($value, ['system', 'light', 'dark'])) {
+            $user = Auth::user();
+            if ($user) {
+                $user->update(['theme_preference' => $value]);
+                $this->dispatch('pp-theme-changed', theme: $value);
+            }
+        }
     }
 
     public function removeAvatar()
@@ -224,8 +257,29 @@ class Profile extends Component
             $browserName = 'Microsoft Edge';
         }
 
-        $token = $token ?: 'fcm_token_' . md5($user->id . '_' . $rawAgent . '_' . now()->timestamp);
         $deviceName = $deviceName ?: ($browserName . ' (' . (PHP_OS_FAMILY ?? 'PC') . ')');
+
+        // Deterministic, persistent token per user browser environment
+        $stableToken = 'web_' . md5($user->id . '_' . $rawAgent);
+        $token = $token ?: $stableToken;
+
+        // Check if device token record already exists for this user & browser
+        $existing = $user->deviceTokens()
+            ->where(function ($q) use ($token, $deviceName) {
+                $q->where('token', $token)
+                  ->orWhere('device_name', $deviceName);
+            })->first();
+
+        if ($existing) {
+            $existing->update([
+                'token' => $token,
+                'last_used_at' => now(),
+                'is_active' => true,
+                'device_name' => $deviceName,
+            ]);
+            session()->flash('device_success', "Browser '{$deviceName}' is already registered (last active session updated).");
+            return;
+        }
 
         app(FcmService::class)->registerToken($user, $token, $platform, $deviceName);
         session()->flash('device_success', "Device '{$deviceName}' registered for push notifications.");
@@ -235,8 +289,7 @@ class Profile extends Component
     {
         $user = Auth::user();
         if ($user->deviceTokens()->count() === 0) {
-            session()->flash('device_error', 'No registered devices found. Click "Register This Browser" below to test push notifications.');
-            return;
+            $this->registerCurrentDevice();
         }
 
         $result = $fcm->sendToUser(
@@ -251,7 +304,128 @@ class Profile extends Component
         );
 
         $sentCount = $result['sent_count'] ?? 0;
-        session()->flash('device_success', "Test push notification dispatched to {$sentCount} active device(s).");
+
+        // Dispatch browser event so the current window immediately triggers a notification alert
+        $this->dispatch('pp-test-push-notification', [
+            'title' => 'Parts & Parcel Alert',
+            'body' => 'Push notifications are working properly on your device!',
+            'icon' => asset('images/logo.png'),
+        ]);
+
+        session()->flash('device_success', "Test push notification dispatched! Active registered devices: {$sentCount}.");
+    }
+
+    public function openCameraModal(): void
+    {
+        $this->showCameraModal = true;
+    }
+
+    public function closeCameraModal(): void
+    {
+        $this->showCameraModal = false;
+    }
+
+    public function saveCameraSelfie(string $base64Data): void
+    {
+        $user = Auth::user();
+        if (empty($base64Data)) {
+            session()->flash('camera_error', 'No image data captured.');
+            return;
+        }
+
+        // Clean base64 string
+        if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $type)) {
+            $data = substr($base64Data, strpos($base64Data, ',') + 1);
+            $type = strtolower($type[1]);
+            $data = base64_decode($data);
+
+            if ($data === false) {
+                session()->flash('camera_error', 'Failed to decode captured selfie image.');
+                return;
+            }
+
+            $filename = 'avatars/live_selfie_' . $user->id . '_' . time() . '.' . ($type === 'png' ? 'png' : 'jpg');
+            Storage::disk('public')->put($filename, $data);
+
+            // Update user's avatar & facial_verified_at
+            $user->update([
+                'avatar' => $filename,
+                'facial_verified_at' => now(),
+            ]);
+
+            $this->currentAvatar = $filename;
+            $this->closeCameraModal();
+            session()->flash('profile_success', 'Live facial capture completed and profile avatar updated!');
+        } else {
+            session()->flash('camera_error', 'Invalid selfie image data format.');
+        }
+    }
+
+    public function submitKycVerification(): void
+    {
+        $user = Auth::user();
+
+        $rules = [
+            'kyc_document_type' => 'required|in:national_id,drivers_license,international_passport,voters_card',
+            'kyc_document_number' => 'required|string|max:60',
+            'kyc_front_image' => $this->activeVerification?->front_image ? 'nullable|image|max:10240' : 'required|image|max:10240',
+            'kyc_back_image' => 'nullable|image|max:10240',
+            'kyc_selfie_image' => 'nullable|image|max:10240',
+        ];
+
+        $this->validate($rules, [
+            'kyc_document_type.required' => 'Please select your document type.',
+            'kyc_document_number.required' => 'Please enter your document or ID number.',
+            'kyc_front_image.required' => 'Front photo of your ID document is required.',
+            'kyc_front_image.max' => 'Maximum image size is 10MB.',
+        ]);
+
+        $frontPath = $this->activeVerification?->front_image;
+        if ($this->kyc_front_image) {
+            $frontPath = $this->kyc_front_image->store('verifications/front', 'public');
+        }
+
+        $backPath = $this->activeVerification?->back_image;
+        if ($this->kyc_back_image) {
+            $backPath = $this->kyc_back_image->store('verifications/back', 'public');
+        }
+
+        $selfiePath = $this->activeVerification?->selfie_image;
+        if ($this->kyc_selfie_image) {
+            $selfiePath = $this->kyc_selfie_image->store('verifications/selfie', 'public');
+        } elseif ($user->avatar) {
+            $selfiePath = $user->avatar;
+        }
+
+        $isLiveness = (bool) ($user->facial_verified_at || $selfiePath);
+
+        $verification = Verification::create([
+            'user_id' => $user->id,
+            'document_type' => $this->kyc_document_type,
+            'document_number' => $this->kyc_document_number,
+            'front_image' => $frontPath,
+            'back_image' => $backPath,
+            'selfie_image' => $selfiePath,
+            'liveness_verified' => $isLiveness,
+            'status' => 'pending',
+            'rejection_reason' => null,
+        ]);
+
+        // Create Moderation entry for admin review queue
+        Moderation::create([
+            'moderatable_type' => Verification::class,
+            'moderatable_id' => $verification->id,
+            'status' => 'pending',
+            'action' => $this->activeVerification ? 'updated' : 'created',
+            'reason' => 'Government ID identity verification submitted',
+        ]);
+
+        $this->activeVerification = $verification;
+        $this->kyc_front_image = null;
+        $this->kyc_back_image = null;
+        $this->kyc_selfie_image = null;
+
+        session()->flash('kyc_success', 'Identity documents submitted successfully! Our compliance team is reviewing them.');
     }
 
     /**

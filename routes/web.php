@@ -6,8 +6,6 @@ use App\Livewire\Admin\AdminBlogComments;
 use App\Livewire\Admin\AdminBlogPostCreate;
 use App\Livewire\Admin\AdminBlogPostEdit;
 use App\Livewire\Admin\AdminBlogPostShow;
-use App\Livewire\Marketplace\Blog\BlogList;
-use App\Livewire\Marketplace\Blog\BlogPost;
 use App\Livewire\Admin\AdminCouponCreate;
 use App\Livewire\Admin\AdminCouponEdit;
 use App\Livewire\Admin\AdminCoupons;
@@ -32,6 +30,7 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Dashboard\Disputes\DisputesList;
 use App\Livewire\Dashboard\Disputes\DisputeView;
 use App\Livewire\Dashboard\Earnings;
@@ -60,6 +59,8 @@ use App\Livewire\Dashboard\SubscriptionConfirmation;
 use App\Livewire\Dashboard\SubscriptionPlans;
 use App\Livewire\Dashboard\Subscriptions;
 use App\Livewire\Dashboard\Wishlists;
+use App\Livewire\Marketplace\Blog\BlogList;
+use App\Livewire\Marketplace\Blog\BlogPost;
 use App\Livewire\Marketplace\CartPage;
 use App\Livewire\Marketplace\CheckoutPage;
 use App\Livewire\Marketplace\Community\CommunityHome;
@@ -88,18 +89,13 @@ Route::post('logout', function () {
     request()->session()->regenerateToken();
     return redirect()->route('welcome');
 })->name('logout');
-// Admin Direct Logout
-// Route::get('admin/logout', function () {
-//     Auth::guard('web')->logout();
-//     request()->session()->invalidate();
-//     request()->session()->regenerateToken();
-//     return redirect()->route('welcome');
-// })->name('admin.logout');
+
 
 Route::get('/', Welcome::class)->name('welcome');
 Route::get('category', Category::class)->name('category');
 Route::get('search', SearchPage::class)->name('search');
 Route::get('listing-details/{listing}', ListingDetails::class)->name('listing-details');
+Route::get('users/{user}', UserProfile::class)->name('users.show');
 Route::get('user/{user}', UserProfile::class)->name('user.profile');
 Route::get('community', CommunityHome::class)->name('community');
 Route::get('community/request/{id}', CommunityRequest::class)->name('community.request');
@@ -114,8 +110,13 @@ Route::get('payment/callback', [\App\Http\Controllers\PaymentController::class, 
 Route::post('webhooks/paystack', [\App\Http\Controllers\Webhooks\PaystackWebhookController::class, 'handle'])->name('webhooks.paystack');
 Route::post('webhooks/flutterwave', [\App\Http\Controllers\Webhooks\FlutterwaveWebhookController::class, 'handle'])->name('webhooks.flutterwave');
 
-// Invoice Document & Spreadsheet Exports
+// Email Verification (Auth required, but unverified permitted)
 Route::middleware('auth')->group(function () {
+    Route::get('verify-email', VerifyEmail::class)->name('verification.notice');
+});
+
+// Protected Dashboard Routes (Require Auth & Verified Email)
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', Overview::class)->name('dashboard');
     Route::get('subscriptions', Subscriptions::class)->name('subscriptions');
     Route::get('subscription-plans', SubscriptionPlans::class)->name('subscription-plans');
@@ -153,29 +154,34 @@ Route::middleware('auth')->group(function () {
     Route::get('disputes/dispute_id', DisputeView::class)->name('disputes.view');
 });
 
-// Admin Control Center (Protected by EnsureUserIsAdmin)
-Route::middleware(['auth', 'admin'])->prefix('admin')->as('admin.')->group(function () {
+// Admin Control Center (Protected by EnsureUserIsAdmin & Verified Email)
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('/', AdminDashboard::class)->name('index');
     Route::get('dashboard', AdminDashboard::class)->name('dashboard');
-    Route::get('profile', Profile::class)->name('profile');
     Route::get('moderations', AdminModerations::class)->name('moderations');
+    
     Route::get('users', AdminUsers::class)->name('users');
     Route::get('users/{user}', AdminUserDetails::class)->whereNumber('user')->name('users.show');
+    //Subscriptions & Promotions
     Route::get('subscriptions', AdminSubscriptions::class)->name('subscriptions');
     Route::get('promotions', AdminPromotions::class)->name('promotions');
-    Route::get('properties', AdminListings::class)->name('properties');
-    Route::get('properties/{property}', AdminListingDetails::class)->whereNumber('property')->name('properties.show');
+
+    //Marketplace
+    Route::get('listings', AdminListings::class)->name('properties');
+    Route::get('listings/{property}', AdminListingDetails::class)->whereNumber('property')->name('properties.show');
+    //Content & Blog
     Route::get('blog', AdminBlog::class)->name('blog');
     Route::get('blog/create', AdminBlogPostCreate::class)->name('blog.create');
     Route::get('blog/comments', AdminBlogComments::class)->name('blog.comments');
     Route::get('blog/{post}', AdminBlogPostShow::class)->whereNumber('post')->name('blog.show');
     Route::get('blog/{post}/edit', AdminBlogPostEdit::class)->whereNumber('post')->name('blog.edit');
+    //
     Route::get('payments', AdminPayments::class)->name('payments');
     Route::get('coupons', AdminCoupons::class)->name('coupons');
     Route::get('coupons/create', AdminCouponCreate::class)->name('coupons.create');
     Route::get('coupons/{coupon}/edit', AdminCouponEdit::class)->whereNumber('coupon')->name('coupons.edit');
     Route::get('faqs', AdminFaqs::class)->name('faqs');
-    // Route::get('advertisements', AdminAdvertisements::class)->name('advertisements');
+    // System Settings
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('general', AdminGeneral::class)->name('general');
         Route::get('categories', AdminCategories::class)->name('categories');

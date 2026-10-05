@@ -48,20 +48,20 @@
     @endif
 
     <!-- KPI STATS CARDS -->
-    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
         <!-- Pending Total -->
         <div 
             wire:click="setFilter('pending')"
-            class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border transition cursor-pointer {{ $filter === 'pending' ? 'border-amber-500 ring-2 ring-amber-500/20 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300' }}"
+            class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border transition cursor-pointer {{ $filter === 'pending' && $type === 'all' ? 'border-amber-500 ring-2 ring-amber-500/20 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300' }}"
         >
             <div class="flex items-center justify-between">
-                <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Awaiting Review</span>
+                <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Awaiting</span>
                 <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs">
                     <i class="fas fa-hourglass-half"></i>
                 </span>
             </div>
             <div class="mt-2 sm:mt-3 text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">{{ number_format($pendingCount) }}</div>
-            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Needs admin action</p>
+            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Needs action</p>
         </div>
 
         <!-- Pending Listings -->
@@ -76,7 +76,37 @@
                 </span>
             </div>
             <div class="mt-2 sm:mt-3 text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ number_format($pendingListingsCount) }}</div>
-            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Pending marketplace items</p>
+            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Marketplace</p>
+        </div>
+
+        <!-- Pending Locations (Address Proofs) -->
+        <div 
+            wire:click="setType('location')"
+            class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border transition cursor-pointer {{ $type === 'location' ? 'border-teal-500 ring-2 ring-teal-500/20 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300' }}"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Addresses</span>
+                <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center text-xs">
+                    <i class="fas fa-map-marker-alt"></i>
+                </span>
+            </div>
+            <div class="mt-2 sm:mt-3 text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ number_format($pendingLocationsCount) }}</div>
+            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Utility bills</p>
+        </div>
+
+        <!-- Pending User Verifications (KYC) -->
+        <div 
+            wire:click="setType('verification')"
+            class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border transition cursor-pointer {{ $type === 'verification' ? 'border-purple-500 ring-2 ring-purple-500/20 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300' }}"
+        >
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Identity</span>
+                <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xs">
+                    <i class="fas fa-id-card"></i>
+                </span>
+            </div>
+            <div class="mt-2 sm:mt-3 text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ number_format($pendingVerificationsCount) }}</div>
+            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">IDs & Selfies</p>
         </div>
 
         <!-- Pending Discussions -->
@@ -91,7 +121,7 @@
                 </span>
             </div>
             <div class="mt-2 sm:mt-3 text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ number_format($pendingDiscussionsCount) }}</div>
-            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Pending community posts</p>
+            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Community</p>
         </div>
 
         <!-- Pending Comments -->
@@ -100,13 +130,13 @@
             class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border transition cursor-pointer {{ $type === 'post_comment' ? 'border-sky-500 ring-2 ring-sky-500/20 shadow-sm' : 'border-slate-200/80 dark:border-slate-800 shadow-2xs hover:border-slate-300' }}"
         >
             <div class="flex items-center justify-between">
-                <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Blog Comments</span>
+                <span class="text-[11px] sm:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Comments</span>
                 <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-xs">
                     <i class="fas fa-comment-dots"></i>
                 </span>
             </div>
             <div class="mt-2 sm:mt-3 text-xl sm:text-2xl font-black text-slate-900 dark:text-white">{{ number_format($pendingCommentsCount) }}</div>
-            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Pending blog comments</p>
+            <p class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5">Blog notes</p>
         </div>
 
         <!-- Processed Summary -->
@@ -192,6 +222,8 @@
                     >
                         <option value="all">All Content Types</option>
                         <option value="listing">Listings (Marketplace)</option>
+                        <option value="location">Address Proofs (Locations)</option>
+                        <option value="verification">Identity KYC (Verifications)</option>
                         <option value="discussion">Discussions (Community)</option>
                         <option value="post_comment">Blog Comments</option>
                     </select>
@@ -252,6 +284,8 @@
                             $isListing = $moderation->moderatable_type === 'App\Models\Listing' || $item instanceof \App\Models\Listing;
                             $isDiscussion = $moderation->moderatable_type === 'App\Models\Discussion' || $item instanceof \App\Models\Discussion;
                             $isComment = $moderation->moderatable_type === 'App\Models\PostComment' || $item instanceof \App\Models\PostComment;
+                            $isLocation = $moderation->moderatable_type === 'App\Models\Location' || $item instanceof \App\Models\Location;
+                            $isVerification = $moderation->moderatable_type === 'App\Models\Verification' || $item instanceof \App\Models\Verification;
                         @endphp
                         <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
                             
@@ -263,6 +297,14 @@
                                         @if($isListing)
                                             <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-100 dark:border-emerald-800/60 shadow-2xs">
                                                 <i class="fas fa-tag"></i>
+                                            </div>
+                                        @elseif($isLocation)
+                                            <div class="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-xs border border-teal-100 dark:border-teal-800/60 shadow-2xs">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                            </div>
+                                        @elseif($isVerification)
+                                            <div class="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-xs border border-purple-100 dark:border-purple-800/60 shadow-2xs">
+                                                <i class="fas fa-id-card"></i>
                                             </div>
                                         @elseif($isDiscussion)
                                             <div class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs border border-indigo-100 dark:border-indigo-800/60 shadow-2xs">
@@ -297,6 +339,28 @@
                                                     <span class="truncate">{{ $item->item->deviceModel->name }}</span>
                                                 @endif
                                             </div>
+                                        @elseif($isLocation && $item)
+                                            <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                                                <span class="font-bold text-slate-800 dark:text-slate-200">{{ $item->city ?? '' }}, {{ $item->state?->name ?? '' }}</span>
+                                                <span>·</span>
+                                                <span class="truncate max-w-[150px]">{{ $item->address_line_1 }}</span>
+                                                @if($item->utility_bill_path)
+                                                    <span>·</span>
+                                                    <span class="text-teal-600 dark:text-teal-400 font-semibold flex items-center gap-1"><i class="fas fa-file-invoice"></i> Bill</span>
+                                                @endif
+                                            </div>
+                                        @elseif($isVerification && $item)
+                                            <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                                                <span class="font-bold text-purple-600 dark:text-purple-400 uppercase">{{ str_replace('_', ' ', $item->document_type ?? 'ID') }}</span>
+                                                @if($item->document_number)
+                                                    <span>·</span>
+                                                    <span class="font-mono text-[10px]">{{ $item->document_number }}</span>
+                                                @endif
+                                                @if($item->liveness_verified)
+                                                    <span>·</span>
+                                                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1"><i class="fas fa-check-circle"></i> Live Face Checked</span>
+                                                @endif
+                                            </div>
                                         @elseif($isDiscussion && $item)
                                             <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
                                                 <span class="px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold uppercase">
@@ -321,7 +385,7 @@
                             <!-- TYPE & ACTION -->
                             <td class="px-4 py-3.5 whitespace-nowrap">
                                 <div class="flex flex-col gap-1 items-start">
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold {{ $isListing ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : ($isDiscussion ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300' : 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300') }}">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold {{ $isListing ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : ($isLocation ? 'bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300' : ($isVerification ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300' : ($isDiscussion ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300' : 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300'))) }}">
                                         {{ $moderation->type_label }}
                                     </span>
                                     <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold {{ $moderation->action === 'created' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400' }}">
@@ -576,6 +640,8 @@
             $isListing = $previewItem->moderatable_type === 'App\Models\Listing' || $target instanceof \App\Models\Listing;
             $isDiscussion = $previewItem->moderatable_type === 'App\Models\Discussion' || $target instanceof \App\Models\Discussion;
             $isComment = $previewItem->moderatable_type === 'App\Models\PostComment' || $target instanceof \App\Models\PostComment;
+            $isLocation = $previewItem->moderatable_type === 'App\Models\Location' || $target instanceof \App\Models\Location;
+            $isVerification = $previewItem->moderatable_type === 'App\Models\Verification' || $target instanceof \App\Models\Verification;
         @endphp
         <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="preview-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -589,7 +655,7 @@
                     <!-- Preview Header -->
                     <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between gap-4">
                         <div class="flex items-center gap-3">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black {{ $isListing ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : ($isDiscussion ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300') }}">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black {{ $isListing ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : ($isLocation ? 'bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300' : ($isVerification ? 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300' : ($isDiscussion ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300'))) }}">
                                 {{ $previewItem->type_label }}
                             </span>
                             <span class="text-xs font-semibold text-slate-400">
@@ -746,6 +812,194 @@
                                 <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Submitted Comment Body</h4>
                                 <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-800 dark:text-slate-200 leading-relaxed border border-slate-100 dark:border-slate-700/60 whitespace-pre-line">
                                     {{ $target->comment }}
+                                </div>
+                            </div>
+
+                        <!-- LOCATION DETAILS -->
+                        @elseif ($isLocation && $target)
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Label</div>
+                                    <div class="text-sm font-black text-slate-900 dark:text-white mt-0.5">
+                                        {{ $target->label ?? 'Location' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">City & State</div>
+                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                        {{ $target->city }}, {{ $target->state?->name ?? '—' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Country</div>
+                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                        {{ $target->country?->name ?? 'Nigeria' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Default Location</div>
+                                    <div class="text-sm font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                                        {{ $target->is_default ? 'Yes' : 'No' }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-700 dark:text-slate-300">
+                                <span class="font-bold text-slate-500 uppercase tracking-wider block text-[10px] mb-1">Full Street Address</span>
+                                {{ $target->address_line_1 }}
+                                @if($target->address_line_2)
+                                    <div>{{ $target->address_line_2 }}</div>
+                                @endif
+                                @if($target->postal_code)
+                                    <div class="text-slate-400 mt-1">Postal Code: {{ $target->postal_code }}</div>
+                                @endif
+                            </div>
+
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+                                    <span>Utility Bill / Address Proof Document</span>
+                                    <span class="text-[11px] font-semibold text-slate-400">Electricity, Water, or Waste Bill</span>
+                                </h4>
+                                
+                                @if ($target->utility_bill_path)
+                                    @php
+                                        $ext = strtolower(pathinfo($target->utility_bill_path, PATHINFO_EXTENSION));
+                                        $billUrl = Storage::url($target->utility_bill_path);
+                                    @endphp
+
+                                    @if(in_array($ext, ['jpg', 'jpeg', 'png', 'webp']))
+                                        <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-950 flex flex-col items-center">
+                                            <a href="{{ $billUrl }}" target="_blank" title="Click to view full image">
+                                                <img src="{{ $billUrl }}" alt="Utility Bill" class="max-h-96 w-auto object-contain mx-auto">
+                                            </a>
+                                            <div class="w-full bg-slate-900/90 p-2 text-center">
+                                                <a href="{{ $billUrl }}" target="_blank" class="text-xs text-pp-400 hover:underline font-bold inline-flex items-center gap-1">
+                                                    <span>Open full bill image in new tab</span>
+                                                    <i class="fas fa-external-link-alt text-[10px]"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="p-6 rounded-xl border-2 border-dashed border-teal-300 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-950/20 text-center">
+                                            <div class="w-12 h-12 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-600 dark:text-teal-300 flex items-center justify-center mx-auto text-xl mb-2">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </div>
+                                            <h5 class="text-sm font-bold text-slate-800 dark:text-slate-200">PDF Document Uploaded</h5>
+                                            <p class="text-xs text-slate-500 mt-1 mb-3">Address proof submitted as PDF document.</p>
+                                            <a href="{{ $billUrl }}" target="_blank" class="px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs inline-flex items-center gap-2 transition shadow-xs">
+                                                <i class="fas fa-external-link-alt"></i>
+                                                <span>View Utility Bill PDF</span>
+                                            </a>
+                                        </div>
+                                    @endif
+                                @else
+                                    <div class="p-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 text-center text-slate-400 text-xs">
+                                        <i class="fas fa-exclamation-circle text-amber-500 text-base mb-1 block"></i>
+                                        No utility bill document has been uploaded for this address yet.
+                                    </div>
+                                @endif
+                            </div>
+
+                        <!-- USER IDENTITY KYC & LIVENESS VERIFICATION -->
+                        @elseif ($isVerification && $target)
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Document Type</div>
+                                    <div class="text-sm font-black text-purple-600 dark:text-purple-400 mt-0.5 uppercase">
+                                        {{ str_replace('_', ' ', $target->document_type ?? 'Government ID') }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Document Number</div>
+                                    <div class="text-sm font-black font-mono text-slate-800 dark:text-slate-200 mt-0.5">
+                                        {{ $target->document_number ?? 'Not Provided' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">Liveness Check</div>
+                                    <div class="text-sm font-black mt-0.5 {{ $target->liveness_verified ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-500' }}">
+                                        {{ $target->liveness_verified ? 'Passed (Live)' : 'Pending' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase">KYC Status</div>
+                                    <div class="text-sm font-black mt-0.5 capitalize {{ $target->status === 'verified' ? 'text-emerald-600' : ($target->status === 'rejected' ? 'text-rose-600' : 'text-amber-500') }}">
+                                        {{ $target->status ?? 'Pending' }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- COMPARISON PANEL: ID CARD vs LIVE SELFIE -->
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                                    Identity Document & Live Face Comparison
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <!-- FRONT ID -->
+                                    <div class="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800/60">
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase mb-2 flex items-center justify-between">
+                                            <span>Front of ID Card</span>
+                                            <i class="fas fa-id-card text-purple-500"></i>
+                                        </div>
+                                        @if($target->front_image)
+                                            <a href="{{ Storage::url($target->front_image) }}" target="_blank" class="block aspect-4/3 rounded-lg overflow-hidden bg-slate-900 border border-slate-200 dark:border-slate-700 hover:opacity-90 transition">
+                                                <img src="{{ Storage::url($target->front_image) }}" alt="Front ID" class="w-full h-full object-cover">
+                                            </a>
+                                            <div class="mt-2 text-center">
+                                                <a href="{{ Storage::url($target->front_image) }}" target="_blank" class="text-[11px] text-pp-600 hover:underline font-bold">
+                                                    View Full Size
+                                                </a>
+                                            </div>
+                                        @else
+                                            <div class="aspect-4/3 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 text-xs">
+                                                No front image
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <!-- BACK ID -->
+                                    <div class="rounded-xl border border-slate-200 dark:border-slate-700 p-3 bg-white dark:bg-slate-800/60">
+                                        <div class="text-[10px] font-bold text-slate-400 uppercase mb-2 flex items-center justify-between">
+                                            <span>Back of ID Card</span>
+                                            <i class="fas fa-id-card-alt text-purple-500"></i>
+                                        </div>
+                                        @if($target->back_image)
+                                            <a href="{{ Storage::url($target->back_image) }}" target="_blank" class="block aspect-4/3 rounded-lg overflow-hidden bg-slate-900 border border-slate-200 dark:border-slate-700 hover:opacity-90 transition">
+                                                <img src="{{ Storage::url($target->back_image) }}" alt="Back ID" class="w-full h-full object-cover">
+                                            </a>
+                                            <div class="mt-2 text-center">
+                                                <a href="{{ Storage::url($target->back_image) }}" target="_blank" class="text-[11px] text-pp-600 hover:underline font-bold">
+                                                    View Full Size
+                                                </a>
+                                            </div>
+                                        @else
+                                            <div class="aspect-4/3 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 text-xs">
+                                                Optional / Not provided
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <!-- LIVE SELFIE / FACIAL RECOGNITION -->
+                                    <div class="rounded-xl border border-purple-200 dark:border-purple-800/60 p-3 bg-purple-50/20 dark:bg-purple-950/20">
+                                        <div class="text-[10px] font-bold text-purple-700 dark:text-purple-300 uppercase mb-2 flex items-center justify-between">
+                                            <span>Live Camera Selfie</span>
+                                            <i class="fas fa-camera text-emerald-500"></i>
+                                        </div>
+                                        @if($target->selfie_image)
+                                            <a href="{{ Storage::url($target->selfie_image) }}" target="_blank" class="block aspect-4/3 rounded-lg overflow-hidden bg-slate-900 border border-purple-300 dark:border-purple-700 hover:opacity-90 transition">
+                                                <img src="{{ Storage::url($target->selfie_image) }}" alt="Live Selfie" class="w-full h-full object-cover">
+                                            </a>
+                                            <div class="mt-2 text-center">
+                                                <a href="{{ Storage::url($target->selfie_image) }}" target="_blank" class="text-[11px] text-purple-600 hover:underline font-bold">
+                                                    View Full Size
+                                                </a>
+                                            </div>
+                                        @else
+                                            <div class="aspect-4/3 rounded-lg border-2 border-dashed border-purple-200 dark:border-purple-800 flex items-center justify-center text-slate-400 text-xs">
+                                                No live selfie captured
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         @endif

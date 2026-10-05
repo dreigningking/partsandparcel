@@ -259,7 +259,7 @@
         <div class="flex items-center justify-between">
           <div>
             <label class="block text-xs font-bold text-slate-900 uppercase tracking-wider">Item Media (Photos &amp; Video)</label>
-            <p class="text-[11px] text-slate-500 mt-0.5">Upload photos and video clips of the item or capture directly via camera.</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">Upload photos (max {{ $maxImageWidth ?? 1000 }}×{{ $maxImageHeight ?? 1000 }}px, up to {{ $maxImageMb ?? 10 }}MB) and video clips (up to {{ $maxVideoMb ?? 10 }}MB) or capture directly via camera.</p>
           </div>
 
           <div class="flex items-center gap-2">

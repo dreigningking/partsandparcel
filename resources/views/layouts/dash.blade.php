@@ -7,16 +7,42 @@
     <title>{{ $title ?? 'Parts & Parcel — Dashboard' }}</title>
     
     <script>
-        (function() {
+        function applyAppTheme(theme) {
             try {
-                const mode = localStorage.getItem('pp_theme_mode') || 'light';
-                if (mode === 'dark' || (mode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                if (theme) {
+                    localStorage.setItem('pp_theme_mode', theme);
+                }
+                const currentMode = theme || localStorage.getItem('pp_theme_mode') || 'system';
+                const isDark = currentMode === 'dark' || (currentMode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
                     document.documentElement.classList.add('dark');
                 } else {
                     document.documentElement.classList.remove('dark');
                 }
             } catch (e) {}
+        }
+
+        (function() {
+            try {
+                const userPref = @json(auth()->check() ? auth()->user()->theme_preference : null);
+                const mode = userPref || localStorage.getItem('pp_theme_mode') || 'system';
+                applyAppTheme(mode);
+            } catch (e) {}
         })();
+
+        window.addEventListener('pp-theme-changed', function(event) {
+            const theme = (event.detail && typeof event.detail === 'object') ? (event.detail.theme || 'system') : (event.detail || 'system');
+            applyAppTheme(theme);
+        });
+
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+                const current = localStorage.getItem('pp_theme_mode') || 'system';
+                if (current === 'system') {
+                    applyAppTheme('system');
+                }
+            });
+        }
     </script>
     
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
@@ -85,12 +111,12 @@
 
                   <div class="hidden sm:flex flex-col">
                       <div class="text-xs text-slate-400">{{ Route::is('admin.*') ? 'Admin Console' : 'Dashboard' }}</div>
-                      <b class="text-sm font-extrabold text-slate-900">Good morning, {{ auth()->user()->first_name ?? auth()->user()->name ?? 'User' }} 👋</b>
+                      {{-- <b class="text-sm font-extrabold text-slate-900">Good morning, {{ auth()->user()->name ?? 'User' }}</b> --}}
                   </div>
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <a href="{{ route('welcome') }}" class="hidden md:flex items-center gap-1 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition border border-slate-200/80">Marketplace ↗</a>
+                  <a href="{{ route('welcome') }}" class="hidden md:flex items-center gap-1 px-3.5 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition border border-slate-200/80">Marketplace ↗</a>
                   
                   @include('layouts.partials.header-user-actions')
                 </div>

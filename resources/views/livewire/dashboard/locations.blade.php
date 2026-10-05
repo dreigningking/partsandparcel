@@ -96,7 +96,7 @@
         >
           <div class="space-y-3.5">
             <!-- CARD TOP BADGES -->
-            <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
               <span class="px-2.5 py-0.5 rounded-full font-black text-[10px] uppercase tracking-wider {{ $loc->is_default ? 'bg-pp-100 text-pp-800' : 'bg-slate-100 text-slate-600' }}">
                 {{ $loc->is_default ? 'Primary Store / Address' : 'Additional Location' }}
               </span>
@@ -114,6 +114,32 @@
                 >
                   <i class="far fa-star text-[11px]"></i> Set Default
                 </button>
+              @endif
+            </div>
+
+            <!-- VERIFICATION STATUS BADGE -->
+            <div>
+              @if($loc->verification_status === 'verified')
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <i class="fas fa-check-circle text-emerald-600"></i> Verified Address
+                </span>
+              @elseif($loc->verification_status === 'pending')
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[10px] bg-amber-50 text-amber-700 border border-amber-200">
+                  <i class="fas fa-hourglass-half text-amber-600 animate-pulse"></i> Address Verification Pending
+                </span>
+              @elseif($loc->verification_status === 'rejected')
+                <div class="space-y-1">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[10px] bg-rose-50 text-rose-700 border border-rose-200">
+                    <i class="fas fa-times-circle text-rose-600"></i> Verification Rejected
+                  </span>
+                  @if($loc->rejection_reason)
+                    <p class="text-[10px] text-rose-600 font-medium pl-1">Reason: {{ $loc->rejection_reason }}</p>
+                  @endif
+                </div>
+              @else
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-bold text-[10px] bg-slate-100 text-slate-600 border border-slate-200">
+                  <i class="fas fa-shield-alt text-slate-400"></i> Unverified Address
+                </span>
               @endif
             </div>
 
@@ -151,6 +177,13 @@
               @if($loc->postal_code)
                 <div class="text-[10px] text-slate-400 font-mono">Postal Code: {{ $loc->postal_code }}</div>
               @endif
+              @if($loc->utility_bill_path)
+                <div class="pt-1 flex items-center gap-1.5 text-[11px] font-semibold text-teal-700">
+                  <i class="fas fa-file-invoice text-teal-600"></i>
+                  <span>Utility bill uploaded</span>
+                  <a href="{{ Storage::url($loc->utility_bill_path) }}" target="_blank" class="text-pp-600 underline font-bold ml-1">View</a>
+                </div>
+              @endif
             </div>
 
             <!-- CONTACT DETAILS -->
@@ -173,14 +206,28 @@
           </div>
 
           <!-- CARD ACTIONS -->
-          <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold mt-2">
-            <button
-              type="button"
-              wire:click="openEditModal({{ $loc->id }})"
-              class="text-pp-600 hover:text-pp-700 hover:underline cursor-pointer flex items-center gap-1"
-            >
-              <i class="fas fa-edit text-[10px]"></i> Edit Details
-            </button>
+          <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold mt-2 gap-2 flex-wrap">
+            <div class="flex items-center gap-3">
+              <button
+                type="button"
+                wire:click="openEditModal({{ $loc->id }})"
+                class="text-pp-600 hover:text-pp-700 hover:underline cursor-pointer flex items-center gap-1"
+              >
+                <i class="fas fa-edit text-[10px]"></i> Edit
+              </button>
+
+              @if($loc->verification_status !== 'verified')
+                <button
+                  type="button"
+                  wire:click="openProofModal({{ $loc->id }})"
+                  class="text-teal-600 hover:text-teal-700 hover:underline cursor-pointer flex items-center gap-1"
+                  title="Upload utility bill for address verification"
+                >
+                  <i class="fas fa-file-invoice text-[10px]"></i>
+                  <span>{{ $loc->utility_bill_path ? 'Update Bill' : 'Verify Address' }}</span>
+                </button>
+              @endif
+            </div>
 
             <button
               type="button"
@@ -329,6 +376,36 @@
             />
           </div>
 
+          <!-- UTILITY BILL / ADDRESS PROOF UPLOAD -->
+          <div class="p-4 rounded-2xl bg-teal-50/60 border border-teal-100 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="font-bold text-slate-900 block text-xs">
+                <i class="fas fa-file-invoice text-teal-600 mr-1"></i> Address Verification (Utility Bill)
+              </label>
+              <span class="text-[10px] font-semibold text-teal-700 uppercase tracking-wider bg-teal-100 px-2 py-0.5 rounded-full">Recommended</span>
+            </div>
+            <p class="text-[11px] text-slate-500 leading-relaxed">
+              Upload a utility bill (electricity, water, or waste) showing this address to get your location verified and build trust with buyers.
+            </p>
+            <input
+              type="file"
+              wire:model="utility_bill"
+              accept="image/*,application/pdf"
+              class="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer"
+            />
+            <div wire:loading wire:target="utility_bill" class="text-[10px] text-teal-600 font-semibold flex items-center gap-1">
+              <i class="fas fa-spinner fa-spin"></i> Uploading document...
+            </div>
+            @error('utility_bill') <span class="text-[10px] text-rose-600 font-bold block">{{ $message }}</span> @enderror
+
+            @if($existing_bill_path)
+              <div class="text-[10px] text-slate-500 flex items-center gap-1.5 pt-1">
+                <i class="fas fa-check-circle text-teal-600"></i>
+                <span>A document is already attached to this location. Upload a new one to replace it.</span>
+              </div>
+            @endif
+          </div>
+
           <!-- DEFAULT ADDRESS TOGGLE -->
           <div class="pt-2">
             <label class="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer">
@@ -367,6 +444,73 @@
           </div>
         </form>
 
+      </div>
+    </div>
+  @endif
+
+  <!-- QUICK PROOF / UTILITY BILL UPLOAD MODAL -->
+  @if($showProofModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-5 relative">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 grid place-items-center text-sm font-black">
+              <i class="fas fa-file-invoice"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-950">Verify Location Address</h3>
+              <p class="text-[11px] text-slate-500">Upload your recent utility bill</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            wire:click="closeProofModal"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 grid place-items-center transition cursor-pointer"
+          >
+            <i class="fas fa-times text-xs"></i>
+          </button>
+        </div>
+
+        <form wire:submit.prevent="submitProof" class="space-y-4 text-xs">
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Please attach a recent utility bill (electricity, water, waste, or property tax) showing the address of this location. Once submitted, our team will review and verify your address.
+          </p>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">
+              Select Document File (JPG, PNG, PDF) <span class="text-rose-500">*</span>
+            </label>
+            <input
+              type="file"
+              wire:model="proof_utility_bill"
+              accept="image/*,application/pdf"
+              class="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-teal-600 file:text-white hover:file:bg-teal-700 file:cursor-pointer cursor-pointer border border-slate-200 rounded-xl p-2"
+            />
+            <div wire:loading wire:target="proof_utility_bill" class="text-[10px] text-teal-600 font-semibold flex items-center gap-1 mt-1">
+              <i class="fas fa-spinner fa-spin"></i> Preparing document...
+            </div>
+            @error('proof_utility_bill') <span class="text-[10px] text-rose-600 font-bold block mt-1">{{ $message }}</span> @enderror
+          </div>
+
+          <div class="border-t border-slate-100 pt-4 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              wire:click="closeProofModal"
+              class="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold text-slate-700 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              wire:loading.attr="disabled"
+              class="px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-extrabold shadow-xs transition cursor-pointer flex items-center gap-1.5"
+            >
+              <i class="fas fa-upload text-[10px]" wire:loading.remove wire:target="submitProof"></i>
+              <i class="fas fa-spinner fa-spin text-[10px]" wire:loading wire:target="submitProof"></i>
+              <span>Submit for Verification</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   @endif

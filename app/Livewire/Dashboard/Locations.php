@@ -4,22 +4,31 @@ namespace App\Livewire\Dashboard;
 
 use App\Models\Country;
 use App\Models\Location;
+use App\Models\Moderation;
 use App\Models\State;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('layouts.dash')]
 #[Title('Saved Locations — Parts & Parcel')]
 class Locations extends Component
 {
+    use WithFileUploads;
+
     public string $search = '';
 
     // Modal state
     public bool $showLocationModal = false;
     public ?int $editingLocationId = null;
     public ?int $confirmingDeleteId = null;
+
+    // Proof upload modal state
+    public bool $showProofModal = false;
+    public ?int $uploadingProofLocationId = null;
+    public $proof_utility_bill;
 
     // Form fields
     public string $label = '';
@@ -32,6 +41,8 @@ class Locations extends Component
     public ?int $country_id = null;
     public string $postal_code = '';
     public bool $is_default = false;
+    public $utility_bill; // File upload for create/edit modal
+    public ?string $existing_bill_path = null;
 
     protected function rules(): array
     {
@@ -45,6 +56,7 @@ class Locations extends Component
             'contact_name' => 'nullable|string|max:100',
             'postal_code' => 'nullable|string|max:20',
             'is_default' => 'boolean',
+            'utility_bill' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ];
     }
 
@@ -54,6 +66,8 @@ class Locations extends Component
         'city.required' => 'City name is required.',
         'state_id.required' => 'Please select a state.',
         'state_id.exists' => 'The selected state is invalid.',
+        'utility_bill.mimes' => 'Accepted utility bill formats: JPG, PNG, WEBP, or PDF.',
+        'utility_bill.max' => 'Utility bill file size cannot exceed 10MB.',
     ];
 
     public function openCreateModal(): void
@@ -68,6 +82,8 @@ class Locations extends Component
         $this->city = '';
         $this->state_id = null;
         $this->postal_code = '';
+        $this->utility_bill = null;
+        $this->existing_bill_path = null;
 
         $country = Country::where('is_default', true)->first() ?? Country::first();
         $this->country_id = $country?->id;
@@ -95,6 +111,8 @@ class Locations extends Component
         $this->country_id = $location->country_id;
         $this->postal_code = $location->postal_code ?? '';
         $this->is_default = (bool) $location->is_default;
+        $this->utility_bill = null;
+        $this->existing_bill_path = $location->utility_bill_path;
 
         $this->showLocationModal = true;
     }
@@ -103,7 +121,57 @@ class Locations extends Component
     {
         $this->showLocationModal = false;
         $this->editingLocationId = null;
+        $this->utility_bill = null;
+        $this->existing_bill_path = null;
         $this->resetErrorBag();
+    }
+
+    public function openProofModal(int $id): void
+    {
+        $this->resetErrorBag();
+        $this->uploadingProofLocationId = $id;
+        $this->proof_utility_bill = null;
+        $this->showProofModal = true;
+    }
+
+    public function closeProofModal(): void
+    {
+        $this->showProofModal = false;
+        $this->uploadingProofLocationId = null;
+        $this->proof_utility_bill = null;
+        $this->resetErrorBag();
+    }
+
+    public function submitProof(): void
+    {
+        $this->validate([
+            'proof_utility_bill' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+        ], [
+            'proof_utility_bill.required' => 'Please choose a utility bill file (image or PDF).',
+            'proof_utility_bill.mimes' => 'Accepted file formats: JPG, PNG, WEBP, or PDF.',
+            'proof_utility_bill.max' => 'Maximum file size is 10MB.',
+        ]);
+
+        $user = Auth::user();
+        $location = $user->locations()->findOrFail($this->uploadingProofLocationId);
+
+        $path = $this->proof_utility_bill->store('locations/utility_bills', 'public');
+        $location->update([
+            'utility_bill_path' => $path,
+            'verification_status' => 'pending',
+            'rejection_reason' => null,
+        ]);
+
+        Moderation::create([
+            'moderatable_type' => Location::class,
+            'moderatable_id' => $location->id,
+            'status' => 'pending',
+            'action' => 'updated',
+            'reason' => 'Address verification utility bill submitted',
+        ]);
+
+        $this->closeProofModal();
+        session()->flash('success', "Utility bill for '{$location->label}' submitted for verification!");
     }
 
     public function saveLocation(): void
@@ -154,12 +222,42 @@ class Locations extends Component
             'is_default' => $isDefaultToSave,
         ];
 
+        $uploadedNewBill = false;
+        if ($this->utility_bill) {
+            $payload['utility_bill_path'] = $this->utility_bill->store('locations/utility_bills', 'public');
+            $payload['verification_status'] = 'pending';
+            $payload['rejection_reason'] = null;
+            $uploadedNewBill = true;
+        }
+
         if ($this->editingLocationId) {
             $location = $user->locations()->findOrFail($this->editingLocationId);
             $location->update($payload);
+
+            if ($uploadedNewBill) {
+                Moderation::create([
+                    'moderatable_type' => Location::class,
+                    'moderatable_id' => $location->id,
+                    'status' => 'pending',
+                    'action' => 'updated',
+                    'reason' => 'Address verification utility bill updated',
+                ]);
+            }
+
             session()->flash('success', "Location '{$location->label}' updated successfully!");
         } else {
             $created = $user->locations()->create($payload);
+
+            if ($uploadedNewBill) {
+                Moderation::create([
+                    'moderatable_type' => Location::class,
+                    'moderatable_id' => $created->id,
+                    'status' => 'pending',
+                    'action' => 'created',
+                    'reason' => 'New address verification utility bill submitted',
+                ]);
+            }
+
             session()->flash('success', "Location '{$created->label}' added successfully!");
         }
 

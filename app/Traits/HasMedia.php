@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\Jobs\ProcessMediaImageJob;
 use App\Models\Media;
+use App\Models\Setting;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -34,6 +35,63 @@ trait HasMedia
     public function videos(): MorphMany
     {
         return $this->media()->where('media_type', 'video');
+    }
+
+    /**
+     * Get the primary image media model.
+     */
+    public function getPrimaryImageAttribute(): ?Media
+    {
+        if ($this->relationLoaded('media')) {
+            $image = $this->media->first(fn($m) => $m->is_image) ?? $this->media->first();
+            if ($image) {
+                return $image;
+            }
+        } else {
+            $image = $this->images()->orderBy('sort_order')->first() ?? $this->media()->orderBy('sort_order')->first();
+            if ($image) {
+                return $image;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the primary image URL.
+     */
+    public function getPrimaryImageUrlAttribute(): ?string
+    {
+        return $this->primary_image?->url;
+    }
+
+    /**
+     * Get max allowed media size in kilobytes based on media type and settings.
+     */
+    public static function getMaxMediaSizeKb(string $type = 'image'): int
+    {
+        $settingKey = match ($type) {
+            'video' => 'max_media_video_size',
+            'document' => 'max_media_document_size',
+            default => 'max_media_image_size',
+        };
+
+        $mb = (int) Setting::getValue($settingKey, 10);
+        return max(1, $mb) * 1024;
+    }
+
+    /**
+     * Get media dimension limits and sizes from system settings.
+     */
+    public static function getMediaDimensionSettings(): array
+    {
+        return [
+            'width' => (int) Setting::getValue('max_media_image_width', 1000),
+            'height' => (int) Setting::getValue('max_media_image_height', 1000),
+            'max_image_size_mb' => (int) Setting::getValue('max_media_image_size', 10),
+            'max_video_size_mb' => (int) Setting::getValue('max_media_video_size', 10),
+            'max_document_size_mb' => (int) Setting::getValue('max_media_document_size', 10),
+        ];
     }
 
     /**
@@ -151,6 +209,20 @@ trait HasMedia
             return $reqs['*'];
         }
 
+        $width = (int) Setting::getValue('max_media_image_width', 1000);
+        $height = (int) Setting::getValue('max_media_image_height', 1000);
+        $maxSizeMb = (int) Setting::getValue('max_media_image_size', 10);
+
+        if ($width > 0 && $height > 0) {
+            return [
+                'width' => $width,
+                'height' => $height,
+                'max_size_mb' => $maxSizeMb,
+                'bg_color' => 'ffffff',
+                'quality' => 90,
+            ];
+        }
+
         return null;
     }
 
@@ -160,7 +232,15 @@ trait HasMedia
     public function firstMediaUrl(string $collection = 'default', ?string $fallback = null): ?string
     {
         $first = $this->media()->where('collection', $collection)->first();
-        return $first ? $first->url : $fallback;
+        if ($first) {
+            return $first->url;
+        }
+
+        if (isset($this->item) && method_exists($this->item, 'firstMediaUrl')) {
+            return $this->item->firstMediaUrl($collection, $fallback);
+        }
+
+        return $fallback;
     }
 
     /**
@@ -169,7 +249,15 @@ trait HasMedia
     public function firstImageUrl(string $collection = 'default', ?string $fallback = null): ?string
     {
         $first = $this->images()->where('collection', $collection)->first();
-        return $first ? $first->url : $fallback;
+        if ($first) {
+            return $first->url;
+        }
+
+        if (isset($this->item) && method_exists($this->item, 'firstImageUrl')) {
+            return $this->item->firstImageUrl($collection, $fallback);
+        }
+
+        return $fallback;
     }
 
     /**

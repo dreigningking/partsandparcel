@@ -157,6 +157,9 @@ class UserProfile extends Component
         }
 
         return view('livewire.marketplace.user-profile', [
+            'user' => $this->user,
+            'tab' => $this->tab,
+            'reviewFilter' => $this->reviewFilter,
             'listings' => $listings,
             'services' => $services,
             'reviews' => $reviews,

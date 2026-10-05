@@ -33,6 +33,7 @@ return new class extends Migration
                 $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
                 $table->string('phone')->nullable();
                 $table->string('business_name')->nullable();
+                $table->string('slug')->nullable();
                 $table->string('avatar')->nullable();
                 $table->text('bio')->nullable();
                 $table->boolean('is_verified')->default(false);

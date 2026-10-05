@@ -6,12 +6,52 @@
 
       <title>{{ $title ?? config('app.name') }}</title>
 
+      <script>
+        function applyAppTheme(theme) {
+            try {
+                if (theme) {
+                    localStorage.setItem('pp_theme_mode', theme);
+                }
+                const currentMode = theme || localStorage.getItem('pp_theme_mode') || 'system';
+                const isDark = currentMode === 'dark' || (currentMode === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        }
+
+        (function() {
+            try {
+                const userPref = @json(auth()->check() ? auth()->user()->theme_preference : null);
+                const mode = userPref || localStorage.getItem('pp_theme_mode') || 'system';
+                applyAppTheme(mode);
+            } catch (e) {}
+        })();
+
+        window.addEventListener('pp-theme-changed', function(event) {
+            const theme = (event.detail && typeof event.detail === 'object') ? (event.detail.theme || 'system') : (event.detail || 'system');
+            applyAppTheme(theme);
+        });
+
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+                const current = localStorage.getItem('pp_theme_mode') || 'system';
+                if (current === 'system') {
+                    applyAppTheme('system');
+                }
+            });
+        }
+      </script>
+
       @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
           @vite(['resources/css/app.css', 'resources/js/app.js'])
       @else
           <script src="https://cdn.tailwindcss.com"></script>
           <script>
           tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {

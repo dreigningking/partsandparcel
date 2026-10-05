@@ -9,7 +9,9 @@ use App\Models\DeviceModel;
 use App\Models\Item;
 use App\Models\Listing;
 use App\Models\Location;
+use App\Models\Setting;
 use App\Models\State;
+use App\Traits\HasMedia;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -329,13 +331,24 @@ class ItemCreate extends Component
             $this->condition_status = 'faulty';
         }
 
+        $maxImageKb = HasMedia::getMaxMediaSizeKb('image');
+        $maxVideoKb = HasMedia::getMaxMediaSizeKb('video');
+        $maxFileKb = max(1024, max($maxImageKb, $maxVideoKb));
+
         $this->validate([
             'name' => 'required|string|max:255',
             'item_type' => 'required|in:whole,part,scrap',
             'condition_status' => 'required|in:new,used,refurbished,faulty',
             'location_id' => 'required|exists:locations,id',
             'model_id' => 'nullable|exists:models,id',
-            'photos.*' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,mp4,mov,avi,webm|max:51200',
+            'photos.*' => [
+                'nullable',
+                'file',
+                'mimes:jpeg,png,jpg,gif,webp,mp4,mov,avi,webm',
+                "max:{$maxFileKb}",
+            ],
+        ], [
+            'photos.*.max' => 'Uploaded media files must not exceed ' . round($maxFileKb / 1024) . 'MB each based on platform media settings.',
         ]);
     }
 
@@ -423,7 +436,7 @@ class ItemCreate extends Component
 
         $this->attachUploadedMedia($item);
 
-        // 2. Publish Main Item Listing if requested
+        // 2. Publish Main Item Listing if requested (images are retrieved dynamically from Item via Media getter)
         if ($this->include_whole_listing) {
             $listing = Listing::create([
                 'user_id' => Auth::id(),
@@ -437,15 +450,6 @@ class ItemCreate extends Component
                 'warranty_terms' => $this->warranty_terms,
                 'allow_shipping' => $this->allow_shipping,
             ]);
-
-            // Sync media to listing as well
-            if (!empty($this->photos)) {
-                foreach ($this->photos as $photo) {
-                    if ($photo instanceof \Illuminate\Http\UploadedFile) {
-                        $listing->attachMedia($photo);
-                    }
-                }
-            }
         }
 
         // 3. Create Harvested Components & Component Listings if disassemble mode and not as_is_scrap
@@ -498,6 +502,7 @@ class ItemCreate extends Component
 
         $locations = Auth::user()?->locations()->with(['state', 'country'])->get() ?? collect();
         $states = State::where('is_active', true)->orderBy('name')->get();
+        $mediaSettings = HasMedia::getMediaDimensionSettings();
 
         return view('livewire.dashboard.inventory.item-create', [
             'categories' => $categories,
@@ -505,6 +510,10 @@ class ItemCreate extends Component
             'models' => $models,
             'locations' => $locations,
             'states' => $states,
+            'maxImageWidth' => $mediaSettings['width'],
+            'maxImageHeight' => $mediaSettings['height'],
+            'maxImageMb' => $mediaSettings['max_image_size_mb'],
+            'maxVideoMb' => $mediaSettings['max_video_size_mb'],
         ]);
     }
 }

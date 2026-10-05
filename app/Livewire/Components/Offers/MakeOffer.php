@@ -8,6 +8,7 @@ use App\Models\Location;
 use App\Models\User;
 use App\Services\Commercial\NegotiationService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -16,6 +17,7 @@ class MakeOffer extends Component
     public bool $isOpen = false;
     public ?string $sellerId = null;
     public string $sellerName = 'Seller';
+    public ?string $cartId = null;
     public ?int $listingId = null;
 
     // Wizard state
@@ -34,36 +36,33 @@ class MakeOffer extends Component
     public string $newCity = 'Ikeja';
     public string $newState = 'Lagos';
 
-    // Items in the offer
-    public array $cartItems = [];
-    public array $selectedItemIds = [];
-
-    // Price & Terms
-    public string $proposedPrice = '';
-    public string $offerNote = '';
-    public int $warrantyDays = 14;
-    public string $warrantyTerms = '14-day replacement and inspection warranty';
+    // Itemized list of items included in this offer
+    public array $offerItems = [];
 
     // Negotiation & Shipping Capability Flags
-    public bool $isNegotiable = true;
-    public bool $isWarrantyNegotiable = true;
     public bool $allowShipping = true;
 
-    // Optional repair / services
+    // Optional repair / services (Step N + 2)
     public bool $requestRepair = false;
     public string $repairServiceType = 'Installation & Testing';
     public string $repairDetails = '';
+    public string $offerNote = '';
 
     #[On('open-make-offer')]
-    public function loadOfferDrawer($payload = null)
+    public function loadOfferDrawer($payload = null): void
     {
-        $user = Auth::user();
+        // Reset state
+        $this->cartId = null;
+        $this->sellerId = null;
+        $this->listingId = null;
+        $this->offerItems = [];
 
         // Extract payload parameters
         if (is_array($payload)) {
             $this->sellerId = isset($payload['seller_id']) ? (string) $payload['seller_id'] : null;
             $this->sellerName = $payload['seller_name'] ?? 'Seller';
             $this->listingId = isset($payload['listing_id']) ? (int) $payload['listing_id'] : null;
+            $this->cartId = isset($payload['cart_id']) ? (string) $payload['cart_id'] : null;
         } elseif (is_numeric($payload)) {
             $this->sellerId = (string) $payload;
         }
@@ -76,28 +75,32 @@ class MakeOffer extends Component
             }
         }
 
-        // Load saved addresses for logged in user
+        // Load saved addresses for user
         $this->loadAddresses();
 
-        // Load items: from single listing OR from buyer's split-cart
+        // Load items: from single listing OR from buyer's cart for this seller
         $this->loadItems();
+
+        // Dynamically compute wizard steps: Step 1..N for items, Step N+1 for Shipment, Step N+2 for Special Request
+        $itemCount = count($this->offerItems);
+        $this->totalSteps = max(3, $itemCount + 2);
 
         $this->currentStep = 1;
         $this->isOpen = true;
     }
 
-    public function loadAddresses()
+    public function loadAddresses(): void
     {
         $user = Auth::user();
         if ($user) {
-            $addresses = Location::where('user_id', $user->id)->get();
+            $addresses = Location::with('state')->where('user_id', $user->id)->get();
             if ($addresses->isNotEmpty()) {
                 $this->savedAddresses = $addresses->map(fn ($a) => [
                     'id' => $a->id,
-                    'label' => $a->name ?: 'Address',
+                    'label' => $a->label ?: ($a->name ?: 'Address'),
                     'address' => $a->address_line_1,
                     'city' => $a->city,
-                    'state' => $a->state,
+                    'state' => $a->state?->name ?? (is_string($a->state) ? $a->state : ''),
                 ])->toArray();
                 $this->deliveryAddressId = $this->savedAddresses[0]['id'];
                 return;
@@ -111,88 +114,139 @@ class MakeOffer extends Component
         $this->deliveryAddressId = 1;
     }
 
-    public function loadItems()
+    public function loadItems(): void
     {
         $user = Auth::user();
-        $this->cartItems = [];
-        $this->selectedItemIds = [];
+        $this->offerItems = [];
 
-        // Case 1: Triggered for a specific listing
+        // Case 1: Triggered from a single listing details page
         if ($this->listingId) {
-            $listing = Listing::with('user')->find($this->listingId);
+            $listing = Listing::with(['user', 'item.media', 'media'])->find($this->listingId);
             if ($listing) {
                 $this->sellerId = (string) $listing->user_id;
-                $this->sellerName = $listing->user?->business_name ?: $listing->user?->name ?: $this->sellerName;
-                $this->isNegotiable = (bool) $listing->is_negotiable;
-                $this->isWarrantyNegotiable = (bool) $listing->is_warranty_negotiable;
-                $this->allowShipping = (bool) $listing->allow_shipping;
+                $this->sellerName = $listing->user?->business_name ?: ($listing->user?->name ?: $this->sellerName);
 
-                if (! $this->allowShipping) {
-                    $this->deliveryMode = 'pickup';
-                }
+                $listingDays = $listing->warranty_period_days;
+                $listingTerms = $listing->warranty_terms ?: ($listingDays ? "{$listingDays}-day replacement and inspection warranty" : 'Standard inspection warranty');
 
-                if (! $this->isWarrantyNegotiable && $listing->warranty_period_days !== null) {
-                    $this->warrantyDays = (int) $listing->warranty_period_days;
-                    $this->warrantyTerms = $listing->warranty_terms ?: "{$listing->warranty_period_days}-day replacement and inspection warranty";
-                }
-
-                $this->cartItems = [
+                $this->offerItems = [
                     [
                         'id' => 1,
                         'listing_id' => $listing->id,
-                        'title' => $listing->title ?? $listing->description ?? ($listing->item?->name ?? 'Listing #' . $listing->id),
+                        'title' => $listing->title ?? ($listing->item?->name ?? 'Listing #' . $listing->id),
                         'specs' => $listing->condition ? ucfirst($listing->condition) : 'Tested',
                         'price' => (float) $listing->price,
                         'quantity' => 1,
-                        'icon' => '📦'
+                        'icon' => '📦',
+                        'is_negotiable' => (bool) $listing->is_negotiable,
+                        'proposed_price' => (string) $listing->price,
+                        'is_warranty_negotiable' => (bool) $listing->is_warranty_negotiable,
+                        'listing_warranty_days' => $listingDays,
+                        'listing_warranty_terms' => $listingTerms,
+                        'proposed_warranty_days' => $listingDays ?? 14,
+                        'proposed_warranty_terms' => $listingTerms,
+                        'allow_shipping' => (bool) $listing->allow_shipping,
                     ]
                 ];
-                $this->selectedItemIds = [1];
-                $this->proposedPrice = (string) $listing->price;
-                return;
-            }
-        }
 
-        // Case 2: From Cart for a specific seller
-        if ($user && $this->sellerId && is_numeric($this->sellerId)) {
-            $cart = Cart::with(['items.listing'])
-                ->where('buyer_id', $user->id)
-                ->where('seller_id', $this->sellerId)
-                ->where('status', 'active')
-                ->first();
-
-            if ($cart && $cart->items->isNotEmpty()) {
-                $listings = $cart->items->map->listing->filter();
-                $this->isNegotiable = $listings->isEmpty() ? true : $listings->contains(fn ($l) => (bool) $l->is_negotiable);
-                $this->isWarrantyNegotiable = $listings->isEmpty() ? true : $listings->contains(fn ($l) => (bool) $l->is_warranty_negotiable);
-                $this->allowShipping = $listings->isEmpty() ? true : $listings->every(fn ($l) => (bool) $l->allow_shipping);
-
+                $this->allowShipping = (bool) $listing->allow_shipping;
                 if (! $this->allowShipping) {
                     $this->deliveryMode = 'pickup';
                 }
-
-                $this->cartItems = $cart->items->map(fn ($item) => [
-                    'id' => $item->id,
-                    'listing_id' => $item->listing_id,
-                    'title' => $item->listing?->title ?? "Item #{$item->id}",
-                    'specs' => $item->listing?->condition ? ucfirst($item->listing->condition) : 'Tested',
-                    'price' => (float) $item->unit_price,
-                    'quantity' => (int) $item->quantity,
-                    'icon' => '💻'
-                ])->toArray();
-
-                $this->selectedItemIds = collect($this->cartItems)->pluck('id')->toArray();
-                $subtotal = collect($this->cartItems)->sum(fn ($i) => $i['price'] * $i['quantity']);
-                $this->proposedPrice = (string) $subtotal;
                 return;
             }
         }
 
-        // Fallback demo item if guest / no DB cart
-        $this->isNegotiable = true;
-        $this->isWarrantyNegotiable = true;
-        $this->allowShipping = true;
-        $this->cartItems = [
+        // Case 2: From Cart for a specific seller (via cart_id or seller_id)
+        if ($user) {
+            $cartQuery = Cart::with(['items.listing.item', 'items.listing.media'])
+                ->where('buyer_id', $user->id)
+                ->where('status', 'active');
+
+            if ($this->cartId && is_numeric($this->cartId)) {
+                $cartQuery->where('id', (int) $this->cartId);
+            } elseif ($this->sellerId && is_numeric($this->sellerId)) {
+                $cartQuery->where('seller_id', (int) $this->sellerId);
+            }
+
+            $cart = $cartQuery->first();
+
+            if ($cart && $cart->items->isNotEmpty()) {
+                foreach ($cart->items as $item) {
+                    $listing = $item->listing;
+                    $listingDays = $listing?->warranty_period_days;
+                    $listingTerms = $listing?->warranty_terms ?: ($listingDays ? "{$listingDays}-day replacement and inspection warranty" : 'Standard inspection warranty');
+
+                    $this->offerItems[] = [
+                        'id' => $item->id,
+                        'listing_id' => $item->listing_id,
+                        'title' => $listing?->title ?? ($listing?->item?->name ?? "Item #{$item->id}"),
+                        'specs' => $listing?->condition ? ucfirst($listing->condition) : 'Tested',
+                        'price' => (float) $item->unit_price,
+                        'quantity' => (int) $item->quantity,
+                        'icon' => $listing?->item?->item_type === 'part' ? '⚙️' : ($listing?->item?->item_type === 'scrap' ? '🛠️' : '💻'),
+                        'is_negotiable' => (bool) ($listing?->is_negotiable ?? true),
+                        'proposed_price' => (string) $item->unit_price,
+                        'is_warranty_negotiable' => (bool) ($listing?->is_warranty_negotiable ?? false),
+                        'listing_warranty_days' => $listingDays,
+                        'listing_warranty_terms' => $listingTerms,
+                        'proposed_warranty_days' => $listingDays ?? 14,
+                        'proposed_warranty_terms' => $listingTerms,
+                        'allow_shipping' => (bool) ($listing?->allow_shipping ?? true),
+                    ];
+                }
+
+                $this->allowShipping = collect($this->offerItems)->contains(fn ($i) => !empty($i['allow_shipping']));
+                if (! $this->allowShipping) {
+                    $this->deliveryMode = 'pickup';
+                }
+                return;
+            }
+        }
+
+        // Case 3: Guest cart session for this seller
+        $guestCart = Session::get('guest_cart', []);
+        $sellerKey = $this->sellerId ?? '';
+        if (isset($guestCart[$sellerKey]) && ! empty($guestCart[$sellerKey])) {
+            $sellerItems = $guestCart[$sellerKey];
+            $listingIds = array_keys($sellerItems);
+            $listings = Listing::with(['item', 'media'])->whereIn('id', $listingIds)->get()->keyBy('id');
+
+            foreach ($sellerItems as $lid => $itemData) {
+                $listing = $listings->get($lid);
+                if (! $listing) continue;
+
+                $listingDays = $listing->warranty_period_days;
+                $listingTerms = $listing->warranty_terms ?: ($listingDays ? "{$listingDays}-day replacement and inspection warranty" : 'Standard inspection warranty');
+
+                $this->offerItems[] = [
+                    'id' => 'guest_' . $lid,
+                    'listing_id' => $listing->id,
+                    'title' => $listing->title ?? ($listing->item?->name ?? "Item #{$listing->id}"),
+                    'specs' => $listing->condition ? ucfirst($listing->condition) : 'Standard',
+                    'price' => (float) ($itemData['unit_price'] ?? $listing->price),
+                    'quantity' => (int) ($itemData['quantity'] ?? 1),
+                    'icon' => $listing->item?->item_type === 'part' ? '⚙️' : ($listing->item?->item_type === 'scrap' ? '🛠️' : '💻'),
+                    'is_negotiable' => (bool) $listing->is_negotiable,
+                    'proposed_price' => (string) ($itemData['unit_price'] ?? $listing->price),
+                    'is_warranty_negotiable' => (bool) $listing->is_warranty_negotiable,
+                    'listing_warranty_days' => $listingDays,
+                    'listing_warranty_terms' => $listingTerms,
+                    'proposed_warranty_days' => $listingDays ?? 14,
+                    'proposed_warranty_terms' => $listingTerms,
+                    'allow_shipping' => (bool) $listing->allow_shipping,
+                ];
+            }
+
+            $this->allowShipping = collect($this->offerItems)->contains(fn ($i) => !empty($i['allow_shipping']));
+            if (! $this->allowShipping) {
+                $this->deliveryMode = 'pickup';
+            }
+            return;
+        }
+
+        // Fallback demo items if no DB or session items found
+        $this->offerItems = [
             [
                 'id' => 101,
                 'listing_id' => null,
@@ -200,37 +254,62 @@ class MakeOffer extends Component
                 'specs' => 'Tested Working · Grade A',
                 'price' => 85000,
                 'quantity' => 1,
-                'icon' => '💻'
+                'icon' => '💻',
+                'is_negotiable' => true,
+                'proposed_price' => '80000',
+                'is_warranty_negotiable' => true,
+                'listing_warranty_days' => 14,
+                'listing_warranty_terms' => '14-day replacement and inspection warranty',
+                'proposed_warranty_days' => 14,
+                'proposed_warranty_terms' => '14-day replacement and inspection warranty',
+                'allow_shipping' => true,
             ]
         ];
-        $this->selectedItemIds = [101];
-        $this->proposedPrice = '80000';
+        $this->allowShipping = true;
     }
 
-    public function toggleItem($itemId)
+    public function setItemWarrantyDays(int $index, int $days): void
     {
-        if (in_array($itemId, $this->selectedItemIds)) {
-            $this->selectedItemIds = array_values(array_diff($this->selectedItemIds, [$itemId]));
-        } else {
-            $this->selectedItemIds[] = $itemId;
+        if (! isset($this->offerItems[$index])) return;
+
+        if (! ($this->offerItems[$index]['is_warranty_negotiable'] ?? false)) {
+            return;
         }
 
-        $newSubtotal = collect($this->cartItems)
-            ->filter(fn ($i) => in_array($i['id'], $this->selectedItemIds))
-            ->sum(fn ($i) => $i['price'] * $i['quantity']);
-
-        $this->proposedPrice = (string) $newSubtotal;
+        $this->offerItems[$index]['proposed_warranty_days'] = $days;
+        $this->offerItems[$index]['proposed_warranty_terms'] = "{$days}-day inspection and replacement warranty";
     }
 
-    public function nextStep()
+    public function nextStep(): void
     {
-        if ($this->currentStep === 1) {
-            if (empty($this->selectedItemIds)) {
-                session()->flash('error', 'Please select at least one item to proceed.');
-                return;
+        $itemCount = count($this->offerItems);
+
+        // If currently on an item step (1..N)
+        if ($this->currentStep <= $itemCount) {
+            $itemIdx = $this->currentStep - 1;
+            $item = $this->offerItems[$itemIdx];
+
+            if ($item['is_negotiable']) {
+                $proposed = (float) str_replace(',', '', (string) ($item['proposed_price'] ?? 0));
+                if ($proposed <= 0) {
+                    session()->flash('error', "Please enter a valid proposed price for {$item['title']}.");
+                    return;
+                }
             }
-            if ($this->isNegotiable && ((float) str_replace(',', '', $this->proposedPrice) <= 0)) {
-                session()->flash('error', 'Please enter a valid proposed price.');
+
+            if ($item['is_warranty_negotiable']) {
+                $days = (int) ($item['proposed_warranty_days'] ?? 0);
+                if ($days < 0) {
+                    session()->flash('error', "Please enter valid warranty days for {$item['title']}.");
+                    return;
+                }
+            }
+        }
+
+        // If currently on the Shipment step (N+1)
+        if ($this->currentStep === $itemCount + 1) {
+            if ($this->deliveryMode === 'seller_delivery' && empty($this->deliveryAddressId)) {
+                session()->flash('error', 'Please select or add a delivery destination address.');
                 return;
             }
         }
@@ -240,25 +319,21 @@ class MakeOffer extends Component
         }
     }
 
-    public function previousStep()
+    public function previousStep(): void
     {
         if ($this->currentStep > 1) {
             $this->currentStep--;
         }
     }
 
-    public function goToStep(int $step)
+    public function goToStep(int $step): void
     {
         if ($step >= 1 && $step <= $this->totalSteps) {
-            if ($step > 1 && empty($this->selectedItemIds)) {
-                session()->flash('error', 'Please select at least one item first.');
-                return;
-            }
             $this->currentStep = $step;
         }
     }
 
-    public function saveNewAddress()
+    public function saveNewAddress(): void
     {
         if (trim($this->newAddressLine) === '') {
             return;
@@ -269,9 +344,10 @@ class MakeOffer extends Component
             $location = Location::create([
                 'user_id' => $user->id,
                 'name' => $this->newAddressLabel,
+                'label' => $this->newAddressLabel,
                 'address_line_1' => $this->newAddressLine,
                 'city' => $this->newCity,
-                'state' => $this->newState,
+                'state_id' => null,
                 'country_code' => $user->country_code ?? 'NG',
             ]);
 
@@ -293,16 +369,6 @@ class MakeOffer extends Component
         $this->newAddressLine = '';
     }
 
-    public function setWarrantyDays(int $days)
-    {
-        if (! $this->isWarrantyNegotiable) {
-            return;
-        }
-
-        $this->warrantyDays = $days;
-        $this->warrantyTerms = "{$days}-day inspection and replacement warranty";
-    }
-
     public function submitPackageOffer()
     {
         $user = Auth::user();
@@ -311,50 +377,41 @@ class MakeOffer extends Component
             return redirect()->route('login');
         }
 
-        if (empty($this->selectedItemIds)) {
-            session()->flash('error', 'Please select at least one item to include in your offer.');
+        if (empty($this->offerItems)) {
+            session()->flash('error', 'No items found in this cart to submit an offer for.');
             return;
         }
 
         $sellerId = (int) $this->sellerId;
-        $selectedItems = collect($this->cartItems)
-            ->filter(fn ($i) => in_array($i['id'], $this->selectedItemIds))
-            ->values();
-
-        $originalSubtotal = $selectedItems->sum(fn ($i) => $i['price'] * $i['quantity']);
-        if (! $this->isNegotiable) {
-            $proposedNum = $originalSubtotal;
-            $discount = 0;
-            $this->proposedPrice = (string) $originalSubtotal;
-        } else {
-            $proposedNum = (float) str_replace(',', '', $this->proposedPrice);
-            $discount = max(0, $originalSubtotal - $proposedNum);
-        }
+        $originalSubtotal = collect($this->offerItems)->sum(fn ($i) => (float) $i['price'] * (int) $i['quantity']);
+        $proposedSubtotal = collect($this->offerItems)->sum(fn ($i) => (float) str_replace(',', '', (string) $i['proposed_price']) * (int) $i['quantity']);
+        $discount = max(0, $originalSubtotal - $proposedSubtotal);
 
         if (! $this->allowShipping) {
             $this->deliveryMode = 'pickup';
         }
 
         $customItems = [];
-        foreach ($selectedItems as $sItem) {
+        foreach ($this->offerItems as $sItem) {
             $customItems[] = [
                 'listing_id' => $sItem['listing_id'],
                 'description' => $sItem['title'],
                 'type' => 'item',
-                'quantity' => $sItem['quantity'],
-                'unit_price' => $sItem['price'],
-                'warranty_days' => $this->warrantyDays,
-                'warranty_terms' => $this->warrantyTerms,
+                'quantity' => (int) $sItem['quantity'],
+                'unit_price' => (float) str_replace(',', '', (string) $sItem['proposed_price']),
+                'warranty_period_days' => (int) ($sItem['proposed_warranty_days'] ?? 14),
+                'warranty_terms' => $sItem['proposed_warranty_terms'] ?? 'Standard warranty terms',
             ];
         }
+
+        $maxWarranty = collect($this->offerItems)->max('proposed_warranty_days') ?? 14;
 
         $offer = app(NegotiationService::class)->createOfferFromCart($user, $sellerId, [
             'delivery_method' => $this->deliveryMode === 'seller_delivery' ? 'seller_responsible' : 'buyer_responsible',
             'discount' => $discount,
             'terms' => $this->offerNote ?: 'Custom negotiated offer proposal',
-            'warranty_days' => $this->warrantyDays,
-            'warranty_terms' => $this->warrantyTerms,
-            'items' => $this->selectedItemIds,
+            'warranty_days' => $maxWarranty,
+            'warranty_terms' => "Includes agreed item warranties",
             'custom_items' => $customItems,
             'request_repair' => $this->requestRepair,
             'repair_service_type' => $this->repairServiceType,
@@ -367,23 +424,22 @@ class MakeOffer extends Component
         return redirect()->route('offers');
     }
 
-    public function closeDrawer()
+    public function closeDrawer(): void
     {
         $this->isOpen = false;
     }
 
     public function render()
     {
-        $selectedSubtotal = collect($this->cartItems)
-            ->filter(fn ($i) => in_array($i['id'], $this->selectedItemIds))
-            ->sum(fn ($i) => $i['price'] * $i['quantity']);
-
-        $proposedNum = (float) str_replace(',', '', $this->proposedPrice);
-        $savings = max(0, $selectedSubtotal - $proposedNum);
+        $originalSubtotal = collect($this->offerItems)->sum(fn ($i) => (float) $i['price'] * (int) $i['quantity']);
+        $proposedSubtotal = collect($this->offerItems)->sum(fn ($i) => (float) str_replace(',', '', (string) $i['proposed_price']) * (int) $i['quantity']);
+        $savings = max(0, $originalSubtotal - $proposedSubtotal);
 
         return view('livewire.components.offers.make-offer', [
-            'selectedSubtotal' => $selectedSubtotal,
+            'originalSubtotal' => $originalSubtotal,
+            'proposedSubtotal' => $proposedSubtotal,
             'savings' => $savings,
+            'itemCount' => count($this->offerItems),
         ]);
     }
 }

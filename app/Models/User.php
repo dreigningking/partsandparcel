@@ -2,18 +2,19 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, Sluggable;
 
     protected $fillable = [
         'name',
@@ -23,13 +24,48 @@ class User extends Authenticatable
         'role_id',
         'phone',
         'business_name',
+        'slug',
         'avatar',
         'bio',
         'is_verified',
         'theme_preference',
         'notification_preferences',
-        'country_id'
+        'country_id',
+        'facial_verified_at',
+        'id_verified_at',
     ];
+
+    public function sluggable(): array
+    {
+        return [
+            'slug' => [
+                'source' => 'slug_source',
+            ],
+        ];
+    }
+
+    public function getSlugSourceAttribute(): string
+    {
+        return ! empty($this->business_name) ? $this->business_name : ($this->name ?? 'user');
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $field = $field ?? $this->getRouteKeyName();
+
+        if ($field === 'slug' || $field === null) {
+            return $this->where('slug', $value)
+                ->orWhere('id', is_numeric($value) ? (int) $value : null)
+                ->first();
+        }
+
+        return parent::resolveRouteBinding($value, $field);
+    }
 
     protected $hidden = [
         'password',
@@ -42,6 +78,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_verified' => 'boolean',
+            'facial_verified_at' => 'datetime',
+            'id_verified_at' => 'datetime',
             'notification_preferences' => 'array',
         ];
     }
@@ -190,6 +228,26 @@ class User extends Authenticatable
         return $this->hasMany(DeviceToken::class);
     }
 
+    public function verifications(): HasMany
+    {
+        return $this->hasMany(Verification::class);
+    }
+
+    public function latestVerification(): HasOne
+    {
+        return $this->hasOne(Verification::class)->latestOfMany();
+    }
+
+    public function isIdentityVerified(): bool
+    {
+        return (bool) ($this->is_verified || $this->id_verified_at);
+    }
+
+    public function isFacialVerified(): bool
+    {
+        return !is_null($this->facial_verified_at);
+    }
+
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);
@@ -197,7 +255,65 @@ class User extends Authenticatable
 
     public function activeSubscription(): HasOne
     {
-        return $this->hasOne(Subscription::class)->where('status', 'active')->where('ends_at', '>', now());
+        return $this->hasOne(Subscription::class)
+            ->where('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('ends_at')->orWhere('ends_at', '>', now());
+            });
+    }
+
+    /**
+     * Get dynamic escrow fee percentage based on the user's active subscription plan.
+     */
+    public function getEscrowPercentage(): float
+    {
+        $activeSub = $this->activeSubscription()->with('plan')->first();
+        if ($activeSub && $activeSub->plan && $activeSub->plan->escrow_percentage !== null) {
+            return (float) $activeSub->plan->escrow_percentage;
+        }
+
+        $defaultPlan = SubscriptionPlan::where('is_default', true)->first()
+            ?? SubscriptionPlan::where('name', 'like', '%Starter%')->first()
+            ?? SubscriptionPlan::first();
+
+        return $defaultPlan && $defaultPlan->escrow_percentage !== null 
+            ? (float) $defaultPlan->escrow_percentage 
+            : 10.00;
+    }
+
+    /**
+     * Get dynamic escrow fee cap based on the user's active subscription plan.
+     */
+    public function getEscrowCap(): ?float
+    {
+        $activeSub = $this->activeSubscription()->with('plan')->first();
+        if ($activeSub && $activeSub->plan && $activeSub->plan->escrow_cap !== null) {
+            return (float) $activeSub->plan->escrow_cap;
+        }
+
+        $defaultPlan = SubscriptionPlan::where('is_default', true)->first()
+            ?? SubscriptionPlan::where('name', 'like', '%Starter%')->first()
+            ?? SubscriptionPlan::first();
+
+        return $defaultPlan && $defaultPlan->escrow_cap !== null 
+            ? (float) $defaultPlan->escrow_cap 
+            : null;
+    }
+
+    /**
+     * Calculate dynamic escrow fee for a given amount, applying escrow percentage and capping at escrow_cap if configured.
+     */
+    public function calculateEscrowFee(float $amount): float
+    {
+        $percentage = $this->getEscrowPercentage();
+        $rawFee = round($amount * ($percentage / 100), 2);
+        $cap = $this->getEscrowCap();
+
+        if ($cap !== null && $rawFee > $cap) {
+            return (float) $cap;
+        }
+
+        return (float) $rawFee;
     }
 
     public function serviceJobsAsCustomer(): HasMany

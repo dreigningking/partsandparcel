@@ -189,6 +189,19 @@
         @endif
       </div>
 
+      @if (session('cart_success'))
+        <div class="mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 flex items-center justify-between shadow-2xs animate-in fade-in duration-200">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-check-circle text-emerald-600"></i>
+            <span>{{ session('cart_success') }}</span>
+          </div>
+          <a href="{{ route('cart') }}" class="text-pp-700 hover:text-pp-900 font-extrabold underline flex items-center gap-1">
+            <span>View Cart</span>
+            <i class="fas fa-arrow-right text-[10px]"></i>
+          </a>
+        </div>
+      @endif
+
       <!-- OFFER ON SPECIFIC COMPONENT (SCRAP ONLY WITH AVAILABLE CHILDREN) -->
       @if($item?->item_type === 'scrap' && $item?->children()->where('status', 'available')->count() > 0)
         <button type="button" 

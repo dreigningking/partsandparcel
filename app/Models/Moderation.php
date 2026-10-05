@@ -50,6 +50,8 @@ class Moderation extends Model
             Discussion::class, 'Discussion', 'discussion' => 'Discussion',
             PostComment::class, 'PostComment', 'post_comment' => 'Post Comment',
             Item::class, 'Item', 'item' => 'Item',
+            Location::class, 'Location', 'location' => 'Location (Address Proof)',
+            Verification::class, 'Verification', 'verification' => 'User Identity KYC',
             default => class_basename($this->moderatable_type ?? 'Item'),
         };
     }
@@ -74,6 +76,14 @@ class Moderation extends Model
             return "Comment on: {$postTitle}";
         }
 
+        if ($item instanceof Location) {
+            return "Address: {$item->label} ({$item->city}, {$item->state?->name})";
+        }
+
+        if ($item instanceof Verification) {
+            return "ID Verification: {$item->document_type_label} (" . ($item->document_number ?: 'No ID #') . ")";
+        }
+
         return $item->name ?? $item->title ?? "Item #{$this->moderatable_id}";
     }
 
@@ -96,6 +106,14 @@ class Moderation extends Model
             return $item->name ?? '—';
         }
 
+        if ($item instanceof Location) {
+            return $item->user?->name ?? $item->contact_name ?? '—';
+        }
+
+        if ($item instanceof Verification) {
+            return $item->user?->name ?? '—';
+        }
+
         return $item->user?->name ?? '—';
     }
 
@@ -116,6 +134,14 @@ class Moderation extends Model
 
         if ($item instanceof PostComment) {
             return $item->email ?? '—';
+        }
+
+        if ($item instanceof Location) {
+            return $item->user?->email ?? '—';
+        }
+
+        if ($item instanceof Verification) {
+            return $item->user?->email ?? '—';
         }
 
         return $item->user?->email ?? '—';

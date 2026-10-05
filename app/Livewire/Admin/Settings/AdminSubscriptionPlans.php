@@ -36,6 +36,8 @@ class AdminSubscriptionPlans extends Component
 
     public string $escrow_percentage = '10.00';
 
+    public ?string $escrow_cap = null;
+
     public bool $is_active = true;
 
     public bool $is_default = false;
@@ -63,6 +65,7 @@ class AdminSubscriptionPlans extends Component
         $this->response_limit = 1;
         $this->listing_limit = 10;
         $this->escrow_percentage = '10.00';
+        $this->escrow_cap = null;
         $this->is_active = true;
         $this->is_default = false;
         $this->priority_placement = false;
@@ -99,6 +102,7 @@ class AdminSubscriptionPlans extends Component
         $this->response_limit = (int) $plan->response_limit;
         $this->listing_limit = (int) $plan->listing_limit;
         $this->escrow_percentage = (string) $plan->escrow_percentage;
+        $this->escrow_cap = $plan->escrow_cap !== null ? (string) $plan->escrow_cap : null;
         $this->is_active = (bool) $plan->is_active;
         $this->is_default = (bool) $plan->is_default;
 
@@ -185,6 +189,7 @@ class AdminSubscriptionPlans extends Component
             'response_limit' => ['required', 'integer', 'min:0'],
             'listing_limit' => ['required', 'integer', 'min:0'],
             'escrow_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
+            'escrow_cap' => ['nullable', 'numeric', 'min:0'],
             'priceRows' => ['required', 'array', 'min:1'],
             'priceRows.*.country_id' => ['required', 'exists:countries,id'],
             'priceRows.*.price_monthly' => ['required', 'numeric', 'min:0'],
@@ -202,6 +207,7 @@ class AdminSubscriptionPlans extends Component
             'daily_response_limit' => $this->response_limit,
             'listing_limit' => $this->listing_limit,
             'escrow_fee' => rtrim(rtrim((string) $this->escrow_percentage, '0'), '.').'%',
+            'escrow_cap' => ($this->escrow_cap !== null && $this->escrow_cap !== '') ? (float) $this->escrow_cap : null,
             'priority_placement' => $this->priority_placement,
             'verified_badge' => $this->verified_badge,
             'dedicated_support' => $this->dedicated_support,
@@ -218,6 +224,7 @@ class AdminSubscriptionPlans extends Component
                 'response_limit' => $this->response_limit,
                 'listing_limit' => $this->listing_limit,
                 'escrow_percentage' => $this->escrow_percentage,
+                'escrow_cap' => ($this->escrow_cap !== null && $this->escrow_cap !== '') ? $this->escrow_cap : null,
                 'features' => $features,
                 'is_active' => $this->is_active,
                 'is_default' => $this->is_default,

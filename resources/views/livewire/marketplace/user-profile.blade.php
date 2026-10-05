@@ -84,7 +84,7 @@
               @if ($user->primaryLocation)
                 <span class="flex items-center gap-1.5">
                   <i class="fas fa-store text-slate-400"></i>
-                  {{ $user->primaryLocation->city }}, {{ $user->primaryLocation->state }}
+                  {{ $user->primaryLocation->city }}, {{ $user->primaryLocation->state?->name }}
                 </span>
               @endif
             </div>
@@ -199,11 +199,12 @@
                 $primaryImg = $listing->primary_image_url ?: ($item?->primary_image_url ?: asset('images/placeholder-part.png'));
                 $deviceModel = $item?->deviceModel;
                 $brand = $deviceModel?->brand;
+                $itemCondition = $item?->condition_status ?: ($item?->condition ?? null);
               @endphp
               <div class="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-card hover:border-pp-300 transition duration-200 flex flex-col justify-between">
                 <div>
                   <!-- PRODUCT IMAGE -->
-                  <a href="{{ route('listing-details', $listing->id) }}" class="relative block aspect-4/3 bg-slate-100 overflow-hidden">
+                  <a href="{{ route('listing-details', $listing) }}" class="relative block aspect-4/3 bg-slate-100 overflow-hidden">
                     <img src="{{ $primaryImg }}" alt="{{ $listing->title }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                     
                     @if ($listing->warranty_period_days)
@@ -212,9 +213,9 @@
                       </span>
                     @endif
 
-                    @if ($item?->condition)
+                    @if ($itemCondition)
                       <span class="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-md bg-slate-900/80 backdrop-blur text-white text-[10px] font-bold">
-                        {{ ucfirst($item->condition) }}
+                        {{ ucfirst(str_replace('_', ' ', $itemCondition)) }}
                       </span>
                     @endif
                   </a>
@@ -227,7 +228,7 @@
                       </div>
                     @endif
 
-                    <a href="{{ route('listing-details', $listing->id) }}" class="font-extrabold text-xs text-slate-900 hover:text-pp-600 transition line-clamp-2 block" title="{{ $listing->title }}">
+                    <a href="{{ route('listing-details', $listing) }}" class="font-extrabold text-xs text-slate-900 hover:text-pp-600 transition line-clamp-2 block" title="{{ $listing->title }}">
                       {{ $listing->title }}
                     </a>
 
@@ -248,7 +249,7 @@
                 </div>
 
                 <div class="p-4 pt-0">
-                  <a href="{{ route('listing-details', $listing->id) }}" class="w-full py-2 rounded-xl bg-slate-50 hover:bg-pp-50 hover:text-pp-700 text-slate-700 font-bold text-xs transition border border-slate-200 flex items-center justify-center gap-1.5 cursor-pointer">
+                  <a href="{{ route('listing-details', $listing) }}" class="w-full py-2 rounded-xl bg-slate-50 hover:bg-pp-50 hover:text-pp-700 text-slate-700 font-bold text-xs transition border border-slate-200 flex items-center justify-center gap-1.5 cursor-pointer">
                     <span>View Listing</span>
                     <i class="fas fa-arrow-right text-[10px]"></i>
                   </a>

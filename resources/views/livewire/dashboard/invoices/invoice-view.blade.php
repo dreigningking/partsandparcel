@@ -66,6 +66,20 @@
     </div>
   @endif
 
+  @if (session()->has('buyer_payment_success'))
+    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-xs">
+      <i class="fas fa-shield-alt text-emerald-600 text-base"></i>
+      {{ session('buyer_payment_success') }}
+    </div>
+  @endif
+
+  @if (session()->has('buyer_direct_notice'))
+    <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold flex items-center gap-2 shadow-xs">
+      <i class="fas fa-university text-amber-600 text-base"></i>
+      {{ session('buyer_direct_notice') }}
+    </div>
+  @endif
+
   <!-- SELLER DIRECT PAYMENT VERIFICATION PROMPT (POST-WARRANTY) -->
   @if (($invoice->payment_method ?? '') === 'direct' && ($invoice->status ?? '') !== 'paid' && ($invoice->status ?? '') !== 'cancelled')
     <div class="p-6 rounded-3xl bg-gradient-to-r from-amber-50 via-white to-amber-50/50 border-2 border-amber-300 shadow-soft space-y-3">
@@ -239,13 +253,192 @@
       </div>
     </div>
 
+    <!-- PAYMENT SELECTION SECTION (FOR UNPAID / ISSUED INVOICES) -->
+    @if (($invoice->status ?? '') !== 'paid' && ($invoice->status ?? '') !== 'cancelled')
+      <div class="p-6 rounded-3xl bg-slate-50/70 border border-slate-200 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-200/80 pb-3">
+          <div>
+            <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <i class="fas fa-credit-card text-pp-600"></i> Select Payment Option
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Select how you wish to complete payment for this invoice</p>
+          </div>
+          <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-slate-200 text-slate-700 self-start sm:self-auto">
+            Payment Choice
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- OPTION A: PAY VIA PARTS & PARCEL (ESCROW PROTECTED) -->
+          <div wire:click="setPaymentOption('platform')" class="p-5 rounded-2xl border transition cursor-pointer flex flex-col justify-between {{ $paymentOption === 'platform' ? 'border-2 border-pp-600 bg-white shadow-soft ring-2 ring-pp-100' : 'border-slate-200 hover:border-pp-300 bg-white' }}">
+            <div class="space-y-3">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                  <input type="radio" name="payment_option_radio" value="platform" @checked($paymentOption === 'platform') class="accent-pp-600 w-4 h-4 cursor-pointer" />
+                  <span class="text-xs font-extrabold text-slate-900 uppercase flex items-center gap-1.5">
+                    <i class="fas fa-shield-alt text-pp-600"></i> Parts &amp; Parcel Escrow
+                  </span>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full bg-pp-100 text-pp-800 text-[10px] font-extrabold shrink-0">
+                  + ₦{{ number_format($escrowFee) }} ({{ $escrowPercentage }}%@if($escrowCap && $escrowFee >= $escrowCap) - Capped @endif) ESCROW FEE
+                </span>
+              </div>
+
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Pay securely via platform escrow. Your funds remain locked until you receive, inspect, and verify the agreed items within the warranty window.
+              </p>
+
+              <div class="space-y-1.5 text-[11px] text-slate-600 pt-1">
+                <div class="flex items-center gap-2 text-pp-800 font-bold">
+                  <i class="fas fa-check-circle text-pp-600 text-xs"></i> 100% Money-Back Escrow Guarantee
+                </div>
+                <div class="flex items-center gap-2 text-slate-600">
+                  <i class="fas fa-check-circle text-slate-400 text-xs"></i> Full dispute protection &amp; platform mediation
+                </div>
+                <div class="flex items-center gap-2 text-slate-600">
+                  <i class="fas fa-check-circle text-slate-400 text-xs"></i> Instant automated receipt &amp; verified record
+                </div>
+              </div>
+
+              <!-- COUPON / PROMO VOUCHER (ONLY ON PLATFORM / ESCROW PAYMENTS) -->
+              @if ($paymentOption === 'platform')
+                <div class="mt-4 pt-4 border-t border-slate-100 space-y-2" wire:click.stop>
+                  <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+                    Have a Promo Voucher / Coupon?
+                  </label>
+
+                  @if ($couponValid && $appliedCouponId)
+                    <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
+                      <div class="flex items-center gap-1.5 text-emerald-800 font-extrabold truncate">
+                        <i class="fas fa-ticket text-emerald-600"></i>
+                        <span class="truncate">{{ $couponMessage }}</span>
+                      </div>
+                      <button
+                        type="button"
+                        wire:click="removeCoupon"
+                        class="text-xs font-bold text-rose-600 hover:underline shrink-0 ml-2 cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  @else
+                    <div class="flex items-center gap-2">
+                      <div class="relative w-full">
+                        <i class="fas fa-ticket absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        <input
+                          type="text"
+                          wire:model="couponCode"
+                          wire:keydown.enter.prevent="applyCoupon"
+                          placeholder="Coupon code"
+                          class="w-full text-xs font-bold uppercase rounded-xl border border-slate-200 pl-8 pr-2.5 py-2 focus:border-pp-600 focus:outline-none"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        wire:click="applyCoupon"
+                        class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition shrink-0 cursor-pointer"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    @error('couponCode')
+                      <span class="text-[11px] text-rose-500 font-bold block">{{ $message }}</span>
+                    @enderror
+                  @endif
+                </div>
+              @endif
+            </div>
+
+            @if ($paymentOption === 'platform')
+              <div class="pt-5 mt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  wire:click="payWithPlatformEscrow"
+                  class="w-full py-3 px-4 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <i class="fas fa-shield-alt text-white"></i>
+                  <span>Pay ₦{{ number_format($totalPayable) }} with Escrow Protection →</span>
+                </button>
+              </div>
+            @endif
+          </div>
+
+          <!-- OPTION B: PAY DIRECTLY TO SELLER (OFF-PLATFORM DIRECT TRANSFER) -->
+          <div wire:click="setPaymentOption('direct')" class="p-5 rounded-2xl border transition cursor-pointer flex flex-col justify-between {{ $paymentOption === 'direct' ? 'border-2 border-amber-600 bg-white shadow-soft ring-2 ring-amber-100' : 'border-slate-200 hover:border-slate-300 bg-white' }}">
+            <div class="space-y-3">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                  <input type="radio" name="payment_option_radio" value="direct" @checked($paymentOption === 'direct') class="accent-amber-600 w-4 h-4 cursor-pointer" />
+                  <span class="text-xs font-extrabold text-slate-900 uppercase flex items-center gap-1.5">
+                    <i class="fas fa-university text-slate-600"></i> Direct Bank Transfer
+                  </span>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-extrabold shrink-0">
+                  DIRECT SELLER TRANSFER
+                </span>
+              </div>
+
+              <p class="text-xs text-slate-600 leading-relaxed">
+                Transfer directly to the seller's bank account. No platform escrow fee is charged. Note: Coupons cannot be used on direct payments.
+              </p>
+
+              @if ($paymentOption === 'direct')
+                <!-- SELLER BANK ACCOUNT DETAILS -->
+                <div class="mt-3 p-3.5 rounded-xl bg-amber-50/60 border border-amber-200 text-xs space-y-2">
+                  <span class="text-[10px] font-extrabold uppercase text-amber-900 tracking-wider flex items-center gap-1.5">
+                    <i class="fas fa-building-columns text-amber-700"></i> Seller Bank Details ({{ $invoice->seller->business_name ?: ($invoice->seller->name ?? 'Seller') }})
+                  </span>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-slate-900">
+                    <div class="bg-white p-2 rounded-lg border border-amber-100 shadow-2xs">
+                      <span class="text-[9px] text-slate-400 font-bold block uppercase">Bank Name</span>
+                      <strong class="text-xs text-slate-950 font-black truncate block">{{ $sellerBank['bank_name'] }}</strong>
+                    </div>
+                    <div class="bg-white p-2 rounded-lg border border-amber-100 shadow-2xs">
+                      <span class="text-[9px] text-slate-400 font-bold block uppercase">Account Name</span>
+                      <strong class="text-xs text-slate-950 font-black truncate block">{{ $sellerBank['account_name'] }}</strong>
+                    </div>
+                    <div class="bg-white p-2 rounded-lg border border-amber-100 shadow-2xs">
+                      <span class="text-[9px] text-slate-400 font-bold block uppercase">Account Number</span>
+                      <strong class="text-xs text-pp-700 font-black tracking-wider block">{{ $sellerBank['account_number'] }}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-[11px] text-rose-800 space-y-0.5">
+                  <b class="font-bold text-rose-700 flex items-center gap-1.5">
+                    <i class="fas fa-exclamation-triangle text-rose-600"></i> Direct Payment Notice
+                  </b>
+                  <p class="text-rose-900 leading-relaxed text-[11px]">
+                    You are paying {{ $invoice->seller->business_name ?: ($invoice->seller->name ?? 'the seller') }} directly outside Parts &amp; Parcel Escrow. Ensure you keep your payment transfer receipt.
+                  </p>
+                </div>
+              @endif
+            </div>
+
+            @if ($paymentOption === 'direct')
+              <div class="pt-5 mt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  wire:click="confirmDirectTransferSent"
+                  class="w-full py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <i class="fas fa-check-circle text-emerald-400"></i>
+                  <span>I Have Transferred ₦{{ number_format($totalPayable) }} to Seller</span>
+                </button>
+              </div>
+            @endif
+          </div>
+        </div>
+      </div>
+    @endif
+
     <!-- TOTALS & PAYMENT TERMS -->
     <div class="grid sm:grid-cols-2 gap-6 pt-3 border-t border-slate-100 text-xs">
-      <div class="p-4 rounded-2xl {{ ($invoice->payment_method ?? '') === 'direct' ? 'bg-amber-50 border border-amber-200' : 'bg-pp-50 border border-pp-200' }} space-y-2">
-        @if (($invoice->payment_method ?? '') === 'direct')
+      <div class="p-4 rounded-2xl {{ ($invoice->status === 'paid' ? (($invoice->payment_method ?? '') === 'direct' ? 'bg-amber-50 border border-amber-200' : 'bg-pp-50 border border-pp-200') : ($paymentOption === 'direct' ? 'bg-amber-50 border border-amber-200' : 'bg-pp-50 border border-pp-200')) }} space-y-2">
+        @if (($invoice->status === 'paid' ? ($invoice->payment_method ?? '') : $paymentOption) === 'direct')
           <b class="text-amber-900 font-bold flex items-center gap-1.5"><i class="fas fa-university text-amber-600"></i> Direct Seller Transfer Terms:</b>
           <p class="text-slate-700 leading-relaxed text-[11px]">
-            Payment was made directly between buyer and seller outside platform escrow. After the warranty inspection period, the seller confirms receipt to increment their verified sales count.
+            Payment is made directly between buyer and seller outside platform escrow. After the warranty inspection period, the seller confirms receipt to increment their verified sales count.
           </p>
         @else
           <b class="text-pp-900 font-bold flex items-center gap-1.5"><i class="fas fa-shield-alt text-pp-600"></i> Platform Escrow Protection Terms:</b>
@@ -258,24 +451,54 @@
       <div class="space-y-1.5 text-right">
         <div class="flex justify-between text-slate-600">
           <span>Subtotal:</span>
-          <span>₦{{ number_format($invoice->subtotal ?? 250000) }}</span>
+          <span>₦{{ number_format($invoice->subtotal ?? 0) }}</span>
         </div>
-        @if (($invoice->discount ?? 0) > 0)
+        @if ($offerDiscount > 0)
           <div class="flex justify-between text-pp-700 font-bold">
-            <span>Agreed Discount:</span>
-            <span>-₦{{ number_format($invoice->discount) }}</span>
+            <span>Agreed Offer Discount:</span>
+            <span>-₦{{ number_format($offerDiscount) }}</span>
           </div>
         @endif
-        @if (($invoice->payment_method ?? '') === 'platform')
-          <div class="flex justify-between text-slate-600">
-            <span>Escrow Protection Fee (+):</span>
-            <span>₦1,500</span>
+        @if (($invoice->status ?? '') !== 'paid' && $paymentOption === 'platform' && $couponDiscount > 0)
+          <div class="flex justify-between text-emerald-600 font-bold">
+            <span>Promo Voucher Discount:</span>
+            <span>-₦{{ number_format($couponDiscount) }}</span>
           </div>
         @endif
-        <div class="border-t border-slate-200 pt-2 flex justify-between items-baseline text-base">
-          <span class="font-bold text-slate-900">Total Amount:</span>
-          <span class="text-2xl font-black text-slate-950">₦{{ number_format($invoice->total ?? 250000) }}</span>
-        </div>
+
+        @if (($invoice->status ?? '') === 'paid')
+          @if (($invoice->payment_method ?? '') === 'platform')
+            <div class="flex justify-between text-slate-600">
+              <span>Escrow Protection Fee ({{ $escrowPercentage }}%@if($escrowCap && $escrowFee >= $escrowCap), capped at ₦{{ number_format($escrowCap) }}@endif):</span>
+              <span>+₦{{ number_format($escrowFee) }}</span>
+            </div>
+          @else
+            <div class="flex justify-between text-slate-500 text-[11px]">
+              <span>Escrow Protection:</span>
+              <span class="font-bold text-amber-700">NO ESCROW (Direct Seller Payment)</span>
+            </div>
+          @endif
+          <div class="border-t border-slate-200 pt-2 flex justify-between items-baseline text-base">
+            <span class="font-bold text-slate-900">Total Paid:</span>
+            <span class="text-2xl font-black text-slate-950">₦{{ number_format($invoice->total ?? 0) }}</span>
+          </div>
+        @else
+          @if ($paymentOption === 'platform')
+            <div class="flex justify-between text-slate-600">
+              <span>Escrow Protection Fee ({{ $escrowPercentage }}%@if($escrowCap && $escrowFee >= $escrowCap), capped at ₦{{ number_format($escrowCap) }}@endif):</span>
+              <span class="font-bold text-pp-700">+₦{{ number_format($escrowFee) }}</span>
+            </div>
+          @else
+            <div class="flex justify-between text-slate-500 text-[11px]">
+              <span>Escrow Protection Fee:</span>
+              <span class="font-bold text-amber-700">NO ESCROW (Direct Transfer)</span>
+            </div>
+          @endif
+          <div class="border-t border-slate-200 pt-2 flex justify-between items-baseline text-base">
+            <span class="font-bold text-slate-900">Total Amount Payable:</span>
+            <span class="text-2xl font-black text-slate-950">₦{{ number_format($totalPayable) }}</span>
+          </div>
+        @endif
       </div>
     </div>
 

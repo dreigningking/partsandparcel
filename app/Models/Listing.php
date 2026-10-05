@@ -12,13 +12,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Str;
 
 #[ObservedBy([ListingObserver::class])]
 class Listing extends Model
 {
-    use HasFactory, HasMedia;
+    use HasFactory, HasMedia, Sluggable;
 
     protected $fillable = [
         'user_id',
@@ -51,17 +52,40 @@ class Listing extends Model
         ];
     }
 
-    protected static function booted(): void
+    public function sluggable(): array
     {
-        static::creating(function (Listing $listing) {
-            if (empty($listing->slug)) {
-                $itemName = $listing->item?->name;
-                if (!$itemName && $listing->item_id) {
-                    $itemName = Item::where('id', $listing->item_id)->value('name');
-                }
-                $listing->slug = static::generateUniqueSlug($itemName ?: 'listing');
-            }
-        });
+        return [
+            'slug' => [
+                'source' => 'slug_source',
+            ],
+        ];
+    }
+
+    public function getSlugSourceAttribute(): string
+    {
+        $itemName = $this->item?->name;
+        if (! $itemName && $this->item_id) {
+            $itemName = Item::where('id', $this->item_id)->value('name');
+        }
+        return $itemName ?: 'listing';
+    }
+
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $field = $field ?? $this->getRouteKeyName();
+
+        if ($field === 'slug' || $field === null) {
+            return $this->where('slug', $value)
+                ->orWhere('id', is_numeric($value) ? (int) $value : null)
+                ->first();
+        }
+
+        return parent::resolveRouteBinding($value, $field);
     }
 
     public static function generateUniqueSlug(?string $name, ?int $ignoreId = null): string
@@ -175,12 +199,28 @@ class Listing extends Model
         return $query->whereHas('seller', fn ($q) => $q->where('country_code', $code));
     }
 
-    public function mediaDimensionRequirements(): array
+    public function getPrimaryImageAttribute(): ?Media
     {
-        return [
-            'default' => ['width' => 1000, 'height' => 1000, 'bg_color' => 'ffffff', 'quality' => 90],
-            'images' => ['width' => 1000, 'height' => 1000, 'bg_color' => 'ffffff', 'quality' => 90],
-        ];
+        // 1. Direct media if any exists (legacy fallback)
+        if ($this->relationLoaded('media') && $this->media->isNotEmpty()) {
+            $direct = $this->media->first(fn($m) => $m->is_image) ?? $this->media->first();
+            if ($direct) {
+                return $direct;
+            }
+        } elseif ($this->media()->exists()) {
+            $direct = $this->images()->orderBy('sort_order')->first() ?? $this->media()->orderBy('sort_order')->first();
+            if ($direct) {
+                return $direct;
+            }
+        }
+
+        // 2. Associated item's primary image from Media model
+        return $this->item?->primary_image;
+    }
+
+    public function getPrimaryImageUrlAttribute(): ?string
+    {
+        return $this->primary_image?->url;
     }
 
     

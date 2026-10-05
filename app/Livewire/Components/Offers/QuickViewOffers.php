@@ -260,7 +260,7 @@ class QuickViewOffers extends Component
                 $invoice = app(NegotiationService::class)->acceptOffer($user, $offer);
                 $this->isOpen = false;
                 session()->flash('message', "Offer accepted! Invoice {$invoice->invoice_number} generated.");
-                return redirect()->route('invoices');
+                return redirect()->route('invoices.view', $invoice->invoice_number);
             } catch (\Throwable $e) {
                 session()->flash('error', $e->getMessage());
                 return;

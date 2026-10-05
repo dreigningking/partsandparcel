@@ -306,12 +306,7 @@
             >
                 ◈ <span class="label">Subscriptions</span>
             </a>
-            <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.subscription-plans*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
-                href="{{ route('admin.settings.subscription-plans') }}"
-            >
-                💳 <span class="label">Subscription Plans</span>
-            </a>
+            
             <a
                 class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"
                 href="{{ route('earnings') }}"
@@ -338,32 +333,40 @@
                 ⚙ <span class="label">Platform Settings</span>
             </a>
             <a
+                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.subscription-plans*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
+                href="{{ route('admin.settings.subscription-plans') }}"
+            >
+                💳 <span class="label">Subscription Plans</span>
+            </a>
+            <a
                 class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.promotion-plans*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
                 href="{{ route('admin.settings.promotion-plans') }}"
             >
                 ⚡ <span class="label">Promotion Plans</span>
             </a>
+
             <a
                 class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.countries*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
                 href="{{ route('admin.settings.countries') }}"
             >
                 🌍 <span class="label">Countries &amp; States</span>
             </a>
-            <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"
-                href="{{ route('notifications') }}"
-            >
-                🔔 <span class="label">Notifications</span>
-            </a>
-            <form action="{{ route('logout') }}" method="POST" class="w-full">
-                @csrf
-                <button
-                    type="submit"
-                    class="nav w-full text-left flex items-center gap-3 p-2.5 rounded-xl hover:bg-rose-50 text-rose-600 font-bold text-xs transition cursor-pointer"
-                >
-                    ↪ <span class="label">Logout</span>
-                </button>
-            </form>
+            
         </div>
     </div>
+
+    <a class="nav flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 text-sm text-slate-600 transition"
+        href="{{ route('notifications') }}"
+    >
+        🔔 <span class="label">Notifications</span>
+    </a>
+    <form action="{{ route('logout') }}" method="POST" class="w-full">
+        @csrf
+        <button
+            type="submit"
+            class="nav w-full text-left flex items-center gap-3 p-2.5 rounded-xl hover:bg-rose-50 text-rose-600 font-bold text-xs transition cursor-pointer"
+        >
+            ↪ <span class="label">Logout</span>
+        </button>
+    </form>
 </nav>

@@ -86,11 +86,30 @@ class Item extends Model
         return $query->where('item_type', 'scrap');
     }
 
-    public function mediaDimensionRequirements(): array
+    public function getPrimaryImageAttribute(): ?Media
     {
-        return [
-            'default' => ['width' => 1000, 'height' => 1000, 'bg_color' => 'ffffff', 'quality' => 90],
-            'images' => ['width' => 1000, 'height' => 1000, 'bg_color' => 'ffffff', 'quality' => 90],
-        ];
+        if ($this->relationLoaded('media')) {
+            $direct = $this->media->first(fn($m) => $m->is_image) ?? $this->media->first();
+            if ($direct) {
+                return $direct;
+            }
+        } else {
+            $direct = $this->images()->orderBy('sort_order')->first() ?? $this->media()->orderBy('sort_order')->first();
+            if ($direct) {
+                return $direct;
+            }
+        }
+
+        // Fallback for harvested component parts to their parent donor unit
+        if ($this->parent_id && $this->parent) {
+            return $this->parent->primary_image;
+        }
+
+        return null;
+    }
+
+    public function getPrimaryImageUrlAttribute(): ?string
+    {
+        return $this->primary_image?->url;
     }
 }

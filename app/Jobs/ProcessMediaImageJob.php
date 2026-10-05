@@ -110,6 +110,17 @@ class ProcessMediaImageJob implements ShouldQueue
             }
         }
 
+        $width = (int) \App\Models\Setting::getValue('max_media_image_width', 1000);
+        $height = (int) \App\Models\Setting::getValue('max_media_image_height', 1000);
+        if ($width > 0 && $height > 0) {
+            return [
+                'width' => $width,
+                'height' => $height,
+                'bg_color' => 'ffffff',
+                'quality' => 90,
+            ];
+        }
+
         return config('media.default_dimensions');
     }
 }

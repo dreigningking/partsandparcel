@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Commercial\CartService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -41,8 +42,10 @@ class CheckoutPage extends Component
     // Payment Option selection ('platform' vs 'direct')
     public $paymentMethod = 'platform';
 
-    // Fee Configuration
-    public $escrowFee = 1500;
+    // Fee Configuration (Computed from user subscription plan)
+    public float $escrowPercentage = 10.0;
+    public ?float $escrowCap = null;
+    public float $escrowFee = 0.0;
 
     // Coupon / Promo Code State
     public string $couponCode = '';
@@ -73,7 +76,14 @@ class CheckoutPage extends Component
 
         $sellerParam = $seller ?? request()->query('seller');
         if ($sellerParam) {
-            $this->sellerId = (string) $sellerParam;
+            $sellerModel = User::where('slug', $sellerParam)
+                ->orWhere('id', is_numeric($sellerParam) ? (int) $sellerParam : null)
+                ->first();
+            if ($sellerModel) {
+                $this->sellerId = (string) $sellerModel->id;
+            } else {
+                $this->sellerId = (string) $sellerParam;
+            }
         }
 
         $this->loadCheckoutData();
@@ -117,13 +127,23 @@ class CheckoutPage extends Component
     public function loadCheckoutData()
     {
         $user = Auth::user();
-        $seller = User::with(['primaryLocation', 'bankAccounts'])->find($this->sellerId);
+        $seller = User::with(['primaryLocation.state', 'bankAccounts'])
+            ->where('id', is_numeric($this->sellerId) ? (int) $this->sellerId : null)
+            ->orWhere('slug', $this->sellerId)
+            ->first();
 
         if ($seller) {
+            $this->sellerId = (string) $seller->id;
             $this->sellerName = $seller->business_name ?: $seller->name;
-            $this->sellerLocation = $seller->primaryLocation?->city
-                ? "{$seller->primaryLocation->city}, {$seller->primaryLocation->state}"
+            $loc = $seller->primaryLocation;
+            $stateName = $loc?->state?->name ?? (is_string($loc?->state) ? $loc?->state : null);
+            $this->sellerLocation = $loc
+                ? collect([$loc->city, $stateName])->filter()->implode(', ')
                 : 'Computer Village, Ikeja, Lagos';
+
+            if (empty($this->sellerLocation)) {
+                $this->sellerLocation = 'Computer Village, Ikeja, Lagos';
+            }
 
             $activeBank = $seller->bankAccounts()->first();
             if ($activeBank) {
@@ -137,14 +157,22 @@ class CheckoutPage extends Component
 
         if ($user) {
             // Load saved addresses
-            $locations = Location::where('user_id', $user->id)->get();
+            $locations = Location::with('state')->where('user_id', $user->id)->get();
             if ($locations->isNotEmpty()) {
-                $this->savedAddresses = $locations->toArray();
+                $this->savedAddresses = $locations->map(fn ($l) => [
+                    'id' => $l->id,
+                    'name' => $l->label ?: ($l->name ?: 'Address'),
+                    'label' => $l->label ?: ($l->name ?: 'Address'),
+                    'address_line_1' => $l->address_line_1,
+                    'city' => $l->city,
+                    'state' => $l->state?->name ?? (is_string($l->state) ? $l->state : ''),
+                    'phone' => $l->phone,
+                ])->toArray();
                 $this->selectedAddressId = $locations->first()->id;
             }
 
             // Load real cart for this seller
-            $cart = Cart::with(['items.listing'])
+            $cart = Cart::with(['items.listing.item'])
                 ->where('buyer_id', $user->id)
                 ->where('seller_id', $this->sellerId)
                 ->where('status', 'active')
@@ -158,8 +186,13 @@ class CheckoutPage extends Component
                     'specs' => $item->listing?->condition ? ucfirst($item->listing->condition) : 'Standard',
                     'price' => (float) $item->unit_price,
                     'quantity' => (int) $item->quantity,
-                    'icon' => '💻',
+                    'icon' => $item->listing?->item?->item_type === 'part' ? '⚙️' : ($item->listing?->item?->item_type === 'scrap' ? '🛠️' : '💻'),
+                    'allow_shipping' => (bool) ($item->listing?->allow_shipping ?? false),
                 ])->toArray();
+
+                if (! $this->canShip()) {
+                    $this->deliveryMethod = 'pickup';
+                }
                 return;
             }
         }
@@ -173,19 +206,49 @@ class CheckoutPage extends Component
                 'specs' => 'Intel i5 · 8GB RAM · 256GB SSD',
                 'price' => 280000,
                 'quantity' => 1,
-                'icon' => '💻'
+                'icon' => '💻',
+                'allow_shipping' => true,
             ]
         ];
+
+        if (! $this->canShip()) {
+            $this->deliveryMethod = 'pickup';
+        }
+
+        $user = Auth::user();
+        if ($user && method_exists($user, 'getEscrowPercentage')) {
+            $this->escrowPercentage = (float) $user->getEscrowPercentage();
+            $this->escrowCap = method_exists($user, 'getEscrowCap') ? $user->getEscrowCap() : null;
+        }
+        $subtotal = collect($this->cartItems)->sum(fn ($i) => $i['price'] * $i['quantity']);
+        if ($user && method_exists($user, 'calculateEscrowFee')) {
+            $this->escrowFee = $user->calculateEscrowFee((float) $subtotal);
+        } else {
+            $rawFee = round($subtotal * ($this->escrowPercentage / 100), 2);
+            $this->escrowFee = ($this->escrowCap !== null && $rawFee > $this->escrowCap) ? (float) $this->escrowCap : $rawFee;
+        }
+    }
+
+    #[Computed]
+    public function canShip(): bool
+    {
+        return collect($this->cartItems)->contains(fn ($i) => ! empty($i['allow_shipping']));
     }
 
     public function selectDeliveryMethod($method)
     {
+        if ($method === 'seller_delivery' && ! $this->canShip()) {
+            return;
+        }
         $this->deliveryMethod = in_array($method, ['pickup', 'seller_delivery']) ? $method : 'pickup';
     }
 
     public function setPaymentMethod($method)
     {
         $this->paymentMethod = in_array($method, ['platform', 'direct']) ? $method : 'platform';
+        if ($this->paymentMethod === 'direct') {
+            $this->removeCoupon();
+        }
     }
 
     public function applyCoupon()
@@ -246,9 +309,17 @@ class CheckoutPage extends Component
         $sellerId = (int) $this->sellerId;
         $deliveryMethodMapped = ($this->deliveryMethod === 'seller_delivery') ? 'seller_responsible' : 'buyer_responsible';
         $itemSubtotal = collect($this->cartItems)->sum(fn ($i) => $i['price'] * $i['quantity']);
+        $this->escrowPercentage = method_exists($user, 'getEscrowPercentage') ? (float) $user->getEscrowPercentage() : 10.0;
+        $this->escrowCap = method_exists($user, 'getEscrowCap') ? $user->getEscrowCap() : null;
+        if (method_exists($user, 'calculateEscrowFee')) {
+            $this->escrowFee = $user->calculateEscrowFee((float) $itemSubtotal);
+        } else {
+            $rawFee = round($itemSubtotal * ($this->escrowPercentage / 100), 2);
+            $this->escrowFee = ($this->escrowCap !== null && $rawFee > $this->escrowCap) ? (float) $this->escrowCap : $rawFee;
+        }
         $isPlatform = ($this->paymentMethod === 'platform');
         $activeEscrowFee = $isPlatform ? $this->escrowFee : 0;
-        $discount = $this->couponDiscount;
+        $discount = $isPlatform ? $this->couponDiscount : 0;
         $totalPayable = max(0.00, round($itemSubtotal + $activeEscrowFee - $discount, 2));
         $commission = round(max(0.00, $itemSubtotal - $discount) * 0.05, 2);
 
@@ -337,18 +408,33 @@ class CheckoutPage extends Component
 
     public function render()
     {
+        $user = Auth::user();
+        if ($user && method_exists($user, 'getEscrowPercentage')) {
+            $this->escrowPercentage = (float) $user->getEscrowPercentage();
+            $this->escrowCap = method_exists($user, 'getEscrowCap') ? $user->getEscrowCap() : null;
+        }
         $itemSubtotal = collect($this->cartItems)->sum(fn($i) => $i['price'] * $i['quantity']);
         $deliveryFee = 0;
+        if ($user && method_exists($user, 'calculateEscrowFee')) {
+            $this->escrowFee = $user->calculateEscrowFee((float) $itemSubtotal);
+        } else {
+            $rawFee = round($itemSubtotal * ($this->escrowPercentage / 100), 2);
+            $this->escrowFee = ($this->escrowCap !== null && $rawFee > $this->escrowCap) ? (float) $this->escrowCap : $rawFee;
+        }
         $activeEscrowFee = ($this->paymentMethod === 'platform') ? $this->escrowFee : 0;
-        $discount = $this->couponDiscount;
+        $discount = ($this->paymentMethod === 'platform') ? $this->couponDiscount : 0;
         $totalPayable = max(0.00, round($itemSubtotal + $deliveryFee + $activeEscrowFee - $discount, 2));
 
         return view('livewire.marketplace.checkout-page', [
             'itemSubtotal' => $itemSubtotal,
             'deliveryFee' => $deliveryFee,
+            'escrowPercentage' => $this->escrowPercentage,
+            'escrowCap' => $this->escrowCap,
+            'escrowFee' => $this->escrowFee,
             'activeEscrowFee' => $activeEscrowFee,
             'discount' => $discount,
-            'totalPayable' => $totalPayable
+            'totalPayable' => $totalPayable,
+            'canShip' => $this->canShip(),
         ]);
     }
 }

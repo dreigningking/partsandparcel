@@ -189,7 +189,7 @@ class OfferView extends Component
             try {
                 $invoice = app(NegotiationService::class)->acceptOffer($user, $this->offer);
                 session()->flash('message', "Offer accepted! Invoice {$invoice->invoice_number} generated for payment.");
-                return redirect()->route('invoices');
+                return redirect()->route('invoices.view', $invoice->invoice_number);
             } catch (\Throwable $e) {
                 session()->flash('error', $e->getMessage());
                 return;

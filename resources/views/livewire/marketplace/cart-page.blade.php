@@ -62,45 +62,13 @@
     </div>
   @else
 
-    <!-- FULFILLMENT PATHS GUIDE BANNER -->
-    <div class="bg-white rounded-3xl border border-slate-200 p-5 shadow-soft space-y-3">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-        <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-          <i class="fas fa-route text-pp-600"></i> Delivery &amp; Fulfillment Options Overview
-        </h3>
-        <span class="text-[10px] font-bold text-pp-700 bg-pp-50 px-2 py-0.5 rounded-full border border-pp-100">
-          Choose your path per seller
-        </span>
-      </div>
-
-      <div class="grid sm:grid-cols-2 gap-3">
-        <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
-          <div class="w-8 h-8 rounded-xl bg-pp-100 text-pp-700 font-extrabold grid place-items-center text-xs shrink-0">1</div>
-          <div>
-            <h4 class="text-xs font-bold text-slate-900">Buyer Pickup</h4>
-            <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">"I'll collect this from the seller." Pick up directly at seller location. No shipment necessary.</p>
-          </div>
-        </div>
-
-        <div class="flex items-start gap-3 p-3.5 rounded-2xl bg-pp-50/70 border border-pp-200/80">
-          <div class="w-8 h-8 rounded-xl bg-pp-600 text-white font-extrabold grid place-items-center text-xs shrink-0">
-            <i class="fas fa-truck text-xs"></i>
-          </div>
-          <div>
-            <h4 class="text-xs font-bold text-slate-900">Seller Delivery</h4>
-            <p class="text-[11px] text-slate-600 mt-0.5 leading-snug">"The seller will deliver this to me." Seller dispatches shipment directly to your address.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="grid lg:grid-cols-12 gap-8">
       
       <!-- LEFT: SELLER GROUPED CARTS -->
       <div class="lg:col-span-8 space-y-6">
         
         @foreach ($cartGrouped as $sellerCart)
-          <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-5 shadow-soft">
+          <div wire:key="seller-cart-{{ $sellerCart['id'] }}" class="bg-white rounded-3xl border border-slate-200 p-6 space-y-5 shadow-soft">
             
             <!-- SELLER HEADER -->
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -130,7 +98,7 @@
             <!-- CART ITEMS LIST FOR THIS SELLER -->
             <div class="divide-y divide-slate-100">
               @foreach ($sellerCart['items'] as $item)
-                <div class="py-4 first:pt-0 last:pb-0 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+                <div wire:key="cart-item-{{ $item['id'] }}" class="py-4 first:pt-0 last:pb-0 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
                   <div class="flex items-center gap-3">
                     <div class="w-12 h-12 rounded-2xl bg-slate-100 grid place-items-center text-xl shrink-0">
                       {{ $item['icon'] ?? '📦' }}
@@ -176,7 +144,7 @@
               <!-- TWO EXPLICIT ACTION BUTTONS -->
               <div class="grid sm:grid-cols-2 gap-3">
                 <!-- BUTTON 1: MAKE CUSTOM OFFER -->
-                <button wire:click="$dispatch('open-make-offer', { seller_id: '{{ $sellerCart['id'] }}', seller_name: '{{ $sellerCart['name'] }}' })" class="p-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-2xs transition flex items-center gap-3 cursor-pointer text-left">
+                <button wire:click="$dispatch('open-make-offer', { seller_id: '{{ $sellerCart['id'] }}', seller_name: '{{ addslashes($sellerCart['name']) }}', cart_id: '{{ $sellerCart['cart_id'] }}' })" class="p-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-2xs transition flex items-center gap-3 cursor-pointer text-left">
                   <div class="w-9 h-9 rounded-xl bg-slate-800 text-white grid place-items-center shrink-0">
                     <i class="fas fa-handshake text-pp-400 text-sm"></i>
                   </div>
@@ -187,7 +155,7 @@
                 </button>
 
                 <!-- BUTTON 2: PROCEED TO CHECKOUT -->
-                <button type="button" wire:click="proceedToCheckout('{{ $sellerCart['id'] }}')" class="p-3.5 rounded-2xl bg-pp-600 hover:bg-pp-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-between gap-2 text-left cursor-pointer">
+                <button type="button" wire:click="proceedToCheckout('{{ $sellerCart['seller_slug'] ?? $sellerCart['id'] }}')" class="p-3.5 rounded-2xl bg-pp-600 hover:bg-pp-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-between gap-2 text-left cursor-pointer">
                   <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-pp-500 text-white grid place-items-center shrink-0">
                       <i class="fas fa-shopping-bag text-sm"></i>

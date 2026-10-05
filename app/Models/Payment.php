@@ -48,4 +48,17 @@ class Payment extends Model
     {
         return $this->status === 'held_in_escrow';
     }
+
+    public function getInvoiceAttribute(): ?Invoice
+    {
+        if ($this->paymentable_type === Invoice::class || $this->paymentable instanceof Invoice) {
+            return $this->paymentable;
+        }
+        return null;
+    }
+
+    public function getInvoiceIdAttribute(): ?int
+    {
+        return ($this->paymentable_type === Invoice::class) ? (int) $this->paymentable_id : null;
+    }
 }

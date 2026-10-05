@@ -116,7 +116,20 @@ class NegotiationService
         $selectedItemIds = $data['items'] ?? ($cart ? $cart->items->pluck('id')->toArray() : []);
         $cartItems = $cart ? $cart->items()->whereIn('id', $selectedItemIds)->get() : collect();
 
-        if ($cartItems->isNotEmpty()) {
+        if (! empty($data['custom_items'])) {
+            foreach ($data['custom_items'] as $cItem) {
+                OfferItem::create([
+                    'offer_id' => $offer->id,
+                    'listing_id' => $cItem['listing_id'] ?? null,
+                    'description' => $cItem['description'] ?? 'Product Offer Item',
+                    'type' => $cItem['type'] ?? 'item',
+                    'quantity' => $cItem['quantity'] ?? 1,
+                    'unit_price' => $cItem['unit_price'] ?? 0,
+                    'warranty_period_days' => $cItem['warranty_period_days'] ?? ($cItem['warranty_days'] ?? $warrantyPeriod),
+                    'warranty_terms' => $cItem['warranty_terms'] ?? $warrantyTerms,
+                ]);
+            }
+        } elseif ($cartItems->isNotEmpty()) {
             foreach ($cartItems as $cItem) {
                 $listing = $cItem->listing;
                 OfferItem::create([
@@ -128,19 +141,6 @@ class NegotiationService
                     'unit_price' => $cItem->unit_price,
                     'warranty_period_days' => $warrantyPeriod,
                     'warranty_terms' => $warrantyTerms,
-                ]);
-            }
-        } elseif (! empty($data['custom_items'])) {
-            foreach ($data['custom_items'] as $cItem) {
-                OfferItem::create([
-                    'offer_id' => $offer->id,
-                    'listing_id' => $cItem['listing_id'] ?? null,
-                    'description' => $cItem['description'] ?? 'Product Offer Item',
-                    'type' => $cItem['type'] ?? 'item',
-                    'quantity' => $cItem['quantity'] ?? 1,
-                    'unit_price' => $cItem['unit_price'] ?? 0,
-                    'warranty_period_days' => $cItem['warranty_days'] ?? $warrantyPeriod,
-                    'warranty_terms' => $cItem['warranty_terms'] ?? $warrantyTerms,
                 ]);
             }
         }

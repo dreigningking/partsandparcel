@@ -18,7 +18,7 @@
         </span>
       @endif
 
-      <a href="{{ route('user.profile', $user->id) }}" target="_blank" class="px-3.5 py-1.5 rounded-full bg-pp-50 hover:bg-pp-100 text-pp-700 border border-pp-200 text-xs font-extrabold flex items-center gap-1.5 transition shadow-2xs" title="View Public Profile">
+      <a href="{{ route('user.profile', $user) }}" target="_blank" class="px-3.5 py-1.5 rounded-full bg-pp-50 hover:bg-pp-100 text-pp-700 border border-pp-200 text-xs font-extrabold flex items-center gap-1.5 transition shadow-2xs" title="View Public Profile">
         <i class="fas fa-external-link-alt text-pp-600"></i> Public Page ↗
       </a>
     </div>
@@ -85,11 +85,41 @@
     </div>
   @endif
 
+  @if (session()->has('kyc_success'))
+    <div class="p-4 rounded-2xl bg-purple-50 border border-purple-200 text-purple-900 text-xs font-bold flex items-center justify-between gap-2 shadow-2xs animate-in fade-in">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-id-card text-purple-600 text-sm"></i>
+        <span>{{ session('kyc_success') }}</span>
+      </div>
+      <button type="button" onclick="this.parentElement.remove()" class="text-purple-600 hover:text-purple-800 cursor-pointer"><i class="fas fa-times"></i></button>
+    </div>
+  @endif
+
+  @if (session()->has('camera_error'))
+    <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold flex items-center justify-between gap-2 shadow-2xs animate-in fade-in">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-exclamation-circle text-rose-600 text-sm"></i>
+        <span>{{ session('camera_error') }}</span>
+      </div>
+      <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 hover:text-rose-800 cursor-pointer"><i class="fas fa-times"></i></button>
+    </div>
+  @endif
+
   <!-- HORIZONTAL SUB-NAVIGATION TABS -->
   <div class="flex items-center gap-2 border-b border-slate-200 overflow-x-auto pb-px">
     <button type="button" wire:click="setSection('profile')" class="px-4 py-2.5 text-xs font-extrabold flex items-center gap-2 whitespace-nowrap transition border-b-2 cursor-pointer {{ $activeSection === 'profile' ? 'border-pp-600 text-pp-700 bg-white rounded-t-xl' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">
       <i class="fas fa-user-circle {{ $activeSection === 'profile' ? 'text-pp-600' : 'text-slate-400' }}"></i>
       <span>Profile Details</span>
+    </button>
+
+    <button type="button" wire:click="setSection('verification')" class="px-4 py-2.5 text-xs font-extrabold flex items-center gap-2 whitespace-nowrap transition border-b-2 cursor-pointer {{ $activeSection === 'verification' ? 'border-pp-600 text-pp-700 bg-white rounded-t-xl' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">
+      <i class="fas fa-id-card {{ $activeSection === 'verification' ? 'text-pp-600' : 'text-slate-400' }}"></i>
+      <span>Identity Verification (KYC)</span>
+      @if($user->is_verified || $user->id_verified_at)
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+      @elseif($activeVerification && $activeVerification->status === 'pending')
+        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+      @endif
     </button>
 
     <button type="button" wire:click="setSection('security')" class="px-4 py-2.5 text-xs font-extrabold flex items-center gap-2 whitespace-nowrap transition border-b-2 cursor-pointer {{ $activeSection === 'security' ? 'border-pp-600 text-pp-700 bg-white rounded-t-xl' : 'border-transparent text-slate-500 hover:text-slate-900 hover:border-slate-300' }}">
@@ -149,11 +179,18 @@
               <span class="inline-block mt-1 text-[11px] font-bold text-slate-400">Member since {{ $user->created_at->format('M Y') }}</span>
             </div>
 
-            <!-- UPLOAD ACTIONS -->
+            <!-- UPLOAD & FACIAL RECOGNITION ACTIONS -->
             <div class="w-full space-y-2 pt-2">
+              @if ($user->facial_verified_at)
+                <div class="p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold flex items-center justify-center gap-1.5">
+                  <i class="fas fa-check-circle text-emerald-600"></i>
+                  <span>Facial Verified (Live Checked)</span>
+                </div>
+              @endif
+
               <label class="w-full py-2.5 px-3 rounded-xl border border-pp-200 bg-pp-50 hover:bg-pp-100 text-pp-700 font-extrabold text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs">
                 <i class="fas fa-upload text-pp-600"></i>
-                <span>Upload New Avatar</span>
+                <span>Upload Avatar File</span>
                 <input type="file" wire:model="avatarFile" accept="image/png,image/jpeg,image/webp" class="hidden">
               </label>
 
@@ -184,13 +221,32 @@
             </div>
 
             <div class="flex items-center justify-between">
-              <span class="text-slate-500 font-semibold">Seller Trust:</span>
-              @if ($user->is_verified)
+              <span class="text-slate-500 font-semibold">Facial Check:</span>
+              @if ($user->facial_verified_at)
                 <span class="text-emerald-700 font-extrabold text-[11px] flex items-center gap-1">
-                  <i class="fas fa-badge-check"></i> Identity Verified
+                  <i class="fas fa-check-circle"></i> Passed
                 </span>
               @else
-                <span class="text-slate-500 font-extrabold text-[11px]">Standard Account</span>
+                <span class="text-amber-700 font-extrabold text-[11px] flex items-center gap-1">
+                  <i class="fas fa-clock"></i> Not Checked
+                </span>
+              @endif
+            </div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500 font-semibold">Government ID:</span>
+              @if ($user->id_verified_at || $user->is_verified)
+                <span class="text-emerald-700 font-extrabold text-[11px] flex items-center gap-1">
+                  <i class="fas fa-check-circle"></i> Verified
+                </span>
+              @elseif($activeVerification && $activeVerification->status === 'pending')
+                <span class="text-amber-700 font-extrabold text-[11px] flex items-center gap-1">
+                  <i class="fas fa-hourglass-half"></i> In Review
+                </span>
+              @else
+                <button type="button" wire:click="setSection('verification')" class="text-pp-600 hover:underline font-extrabold text-[11px]">
+                  Submit ID
+                </button>
               @endif
             </div>
 
@@ -259,7 +315,7 @@
               <!-- THEME PREFERENCE -->
               <div class="space-y-1">
                 <label class="font-bold text-slate-700 block">Theme Preference</label>
-                <select wire:model="theme_preference" class="w-full p-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 outline-none focus:border-pp-500 transition bg-white cursor-pointer">
+                <select wire:model.live="theme_preference" class="w-full p-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 outline-none focus:border-pp-500 transition bg-white cursor-pointer">
                   <option value="system">System Default</option>
                   <option value="light">Light Mode</option>
                   <option value="dark">Dark Mode</option>
@@ -473,15 +529,13 @@
           </div>
 
           <div class="flex items-center gap-2">
-            <button type="button" wire:click="registerCurrentDevice" class="px-3.5 py-2 rounded-xl border border-pp-200 bg-pp-50 hover:bg-pp-100 text-pp-700 font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
+            <button type="button" @click="registerBrowserSession()" class="px-3.5 py-2 rounded-xl border border-pp-200 bg-pp-50 hover:bg-pp-100 text-pp-700 font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-2xs">
               <i class="fas fa-plus-circle text-pp-600"></i> Register This Browser
             </button>
 
-            @if($deviceTokens->count() > 0)
-              <button type="button" wire:click="testPushNotification" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-xs">
-                <i class="fas fa-paper-plane"></i> Send Test Push
-              </button>
-            @endif
+            <button type="button" wire:click="testPushNotification" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 shadow-xs">
+              <i class="fas fa-paper-plane"></i> Send Test Push
+            </button>
           </div>
         </div>
 
@@ -553,7 +607,7 @@
                 Register this browser to enable instant push notifications for offers, transactions, and customer inquiries.
               </p>
             </div>
-            <button type="button" wire:click="registerCurrentDevice" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition cursor-pointer inline-flex items-center gap-1.5">
+            <button type="button" @click="registerBrowserSession()" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition cursor-pointer inline-flex items-center gap-1.5">
               <i class="fas fa-plus-circle"></i> Register This Browser Now
             </button>
           </div>
@@ -761,5 +815,529 @@
 
     </div>
   @endif
+
+  <!-- SECTION 5: IDENTITY VERIFICATION (KYC) -->
+  @if ($activeSection === 'verification')
+    <div class="grid md:grid-cols-12 gap-6">
+      
+      <!-- LEFT: KYC GUIDELINES & BENEFITS -->
+      <div class="md:col-span-5 space-y-6">
+        <div class="p-6 rounded-3xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-4 shadow-2xs">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 grid place-items-center text-lg font-black">
+              <i class="fas fa-id-card"></i>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-sm">Identity Verification (KYC)</h4>
+              <p class="text-[11px] text-slate-500">Government ID &amp; Facial Recognition</p>
+            </div>
+          </div>
+
+          <p class="leading-relaxed">
+            Verifying your identity unlocks higher trust with buyers, instant verified seller badges, elevated listing visibility, and higher payout limits.
+          </p>
+
+          <div class="space-y-3 pt-2 border-t border-slate-200 text-xs">
+            <div class="flex items-start gap-2.5">
+              <div class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 grid place-items-center text-[10px] shrink-0 mt-0.5">
+                <i class="fas fa-check"></i>
+              </div>
+              <div>
+                <strong class="text-slate-900 block font-bold">Government Photo ID</strong>
+                <span class="text-slate-500 text-[11px]">Valid National ID Card, Voter's Card, Driver's License, or International Passport.</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2.5">
+              <div class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 grid place-items-center text-[10px] shrink-0 mt-0.5">
+                <i class="fas fa-check"></i>
+              </div>
+              <div>
+                <strong class="text-slate-900 block font-bold">Live Facial Recognition</strong>
+                <span class="text-slate-500 text-[11px]">Quick camera selfie check to confirm you are the true owner of the document.</span>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-2.5">
+              <div class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 grid place-items-center text-[10px] shrink-0 mt-0.5">
+                <i class="fas fa-check"></i>
+              </div>
+              <div>
+                <strong class="text-slate-900 block font-bold">Secure Verification</strong>
+                <span class="text-slate-500 text-[11px]">Your documents are strictly encrypted and used solely for legal compliance.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- VERIFICATION STATUS SUMMARY CARD -->
+          <div class="p-4 rounded-2xl bg-white border border-slate-200 space-y-2">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Your Verification Status</span>
+            
+            @if ($user->is_verified || $user->id_verified_at)
+              <div class="flex items-center gap-2 text-emerald-700 font-extrabold text-sm">
+                <i class="fas fa-check-circle text-base"></i>
+                <span>Identity Fully Verified</span>
+              </div>
+              <p class="text-[11px] text-slate-500">
+                Verified on {{ $user->id_verified_at ? $user->id_verified_at->format('M d, Y') : 'Active' }}
+              </p>
+            @elseif ($activeVerification && $activeVerification->status === 'pending')
+              <div class="flex items-center gap-2 text-amber-600 font-extrabold text-sm">
+                <i class="fas fa-hourglass-half text-base animate-pulse"></i>
+                <span>Under Review by Compliance</span>
+              </div>
+              <p class="text-[11px] text-slate-500">
+                Submitted on {{ $activeVerification->created_at->format('M d, Y h:i A') }}. Reviews typically take under 24 hours.
+              </p>
+            @elseif ($activeVerification && $activeVerification->status === 'rejected')
+              <div class="flex items-center gap-2 text-rose-600 font-extrabold text-sm">
+                <i class="fas fa-times-circle text-base"></i>
+                <span>Verification Rejected</span>
+              </div>
+              @if ($activeVerification->rejection_reason)
+                <p class="text-[11px] text-rose-700 font-semibold bg-rose-50 p-2 rounded-lg border border-rose-100">
+                  {{ $activeVerification->rejection_reason }}
+                </p>
+              @endif
+            @else
+              <div class="flex items-center gap-2 text-slate-700 font-extrabold text-sm">
+                <i class="fas fa-shield-alt text-base text-slate-400"></i>
+                <span>Unverified Account</span>
+              </div>
+              <p class="text-[11px] text-slate-500">
+                Complete the form on the right to verify your identity.
+              </p>
+            @endif
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: SUBMISSION FORM / PREVIEW -->
+      <div class="md:col-span-7 space-y-6">
+        <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-5 shadow-soft">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <i class="fas fa-shield-check text-purple-600"></i> Document Submission
+            </h3>
+            @if ($user->is_verified)
+              <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black">
+                VERIFIED
+              </span>
+            @elseif ($activeVerification && $activeVerification->status === 'pending')
+              <span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-[10px] font-black">
+                PENDING REVIEW
+              </span>
+            @endif
+          </div>
+
+          @if ($user->is_verified)
+            <div class="p-8 text-center bg-emerald-50/50 rounded-2xl border border-emerald-200 space-y-3">
+              <div class="w-14 h-14 mx-auto rounded-3xl bg-emerald-100 text-emerald-600 grid place-items-center text-2xl shadow-xs">
+                <i class="fas fa-shield-check"></i>
+              </div>
+              <div class="space-y-1">
+                <h4 class="font-extrabold text-slate-900 text-base">Your Account is Verified</h4>
+                <p class="text-xs text-slate-600 max-w-sm mx-auto">
+                  You have successfully passed Government ID and Facial Liveness checks. Your verified badge is actively displayed across your listings and profile.
+                </p>
+              </div>
+              @if ($activeVerification)
+                <div class="pt-2 text-[11px] text-slate-500 font-medium">
+                  Document: <strong class="text-slate-800 uppercase">{{ str_replace('_', ' ', $activeVerification->document_type) }}</strong> ({{ $activeVerification->document_number }})
+                </div>
+              @endif
+            </div>
+          @else
+            <form wire:submit.prevent="submitKycVerification" class="space-y-4 text-xs">
+              
+              <!-- DOCUMENT TYPE -->
+              <div class="space-y-1">
+                <label class="font-bold text-slate-700 block">
+                  Select Government ID Type <span class="text-rose-500">*</span>
+                </label>
+                <select wire:model="kyc_document_type" class="w-full p-2.5 rounded-xl border border-slate-200 font-bold text-slate-900 outline-none focus:border-pp-500 transition">
+                  <option value="national_id">National ID Card / Voter's Card</option>
+                  <option value="drivers_license">Driver's License</option>
+                  <option value="international_passport">International Passport</option>
+                </select>
+                @error('kyc_document_type') <span class="text-rose-600 text-[11px] font-semibold block">{{ $message }}</span> @enderror
+              </div>
+
+              <!-- DOCUMENT NUMBER -->
+              <div class="space-y-1">
+                <label class="font-bold text-slate-700 block">
+                  Document / Identification Number <span class="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  wire:model="kyc_document_number"
+                  placeholder="e.g. DL-12345678 or Passport Number"
+                  class="w-full p-2.5 rounded-xl border border-slate-200 font-mono font-bold text-slate-900 outline-none focus:border-pp-500 transition"
+                />
+                @error('kyc_document_number') <span class="text-rose-600 text-[11px] font-semibold block">{{ $message }}</span> @enderror
+              </div>
+
+              <!-- DOCUMENT IMAGES -->
+              <div class="grid sm:grid-cols-2 gap-4 pt-1">
+                <!-- FRONT IMAGE -->
+                <div class="space-y-1.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                  <label class="font-bold text-slate-800 block text-xs flex items-center justify-between">
+                    <span>Front of ID Card <span class="text-rose-500">*</span></span>
+                    <i class="fas fa-id-card text-purple-600"></i>
+                  </label>
+                  <p class="text-[10px] text-slate-500">Ensure text and photo are clearly visible.</p>
+                  
+                  <input
+                    type="file"
+                    wire:model="kyc_front_image"
+                    accept="image/*"
+                    class="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-[11px] file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-700 file:cursor-pointer cursor-pointer"
+                  />
+                  <div wire:loading wire:target="kyc_front_image" class="text-[10px] text-purple-600 font-semibold flex items-center gap-1">
+                    <i class="fas fa-spinner fa-spin"></i> Uploading...
+                  </div>
+                  @error('kyc_front_image') <span class="text-rose-600 text-[10px] font-bold block">{{ $message }}</span> @enderror
+
+                  @if ($kyc_front_image)
+                    <div class="mt-1 aspect-4/3 rounded-lg overflow-hidden border border-purple-200">
+                      <img src="{{ $kyc_front_image->temporaryUrl() }}" class="w-full h-full object-cover">
+                    </div>
+                  @elseif ($activeVerification && $activeVerification->front_image)
+                    <div class="mt-1 text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                      <i class="fas fa-check-circle"></i> Existing document on file
+                    </div>
+                  @endif
+                </div>
+
+                <!-- BACK IMAGE -->
+                <div class="space-y-1.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                  <label class="font-bold text-slate-800 block text-xs flex items-center justify-between">
+                    <span>Back of ID Card</span>
+                    <i class="fas fa-id-card-alt text-purple-600"></i>
+                  </label>
+                  <p class="text-[10px] text-slate-500">Optional for International Passport.</p>
+
+                  <input
+                    type="file"
+                    wire:model="kyc_back_image"
+                    accept="image/*"
+                    class="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-xl file:border-0 file:text-[11px] file:font-bold file:bg-slate-700 file:text-white hover:file:bg-slate-800 file:cursor-pointer cursor-pointer"
+                  />
+                  <div wire:loading wire:target="kyc_back_image" class="text-[10px] text-purple-600 font-semibold flex items-center gap-1">
+                    <i class="fas fa-spinner fa-spin"></i> Uploading...
+                  </div>
+                  @error('kyc_back_image') <span class="text-rose-600 text-[10px] font-bold block">{{ $message }}</span> @enderror
+
+                  @if ($kyc_back_image)
+                    <div class="mt-1 aspect-4/3 rounded-lg overflow-hidden border border-purple-200">
+                      <img src="{{ $kyc_back_image->temporaryUrl() }}" class="w-full h-full object-cover">
+                    </div>
+                  @elseif ($activeVerification && $activeVerification->back_image)
+                    <div class="mt-1 text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                      <i class="fas fa-check-circle"></i> Existing document on file
+                    </div>
+                  @endif
+                </div>
+              </div>
+
+              <!-- LIVENESS / LIVE FACIAL CHECK COMPONENT -->
+              <div class="p-4 rounded-2xl bg-gradient-to-br from-purple-50/60 to-slate-50 border border-purple-100 space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 grid place-items-center text-xs font-black">
+                      <i class="fas fa-video"></i>
+                    </span>
+                    <div>
+                      <h5 class="font-extrabold text-slate-900 text-xs">Live Facial Liveness Check</h5>
+                      <p class="text-[10px] text-slate-500">Compare your live face with the ID document photo</p>
+                    </div>
+                  </div>
+
+                  @if ($user->facial_verified_at)
+                    <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold flex items-center gap-1">
+                      <i class="fas fa-check-circle"></i> PASSED
+                    </span>
+                  @endif
+                </div>
+
+                @if ($user->facial_verified_at)
+                  <p class="text-[11px] text-emerald-800 font-medium leading-relaxed">
+                    Live facial check successfully recorded on {{ $user->facial_verified_at->format('M d, Y') }}. Your live selfie will be submitted alongside your ID.
+                  </p>
+                @else
+                  <p class="text-[11px] text-slate-600 leading-relaxed">
+                    Please use your camera to capture a live selfie. This ensures real-time identity matching.
+                  </p>
+                  <button
+                    type="button"
+                    wire:click="openCameraModal"
+                    class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-2"
+                  >
+                    <i class="fas fa-camera"></i>
+                    <span>Take Live Camera Selfie</span>
+                  </button>
+                @endif
+              </div>
+
+              <!-- SUBMIT BUTTON -->
+              <div class="pt-2">
+                <button
+                  type="submit"
+                  wire:loading.attr="disabled"
+                  class="w-full py-3 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <i class="fas fa-shield-check" wire:loading.remove wire:target="submitKycVerification"></i>
+                  <i class="fas fa-spinner fa-spin" wire:loading wire:target="submitKycVerification"></i>
+                  <span>{{ $activeVerification && $activeVerification->status === 'rejected' ? 'Update & Resubmit Verification' : 'Submit ID for Verification' }}</span>
+                </button>
+              </div>
+
+            </form>
+          @endif
+
+        </div>
+      </div>
+
+    </div>
+  @endif
+
+  <!-- LIVE CAMERA FACIAL RECOGNITION MODAL -->
+  @if ($showCameraModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4" id="webcamModalContainer">
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4 relative">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 grid place-items-center text-sm font-black">
+              <i class="fas fa-camera"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-950">Facial Liveness Check</h3>
+              <p class="text-[11px] text-slate-500">Center your face in the camera oval</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            wire:click="closeCameraModal"
+            onclick="stopCameraStream()"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 grid place-items-center transition cursor-pointer"
+          >
+            <i class="fas fa-times text-xs"></i>
+          </button>
+        </div>
+
+        <!-- CAMERA VIEWPORT -->
+        <div class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-4/3 flex items-center justify-center border border-slate-800">
+          <video id="webcamVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+
+          <!-- FACIAL ALIGNMENT OVAL GUIDE -->
+          <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div class="w-48 h-60 rounded-[50%] border-2 border-dashed border-purple-400/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]"></div>
+          </div>
+
+          <!-- CAMERA LOADING / ERROR OVERLAY -->
+          <div id="cameraLoadingNotice" class="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center text-white text-xs gap-2 p-4 text-center">
+            <i class="fas fa-spinner fa-spin text-2xl text-purple-400"></i>
+            <span>Starting camera preview...</span>
+            <span class="text-[10px] text-slate-400">Please click "Allow" if prompted for camera permission.</span>
+          </div>
+
+          <div id="cameraErrorNotice" class="hidden absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center text-white text-xs gap-2 p-4 text-center">
+            <i class="fas fa-video-slash text-2xl text-rose-500"></i>
+            <span class="font-bold text-rose-400">Camera Access Blocked or Unavailable</span>
+            <span class="text-[10px] text-slate-400">Please enable camera permissions in your browser or use the file upload option on the profile page.</span>
+          </div>
+        </div>
+
+        <p class="text-[11px] text-slate-500 text-center leading-relaxed">
+          Ensure your face is well-lit and not covered by dark sunglasses or masks. Look directly into the lens.
+        </p>
+
+        <!-- CAPTURE ACTION -->
+        <div class="pt-2 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            wire:click="closeCameraModal"
+            onclick="stopCameraStream()"
+            class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition"
+          >
+            Cancel
+          </button>
+          
+          <button
+            type="button"
+            onclick="captureWebcamSelfie()"
+            id="snapButton"
+            class="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i class="fas fa-camera"></i>
+            <span>Capture Live Photo</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  @endif
+
+  <!-- FLOATING IN-APP TEST PUSH TOAST -->
+  <div id="ppInAppPushToast" class="fixed bottom-6 right-6 z-50 max-w-sm w-full bg-slate-950 text-white rounded-2xl p-4 shadow-2xl border border-slate-800 transition-all duration-300 transform translate-y-24 opacity-0 pointer-events-none flex items-start gap-3">
+    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 grid place-items-center shrink-0 border border-emerald-500/30">
+      <i class="fas fa-bell text-base"></i>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center justify-between gap-2">
+        <h5 class="font-extrabold text-xs text-white" id="ppToastTitle">Push Notification</h5>
+        <span class="text-[10px] text-slate-400">Just now</span>
+      </div>
+      <p class="text-xs text-slate-300 mt-0.5 leading-snug" id="ppToastBody">Your notification alert is active.</p>
+    </div>
+    <button type="button" onclick="hidePushToast()" class="text-slate-400 hover:text-white text-xs">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- CLIENT-SIDE BROWSER PUSH NOTIFICATION & WEBCAM SCRIPT -->
+  <script>
+    // 1. Persistent Browser Token Registration (Prevents Duplicate Entries)
+    function registerBrowserSession() {
+      let clientToken = localStorage.getItem('pp_device_token');
+      if (!clientToken) {
+        clientToken = 'web_' + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'dev_' + Math.random().toString(36).substring(2) + Date.now().toString(36));
+        localStorage.setItem('pp_device_token', clientToken);
+      }
+
+      let rawAgent = navigator.userAgent || '';
+      let browserName = 'Web Browser';
+      if (rawAgent.indexOf('Chrome') > -1) browserName = 'Google Chrome';
+      else if (rawAgent.indexOf('Firefox') > -1) browserName = 'Mozilla Firefox';
+      else if (rawAgent.indexOf('Safari') > -1) browserName = 'Apple Safari';
+      else if (rawAgent.indexOf('Edge') > -1) browserName = 'Microsoft Edge';
+
+      let deviceName = browserName + ' (' + (navigator.platform || 'Device') + ')';
+      @this.registerCurrentDevice(clientToken, 'web', deviceName);
+    }
+
+    // 2. Push Notification Dispatch & Screen Display
+    window.addEventListener('pp-test-push-notification', (event) => {
+      const data = event.detail || {};
+      const title = data.title || 'Parts & Parcel Alert';
+      const body = data.body || 'Push notifications are working properly on your device!';
+
+      // Always show floating in-app banner on user's screen
+      showPushToast(title, body);
+
+      // Attempt OS-level native notification
+      if ('Notification' in window) {
+        if (Notification.permission === 'granted') {
+          try {
+            new Notification(title, { body: body, icon: data.icon });
+          } catch (e) {
+            console.log('OS notification display failed:', e);
+          }
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+              try {
+                new Notification(title, { body: body, icon: data.icon });
+              } catch (e) {
+                console.log('OS notification display failed:', e);
+              }
+            }
+          });
+        }
+      }
+    });
+
+    function showPushToast(title, body) {
+      const toast = document.getElementById('ppInAppPushToast');
+      if (!toast) return;
+      document.getElementById('ppToastTitle').innerText = title;
+      document.getElementById('ppToastBody').innerText = body;
+      toast.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        hidePushToast();
+      }, 6000);
+    }
+
+    function hidePushToast() {
+      const toast = document.getElementById('ppInAppPushToast');
+      if (!toast) return;
+      toast.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+      toast.classList.remove('translate-y-0', 'opacity-100');
+    }
+
+    // 3. WebRTC Camera Lifecycle
+    let localStream = null;
+
+    function initCameraStream() {
+      const videoEl = document.getElementById('webcamVideo');
+      const loadingNotice = document.getElementById('cameraLoadingNotice');
+      const errorNotice = document.getElementById('cameraErrorNotice');
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (loadingNotice) loadingNotice.classList.add('hidden');
+        if (errorNotice) errorNotice.classList.remove('hidden');
+        return;
+      }
+
+      navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'user',
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
+        audio: false
+      }).then(stream => {
+        localStream = stream;
+        if (videoEl) {
+          videoEl.srcObject = stream;
+          videoEl.play();
+        }
+        if (loadingNotice) loadingNotice.classList.add('hidden');
+      }).catch(err => {
+        console.error('Camera error:', err);
+        if (loadingNotice) loadingNotice.classList.add('hidden');
+        if (errorNotice) errorNotice.classList.remove('hidden');
+      });
+    }
+
+    function stopCameraStream() {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+    }
+
+    function captureWebcamSelfie() {
+      const videoEl = document.getElementById('webcamVideo');
+      if (!videoEl || !localStream) {
+        alert('Camera stream is not active.');
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = videoEl.videoWidth || 640;
+      canvas.height = videoEl.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+
+      const base64Data = canvas.toDataURL('image/jpeg', 0.9);
+      stopCameraStream();
+      @this.saveCameraSelfie(base64Data);
+    }
+
+    // Auto-init camera when modal opens
+    document.addEventListener('livewire:initialized', () => {
+      Livewire.hook('commit', ({ component, commit, respond, succeed, fail }) => {
+        succeed(() => {
+          setTimeout(() => {
+            const videoEl = document.getElementById('webcamVideo');
+            if (videoEl && !localStream) {
+              initCameraStream();
+            }
+          }, 100);
+        });
+      });
+    });
+  </script>
 
 </div>

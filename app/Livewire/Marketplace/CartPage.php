@@ -9,6 +9,7 @@ use App\Services\Commercial\CartService;
 use App\Services\Commercial\NegotiationService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 #[Layout('layouts.app')]
@@ -52,6 +53,7 @@ class CartPage extends Component
         $this->loadAddresses();
     }
 
+    #[On('cart-updated')]
     public function loadCart()
     {
         $user = Auth::user();
@@ -218,13 +220,18 @@ class CartPage extends Component
 
     public function proceedToCheckout($sellerId)
     {
+        $seller = User::where('id', is_numeric($sellerId) ? (int)$sellerId : null)
+            ->orWhere('slug', $sellerId)
+            ->first();
+        $sellerParam = $seller?->slug ?: $sellerId;
+
         if (! Auth::check()) {
-            session()->put('url.intended', route('checkout', ['seller' => $sellerId]));
+            session()->put('url.intended', route('checkout', ['seller' => $sellerParam]));
             session()->flash('warning', 'Please sign in to proceed with checkout.');
             return redirect()->route('login');
         }
 
-        return redirect()->route('checkout', ['seller' => $sellerId]);
+        return redirect()->route('checkout', ['seller' => $sellerParam]);
     }
 
     public function render()

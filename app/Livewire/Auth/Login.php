@@ -39,6 +39,10 @@ class Login extends Component
         // Refresh location context from user profile
         app(\App\Services\Location\LocationService::class)->resolveForRequest(request());
 
+        if (! Auth::user()->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
+
         if (Auth::user()->isAdmin()) {
             return redirect()->intended(route('admin.dashboard'));
         }

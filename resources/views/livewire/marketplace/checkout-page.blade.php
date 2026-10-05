@@ -41,7 +41,7 @@
             <input type="radio" name="delivery_method_radio" value="pickup" {{ $deliveryMethod === 'pickup' ? 'checked' : '' }} class="mt-1 accent-pp-600" />
             <div class="space-y-1">
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs font-extrabold text-slate-900 uppercase">○ I'll pick it up</span>
+                <span class="text-xs font-extrabold text-slate-900 uppercase">I'll pick it up</span>
                 <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">NO SHIPMENT NECESSARY</span>
               </div>
               <p class="text-xs text-slate-600 leading-relaxed">
@@ -51,18 +51,66 @@
           </div>
 
           <!-- OPTION 2: SELLER DELIVERY -->
-          <div wire:click="selectDeliveryMethod('seller_delivery')" class="flex items-start gap-4 p-4 rounded-2xl border transition cursor-pointer {{ $deliveryMethod === 'seller_delivery' ? 'border-2 border-pp-600 bg-pp-50/40 shadow-2xs' : 'border-slate-200 hover:border-pp-300 bg-white' }}">
-            <input type="radio" name="delivery_method_radio" value="seller_delivery" {{ $deliveryMethod === 'seller_delivery' ? 'checked' : '' }} class="mt-1 accent-pp-600" />
-            <div class="space-y-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs font-extrabold text-slate-900 uppercase">○ Seller will deliver</span>
-                <span class="px-2 py-0.5 rounded-full bg-pp-100 text-pp-800 text-[10px] font-extrabold">SELLER IS DELIVERY PARTY</span>
+          @if ($canShip)
+            <div wire:click="selectDeliveryMethod('seller_delivery')" class="flex items-start gap-4 p-4 rounded-2xl border transition cursor-pointer {{ $deliveryMethod === 'seller_delivery' ? 'border-2 border-pp-600 bg-pp-50/40 shadow-2xs' : 'border-slate-200 hover:border-pp-300 bg-white' }}">
+              <input type="radio" name="delivery_method_radio" value="seller_delivery" {{ $deliveryMethod === 'seller_delivery' ? 'checked' : '' }} class="mt-1 accent-pp-600" />
+              <div class="space-y-2.5 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-extrabold text-slate-900 uppercase">Seller will deliver</span>
+                  <span class="px-2 py-0.5 rounded-full bg-pp-100 text-pp-800 text-[10px] font-extrabold">SELLER IS DELIVERY PARTY</span>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                  "The seller will deliver this to me." {{ $sellerName }} delivers to your location. A shipment is created with the seller as the delivery party.
+                </p>
+
+                <!-- ITEMS ELIGIBILITY BREAKDOWN -->
+                <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                  <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">
+                    Item Delivery Eligibility Breakdown:
+                  </span>
+                  <div class="space-y-1">
+                    @foreach ($cartItems as $cItem)
+                      @if (!empty($cItem['allow_shipping']))
+                        <div class="flex items-center justify-between text-[11px] bg-emerald-50/80 border border-emerald-100 px-2.5 py-1.5 rounded-xl text-emerald-950 font-medium">
+                          <div class="flex items-center gap-2 truncate">
+                            <i class="fas fa-truck text-emerald-600 text-xs shrink-0"></i>
+                            <span class="font-bold truncate">{{ $cItem['title'] }} (x{{ $cItem['quantity'] }})</span>
+                          </div>
+                          <span class="text-[10px] font-extrabold text-emerald-700 bg-white px-2 py-0.5 rounded-full shrink-0 shadow-2xs border border-emerald-100">
+                            Eligible for Delivery
+                          </span>
+                        </div>
+                      @else
+                        <div class="flex items-center justify-between text-[11px] bg-amber-50/80 border border-amber-200 px-2.5 py-1.5 rounded-xl text-amber-950 font-medium">
+                          <div class="flex items-center gap-2 truncate">
+                            <i class="fas fa-store text-amber-600 text-xs shrink-0"></i>
+                            <span class="font-bold truncate">{{ $cItem['title'] }} (x{{ $cItem['quantity'] }})</span>
+                          </div>
+                          <span class="text-[10px] font-extrabold text-amber-800 bg-white px-2 py-0.5 rounded-full shrink-0 shadow-2xs border border-amber-200">
+                            Must be picked up
+                          </span>
+                        </div>
+                      @endif
+                    @endforeach
+                  </div>
+                </div>
               </div>
-              <p class="text-xs text-slate-600 leading-relaxed">
-                "The seller will deliver this to me." {{ $sellerName }} delivers to your location. A shipment is created with the seller as the delivery party.
-              </p>
             </div>
-          </div>
+          @else
+            <!-- SELLER DELIVERY DISABLED: NO ITEMS ALLOW SHIPPING -->
+            <div class="flex items-start gap-4 p-4 rounded-2xl border border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed">
+              <input type="radio" name="delivery_method_radio" value="seller_delivery" disabled class="mt-1 accent-slate-400 cursor-not-allowed" />
+              <div class="space-y-1 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-extrabold text-slate-500 uppercase">Seller will deliver</span>
+                  <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 text-[10px] font-extrabold">NOT ELIGIBLE FOR SHIPPING</span>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                  None of the items from {{ $sellerName }} in this cart allow seller shipment. In-person buyer pickup is required.
+                </p>
+              </div>
+            </div>
+          @endif
 
         </div>
       </div>
@@ -142,7 +190,7 @@
         <div class="space-y-4">
           
           <!-- OPTION A: PAY VIA PARTS & PARCEL (ESCROW PROTECTED) -->
-          <div wire:click="setPaymentMethod('platform')" class="block p-4.5 rounded-2xl border transition cursor-pointer {{ $paymentMethod === 'platform' ? 'border-2 border-pp-600 bg-pp-50/40 shadow-2xs' : 'border-slate-200 hover:border-pp-300 bg-white' }}">
+          <div wire:click="setPaymentMethod('platform')" class="block p-4 rounded-2xl border transition cursor-pointer {{ $paymentMethod === 'platform' ? 'border-2 border-pp-600 bg-pp-50/40 shadow-2xs' : 'border-slate-200 hover:border-pp-300 bg-white' }}">
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-3">
                 <input type="radio" name="payment_method_radio" value="platform" {{ $paymentMethod === 'platform' ? 'checked' : '' }} class="accent-pp-600" />
@@ -150,7 +198,7 @@
                   <i class="fas fa-shield-alt text-pp-600"></i> Pay via Parts &amp; Parcel (Escrow Protected)
                 </span>
               </div>
-              <span class="px-2.5 py-0.5 rounded-full bg-pp-100 text-pp-800 text-[10px] font-extrabold">+ ₦{{ number_format($escrowFee) }} ESCROW FEE</span>
+              <span class="px-2.5 py-0.5 rounded-full bg-pp-100 text-pp-800 text-[10px] font-extrabold">+ ₦{{ number_format($escrowFee) }} ({{ $escrowPercentage }}%@if($escrowCap && $escrowFee >= $escrowCap) - Capped @endif) ESCROW FEE</span>
             </div>
 
             @if ($paymentMethod === 'platform')
@@ -168,7 +216,7 @@
           </div>
 
           <!-- OPTION B: PAY DIRECTLY TO SELLER (OFF-PLATFORM DIRECT TRANSFER) -->
-          <div wire:click="setPaymentMethod('direct')" class="block p-4.5 rounded-2xl border transition cursor-pointer {{ $paymentMethod === 'direct' ? 'border-2 border-amber-600 bg-amber-50/40 shadow-2xs' : 'border-slate-200 hover:border-slate-300 bg-white' }}">
+          <div wire:click="setPaymentMethod('direct')" class="block p-4 rounded-2xl border transition cursor-pointer {{ $paymentMethod === 'direct' ? 'border-2 border-amber-600 bg-amber-50/40 shadow-2xs' : 'border-slate-200 hover:border-slate-300 bg-white' }}">
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-3">
                 <input type="radio" wire:model.live="paymentMethod" value="direct" class="accent-amber-600" />
@@ -255,13 +303,13 @@
           </div>
 
           <div class="flex justify-between">
-            <span>Escrow Protection Fee</span>
+            <span>Escrow Protection Fee @if ($paymentMethod === 'platform')({{ $escrowPercentage }}%@if($escrowCap && $escrowFee >= $escrowCap), capped at ₦{{ number_format($escrowCap) }}@endif)@endif</span>
             <span class="font-bold {{ $paymentMethod === 'platform' ? 'text-pp-700' : 'text-slate-400' }}">
-              @if ($paymentMethod === 'platform') ₦{{ number_format($activeEscrowFee) }} @else NO ESCROW (Direct) @endif
+              @if ($paymentMethod === 'platform') +₦{{ number_format($activeEscrowFee) }} @else NO ESCROW (Direct) @endif
             </span>
           </div>
 
-          @if ($discount > 0)
+          @if ($paymentMethod === 'platform' && $discount > 0)
             <div class="flex justify-between text-emerald-600 font-bold">
               <span>Coupon Discount</span>
               <span>-₦{{ number_format($discount) }}</span>
@@ -269,51 +317,53 @@
           @endif
         </div>
 
-        <!-- COUPON / PROMO VOUCHER -->
-        <div class="space-y-2 border-b border-slate-100 pb-4">
-          <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
-            Have a Promo Voucher / Coupon?
-          </label>
+        <!-- COUPON / PROMO VOUCHER (ONLY ON PLATFORM / ESCROW PAYMENTS) -->
+        @if ($paymentMethod === 'platform')
+          <div class="space-y-2 border-b border-slate-100 pb-4">
+            <label class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">
+              Have a Promo Voucher / Coupon?
+            </label>
 
-          @if ($couponValid && $appliedCouponId)
-            <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
-              <div class="flex items-center gap-1.5 text-emerald-800 font-extrabold truncate">
-                <i class="fas fa-ticket text-emerald-600"></i>
-                <span class="truncate">{{ $couponMessage }}</span>
+            @if ($couponValid && $appliedCouponId)
+              <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5 text-emerald-800 font-extrabold truncate">
+                  <i class="fas fa-ticket text-emerald-600"></i>
+                  <span class="truncate">{{ $couponMessage }}</span>
+                </div>
+                <button
+                  type="button"
+                  wire:click="removeCoupon"
+                  class="text-xs font-bold text-rose-600 hover:underline shrink-0 ml-2 cursor-pointer"
+                >
+                  Remove
+                </button>
               </div>
-              <button
-                type="button"
-                wire:click="removeCoupon"
-                class="text-xs font-bold text-rose-600 hover:underline shrink-0 ml-2 cursor-pointer"
-              >
-                Remove
-              </button>
-            </div>
-          @else
-            <div class="flex items-center gap-2">
-              <div class="relative w-full">
-                <i class="fas fa-ticket absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                <input
-                  type="text"
-                  wire:model="couponCode"
-                  wire:keydown.enter.prevent="applyCoupon"
-                  placeholder="Coupon code"
-                  class="w-full text-xs font-bold uppercase rounded-xl border border-slate-200 pl-8 pr-2.5 py-2 focus:border-pp-600 focus:outline-none"
-                />
+            @else
+              <div class="flex items-center gap-2">
+                <div class="relative w-full">
+                  <i class="fas fa-ticket absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                  <input
+                    type="text"
+                    wire:model="couponCode"
+                    wire:keydown.enter.prevent="applyCoupon"
+                    placeholder="Coupon code"
+                    class="w-full text-xs font-bold uppercase rounded-xl border border-slate-200 pl-8 pr-2.5 py-2 focus:border-pp-600 focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  wire:click="applyCoupon"
+                  class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition shrink-0 cursor-pointer"
+                >
+                  Apply
+                </button>
               </div>
-              <button
-                type="button"
-                wire:click="applyCoupon"
-                class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs transition shrink-0 cursor-pointer"
-              >
-                Apply
-              </button>
-            </div>
-            @error('couponCode')
-              <span class="text-[11px] text-rose-500 font-bold block">{{ $message }}</span>
-            @enderror
-          @endif
-        </div>
+              @error('couponCode')
+                <span class="text-[11px] text-rose-500 font-bold block">{{ $message }}</span>
+              @enderror
+            @endif
+          </div>
+        @endif
 
         <div class="flex items-baseline justify-between">
           <span class="text-xs font-bold text-slate-500">Total Payable:</span>

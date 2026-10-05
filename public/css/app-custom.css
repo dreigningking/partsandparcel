@@ -178,6 +178,15 @@ html.dark aside#sidebar {
     border-color: #1e293b !important;
 }
 
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+    background-color: #1e293b !important;
+    color: #f8fafc !important;
+    border-color: #334155 !important;
+}
+
 html.dark aside#sidebar .border-b,
 html.dark aside#sidebar .border-t {
     border-color: #1e293b !important;
