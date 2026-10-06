@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\InvoiceItem;
 use App\Models\Listing;
 use App\Models\Moderation;
+use App\Models\Report;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -14,6 +16,9 @@ use Livewire\Component;
 class AdminListingDetails extends Component
 {
     public Listing $listing;
+
+    // Tab Navigation
+    public string $activeTab = 'overview';
 
     // Quick Rejection Modal
     public bool $showRejectModal = false;
@@ -37,15 +42,28 @@ class AdminListingDetails extends Component
         $this->newQuantity = (int) $this->listing->quantity;
     }
 
+    public function setTab(string $tab): void
+    {
+        if (in_array($tab, ['overview', 'sales', 'reviews', 'trust'])) {
+            $this->activeTab = $tab;
+        }
+    }
+
     public function approve(): void
     {
-        $hasPending = Moderation::where('moderatable_type', Listing::class)
+        $hasPending = Moderation::where(function ($q) {
+            $q->where('moderatable_type', 'listing')
+                ->orWhere('moderatable_type', Listing::class);
+        })
             ->where('moderatable_id', $this->listing->id)
             ->where('status', 'pending')
             ->exists();
 
         if ($hasPending) {
-            Moderation::where('moderatable_type', Listing::class)
+            Moderation::where(function ($q) {
+                $q->where('moderatable_type', 'listing')
+                    ->orWhere('moderatable_type', Listing::class);
+            })
                 ->where('moderatable_id', $this->listing->id)
                 ->where('status', 'pending')
                 ->update([
@@ -93,13 +111,19 @@ class AdminListingDetails extends Component
             'rejectionReason' => 'required|string|min:5|max:1000',
         ]);
 
-        $hasPending = Moderation::where('moderatable_type', Listing::class)
+        $hasPending = Moderation::where(function ($q) {
+            $q->where('moderatable_type', 'listing')
+                ->orWhere('moderatable_type', Listing::class);
+        })
             ->where('moderatable_id', $this->listing->id)
             ->where('status', 'pending')
             ->exists();
 
         if ($hasPending) {
-            Moderation::where('moderatable_type', Listing::class)
+            Moderation::where(function ($q) {
+                $q->where('moderatable_type', 'listing')
+                    ->orWhere('moderatable_type', Listing::class);
+            })
                 ->where('moderatable_id', $this->listing->id)
                 ->where('status', 'pending')
                 ->update([
@@ -209,6 +233,34 @@ class AdminListingDetails extends Component
         return redirect()->route('admin.properties');
     }
 
+    public function resolveReport(int $reportId, string $notes = 'Resolved by admin during listing inspection.'): void
+    {
+        $report = $this->listing->reports()->findOrFail($reportId);
+
+        $report->update([
+            'status' => 'resolved',
+            'resolved_by' => Auth::id(),
+            'resolution_notes' => $notes ?: 'Resolved by administrator.',
+        ]);
+
+        $this->listing->refresh();
+        session()->flash('message', "Report #{$reportId} marked as resolved.");
+    }
+
+    public function dismissReport(int $reportId, string $notes = 'Dismissed as false positive / invalid report.'): void
+    {
+        $report = $this->listing->reports()->findOrFail($reportId);
+
+        $report->update([
+            'status' => 'dismissed',
+            'resolved_by' => Auth::id(),
+            'resolution_notes' => $notes ?: 'Dismissed by administrator.',
+        ]);
+
+        $this->listing->refresh();
+        session()->flash('message', "Report #{$reportId} has been dismissed.");
+    }
+
     public function render()
     {
         $this->listing->loadMissing([
@@ -217,18 +269,56 @@ class AdminListingDetails extends Component
             'user.subscriptions.plan',
             'item.deviceModel.brand',
             'item.deviceModel.category',
-            'item.location',
+            'item.location.state',
+            'item.location.country',
             'item.parent.deviceModel.brand',
             'item.children.deviceModel',
             'media',
             'item.media',
             'reviews.user',
-            'promotions',
+            'promotions.payments',
             'cartItems',
+            'reports.user',
+            'reports.resolvedBy',
         ]);
 
+        // Sales history from InvoiceItem
+        $salesQuery = InvoiceItem::query()
+            ->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('itemable_type', 'listing')
+                        ->where('itemable_id', $this->listing->id);
+                });
+                if ($this->listing->item_id) {
+                    $q->orWhere(function ($sub) {
+                        $sub->where('itemable_type', 'item')
+                            ->where('itemable_id', $this->listing->item_id);
+                    });
+                }
+            })
+            ->with(['invoice.buyer', 'invoice.payments']);
+
+        $timesSold = (clone $salesQuery)->count();
+        $totalSoldUnits = (int) (clone $salesQuery)->sum('quantity');
+        $grossRevenue = (float) (clone $salesQuery)->sum('amount');
+        $salesHistory = (clone $salesQuery)->latest('created_at')->get();
+
+        // Marketplace views from ViewedEntity
+        $viewsCount = $this->listing->views()->count();
+        $uniqueViewers = $this->listing->views()->whereNotNull('user_id')->distinct('user_id')->count('user_id');
+
+        // Reviews metrics
+        $reviewsCount = $this->listing->reviewsCount();
+        $avgRating = $this->listing->averageRating();
+        $starDistribution = $this->listing->starDistribution();
+        $reviews = $this->listing->reviews()->with('user')->latest('created_at')->get();
+
+        // Moderation audit records
         $moderations = Moderation::query()
-            ->where('moderatable_type', Listing::class)
+            ->where(function ($q) {
+                $q->where('moderatable_type', 'listing')
+                    ->orWhere('moderatable_type', Listing::class);
+            })
             ->where('moderatable_id', $this->listing->id)
             ->with('moderator')
             ->latest('created_at')
@@ -236,6 +326,16 @@ class AdminListingDetails extends Component
 
         return view('livewire.admin.admin-listing-details', [
             'moderations' => $moderations,
+            'timesSold' => $timesSold,
+            'totalSoldUnits' => $totalSoldUnits,
+            'grossRevenue' => $grossRevenue,
+            'salesHistory' => $salesHistory,
+            'viewsCount' => $viewsCount,
+            'uniqueViewers' => $uniqueViewers,
+            'reviewsCount' => $reviewsCount,
+            'avgRating' => $avgRating,
+            'starDistribution' => $starDistribution,
+            'reviews' => $reviews,
         ]);
     }
 }

@@ -303,12 +303,12 @@
                       </span>
                     </div>
 
-                    <button
-                      wire:click="showDiscussion({{ $disc->id }})"
-                      class="font-black text-slate-900 group-hover:text-pp-600 transition text-left line-clamp-2 leading-snug cursor-pointer block"
+                    <a
+                      href="{{ route('admin.discussions.view', $disc->id) }}"
+                      class="font-black text-slate-900 group-hover:text-pp-600 transition text-left line-clamp-2 leading-snug block"
                     >
                       {{ $disc->title }}
-                    </button>
+                    </a>
 
                     <p class="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
                       {{ Str::limit(strip_tags($disc->body), 80) }}
@@ -454,15 +454,15 @@
               <td class="py-3.5 px-4 text-right whitespace-nowrap">
                 <div class="flex items-center justify-end gap-1.5">
                   
-                  <!-- Full Review Modal Button -->
-                  <button
-                    wire:click="showDiscussion({{ $disc->id }})"
-                    class="px-2.5 py-1.5 rounded-lg bg-pp-50 hover:bg-pp-100 text-pp-700 font-extrabold text-xs transition cursor-pointer flex items-center gap-1"
-                    title="Open Full Review &amp; Moderation Modal"
+                  <!-- Full Review View Button -->
+                  <a
+                    href="{{ route('admin.discussions.view', $disc->id) }}"
+                    class="px-2.5 py-1.5 rounded-lg bg-pp-50 hover:bg-pp-100 text-pp-700 font-extrabold text-xs transition flex items-center gap-1"
+                    title="Inspect Full Discussion Details Page"
                   >
                     <i class="fas fa-eye text-[11px]"></i>
-                    <span>Review</span>
-                  </button>
+                    <span>Inspect</span>
+                  </a>
 
                   <!-- Quick Approve Button -->
                   @if($modStatus !== 'approved')

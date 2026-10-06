@@ -203,9 +203,9 @@ class EscrowService
             return false;
         }
 
-        $hasOpenDisputes = Dispute::whereHas('issue', function ($query) use ($settlement) {
-            $query->where('invoice_id', $settlement->invoice_id);
-        })->where('status', 'open')->exists();
+        $hasOpenDisputes = Dispute::where('invoice_id', $settlement->invoice_id)
+            ->whereIn('status', ['open', 'under_review'])
+            ->exists();
 
         if ($hasOpenDisputes) {
             return false;

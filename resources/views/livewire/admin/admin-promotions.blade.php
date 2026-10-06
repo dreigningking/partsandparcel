@@ -20,7 +20,7 @@
 
         <div class="flex items-center gap-3 self-start sm:self-auto">
             <a
-                href="{{ route('admin.settings.promotion-plans') }}"
+                href="{{ route('admin.settings.countries') }}"
                 class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-2xs transition flex items-center gap-2"
             >
                 <i class="fas fa-sliders-h text-slate-400"></i>
@@ -220,9 +220,9 @@
                             <td class="px-5 py-4">
                                 @if ($promotion->listing)
                                     <div class="flex items-center gap-2.5">
-                                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 text-slate-400">
-                                            @if ($promotion->listing->firstImageUrl('images') ?? $promotion->listing->firstImageUrl())
-                                                <img src="{{ $promotion->listing->firstImageUrl('images') ?? $promotion->listing->firstImageUrl() }}" alt="Listing image" class="w-full h-full object-cover rounded-xl" />
+                                        <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 text-slate-400 overflow-hidden">
+                                            @if ($promotion->listing->primary_image_url)
+                                                <img src="{{ $promotion->listing->primary_image_url }}" alt="Listing image" class="w-full h-full object-cover rounded-xl" />
                                             @else
                                                 <i class="fas fa-box text-xs"></i>
                                             @endif
@@ -262,10 +262,22 @@
 
                             <!-- DELIVERED / ACHIEVED COUNT -->
                             <td class="px-5 py-4 whitespace-nowrap">
+                                @php
+                                    $targetQty = (int) ($promotion->payments?->metadata['quantity'] ?? 0);
+                                @endphp
                                 <div class="font-black text-slate-900 dark:text-white text-sm">
                                     {{ number_format($promotion->achieved_count) }}
+                                    @if ($targetQty > 0)
+                                        <span class="text-xs font-normal text-slate-400">/ {{ number_format($targetQty) }}</span>
+                                    @endif
                                     <span class="text-xs font-semibold text-slate-400">{{ $promotion->type }}</span>
                                 </div>
+                                @if ($targetQty > 0)
+                                    @php $progress = min(100, round(($promotion->achieved_count / $targetQty) * 100)); @endphp
+                                    <div class="w-24 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden" title="{{ $progress }}% delivered">
+                                        <div class="bg-pp-600 h-1.5 rounded-full" style="width: {{ $progress }}%"></div>
+                                    </div>
+                                @endif
                             </td>
 
                             <!-- STATUS -->
@@ -405,6 +417,9 @@
                             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Campaign Deliverable</span>
                             <span class="mt-1 font-extrabold text-sm text-slate-900 dark:text-white">
                                 {{ number_format($selectedPromotion->achieved_count) }} {{ $selectedPromotion->type }}
+                                @if ($target = ($selectedPromotion->payments?->metadata['quantity'] ?? null))
+                                    <span class="text-xs font-normal text-slate-400 block font-sans">Target: {{ number_format((int)$target) }} {{ $selectedPromotion->type }}</span>
+                                @endif
                             </span>
                         </div>
                     </div>
@@ -414,9 +429,9 @@
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Promoted Listing</span>
                         @if ($selectedPromotion->listing)
                             <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
-                                    @if ($selectedPromotion->listing->firstImageUrl('images') ?? $selectedPromotion->listing->firstImageUrl())
-                                        <img src="{{ $selectedPromotion->listing->firstImageUrl('images') ?? $selectedPromotion->listing->firstImageUrl() }}" alt="Listing" class="w-full h-full object-cover rounded-xl" />
+                                <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 overflow-hidden shrink-0">
+                                    @if ($selectedPromotion->listing->primary_image_url)
+                                        <img src="{{ $selectedPromotion->listing->primary_image_url }}" alt="Listing" class="w-full h-full object-cover rounded-xl" />
                                     @else
                                         <i class="fas fa-box"></i>
                                     @endif
@@ -461,6 +476,63 @@
                             <p class="text-xs text-slate-400">No seller information.</p>
                         @endif
                     </div>
+
+                    <!-- PAYMENT & VOUCHER DETAILS -->
+                    @if ($selectedPromotion->payments)
+                        @php
+                            $payment = $selectedPromotion->payments;
+                            $meta = $payment->metadata ?? [];
+                        @endphp
+                        <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Payment &amp; Billing</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ in_array($payment->status, ['completed', 'successful', 'success']) ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300' : 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300' }}">
+                                    {{ ucfirst($payment->status) }}
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 text-xs pt-1">
+                                <div>
+                                    <span class="text-slate-400 block text-[11px]">Amount Paid</span>
+                                    <span class="font-extrabold text-slate-900 dark:text-white">
+                                        {{ $payment->currency ?? 'NGN' }} {{ number_format($payment->amount, 2) }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block text-[11px]">Provider / Channel</span>
+                                    <span class="font-semibold text-slate-700 dark:text-slate-300">
+                                        {{ ucfirst($payment->provider ?? 'Gateway') }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block text-[11px]">Reference</span>
+                                    <span class="font-mono text-[11px] text-slate-700 dark:text-slate-300 break-all">
+                                        {{ $payment->reference }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block text-[11px]">Paid Date</span>
+                                    <span class="text-slate-700 dark:text-slate-300">
+                                        {{ $payment->paid_at ? $payment->paid_at->format('M d, Y · H:i') : 'Pending verification' }}
+                                    </span>
+                                </div>
+                                @if (! empty($meta['coupon_code']))
+                                    <div class="col-span-2 flex items-center justify-between p-2.5 rounded-lg bg-pp-50 dark:bg-pp-950/40 border border-pp-200/60 dark:border-pp-800/60">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-ticket-alt text-pp-600 text-xs"></i>
+                                            <span class="text-xs text-slate-700 dark:text-slate-300">
+                                                Coupon Applied: <strong class="font-mono font-black text-pp-700 dark:text-pp-300">{{ $meta['coupon_code'] }}</strong>
+                                            </span>
+                                        </div>
+                                        @if (! empty($meta['discount']))
+                                            <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                                -₦{{ number_format((float) $meta['discount'], 2) }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">

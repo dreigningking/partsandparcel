@@ -158,7 +158,7 @@ class AdminPromotions extends Component
     public function render()
     {
         $promotions = Promotion::query()
-            ->with(['user', 'listing.item', 'listing.media'])
+            ->with(['user', 'listing.item', 'listing.media', 'payments'])
             ->when($this->search !== '', function (Builder $query) {
                 $query->where(function (Builder $sub) {
                     $sub->whereHas('user', function (Builder $uq) {

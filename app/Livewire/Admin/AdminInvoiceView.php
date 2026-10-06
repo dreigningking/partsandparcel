@@ -165,8 +165,10 @@ class AdminInvoiceView extends Component
         $allShipments = $allShipments->merge($additionalShipments);
 
         $issues = $this->invoice->issues()->with(['items.invoiceItem', 'reporter', 'dispute', 'returnRecord', 'replacement'])->latest()->get();
-        $disputes = Dispute::whereHas('issue', fn($q) => $q->where('invoice_id', $this->invoice->id))->with(['opener', 'resolver', 'issue', 'items'])->latest()->get();
-        $replacements = Replacement::where('invoice_id', $this->invoice->id)->with(['shipment', 'issue'])->latest()->get();
+        $disputes = Dispute::where('invoice_id', $this->invoice->id)->with(['opener', 'respondent', 'resolver', 'issue', 'warrantyClaim', 'replacement', 'returnRecord', 'items'])->latest()->get();
+        $warrantyClaims = \App\Models\WarrantyClaim::where('invoice_id', $this->invoice->id)->with(['item', 'invoiceItem', 'buyer', 'seller', 'dispute', 'replacement', 'returnRecord'])->latest()->get();
+        $replacements = Replacement::where('invoice_id', $this->invoice->id)->with(['shipment', 'issue', 'warrantyClaim', 'dispute'])->latest()->get();
+        $returnRecords = \App\Models\ReturnRecord::where('invoice_id', $this->invoice->id)->with(['shipment', 'issue', 'buyer', 'seller'])->latest()->get();
         $refunds = $this->invoice->refunds()->with(['payment', 'items'])->latest()->get();
         $serviceJobs = $this->invoice->serviceJobs()->with(['provider', 'location', 'brand', 'deviceModel', 'review'])->get();
 
@@ -176,7 +178,7 @@ class AdminInvoiceView extends Component
         $hasDisputes = $disputes->isNotEmpty();
         $hasReplacements = $replacements->isNotEmpty();
         $hasRefunds = $refunds->isNotEmpty();
-        $hasWarranty = $this->invoice->hasWarranty() || $issues->where('type', 'warranty_claim')->isNotEmpty();
+        $hasWarranty = $this->invoice->hasWarranty() || $warrantyClaims->isNotEmpty() || $issues->where('type', 'warranty_claim')->isNotEmpty();
 
         $settlement = $this->invoice->settlement ?: Settlement::where('invoice_id', $this->invoice->id)->first();
         $payment = $settlement?->payment ?: $this->invoice->payments()->whereIn('status', ['successful', 'paid', 'held_in_escrow'])->latest()->first();
@@ -188,7 +190,9 @@ class AdminInvoiceView extends Component
             'allShipments' => $allShipments,
             'issues' => $issues,
             'disputes' => $disputes,
+            'warrantyClaims' => $warrantyClaims,
             'replacements' => $replacements,
+            'returnRecords' => $returnRecords,
             'refunds' => $refunds,
             'serviceJobs' => $serviceJobs,
             'settlement' => $settlement,

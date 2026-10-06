@@ -48,11 +48,20 @@
                 <i class="fas fa-scale-balanced text-purple-600"></i>
                 <span>Case #DSP-{{ str_pad($dispute->id, 4, '0', STR_PAD_LEFT) }}</span>
               </span>
+              <span class="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-extrabold uppercase">
+                Origin: {{ $dispute->originCategory() }}
+              </span>
+              <span class="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 text-[10px] font-extrabold">
+                {{ $dispute->typeLabel() }}
+              </span>
+              <span class="text-xs text-slate-400">·</span>
               <span class="text-xs text-slate-500 font-medium">Opened {{ $dispute->created_at->format('M d, Y · h:i A') }}</span>
             </div>
-            <p class="text-xs text-slate-600 mt-1 font-medium">
-              Opened by: <strong class="text-slate-900">{{ $dispute->opener?->name ?: 'User' }}</strong>
-            </p>
+            <div class="flex items-center gap-2 text-xs text-slate-600 mt-1.5 flex-wrap">
+              <span>Complainant: <strong class="text-slate-900">{{ $dispute->opener?->name ?: 'User' }}</strong></span>
+              <span class="text-slate-300">vs</span>
+              <span>Respondent: <strong class="text-slate-900">{{ $dispute->respondent?->name ?: 'Counterparty' }}</strong></span>
+            </div>
           </div>
 
           <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
@@ -67,11 +76,20 @@
         </div>
 
         <div class="space-y-2 text-xs">
-          <span class="font-black uppercase tracking-wider text-slate-400 text-[10px]">Dispute Reason / Claim:</span>
+          <span class="font-black uppercase tracking-wider text-slate-400 text-[10px]">Dispute Reason / Claim Statement:</span>
           <p class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-slate-800 leading-relaxed font-medium">
             "{{ $dispute->reason ?: ($dispute->issue?->description ?? 'Disputed commercial terms.') }}"
           </p>
         </div>
+
+        @if ($dispute->evidence)
+          <div class="flex items-center gap-2 text-xs">
+            <span class="font-bold text-slate-500 text-[11px]">Submitted Evidence:</span>
+            <a href="{{ $dispute->evidence }}" target="_blank" rel="noopener noreferrer" class="text-pp-600 font-bold hover:underline flex items-center gap-1 text-[11px]">
+              <i class="fas fa-paperclip text-[10px]"></i> View Evidence Link
+            </a>
+          </div>
+        @endif
 
         @if ($dispute->resolution)
           <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1 text-xs">

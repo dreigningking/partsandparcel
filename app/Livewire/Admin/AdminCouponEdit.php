@@ -19,7 +19,7 @@ class AdminCouponEdit extends Component
 
     public string $type = 'percentage';
 
-    public string $value = '10.00';
+    public string $value = '';
 
     public string $min_order_amount = '0.00';
 
@@ -33,24 +33,47 @@ class AdminCouponEdit extends Component
 
     public bool $is_active = true;
 
-    public function mount(Coupon $coupon): void
+    public function mount(mixed $coupon = null)
     {
-        $this->coupon = $coupon;
-        $this->code = $coupon->code;
-        $this->type = $coupon->type;
-        $this->value = (string) $coupon->value;
-        $this->min_order_amount = (string) $coupon->min_order_amount;
-        $this->max_discount = $coupon->max_discount !== null ? (string) $coupon->max_discount : null;
-        $this->expires_at = $coupon->expires_at?->format('Y-m-d\TH:i');
-        $this->usage_limit = $coupon->usage_limit;
-        $this->used_count = (int) $coupon->used_count;
-        $this->is_active = (bool) $coupon->is_active;
+        if ($coupon instanceof Coupon && $coupon->exists) {
+            $this->coupon = $coupon;
+        } elseif (is_numeric($coupon) || is_string($coupon)) {
+            $this->coupon = Coupon::query()->find($coupon) ?? new Coupon();
+        } elseif (request()->route('coupon')) {
+            $routeVal = request()->route('coupon');
+            $this->coupon = $routeVal instanceof Coupon ? $routeVal : (Coupon::query()->find($routeVal) ?? new Coupon());
+        } elseif (request()->has('coupon')) {
+            $this->coupon = Coupon::query()->find(request('coupon')) ?? new Coupon();
+        } elseif (request()->has('id')) {
+            $this->coupon = Coupon::query()->find(request('id')) ?? new Coupon();
+        } else {
+            $this->coupon = new Coupon();
+        }
+
+        if (! $this->coupon || ! $this->coupon->exists) {
+            session()->flash('error', __('Coupon not found.'));
+            return redirect()->route('admin.coupons');
+        }
+
+        $this->code = (string) ($this->coupon->code ?? '');
+        $this->type = in_array($this->coupon->type, ['percentage', 'fixed'], true) ? $this->coupon->type : 'percentage';
+        $this->value = $this->coupon->value !== null ? (string) $this->coupon->value : '';
+        $this->min_order_amount = $this->coupon->min_order_amount !== null ? (string) $this->coupon->min_order_amount : '0.00';
+        $this->max_discount = $this->coupon->max_discount !== null ? (string) $this->coupon->max_discount : null;
+        $this->expires_at = $this->coupon->expires_at?->format('Y-m-d\TH:i');
+        $this->usage_limit = $this->coupon->usage_limit;
+        $this->used_count = (int) ($this->coupon->used_count ?? 0);
+        $this->is_active = (bool) ($this->coupon->is_active ?? true);
+
+        return null;
     }
 
     protected function rules(): array
     {
+        $couponId = $this->coupon?->id;
+
         return [
-            'code' => ['required', 'string', 'max:64', Rule::unique('coupons', 'code')->ignore($this->coupon->id)],
+            'code' => ['required', 'string', 'max:64', Rule::unique('coupons', 'code')->ignore($couponId)],
             'type' => ['required', Rule::in(['percentage', 'fixed'])],
             'value' => ['required', 'numeric', 'min:0.01'],
             'min_order_amount' => ['required', 'numeric', 'min:0'],
@@ -66,12 +89,17 @@ class AdminCouponEdit extends Component
     {
         $this->validate();
 
+        if (! $this->coupon || ! $this->coupon->exists) {
+            session()->flash('error', __('Coupon record not found.'));
+            return;
+        }
+
         $this->coupon->update([
             'code' => strtoupper(trim($this->code)),
             'type' => $this->type,
             'value' => $this->value,
             'min_order_amount' => $this->min_order_amount ?: 0.00,
-            'max_discount' => $this->max_discount !== null && $this->max_discount !== '' ? $this->max_discount : null,
+            'max_discount' => ($this->type === 'percentage' && $this->max_discount !== null && $this->max_discount !== '') ? $this->max_discount : null,
             'expires_at' => $this->expires_at ? Carbon::parse($this->expires_at) : null,
             'usage_limit' => $this->usage_limit ?: null,
             'used_count' => $this->used_count,
@@ -84,7 +112,7 @@ class AdminCouponEdit extends Component
     public function render()
     {
         return view('livewire.admin.admin-coupon-form', [
-            'heading' => __('Edit Coupon :code', ['code' => $this->coupon->code]),
+            'heading' => __('Edit Coupon :code', ['code' => $this->coupon?->code ?? '']),
             'subheading' => __('Update discount rules, order eligibility thresholds, and usage caps.'),
             'submitLabel' => __('Save Changes'),
             'isEditing' => true,

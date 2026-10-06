@@ -57,4 +57,17 @@ class Issue extends Model
     {
         return $this->hasOne(Dispute::class, 'issue_id');
     }
+
+    public function typeLabel(): string
+    {
+        return match ($this->type) {
+            'damaged' => 'Damaged in Transit',
+            'defective' => 'Defective / Not Working',
+            'incompatibility' => 'Incompatibility / Does Not Fit',
+            'not_as_described' => 'Not as Described',
+            'wrong_item' => 'Wrong Item Shipped',
+            'lost_or_missing' => 'Lost or Missing Package / Parts',
+            default => ucwords(str_replace('_', ' ', (string) $this->type)),
+        };
+    }
 }

@@ -18,7 +18,7 @@ class AdminCouponCreate extends Component
 
     public string $type = 'percentage';
 
-    public string $value = '10.00';
+    public string $value = '';
 
     public string $min_order_amount = '0.00';
 
@@ -58,7 +58,7 @@ class AdminCouponCreate extends Component
             'type' => $this->type,
             'value' => $this->value,
             'min_order_amount' => $this->min_order_amount ?: 0.00,
-            'max_discount' => $this->max_discount !== null && $this->max_discount !== '' ? $this->max_discount : null,
+            'max_discount' => ($this->type === 'percentage' && $this->max_discount !== null && $this->max_discount !== '') ? $this->max_discount : null,
             'expires_at' => $this->expires_at ? Carbon::parse($this->expires_at) : null,
             'usage_limit' => $this->usage_limit ?: null,
             'used_count' => 0,

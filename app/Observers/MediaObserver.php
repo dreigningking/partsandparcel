@@ -21,7 +21,7 @@ class MediaObserver
 
         $mediable = $media->mediable;
         if ($mediable && method_exists($mediable, 'getMediaDimensionRequirement')) {
-            $requirement = $mediable->getMediaDimensionRequirement($media->collection);
+            $requirement = $mediable->getMediaDimensionRequirement($media->collection ?? 'default');
             if ($requirement) {
                 $targetWidth = (int) ($requirement['width'] ?? 0);
                 $targetHeight = (int) ($requirement['height'] ?? 0);

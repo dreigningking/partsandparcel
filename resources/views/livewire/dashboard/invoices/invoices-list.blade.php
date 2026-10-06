@@ -82,7 +82,7 @@
         <i class="fas fa-filter text-pp-600"></i>
         <span>Filter Invoices</span>
       </div>
-      @if($search || $currency || $paymentMethod || $source || $status || $dateFrom || $dateTo)
+      @if($search || $currency || $paymentMethod || $source || $status || $contains || $dateFrom || $dateTo)
         <button 
           wire:click="resetFilters" 
           type="button"
@@ -93,15 +93,15 @@
       @endif
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
       <!-- Search Input -->
-      <div class="lg:col-span-2">
+      <div class="lg:col-span-1">
         <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Search Ref / Party</label>
         <div class="relative">
           <input 
             type="text" 
             wire:model.live.debounce.300ms="search" 
-            placeholder="INV ref or other party name..."
+            placeholder="INV ref or name..."
             class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 pl-8 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pp-500/20 focus:border-pp-500 text-slate-800 font-medium placeholder-slate-400 transition"
           >
           <i class="fas fa-search absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
@@ -163,6 +163,24 @@
           <option value="draft">Draft</option>
           <option value="cancelled">Cancelled</option>
           <option value="expired">Expired</option>
+        </select>
+      </div>
+
+      <!-- Contains Filter -->
+      <div>
+        <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Contains</label>
+        <select 
+          wire:model.live="contains" 
+          class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:bg-white focus:outline-none focus:ring-2 focus:ring-pp-500/20 focus:border-pp-500 text-slate-800 font-medium transition cursor-pointer"
+        >
+          <option value="">Contains: All</option>
+          <option value="shipment">📦 Shipment</option>
+          <option value="issue">⚠️ Issue</option>
+          <option value="refund">💵 Refund</option>
+          <option value="replacement">🔄 Replacement</option>
+          <option value="return">↩️ Return</option>
+          <option value="warranty">🛡️ Warranty Claim</option>
+          <option value="service">🔧 Service</option>
         </select>
       </div>
 

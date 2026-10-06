@@ -146,9 +146,14 @@ class Invoice extends Model
         return $this->hasMany(Issue::class);
     }
 
-    public function disputes(): HasManyThrough
+    public function disputes(): HasMany
     {
-        return $this->hasManyThrough(Dispute::class, Issue::class);
+        return $this->hasMany(Dispute::class);
+    }
+
+    public function warrantyClaims(): HasMany
+    {
+        return $this->hasMany(WarrantyClaim::class);
     }
 
     public function serviceJobs(): HasMany
@@ -222,9 +227,19 @@ class Invoice extends Model
         return $this->hasOne(ReturnRecord::class);
     }
 
+    public function returns(): HasMany
+    {
+        return $this->hasMany(ReturnRecord::class);
+    }
+
     public function replacement(): HasOne
     {
         return $this->hasOne(Replacement::class);
+    }
+
+    public function replacements(): HasMany
+    {
+        return $this->hasMany(Replacement::class);
     }
 
     public function returnShipment(): ?Shipment

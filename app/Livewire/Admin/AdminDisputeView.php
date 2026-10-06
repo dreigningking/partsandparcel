@@ -12,13 +12,10 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Layout('layouts.dash')]
-#[Title('Returns & Replacements — Admin Control Center')]
-class AdminReturns extends Component
+#[Title('Dispute View — Admin Control Center')]
+class AdminDisputeView extends Component
 {
     use WithPagination;
-
-    #[Url(as: 'tab')]
-    public string $activeTab = 'returns'; // returns, replacements
 
     #[Url(as: 'q')]
     public string $search = '';
@@ -28,13 +25,7 @@ class AdminReturns extends Component
 
     public ?int $selectedRecordId = null;
 
-    public function setTab(string $tab): void
-    {
-        if (in_array($tab, ['returns', 'replacements'])) {
-            $this->activeTab = $tab;
-            $this->resetPage();
-        }
-    }
+    
 
     public function showRecord(int $id): void
     {
@@ -96,8 +87,7 @@ class AdminReturns extends Component
                 : null;
         }
 
-        return view('livewire.admin.admin-returns', [
-            'activeTab' => $this->activeTab,
+        return view('livewire.admin.admin-dispute-view', [
             'search' => $this->search,
             'status' => $this->status,
             'records' => $records,

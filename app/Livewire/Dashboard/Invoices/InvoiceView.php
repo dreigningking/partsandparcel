@@ -3,6 +3,7 @@
 namespace App\Livewire\Dashboard\Invoices;
 
 use App\Models\Coupon;
+use App\Models\Dispute;
 use App\Models\Invoice;
 use App\Models\Issue;
 use App\Models\Item;
@@ -15,6 +16,7 @@ use App\Models\ServiceJob;
 use App\Models\ServiceReview;
 use App\Models\Settlement;
 use App\Models\Shipment;
+use App\Models\WarrantyClaim;
 use App\Services\Payment\EscrowService;
 use App\Services\PostSale\IssueResolutionService;
 use Illuminate\Support\Facades\Auth;
@@ -68,11 +70,13 @@ class InvoiceView extends Component
     // Buyer Delivery Confirmation Modal
     public bool $showReceiveConfirmModal = false;
 
-    // Buyer Report Issue Modal
+    // Buyer Report Issue Modal (Itemized rejection)
     public bool $showIssueModal = false;
-    public string $issueType = 'defective'; // damaged, defective, wrong_item, missing
+    public string $issueType = 'defective'; // damaged, defective, incompatibility, not_as_described, wrong_item, lost_or_missing
     public string $issueDescription = '';
-    public ?int $issueItemId = null;
+    public array $selectedIssueItemIds = [];
+    public array $issueItemReasons = [];
+    public array $issueItemEvidences = [];
     public string $issueEvidence = '';
 
     // Seller Issue Response Modal
@@ -83,6 +87,12 @@ class InvoiceView extends Component
     public string $sellerReturnMethod = 'shipment'; // shipment, dropoff
     public string $sellerResponseNotes = '';
 
+    // Seller Contest Issue Modal (Escalates to Dispute)
+    public bool $showSellerContestModal = false;
+    public ?int $contestIssueId = null;
+    public string $contestReason = '';
+    public string $contestEvidence = '';
+
     // Buyer Return Dispatch Modal
     public bool $showBuyerReturnModal = false;
     public ?int $activeReturnId = null;
@@ -91,17 +101,32 @@ class InvoiceView extends Component
     public string $returnNotes = '';
     public string $returnEvidence = '';
 
+    // Seller Return Inspection / Rejection Modal (Escalates to Dispute)
+    public bool $showSellerReturnRejectModal = false;
+    public ?int $activeReturnRejectId = null;
+    public string $returnRejectReason = '';
+    public string $returnRejectEvidence = '';
+
+    // Buyer Replacement Inspection / Rejection Modal (Escalates to Dispute)
+    public bool $showBuyerReplacementRejectModal = false;
+    public ?int $activeReplacementId = null;
+    public string $replacementRejectReason = '';
+    public string $replacementRejectEvidence = '';
+
     // Buyer Warranty Claim Modal
     public bool $showWarrantyModal = false;
     public ?int $warrantyItemId = null;
+    public string $warrantyClaimType = 'defect'; // defect, hardware_failure, malfunction, wear_tear
     public string $warrantyReason = '';
     public string $warrantyEvidence = '';
 
-    // Seller Warranty Response Modal
+    // Seller Warranty Response Modal (Escalates to Dispute if rejected)
     public bool $showSellerWarrantyModal = false;
-    public ?int $activeWarrantyIssueId = null;
+    public ?int $activeWarrantyClaimId = null;
     public string $warrantyResolutionDecision = 'accept'; // accept, reject
+    public string $warrantyRemedy = 'replacement'; // replacement, repair
     public string $warrantyResolutionNotes = '';
+    public string $warrantyRejectEvidence = '';
 
     public function switchTab(string $tab): void
     {
@@ -176,7 +201,10 @@ class InvoiceView extends Component
         $this->showReceiveConfirmModal = false;
         $this->showIssueModal = false;
         $this->showSellerIssueResponseModal = false;
+        $this->showSellerContestModal = false;
         $this->showBuyerReturnModal = false;
+        $this->showSellerReturnRejectModal = false;
+        $this->showBuyerReplacementRejectModal = false;
         $this->showWarrantyModal = false;
         $this->showSellerWarrantyModal = false;
     }
@@ -426,34 +454,37 @@ class InvoiceView extends Component
     public function openIssueModal(): void
     {
         $this->showReceiveConfirmModal = false;
+        $this->issueType = 'defective';
+        $this->issueDescription = '';
+        $this->issueEvidence = '';
+        $this->selectedIssueItemIds = $this->invoice ? $this->invoice->items->pluck('id')->map(fn($id) => (int) $id)->toArray() : [];
+        $this->issueItemReasons = [];
+        $this->issueItemEvidences = [];
         $this->showIssueModal = true;
     }
 
     /**
-     * Buyer submits issue/rejection.
+     * Buyer submits issue/rejection specifying itemized details.
      */
     public function submitReportIssue(): void
     {
         $this->validate([
             'issueType' => 'required|string',
             'issueDescription' => 'required|string|min:10|max:1000',
+            'selectedIssueItemIds' => 'required|array|min:1',
+        ], [
+            'selectedIssueItemIds.required' => 'Please select at least one item you are reporting an issue with.',
+            'selectedIssueItemIds.min' => 'Please select at least one item you are reporting an issue with.',
         ]);
 
         $items = [];
-        if ($this->issueItemId) {
+        foreach ($this->selectedIssueItemIds as $itemId) {
+            $itemIdInt = (int) $itemId;
             $items[] = [
-                'invoice_item_id' => $this->issueItemId,
-                'reason' => $this->issueType,
-                'evidence' => $this->issueEvidence,
+                'invoice_item_id' => $itemIdInt,
+                'reason' => !empty($this->issueItemReasons[$itemIdInt]) ? $this->issueItemReasons[$itemIdInt] : $this->issueType,
+                'evidence' => !empty($this->issueItemEvidences[$itemIdInt]) ? $this->issueItemEvidences[$itemIdInt] : $this->issueEvidence,
             ];
-        } else {
-            foreach ($this->invoice->items as $item) {
-                $items[] = [
-                    'invoice_item_id' => $item->id,
-                    'reason' => $this->issueType,
-                    'evidence' => $this->issueEvidence,
-                ];
-            }
         }
 
         app(IssueResolutionService::class)->reportIssue(
@@ -476,6 +507,10 @@ class InvoiceView extends Component
     public function openSellerIssueResponseModal(int $issueId): void
     {
         $this->activeIssueId = $issueId;
+        $this->sellerResolutionType = 'replacement';
+        $this->sellerRequiresReturn = true;
+        $this->sellerReturnMethod = 'shipment';
+        $this->sellerResponseNotes = '';
         $this->showSellerIssueResponseModal = true;
     }
 
@@ -547,6 +582,40 @@ class InvoiceView extends Component
     }
 
     /**
+     * Seller opens contest modal to disagree with buyer's issue.
+     */
+    public function openSellerContestModal(int $issueId): void
+    {
+        $this->contestIssueId = $issueId;
+        $this->contestReason = '';
+        $this->contestEvidence = '';
+        $this->showSellerContestModal = true;
+    }
+
+    /**
+     * Seller submits contestation -> Creates dispute on the issue.
+     */
+    public function sellerContestIssue(): void
+    {
+        $this->validate([
+            'contestReason' => 'required|string|min:10|max:1000',
+        ]);
+
+        $issue = Issue::findOrFail($this->contestIssueId);
+        $dispute = app(IssueResolutionService::class)->sellerContestsIssue(
+            $issue,
+            Auth::user(),
+            $this->contestReason,
+            $this->contestEvidence ?: null
+        );
+
+        $this->showSellerContestModal = false;
+        $this->invoice->refresh();
+
+        session()->flash('seller_success', "Issue contested! Dispute #DSP-{$dispute->id} has been opened for platform mediation. Escrow funds remain protected.");
+    }
+
+    /**
      * Buyer opens return dispatch modal.
      */
     public function openBuyerReturnModal(int $returnId): void
@@ -588,7 +657,7 @@ class InvoiceView extends Component
     }
 
     /**
-     * Seller confirms receipt of returned item.
+     * Seller confirms receipt of returned item in satisfactory condition.
      */
     public function sellerConfirmReturnReceived(int $returnId): void
     {
@@ -614,7 +683,108 @@ class InvoiceView extends Component
         }
 
         $this->invoice->refresh();
-        session()->flash('seller_success', 'Returned item marked as received! Return process completed.');
+        session()->flash('seller_success', 'Returned item marked as received and verified! Process advancing.');
+    }
+
+    /**
+     * Seller opens return rejection modal (problem with returned goods).
+     */
+    public function openSellerReturnRejectModal(int $returnId): void
+    {
+        $this->activeReturnRejectId = $returnId;
+        $this->returnRejectReason = '';
+        $this->returnRejectEvidence = '';
+        $this->showSellerReturnRejectModal = true;
+    }
+
+    /**
+     * Seller rejects returned package condition -> Creates dispute on the return.
+     */
+    public function sellerRejectReturn(): void
+    {
+        $this->validate([
+            'returnRejectReason' => 'required|string|min:10|max:1000',
+        ]);
+
+        $return = ReturnRecord::findOrFail($this->activeReturnRejectId);
+        $dispute = app(IssueResolutionService::class)->sellerRejectsReturn(
+            $return,
+            Auth::user(),
+            $this->returnRejectReason,
+            $this->returnRejectEvidence ?: null
+        );
+
+        $this->showSellerReturnRejectModal = false;
+        $this->invoice->refresh();
+
+        session()->flash('seller_success', "Return condition rejected! Dispute #DSP-{$dispute->id} has been opened for platform mediation.");
+    }
+
+    /**
+     * Buyer opens replacement rejection modal (problem with replacement unit).
+     */
+    public function openBuyerReplacementRejectModal(int $replacementId): void
+    {
+        $this->activeReplacementId = $replacementId;
+        $this->replacementRejectReason = '';
+        $this->replacementRejectEvidence = '';
+        $this->showBuyerReplacementRejectModal = true;
+    }
+
+    /**
+     * Buyer rejects delivered replacement -> Escalates to Dispute.
+     */
+    public function buyerRejectReplacement(): void
+    {
+        $this->validate([
+            'replacementRejectReason' => 'required|string|min:10|max:1000',
+        ]);
+
+        $replacement = Replacement::findOrFail($this->activeReplacementId);
+        $dispute = app(IssueResolutionService::class)->buyerRejectsReplacement(
+            $replacement,
+            Auth::user(),
+            $this->replacementRejectReason,
+            $this->replacementRejectEvidence ?: null
+        );
+
+        $this->showBuyerReplacementRejectModal = false;
+        $this->invoice->refresh();
+
+        session()->flash('buyer_notice', "Replacement rejected! Dispute #DSP-{$dispute->id} has been escalated to mediation.");
+    }
+
+    /**
+     * Buyer accepts delivered replacement unit.
+     */
+    public function buyerAcceptReplacement(int $replacementId): void
+    {
+        $replacement = Replacement::findOrFail($replacementId);
+        $replacement->update([
+            'status' => 'delivered',
+            'accepted_at' => now(),
+        ]);
+
+        if ($replacement->issue) {
+            $replacement->issue->update([
+                'status' => 'resolved',
+                'resolved_at' => now(),
+            ]);
+        }
+
+        if ($replacement->warrantyClaim) {
+            $replacement->warrantyClaim->update([
+                'status' => 'resolved',
+                'resolved_at' => now(),
+            ]);
+        }
+
+        if ($this->invoice->settlement) {
+            app(EscrowService::class)->unfreezeAfterDispute($this->invoice->settlement);
+        }
+
+        $this->invoice->refresh();
+        session()->flash('buyer_payment_success', 'Replacement unit accepted! Transaction issue resolved successfully.');
     }
 
     /**
@@ -623,77 +793,77 @@ class InvoiceView extends Component
     public function openWarrantyModal(?int $itemId = null): void
     {
         $this->warrantyItemId = $itemId;
+        $this->warrantyClaimType = 'defect';
+        $this->warrantyReason = '';
+        $this->warrantyEvidence = '';
         $this->showWarrantyModal = true;
     }
 
     /**
-     * Buyer submits warranty claim.
+     * Buyer submits warranty claim during active coverage.
      */
     public function submitWarrantyClaim(): void
     {
         $this->validate([
             'warrantyReason' => 'required|string|min:10|max:1000',
+            'warrantyClaimType' => 'required|string',
         ]);
 
-        $items = [];
-        if ($this->warrantyItemId) {
-            $items[] = [
-                'invoice_item_id' => $this->warrantyItemId,
-                'reason' => 'Warranty Claim',
-                'evidence' => $this->warrantyEvidence,
-            ];
-        } else {
-            foreach ($this->invoice->items as $item) {
-                if ($item->warranty_period_days > 0) {
-                    $items[] = [
-                        'invoice_item_id' => $item->id,
-                        'reason' => 'Warranty Claim',
-                        'evidence' => $this->warrantyEvidence,
-                    ];
-                }
-            }
-        }
-
-        app(IssueResolutionService::class)->reportIssue(
-            $this->invoice,
-            Auth::user(),
-            'warranty_claim',
-            $this->warrantyReason,
-            $items
+        $claim = app(IssueResolutionService::class)->fileWarrantyClaim(
+            invoice: $this->invoice,
+            buyer: Auth::user(),
+            invoiceItemId: $this->warrantyItemId,
+            description: $this->warrantyReason,
+            evidence: $this->warrantyEvidence ?: null,
+            claimType: $this->warrantyClaimType
         );
 
         $this->showWarrantyModal = false;
         $this->invoice->refresh();
 
-        session()->flash('buyer_notice', 'Warranty claim submitted with evidence! The seller has been notified to inspect and resolve your claim.');
+        session()->flash('buyer_notice', "Warranty claim #CLM-{$claim->id} submitted! The seller has been notified to inspect and resolve your claim.");
     }
 
     /**
      * Seller opens warranty response modal.
      */
-    public function openSellerWarrantyModal(int $issueId): void
+    public function openSellerWarrantyModal(int $claimId): void
     {
-        $this->activeWarrantyIssueId = $issueId;
+        $this->activeWarrantyClaimId = $claimId;
+        $this->warrantyResolutionDecision = 'accept';
+        $this->warrantyRemedy = 'replacement';
+        $this->warrantyResolutionNotes = '';
+        $this->warrantyRejectEvidence = '';
         $this->showSellerWarrantyModal = true;
     }
 
     /**
-     * Seller responds to warranty claim.
+     * Seller responds to warranty claim (accepts remedy or refuses -> dispute).
      */
     public function sellerRespondToWarrantyClaim(): void
     {
-        $issue = Issue::findOrFail($this->activeWarrantyIssueId);
+        $claim = WarrantyClaim::findOrFail($this->activeWarrantyClaimId);
 
         if ($this->warrantyResolutionDecision === 'accept') {
-            app(IssueResolutionService::class)->sellerAcceptsIssue($issue, Auth::user(), 'replacement');
-            session()->flash('seller_success', 'Warranty claim accepted! Replacement / repair terms recorded.');
+            app(IssueResolutionService::class)->sellerAcceptsWarranty(
+                claim: $claim,
+                seller: Auth::user(),
+                remedy: $this->warrantyRemedy,
+                notes: $this->warrantyResolutionNotes ?: null
+            );
+            session()->flash('seller_success', 'Warranty claim accepted! Replacement terms have been recorded.');
         } else {
-            $issue->update([
-                'status' => 'rejected',
-                'resolved_at' => now(),
-                'description' => $issue->description . "\n[Seller Rejection Reason]: " . $this->warrantyResolutionNotes,
+            $this->validate([
+                'warrantyResolutionNotes' => 'required|string|min:10|max:1000',
             ]);
-            session()->flash('seller_success', 'Warranty claim rejected with explanation recorded.');
+
+            $dispute = app(IssueResolutionService::class)->sellerRejectsWarranty(
+                claim: $claim,
+                seller: Auth::user(),
+                reason: $this->warrantyResolutionNotes,
+                evidence: $this->warrantyRejectEvidence ?: null
+            );
+            session()->flash('seller_success', "Warranty claim refused. Dispute #DSP-{$dispute->id} has been opened for platform mediation.");
         }
 
         $this->showSellerWarrantyModal = false;
@@ -959,8 +1129,9 @@ class InvoiceView extends Component
         $returnShipment = $this->invoice?->returnShipment();
         // Tab Data Collections
         $issues = $this->invoice?->issues()->with(['items.invoiceItem', 'reporter', 'dispute', 'returnRecord', 'replacement'])->latest()->get() ?? collect();
-        $disputes = \App\Models\Dispute::whereHas('issue', fn($q) => $q->where('invoice_id', $this->invoice?->id))->with(['opener', 'resolver', 'issue', 'items'])->latest()->get();
-        $replacements = \App\Models\Replacement::where('invoice_id', $this->invoice?->id)->with(['shipment', 'issue'])->latest()->get();
+        $disputes = \App\Models\Dispute::where('invoice_id', $this->invoice?->id)->with(['opener', 'respondent', 'resolver', 'issue', 'warrantyClaim', 'replacement', 'returnRecord', 'items'])->latest()->get();
+        $warrantyClaims = \App\Models\WarrantyClaim::where('invoice_id', $this->invoice?->id)->with(['item', 'invoiceItem', 'buyer', 'seller', 'dispute', 'replacement', 'returnRecord'])->latest()->get();
+        $replacements = \App\Models\Replacement::where('invoice_id', $this->invoice?->id)->with(['shipment', 'issue', 'warrantyClaim', 'dispute'])->latest()->get();
         $refunds = $this->invoice?->refunds()->with(['payment', 'items'])->latest()->get() ?? collect();
         $serviceJobs = $this->invoice?->serviceJobs()->with(['provider', 'location', 'brand', 'deviceModel', 'review'])->get() ?? collect();
 
@@ -983,7 +1154,7 @@ class InvoiceView extends Component
         $hasReplacements = $replacements->isNotEmpty();
         $hasRefunds = $refunds->isNotEmpty();
         $hasDisputes = $disputes->isNotEmpty();
-        $hasWarranty = (bool) ($this->invoice && ($this->invoice->hasWarranty() || $issues->where('type', 'warranty_claim')->isNotEmpty()));
+        $hasWarranty = (bool) ($this->invoice && ($this->invoice->hasWarranty() || $warrantyClaims->isNotEmpty() || $issues->where('type', 'warranty_claim')->isNotEmpty()));
         $hasServices = (bool) ($this->invoice && ($this->invoice->hasServices() || $serviceJobs->isNotEmpty()));
 
         // Active tab validation / fallback
@@ -1034,6 +1205,7 @@ class InvoiceView extends Component
             'hasServices' => $hasServices,
             'issues' => $issues,
             'disputes' => $disputes,
+            'warrantyClaims' => $warrantyClaims,
             'replacements' => $replacements,
             'refunds' => $refunds,
             'serviceJobs' => $serviceJobs,

@@ -58,6 +58,20 @@
                 <option value="cancelled">Cancelled</option>
                 <option value="refunded">Refunded</option>
             </select>
+
+            <select
+                wire:model.live="contains"
+                class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none"
+            >
+                <option value="">Contains: All</option>
+                <option value="shipment">Contains: Shipment</option>
+                <option value="issue">Contains: Issue</option>
+                <option value="refund">Contains: Refund</option>
+                <option value="replacement">Contains: Replacement</option>
+                <option value="return">Contains: Return</option>
+                <option value="warranty">Contains: Warranty Claim</option>
+                <option value="service">Contains: Service</option>
+            </select>
         </div>
     </div>
 

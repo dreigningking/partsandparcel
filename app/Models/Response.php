@@ -34,6 +34,11 @@ class Response extends Model
         return $this->hasMany(Offer::class);
     }
 
+    public function latestOffer(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Offer::class)->latestOfMany();
+    }
+
     public function reports(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(Report::class, 'reportable');

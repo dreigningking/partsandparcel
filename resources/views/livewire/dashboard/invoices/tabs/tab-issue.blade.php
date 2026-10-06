@@ -99,19 +99,44 @@
           </div>
         @endif
 
-        <!-- SELLER RESOLUTION PROPOSAL CARD -->
+        <!-- SELLER RESOLUTION PROPOSAL / CONTEST CARD -->
         @if ($issue->status === 'open' && $isSeller)
           <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div>
               <strong class="font-black text-amber-950 block">Action Required as Seller</strong>
               <span class="text-amber-900 text-[11px]">
-                Review the buyer's issue report and propose an acceptable remedy (send replacement or issue refund).
+                Review the buyer's issue report. If you agree, propose a remedy (replacement or refund). If you disagree, contest the issue to escalate to platform mediation.
               </span>
             </div>
-            <button wire:click="openSellerIssueResponseModal({{ $issue->id }})" type="button" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 shrink-0 cursor-pointer">
-              <i class="fas fa-reply"></i>
-              <span>Propose Resolution</span>
-            </button>
+            <div class="flex items-center gap-2 shrink-0 flex-wrap">
+              <button wire:click="openSellerContestModal({{ $issue->id }})" type="button" class="px-3.5 py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-scale-balanced"></i>
+                <span>Contest / Disagree</span>
+              </button>
+              <button wire:click="openSellerIssueResponseModal({{ $issue->id }})" type="button" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-reply"></i>
+                <span>Accept &amp; Propose Remedy</span>
+              </button>
+            </div>
+          </div>
+        @elseif ($issue->dispute || $issue->status === 'escalated')
+          <div class="p-4 rounded-2xl bg-purple-50/70 border border-purple-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 grid place-items-center shrink-0">
+                <i class="fas fa-scale-balanced"></i>
+              </div>
+              <div>
+                <strong class="font-black text-purple-950 block">Issue Escalated to Dispute Center</strong>
+                <span class="text-purple-900 text-[11px]">
+                  Seller contested this issue. Case #DSP-{{ str_pad($issue->dispute?->id ?: $issue->id, 4, '0', STR_PAD_LEFT) }} is currently undergoing official platform arbitration.
+                </span>
+              </div>
+            </div>
+            @if ($issue->dispute)
+              <a href="{{ route('disputes.view', $issue->dispute->id) }}" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[11px] shadow-xs transition flex items-center gap-1.5 shrink-0">
+                <span>View Case File →</span>
+              </a>
+            @endif
           </div>
         @elseif ($issue->returnRecord || $issue->replacement)
           <div class="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 text-xs space-y-2">

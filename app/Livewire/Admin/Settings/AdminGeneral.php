@@ -238,9 +238,15 @@ class AdminGeneral extends Component
                 'unit' => 'hours',
                 'icon' => 'fas fa-times-circle',
             ],
-            'order_processing_to_idle_cancel_hours' => [
+            'order_processing_to_auto_cancel_warning_hours' => [
+                'label' => 'Vendor Inactivity Auto-Cancel Warning Window',
+                'description' => 'Hours before an auto-cancel warning is sent to a vendor for not shipping or marking an order ready for pickup.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-user-clock',
+            ],
+            'order_processing_to_auto_cancel_hours' => [
                 'label' => 'Vendor Inactivity Auto-Cancel Window',
-                'description' => 'Hours allowed for a vendor to acknowledge/process an order before the platform auto-cancels and refunds.',
+                'description' => 'If a vendor does not ship or mark an order ready for pickup, the order will be automatically cancelled after this timeframe.',
                 'unit' => 'hours',
                 'icon' => 'fas fa-user-clock',
             ],
@@ -250,9 +256,9 @@ class AdminGeneral extends Component
                 'unit' => 'hours',
                 'icon' => 'fas fa-box-open',
             ],
-            'order_processing_to_delivery_hours' => [
+            'order_shipped_to_delivery_hours' => [
                 'label' => 'Fulfillment to Delivery Window',
-                'description' => 'Estimated total hours allocated from vendor dispatch until order delivery completion.',
+                'description' => 'Estimated total hours allocated from vendor dispatch until order delivery comfirmation.',
                 'unit' => 'hours',
                 'icon' => 'fas fa-shipping-fast',
             ],
@@ -262,9 +268,9 @@ class AdminGeneral extends Component
                 'unit' => 'hours',
                 'icon' => 'fas fa-receipt',
             ],
-            'order_received_to_auto_acceptance_hours' => [
+            'order_delivered_to_auto_acceptance_hours' => [
                 'label' => 'Inspection & Auto-Acceptance Window',
-                'description' => 'Inspection window after package receipt before order is auto-accepted and payout is queued.',
+                'description' => 'Inspection window after package delivery before order is auto-accepted and payout is queued.',
                 'unit' => 'hours',
                 'icon' => 'fas fa-handshake',
             ],
@@ -279,6 +285,12 @@ class AdminGeneral extends Component
                 'description' => 'Hours allowed for a vendor to inspect returned items before the return is finalized.',
                 'unit' => 'hours',
                 'icon' => 'fas fa-clipboard-check',
+            ],
+            'order_replacement_to_auto_refund_hours' => [
+                'label' => 'Replacement Package Auto-Refund Window',
+                'description' => 'Hours allowed for a vendor to ship or mark replacement items as ready for pickup. If not marked within this timeframe, the order is auto-refunded.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-undo-alt',
             ],
         ];
     }
@@ -320,7 +332,7 @@ class AdminGeneral extends Component
             $searchTerm = '%' . trim($this->search) . '%';
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('name', 'like', $searchTerm)
-                  ->orWhere('segment', 'like', $searchTerm);
+                    ->orWhere('segment', 'like', $searchTerm);
             });
         }
 

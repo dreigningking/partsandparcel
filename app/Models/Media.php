@@ -78,6 +78,11 @@ class Media extends Model
         return $this->media_type === 'video' || str_starts_with($this->mime_type ?? '', 'video/');
     }
 
+    public function getIsDocumentAttribute(): bool
+    {
+        return ! $this->is_image && ! $this->is_video;
+    }
+
     public function scopeImages(Builder $query): Builder
     {
         return $query->where('media_type', 'image');

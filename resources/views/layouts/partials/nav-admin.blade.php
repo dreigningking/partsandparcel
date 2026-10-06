@@ -44,7 +44,6 @@
                         request()->routeIs('admin.subscriptions*') ||
                         request()->routeIs('admin.properties*') ||
                         request()->routeIs('admin.listings*') ||
-                        request()->routeIs('admin.services*') ||
                         request()->routeIs('admin.discussions*') ||
                         request()->routeIs('admin.promotions*') ||
                         request()->routeIs('admin.coupons*') ||
@@ -87,17 +86,6 @@
                 </span>
             </a>
 
-            <!-- Services (AdminServices) -->
-            <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.services*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
-                href="{{ route('admin.services') }}"
-            >
-                🔧 <span class="label">Services</span>
-                @php $activeJobsCount = \App\Models\ServiceJob::whereIn('status', ['pending', 'started', 'in_progress'])->count(); @endphp
-                @if($activeJobsCount > 0)
-                    <span class="label ml-auto text-[10px] bg-blue-100 text-blue-700 rounded-full px-2 font-bold">{{ $activeJobsCount }}</span>
-                @endif
-            </a>
 
             <!-- Discussions (AdminDiscussions) -->
             <a
@@ -147,8 +135,8 @@
 
     <!-- 5. TRUST & RESOLUTION -->
     @php
-        $trustActive = request()->routeIs('admin.disputes*') ||
-                       request()->routeIs('admin.returns*');
+        $trustActive = request()->routeIs('admin.disputes*')
+                       
     @endphp
     <div>
         <button
@@ -171,13 +159,6 @@
                 @endif
             </a>
 
-            <!-- Returns & Replacements (AdminReturns) -->
-            <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.returns*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
-                href="{{ route('admin.returns') }}"
-            >
-                ↩ <span class="label">Returns &amp; Replacements</span>
-            </a>
         </div>
     </div>
 

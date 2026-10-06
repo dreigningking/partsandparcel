@@ -12,8 +12,11 @@ use App\Livewire\Admin\AdminCouponEdit;
 use App\Livewire\Admin\AdminCoupons;
 use App\Livewire\Admin\AdminDashboard;
 use App\Livewire\Admin\AdminDiscussions;
+use App\Livewire\Admin\AdminDiscussionView;
 use App\Livewire\Admin\AdminDisputes;
+use App\Livewire\Admin\AdminDisputeView;
 use App\Livewire\Admin\AdminInvoices;
+use App\Livewire\Admin\AdminInvoiceView;
 use App\Livewire\Admin\AdminListingDetails;
 use App\Livewire\Admin\AdminListings;
 use App\Livewire\Admin\AdminModerations;
@@ -21,10 +24,7 @@ use App\Livewire\Admin\AdminNotifications;
 use App\Livewire\Admin\AdminPayments;
 use App\Livewire\Admin\AdminPayouts;
 use App\Livewire\Admin\AdminPromotions;
-use App\Livewire\Admin\AdminReturns;
 use App\Livewire\Admin\AdminRevenue;
-use App\Livewire\Admin\AdminInvoiceView;
-use App\Livewire\Admin\AdminServices;
 use App\Livewire\Admin\AdminSubscriptions;
 use App\Livewire\Admin\AdminUserDetails;
 use App\Livewire\Admin\AdminUsers;
@@ -175,17 +175,23 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->as('admin.')-
     Route::get('listings/{listing}', AdminListingDetails::class)->name('properties.show');
     Route::get('manage-listings', AdminListings::class)->name('listings');
     Route::get('manage-listings/{listing}', AdminListingDetails::class)->name('listings.show');
-    Route::get('services', AdminServices::class)->name('services');
+    
     Route::get('discussions', AdminDiscussions::class)->name('discussions');
+    Route::get('discussions/{discussion}', AdminDiscussionView::class)->name('discussions.view');
+    
     Route::get('promotions', AdminPromotions::class)->name('promotions');
+    
     Route::get('coupons', AdminCoupons::class)->name('coupons');
     Route::get('coupons/create', AdminCouponCreate::class)->name('coupons.create');
+    Route::get('coupons/{coupon}/edit', AdminCouponEdit::class)->name('coupons.edit');
+    Route::get('coupons/edit/{coupon?}', AdminCouponEdit::class);
+    
     Route::get('invoices', AdminInvoices::class)->name('invoices');
     Route::get('invoices/{invoice}', AdminInvoiceView::class)->name('invoices.show');
 
     // TRUST & RESOLUTION
     Route::get('disputes', AdminDisputes::class)->name('disputes');
-    Route::get('returns', AdminReturns::class)->name('returns');
+    Route::get('disputes/{dispute}', AdminDisputeView::class)->name('disputes.show');
 
     // CONTENT & BLOG
     Route::get('blog', AdminBlog::class)->name('blog');

@@ -111,6 +111,50 @@
           </div>
         @endif
 
+        <!-- BUYER INSPECTION & REJECTION ACTIONS -->
+        @if ($isBuyer && in_array($replacement->status, ['ready_for_dispatch', 'dispatched', 'delivered']) && $replacement->status !== 'disputed' && ! $replacement->accepted_at)
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div>
+              <strong class="font-extrabold text-slate-900 block">Inspect Delivered Replacement</strong>
+              <span class="text-slate-600 text-[11px]">
+                Verify the replacement part works as expected. If satisfied, accept it to finalize resolution. If defective, you can reject it to initiate arbitration.
+              </span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0 flex-wrap">
+              <button wire:click="openBuyerReplacementRejectModal({{ $replacement->id }})" type="button" class="px-3.5 py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span>Reject / Has Issues</span>
+              </button>
+              <button wire:click="buyerAcceptReplacement({{ $replacement->id }})" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-check"></i>
+                <span>Accept Replacement</span>
+              </button>
+            </div>
+          </div>
+        @endif
+
+        <!-- REPLACEMENT DISPUTE NOTICE -->
+        @if ($replacement->status === 'disputed' || $replacement->dispute)
+          <div class="p-4 rounded-2xl bg-purple-50 border border-purple-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 grid place-items-center shrink-0">
+                <i class="fas fa-scale-balanced"></i>
+              </div>
+              <div>
+                <strong class="font-black text-purple-950 block">Replacement Escalated to Platform Dispute</strong>
+                <span class="text-purple-900 text-[11px]">
+                  Buyer reported issues with the replacement unit: "{{ $replacement->rejection_reason ?: 'Defective replacement' }}".
+                </span>
+              </div>
+            </div>
+            @if ($replacement->dispute)
+              <a href="{{ route('disputes.view', $replacement->dispute->id) }}" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[11px] shadow-xs transition flex items-center gap-1.5 shrink-0">
+                <span>View Dispute #DSP-{{ str_pad($replacement->dispute->id, 4, '0', STR_PAD_LEFT) }} →</span>
+              </a>
+            @endif
+          </div>
+        @endif
+
       </div>
     @empty
       <div class="p-8 rounded-3xl bg-white border border-slate-200 text-center text-xs space-y-2 shadow-soft">

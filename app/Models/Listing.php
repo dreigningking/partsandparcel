@@ -251,6 +251,11 @@ class Listing extends Model
         return $this->hasMany(Promotion::class);
     }
 
+    public function invoiceItems(): MorphMany
+    {
+        return $this->morphMany(InvoiceItem::class, 'itemable');
+    }
+
     public function scopePublished(Builder $query)
     {
         return $query->where('is_published', true);

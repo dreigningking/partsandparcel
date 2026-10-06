@@ -42,6 +42,9 @@ class InvoicesList extends Component
     #[Url(as: 'to')]
     public string $dateTo = '';
 
+    #[Url(as: 'contains')]
+    public string $contains = '';
+
     public function setScope(string $scope): void
     {
         if (in_array($scope, ['all', 'buying', 'selling'])) {
@@ -55,6 +58,7 @@ class InvoicesList extends Component
     public function updatingPaymentMethod(): void { $this->resetPage(); }
     public function updatingSource(): void { $this->resetPage(); }
     public function updatingStatus(): void { $this->resetPage(); }
+    public function updatingContains(): void { $this->resetPage(); }
     public function updatingDateFrom(): void { $this->resetPage(); }
     public function updatingDateTo(): void { $this->resetPage(); }
 
@@ -65,6 +69,7 @@ class InvoicesList extends Component
         $this->paymentMethod = '';
         $this->source = '';
         $this->status = '';
+        $this->contains = '';
         $this->dateFrom = '';
         $this->dateTo = '';
         $this->resetPage();
@@ -146,6 +151,42 @@ class InvoicesList extends Component
             $query->where('status', $this->status);
         }
 
+        // Filter by contains
+        if ($this->contains !== '') {
+            match ($this->contains) {
+                'shipment' => $query->where(function (Builder $q) {
+                    $q->whereHas('items', function ($itemQuery) {
+                        $itemQuery->where('itemable_type', \App\Models\Shipment::class)
+                                  ->orWhereIn('type', ['pickup', 'delivery', 'return']);
+                    })->orWhereHas('returns', function ($rq) {
+                        $rq->whereNotNull('shipment_id');
+                    })->orWhereHas('replacements', function ($rq) {
+                        $rq->whereNotNull('shipment_id');
+                    })->orWhereHas('offer.items', function ($itemQuery) {
+                        $itemQuery->where('itemable_type', \App\Models\Shipment::class);
+                    });
+                }),
+                'issue' => $query->whereHas('issues', function (Builder $q) {
+                    $q->where('type', '!=', 'warranty_claim');
+                }),
+                'refund' => $query->whereHas('refunds'),
+                'replacement' => $query->whereHas('replacements'),
+                'return' => $query->where(function (Builder $q) {
+                    $q->whereHas('returns')
+                      ->orWhereHas('issues', fn ($iq) => $iq->where('resolution_action', 'return_refund'));
+                }),
+                'warranty', 'warranty_claim' => $query->where(function (Builder $q) {
+                    $q->whereHas('issues', fn ($iq) => $iq->where('type', 'warranty_claim'))
+                      ->orWhereHas('items', fn ($iq) => $iq->where('warranty_period_days', '>', 0));
+                }),
+                'service' => $query->where(function (Builder $q) {
+                    $q->whereHas('serviceJobs')
+                      ->orWhereHas('items', fn ($iq) => $iq->where('type', 'service'));
+                }),
+                default => null,
+            };
+        }
+
         // Filter by date range
         if ($this->dateFrom !== '') {
             $query->whereDate('created_at', '>=', $this->dateFrom);
@@ -194,6 +235,7 @@ class InvoicesList extends Component
             'paymentMethod' => $this->paymentMethod,
             'source' => $this->source,
             'status' => $this->status,
+            'contains' => $this->contains,
             'dateFrom' => $this->dateFrom,
             'dateTo' => $this->dateTo,
             'currentUserId' => $userId,

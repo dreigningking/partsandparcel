@@ -57,7 +57,7 @@
                             <input
                                 type="text"
                                 wire:model.blur="code"
-                                placeholder="e.g. WELCOME10"
+                                placeholder="Coupon code"
                                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-mono font-black uppercase tracking-wider text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-pp-500"
                             />
                             @if (! $isEditing)
@@ -113,7 +113,7 @@
                                 </span>
                                 <div>
                                     <div class="font-extrabold text-xs text-slate-900 dark:text-white">Percentage Discount</div>
-                                    <div class="text-[10px] text-slate-400">e.g. 10% off the total eligible order value</div>
+                                    <div class="text-[10px] text-slate-400">Deducts a percentage from the eligible subtotal</div>
                                 </div>
                             </div>
                         </label>
@@ -126,7 +126,7 @@
                                 </span>
                                 <div>
                                     <div class="font-extrabold text-xs text-slate-900 dark:text-white">Fixed Amount Deduction</div>
-                                    <div class="text-[10px] text-slate-400">e.g. Flat ₦5,000 deduction from cart total</div>
+                                    <div class="text-[10px] text-slate-400">Deducts a flat Naira amount from cart total</div>
                                 </div>
                             </div>
                         </label>
@@ -149,7 +149,7 @@
                                 step="0.01"
                                 min="0.01"
                                 wire:model="value"
-                                placeholder="{{ $type === 'percentage' ? 'e.g. 10.00' : 'e.g. 5000.00' }}"
+                                placeholder="{{ $type === 'percentage' ? 'Enter percentage discount' : 'Enter deduction amount in Naira' }}"
                                 class="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-extrabold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-pp-500"
                             />
                         </div>
@@ -172,7 +172,7 @@
                                     step="0.01"
                                     min="0"
                                     wire:model="max_discount"
-                                    placeholder="e.g. 5000.00"
+                                    placeholder="Discount ceiling amount"
                                     class="w-full pl-8 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-pp-500"
                                 />
                             </div>
@@ -219,7 +219,7 @@
                             type="number"
                             min="1"
                             wire:model="usage_limit"
-                            placeholder="e.g. 1000"
+                            placeholder="Usage limit quota"
                             class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-pp-500"
                         />
                         @error('usage_limit') <p class="text-[11px] text-rose-500 font-semibold mt-1">{{ $message }}</p> @enderror

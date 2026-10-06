@@ -40,11 +40,19 @@ class AdminDisputes extends Component
     public function resolveDispute(string $resolutionOutcome): void
     {
         $dispute = Dispute::findOrFail($this->selectedDisputeId);
-        $dispute->status = 'resolved';
-        $dispute->resolution = $resolutionOutcome . ($this->resolutionNote ? ": {$this->resolutionNote}" : '');
-        $dispute->resolved_by = Auth::id();
-        $dispute->resolved_at = now();
-        $dispute->save();
+        $decision = match ($resolutionOutcome) {
+            'Refund Buyer' => 'buyer_favor',
+            'Release to Seller' => 'seller_favor',
+            default => 'split',
+        };
+
+        app(\App\Services\PostSale\IssueResolutionService::class)->adminResolveDispute(
+            dispute: $dispute,
+            admin: Auth::user(),
+            decision: $decision,
+            refundAmount: null,
+            resolutionNotes: $this->resolutionNote ?: $resolutionOutcome
+        );
 
         session()->flash('status', __("Dispute #DSP-{$dispute->id} resolved with outcome: {$resolutionOutcome}."));
         $this->closeDispute();
@@ -53,12 +61,12 @@ class AdminDisputes extends Component
     public function render()
     {
         $disputes = Dispute::query()
-            ->with(['issue.invoice.buyer', 'issue.invoice.seller', 'opener', 'resolver', 'items'])
+            ->with(['invoice.buyer', 'invoice.seller', 'opener', 'respondent', 'resolver', 'items', 'warrantyClaim', 'replacement', 'returnRecord'])
             ->when($this->search !== '', function (Builder $query) {
                 $query->where(function (Builder $inner) {
                     $inner->where('reason', 'like', '%' . $this->search . '%')
                         ->orWhereHas('opener', fn ($q) => $q->where('name', 'like', '%' . $this->search . '%'))
-                        ->orWhereHas('issue.invoice', fn ($q) => $q->where('invoice_number', 'like', '%' . $this->search . '%'));
+                        ->orWhereHas('invoice', fn ($q) => $q->where('invoice_number', 'like', '%' . $this->search . '%'));
                 });
             })
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
@@ -66,7 +74,7 @@ class AdminDisputes extends Component
             ->paginate(12);
 
         $selectedDispute = $this->selectedDisputeId
-            ? Dispute::with(['issue.invoice.buyer', 'issue.invoice.seller', 'opener', 'resolver', 'items.item', 'returnRecord', 'refund'])->find($this->selectedDisputeId)
+            ? Dispute::with(['invoice.buyer', 'invoice.seller', 'opener', 'respondent', 'resolver', 'items.item', 'returnRecord', 'replacement', 'warrantyClaim', 'refund'])->find($this->selectedDisputeId)
             : null;
 
         return view('livewire.admin.admin-disputes', [

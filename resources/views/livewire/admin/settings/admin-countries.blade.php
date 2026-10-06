@@ -69,11 +69,9 @@
                 <thead class="bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
                     <tr>
                         <th class="px-4 py-3.5 min-w-[300px]">Country</th>
-                        <th class="px-4 py-3.5 text-center">Code</th>
-                        <th class="px-4 py-3.5">Phone Code</th>
                         <th class="px-4 py-3.5">Currency</th>
-                        <th class="px-4 py-3.5 text-right">Cost / View</th>
-                        <th class="px-4 py-3.5 text-right">Cost / Click</th>
+                        <th class="px-4 py-3.5 text-nowrap">Cost / View</th>
+                        <th class="px-4 py-3.5 text-nowrap">Cost / Click</th>
                         <th class="px-4 py-3.5">Timezone</th>
                         <th class="px-4 py-3.5">Gateways</th>
                         <th class="px-4 py-3.5 text-center">States</th>
@@ -92,7 +90,7 @@
                                         {{ $country->code }}
                                     </div>
                                     <div>
-                                        <b class="font-extrabold text-slate-900 dark:text-white block">{{ $country->name }}</b>
+                                        <b class="font-extrabold text-slate-900 dark:text-white block">{{ $country->name }} {{ $country->phone_code ? '  '.$country->phone_code: '' }}</b>
                                         @if ($country->is_default)
                                             <span class="inline-flex items-center gap-1 text-[9px] font-black uppercase text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
                                                 <i class="fas fa-check-circle text-[8px]"></i> Primary Default
@@ -102,16 +100,6 @@
                                 </div>
                             </td>
 
-                            <!-- CODE -->
-                            <td class="px-4 py-3.5 text-center font-mono font-bold text-slate-900 dark:text-white">
-                                {{ $country->code }}
-                            </td>
-
-                            <!-- PHONE CODE -->
-                            <td class="px-4 py-3.5 font-mono font-bold text-slate-600 dark:text-slate-400">
-                                {{ $country->phone_code ?: '—' }}
-                            </td>
-
                             <!-- CURRENCY -->
                             <td class="px-4 py-3.5">
                                 <span class="font-extrabold text-slate-900 dark:text-white">{{ $country->currency }}</span>
@@ -119,12 +107,12 @@
                             </td>
 
                             <!-- COST / VIEW -->
-                            <td class="px-4 py-3.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                            <td class="px-4 py-3.5 font-mono font-bold text-slate-800 dark:text-slate-200">
                                 <span class="text-slate-400 text-[10px]">{{ $country->currency_symbol }}</span>{{ number_format((float) ($country->views ?? 0), 4) }}
                             </td>
 
                             <!-- COST / CLICK -->
-                            <td class="px-4 py-3.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                            <td class="px-4 py-3.5 font-mono font-bold text-slate-800 dark:text-slate-200">
                                 <span class="text-slate-400 text-[10px]">{{ $country->currency_symbol }}</span>{{ number_format((float) ($country->clicks ?? 0), 2) }}
                             </td>
 
@@ -136,12 +124,15 @@
                             <!-- GATEWAYS -->
                             <td class="px-4 py-3.5">
                                 @if (!empty($country->payment_gateway))
+                                    @php
+                                        $gateways = is_string($country->payment_gateway) ? json_decode($country->payment_gateway, true) : $country->payment_gateway;
+                                    @endphp
                                     <div class="flex flex-wrap gap-1">
-                                        @foreach ((array) $country->payment_gateway as $gw)
+                                        @foreach ($gateways as $gw)
                                             <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-pp-50 dark:bg-pp-950/60 text-pp-700 dark:text-pp-300 border border-pp-200 dark:border-pp-800/60">
                                                 {{ $gw }}
                                             </span>
-                                        @endforeach
+                                        @endforeach 
                                     </div>
                                 @else
                                     <span class="text-slate-400 dark:text-slate-500 italic">None</span>
@@ -170,7 +161,7 @@
                                 <button
                                     type="button"
                                     wire:click="toggleActive({{ $country->id }})"
-                                    class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase transition cursor-pointer {{ $country->is_active ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200' }}"
+                                    class="px-2.5 py-1 rounded-full text-nowrap text-[10px] font-black uppercase transition cursor-pointer {{ $country->is_active ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200' }}"
                                     title="Click to toggle status"
                                 >
                                     <i class="fas fa-circle text-[8px] mr-1"></i>

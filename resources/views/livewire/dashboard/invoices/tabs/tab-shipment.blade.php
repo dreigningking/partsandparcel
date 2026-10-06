@@ -226,20 +226,46 @@
         </div>
 
         <!-- RETURN ACTIONS -->
-        <div class="flex items-center gap-2 self-start sm:self-auto">
+        <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
           @if ($isBuyer && $latestReturn && in_array($latestReturn->status, ['pending', 'approved']))
             <button wire:click="openBuyerReturnModal({{ $latestReturn->id }})" type="button" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
               <i class="fas fa-paper-plane"></i>
               <span>Confirm Return Dispatched</span>
             </button>
-          @elseif ($isSeller && $latestReturn && in_array($latestReturn->status, ['in_transit', 'shipped']))
+          @elseif ($isSeller && $latestReturn && in_array($latestReturn->status, ['in_transit', 'shipped', 'received']) && $latestReturn->status !== 'disputed')
+            <button wire:click="openSellerReturnRejectModal({{ $latestReturn->id }})" type="button" class="px-3.5 py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+              <i class="fas fa-triangle-exclamation"></i>
+              <span>Reject Return Condition</span>
+            </button>
             <button wire:click="sellerConfirmReturnReceived({{ $latestReturn->id }})" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer">
               <i class="fas fa-check-circle"></i>
-              <span>Confirm Return Received</span>
+              <span>Accept Return &amp; Verify</span>
             </button>
           @endif
         </div>
       </div>
+
+      <!-- RETURN DISPUTE NOTICE -->
+      @if ($latestReturn && ($latestReturn->status === 'disputed' || $latestReturn->dispute))
+        <div class="p-4 rounded-2xl bg-purple-50 border border-purple-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 grid place-items-center shrink-0">
+              <i class="fas fa-scale-balanced"></i>
+            </div>
+            <div>
+              <strong class="font-black text-purple-950 block">Return Goods Condition Disputed</strong>
+              <span class="text-purple-900 text-[11px]">
+                Seller rejected the return package condition: "{{ $latestReturn->rejection_reason ?: 'Condition discrepancy' }}". Escalated to platform mediation.
+              </span>
+            </div>
+          </div>
+          @if ($latestReturn->dispute)
+            <a href="{{ route('disputes.view', $latestReturn->dispute->id) }}" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[11px] shadow-xs transition flex items-center gap-1.5 shrink-0">
+              <span>View Dispute #DSP-{{ str_pad($latestReturn->dispute->id, 4, '0', STR_PAD_LEFT) }} →</span>
+            </a>
+          @endif
+        </div>
+      @endif
 
       @if ($returnShipment)
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">

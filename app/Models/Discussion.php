@@ -130,6 +130,11 @@ class Discussion extends Model
         return $this->morphMany(Watchlist::class, 'watchable');
     }
 
+    public function views(): MorphMany
+    {
+        return $this->morphMany(ViewedEntity::class, 'viewable');
+    }
+
     public function isWatchedBy(?User $user): bool
     {
         if (! $user) {
