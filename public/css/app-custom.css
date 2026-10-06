@@ -25,7 +25,20 @@ body, * { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-se
 
 /* MEGA MENU STYLES */
 .mega-menu { display: none; }
-.mega-menu.open { display: block; }
+.mega-menu.open { 
+    display: block; 
+    animation: megaMenuFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes megaMenuFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 .nav-chevron { transition: transform .2s ease; }
 .nav-trigger.open .nav-chevron { transform: rotate(180deg); }
 

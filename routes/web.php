@@ -23,15 +23,14 @@ use App\Livewire\Admin\AdminPayouts;
 use App\Livewire\Admin\AdminPromotions;
 use App\Livewire\Admin\AdminReturns;
 use App\Livewire\Admin\AdminRevenue;
+use App\Livewire\Admin\AdminInvoiceView;
 use App\Livewire\Admin\AdminServices;
-use App\Livewire\Admin\AdminShipments;
 use App\Livewire\Admin\AdminSubscriptions;
 use App\Livewire\Admin\AdminUserDetails;
 use App\Livewire\Admin\AdminUsers;
 use App\Livewire\Admin\Settings\AdminCategories;
 use App\Livewire\Admin\Settings\AdminCountries;
 use App\Livewire\Admin\Settings\AdminGeneral;
-use App\Livewire\Admin\Settings\AdminPromotionPlans;
 use App\Livewire\Admin\Settings\AdminRolesPermissions;
 use App\Livewire\Admin\Settings\AdminStaff;
 use App\Livewire\Admin\Settings\AdminSubscriptionPlans;
@@ -140,8 +139,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('invoices/export/excel', [\App\Http\Controllers\InvoiceExportController::class, 'exportExcel'])->name('invoices.export.excel');
     Route::get('invoices/{invoice}/export/pdf', [\App\Http\Controllers\InvoiceExportController::class, 'exportPdf'])->name('invoices.export.pdf');
 
-    Route::get('shipments', ShipmentsList::class)->name('shipments');
-    Route::get('shipments/{shipment_id?}', ShipmentView::class)->name('shipments.view');
     Route::get('locations', Locations::class)->name('locations');
     Route::get('notifications', Notifications::class)->name('notifications');
     Route::get('profile', Profile::class)->name('profile');
@@ -158,9 +155,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('myitems/{item}', ItemView::class)->name('item.view');
     Route::get('mylistings', Listings::class)->name('mylistings');
     Route::get('mylistings/{listing}', ListingView::class)->name('mylisting.view');
-    Route::get('myearnings', Earnings::class)->name('earnings');
+    // Route::get('myearnings', Earnings::class)->name('earnings');
     Route::get('disputes', DisputesList::class)->name('disputes');
-    Route::get('disputes/dispute_id', DisputeView::class)->name('disputes.view');
+    Route::get('disputes/{dispute_id?}', DisputeView::class)->name('disputes.view');
 });
 
 // Admin Control Center (Protected by EnsureUserIsAdmin & Verified Email)
@@ -175,7 +172,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->as('admin.')-
     Route::get('users/{user}', AdminUserDetails::class)->name('users.show');
     Route::get('subscriptions', AdminSubscriptions::class)->name('subscriptions');
     Route::get('listings', AdminListings::class)->name('properties');
-    Route::get('listings/{property}', AdminListingDetails::class)->name('properties.show');
+    Route::get('listings/{listing}', AdminListingDetails::class)->name('properties.show');
     Route::get('manage-listings', AdminListings::class)->name('listings');
     Route::get('manage-listings/{listing}', AdminListingDetails::class)->name('listings.show');
     Route::get('services', AdminServices::class)->name('services');
@@ -183,9 +180,8 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->as('admin.')-
     Route::get('promotions', AdminPromotions::class)->name('promotions');
     Route::get('coupons', AdminCoupons::class)->name('coupons');
     Route::get('coupons/create', AdminCouponCreate::class)->name('coupons.create');
-    Route::get('coupons/{coupon}/edit', AdminCouponEdit::class)->name('coupons.edit');
-    Route::get('shipments', AdminShipments::class)->name('shipments');
     Route::get('invoices', AdminInvoices::class)->name('invoices');
+    Route::get('invoices/{invoice}', AdminInvoiceView::class)->name('invoices.show');
 
     // TRUST & RESOLUTION
     Route::get('disputes', AdminDisputes::class)->name('disputes');
@@ -213,7 +209,7 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->as('admin.')-
         Route::get('countries', AdminCountries::class)->name('countries');
         Route::get('staff', AdminStaff::class)->name('staff');
         Route::get('roles', AdminRolesPermissions::class)->name('roles');
-        Route::get('promotion-plans', AdminPromotionPlans::class)->name('promotion-plans');
+        Route::get('promotion-plans', fn() => redirect()->route('admin.settings.countries'))->name('promotion-plans');
         Route::get('subscription-plans', AdminSubscriptionPlans::class)->name('subscription-plans');
     });
 });

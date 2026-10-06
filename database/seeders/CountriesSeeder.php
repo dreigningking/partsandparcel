@@ -23,6 +23,8 @@ class CountriesSeeder extends Seeder
                 'is_default' => true,
                 'is_active' => true,
                 'payment_gateway' => json_encode(['paystack', 'flutterwave', 'opay']),
+                'views' => 0.0050,
+                'clicks' => 20.00,
             ]
         );
 

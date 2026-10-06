@@ -21,7 +21,7 @@ Setting{
   Role
 }
 Promotion{
-  PromotionPlan
+  Country (views, clicks rates)
 }
 Subscription{
   SubscriptionPlan
@@ -133,15 +133,15 @@ version2{
   automatic verification via NIN and the likes
   
 }
-
+#Admin
 Payment{
   Payout
   PayoutSettlement
   Revenue
   Settlement
-  BankAccount
 }
 
+#Admin
 Dispute{
   DisputeItem
   Refund
@@ -152,23 +152,23 @@ Dispute{
   ReturnRecord
 }
 
-
+#Admin
 ServiceJob{
   Manage service jobs
-  Add Service Review
 }
 
 
 Invoice{
-  InvoiceItem
-  Buyer ListingReview
-  Shipment
-  ShipmentItem
-
-  Issue
-  IssueItem
-  Dispute
-  DisputeItem
+  Details tab: InvoiceItem + escrow processes + ListingReview
+  Service tab: Add Service Review 
+  Shipment tab:ShipmentItem (pickup, delivery, returns)
+  Issue tab: IssueItem
+  Dispute tab: DisputeItem
+  Replacement tab: ReplacementItem
+  Refund tab: RefundItem
+  Warranty tab: Warranty claims & WarrantyItem
 }
-
+Let's convert [AdminShipments.php](file;file:///c%3A/laragon/www/partsandparcel/app/Livewire/Admin/AdminShipments.php) and [admin-shipments.blade.php](file;file:///c%3A/laragon/www/partsandparcel/resources/views/livewire/admin/admin-shipments.blade.php) into AdminInvoiceView and admin-invoice-view. 
+This is because all shipments are connected to invoices so i want admin to find the shipments inside the invoice view. 
+In the 
 

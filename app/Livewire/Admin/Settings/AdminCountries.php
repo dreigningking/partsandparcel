@@ -28,6 +28,8 @@ class AdminCountries extends Component
     public bool $is_default = false;
     public bool $is_active = true;
     public array $payment_gateway = ['paystack', 'flutterwave'];
+    public string $views = '0.0050';
+    public string $clicks = '20.00';
 
     // Search query
     public string $search = '';
@@ -44,6 +46,8 @@ class AdminCountries extends Component
         $this->is_default = false;
         $this->is_active = true;
         $this->payment_gateway = ['paystack', 'flutterwave'];
+        $this->views = '0.0050';
+        $this->clicks = '20.00';
         $this->resetErrorBag();
         $this->showModal = true;
     }
@@ -61,6 +65,8 @@ class AdminCountries extends Component
         $this->is_default = (bool) $country->is_default;
         $this->is_active = (bool) $country->is_active;
         $this->payment_gateway = is_array($country->payment_gateway) ? $country->payment_gateway : [];
+        $this->views = (string) ($country->views ?? '0.0000');
+        $this->clicks = (string) ($country->clicks ?? '0.00');
         $this->resetErrorBag();
         $this->showModal = true;
     }
@@ -89,6 +95,8 @@ class AdminCountries extends Component
             'is_default'      => ['boolean'],
             'is_active'       => ['boolean'],
             'payment_gateway' => ['nullable', 'array'],
+            'views'           => ['required', 'numeric', 'min:0', 'max:999999.9999'],
+            'clicks'          => ['required', 'numeric', 'min:0', 'max:999999.99'],
         ], [
             'code.size'     => 'Country code must be exactly 2 characters (ISO-2 code, e.g. NG, US, GB).',
             'currency.size' => 'Currency code must be exactly 3 characters (e.g. NGN, USD, GBP).',
@@ -103,6 +111,8 @@ class AdminCountries extends Component
             'timezone'        => trim($this->timezone),
             'is_active'       => $this->is_active,
             'payment_gateway' => array_values($this->payment_gateway),
+            'views'           => (float) $this->views,
+            'clicks'          => (float) $this->clicks,
         ];
 
         if ($this->is_default) {

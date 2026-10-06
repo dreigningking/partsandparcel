@@ -37,6 +37,7 @@ return new class extends Migration
                 $table->string('avatar')->nullable();
                 $table->text('bio')->nullable();
                 $table->string('gender')->nullable();
+                $table->timestamp('suspended_at')->nullable();
                 $table->boolean('is_verified')->default(false);
                 $table->json('notification_preferences')->default(json_encode(['email' => true, 'in_app' => true, 'push' => true]));
                 $table->foreignId('country_id')->constrained()->onDelete('cascade');

@@ -49,6 +49,16 @@ class Discussion extends Model
         return $this->attachments['urgency'] ?? 'Flexible';
     }
 
+    public function getIsPinnedAttribute(): bool
+    {
+        return (bool) ($this->attachments['is_pinned'] ?? false);
+    }
+
+    public function getIsLockedAttribute(): bool
+    {
+        return (bool) ($this->attachments['is_locked'] ?? false);
+    }
+
     public function getLocationTextAttribute(): string
     {
         if ($this->location) {

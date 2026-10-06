@@ -34,31 +34,31 @@
 <div class="bg-white border-b border-slate-200 text-slate-700 relative z-40">
   <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
     <nav class="hidden lg:flex h-11 items-center justify-between w-full text-xs font-bold">
-      <a href="{{ route('category') }}?cat=electronics" data-target="mega-electronics" data-menu="electronics" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <a href="{{ route('category') }}?cat=electronics" data-target="mega-electronics" data-menu="electronics" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition whitespace-nowrap">
         📱 Electronics <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </a>
-      <a href="{{ route('category') }}?cat=appliances" data-target="mega-appliances" data-menu="appliances" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <a href="{{ route('category') }}?cat=appliances" data-target="mega-appliances" data-menu="appliances" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition whitespace-nowrap">
         🔌 Appliances <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </a>
-      <a href="{{ route('category') }}?cat=vehicles" data-target="mega-vehicles" data-menu="vehicles" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <a href="{{ route('category') }}?cat=vehicles" data-target="mega-vehicles" data-menu="vehicles" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition whitespace-nowrap">
         🚗 Vehicles <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </a>
-      <a href="{{ route('category') }}?cat=heavy-equipment" data-target="mega-heavy-equipment" data-menu="heavy-equipment" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <a href="{{ route('category') }}?cat=heavy-equipment" data-target="mega-heavy-equipment" data-menu="heavy-equipment" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition whitespace-nowrap">
         🚜 Heavy Equipment <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </a>
-      <a href="{{ route('category') }}?cat=construction" data-target="mega-construction" data-menu="construction" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <a href="{{ route('category') }}?cat=construction" data-target="mega-construction" data-menu="construction" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition whitespace-nowrap">
         🏗️ Construction <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </a>
-      <a href="{{ route('category') }}?cat=industrial" data-target="mega-industrial" data-menu="industrial" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <a href="{{ route('category') }}?cat=industrial" data-target="mega-industrial" data-menu="industrial" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition whitespace-nowrap">
         🏭 Industrial <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </a>
-      <a href="{{ route('category') }}?cat=agricultural" data-target="mega-agricultural" data-menu="agricultural" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <a href="{{ route('category') }}?cat=agricultural" data-target="mega-agricultural" data-menu="agricultural" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition whitespace-nowrap">
         🌾 Agricultural <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </a>
-      <a href="{{ route('category') }}?cat=power-energy" data-target="mega-power-energy" data-menu="power-energy" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition">
+      <a href="{{ route('category') }}?cat=power-energy" data-target="mega-power-energy" data-menu="power-energy" class="nav-trigger px-2.5 h-9 rounded-lg hover:bg-pp-50 hover:text-pp-600 flex items-center gap-1 transition whitespace-nowrap">
         ⚡ Power &amp; Energy <svg class="nav-chevron w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </a>
-      <a href="{{ route('category') }}?tab=scrap&cat=scrap-salvage" data-target="mega-scrap-salvage" data-menu="scrap-salvage" class="nav-trigger px-3 h-9 rounded-lg hover:bg-amber-100 flex items-center gap-1 transition text-amber-800 bg-amber-100/80 border border-amber-300/60 shadow-xs">
+      <a href="{{ route('category') }}?tab=scrap&cat=scrap-salvage" data-target="mega-scrap-salvage" data-menu="scrap-salvage" class="nav-trigger px-3 h-9 rounded-lg hover:bg-amber-100 flex items-center gap-1 transition whitespace-nowrap text-amber-800 bg-amber-100/80 border border-amber-300/60 shadow-xs">
         🛠️ Scrap &amp; Salvage <svg class="nav-chevron w-3.5 h-3.5 text-amber-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
       </a>
     </nav>

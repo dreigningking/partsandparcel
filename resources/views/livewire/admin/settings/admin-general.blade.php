@@ -180,7 +180,7 @@
                                     {{ $meta['label'] }}
                                 </h3>
                                 <div class="flex items-center gap-2 mt-0.5">
-                                    <code class="text-3xs font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                                    <code class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                                         {{ $setting->name }}
                                     </code>
                                     <span class="text-xs uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">

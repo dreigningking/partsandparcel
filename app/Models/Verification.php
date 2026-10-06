@@ -108,4 +108,31 @@ class Verification extends Model
     {
         return $this->status === 'rejected';
     }
+
+    public function getFrontImageUrlAttribute(): ?string
+    {
+        if (! $this->front_image) {
+            return null;
+        }
+
+        return str_starts_with($this->front_image, 'http') ? $this->front_image : asset('storage/' . $this->front_image);
+    }
+
+    public function getBackImageUrlAttribute(): ?string
+    {
+        if (! $this->back_image) {
+            return null;
+        }
+
+        return str_starts_with($this->back_image, 'http') ? $this->back_image : asset('storage/' . $this->back_image);
+    }
+
+    public function getSelfieImageUrlAttribute(): ?string
+    {
+        if (! $this->selfie_image) {
+            return null;
+        }
+
+        return str_starts_with($this->selfie_image, 'http') ? $this->selfie_image : asset('storage/' . $this->selfie_image);
+    }
 }

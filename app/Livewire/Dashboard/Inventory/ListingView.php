@@ -9,7 +9,6 @@ use App\Models\Listing;
 use App\Models\OfferItem;
 use App\Models\Payment;
 use App\Models\Promotion;
-use App\Models\PromotionPlan;
 use App\Models\Setting;
 use App\Models\ViewedEntity;
 use App\Models\Wishlist;
@@ -183,37 +182,33 @@ class ListingView extends Component
         $this->recalculateCoupon();
     }
 
-    public function getSellerPromotionPlan(): PromotionPlan
+    public function getSellerCountry(): Country
     {
         $user = Auth::user();
-        $countryId = $user->country_id ?? $user->primaryLocation?->state?->country_id;
+        $country = $user?->country ?? Country::find($user?->country_id) ?? $user?->primaryLocation?->state?->country;
 
-        $plan = null;
-        if ($countryId) {
-            $plan = PromotionPlan::where('country_id', $countryId)->first();
+        if (! $country) {
+            $country = Country::where('code', 'NG')->first() ?? Country::where('is_default', true)->first();
         }
 
-        if (! $plan) {
-            $nigeria = Country::where('code', 'NG')->first() ?? Country::where('is_default', true)->first();
-            $plan = PromotionPlan::where('country_id', $nigeria?->id)->first() ?? PromotionPlan::first();
-        }
-
-        if (! $plan) {
-            // Safe fallback plan instance if database has no promotion plan yet
-            $plan = new PromotionPlan([
-                'name' => 'Standard PPC & Impression Plan',
+        if (! $country) {
+            $country = new Country([
+                'name' => 'Nigeria',
+                'code' => 'NG',
+                'currency' => 'NGN',
+                'currency_symbol' => '₦',
                 'views' => 0.0050,
                 'clicks' => 20.00,
             ]);
         }
 
-        return $plan;
+        return $country;
     }
 
     public function getSubtotalProperty(): float
     {
-        $plan = $this->getSellerPromotionPlan();
-        $unitPrice = $this->promoType === 'clicks' ? (float) $plan->clicks : (float) $plan->views;
+        $country = $this->getSellerCountry();
+        $unitPrice = $this->promoType === 'clicks' ? (float) ($country->clicks ?? 20.00) : (float) ($country->views ?? 0.0050);
 
         return round($this->promoQuantity * $unitPrice, 2);
     }
@@ -300,11 +295,11 @@ class ListingView extends Component
             return;
         }
 
-        $plan = $this->getSellerPromotionPlan();
+        $country = $this->getSellerCountry();
         $subtotal = $this->subtotal;
         $finalAmount = $this->totalAmount;
         $user = Auth::user();
-        $currency = $user->country?->currency ?? 'NGN';
+        $currency = $country->currency ?? 'NGN';
         $reference = 'PROM-' . strtoupper(Str::random(12));
 
         $couponCode = null;
@@ -430,10 +425,10 @@ class ListingView extends Component
         $totalAchievedViews = $promotions->where('type', 'views')->sum('achieved_count');
 
         // 6. Pricing Plan & Seller Country
-        $promotionPlan = $this->getSellerPromotionPlan();
+        $sellerCountry = $this->getSellerCountry();
         $user = Auth::user();
-        $currencySymbol = $user->country?->currency_symbol ?? '₦';
-        $countryName = $user->country?->name ?? 'Default Region';
+        $currencySymbol = $sellerCountry->currency_symbol ?? '₦';
+        $countryName = $sellerCountry->name ?? 'Default Region';
 
         // 7. Approval & Overall Listing Status
         $approvalStatus = $this->listing->latestModeration?->status ?? 'pending';
@@ -450,7 +445,8 @@ class ListingView extends Component
             'ongoingPromotions' => $ongoingPromotions,
             'totalAchievedClicks' => $totalAchievedClicks,
             'totalAchievedViews' => $totalAchievedViews,
-            'promotionPlan' => $promotionPlan,
+            'sellerCountry' => $sellerCountry,
+            'promotionPlan' => $sellerCountry,
             'currencySymbol' => $currencySymbol,
             'countryName' => $countryName,
             'approvalStatus' => $approvalStatus,

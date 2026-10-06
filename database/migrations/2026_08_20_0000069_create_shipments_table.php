@@ -10,6 +10,7 @@ return new class extends Migration {
         if (! Schema::hasTable('shipments')) {
             Schema::create('shipments', function (Blueprint $table) {
                 $table->id();
+                $table->string('slug')->nullable()->unique();
                 $table->foreignId('sender_id')->nullable()->constrained('users')->nullOnDelete();
                 $table->foreignId('receiver_id')->nullable()->constrained('users')->nullOnDelete();
                 $table->string('provider_name')->nullable();
@@ -41,6 +42,7 @@ return new class extends Migration {
                 $table->timestamp('dispatched_at')->nullable();
                 $table->timestamp('delivered_at')->nullable();
                 $table->text('notes')->nullable();
+                $table->text('evidence')->nullable();
                 $table->timestamps();
                 $table->index('tracking_number');
             });

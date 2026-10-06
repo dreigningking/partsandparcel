@@ -62,6 +62,29 @@
     </div>
   @endif
 
+  @if(Auth::check() && Auth::id() === $listing->user_id)
+    <div class="mb-5 p-4 rounded-2xl bg-gradient-to-r from-pp-50 via-white to-pp-50/70 border border-pp-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-pp-600 text-white grid place-items-center text-sm shrink-0 shadow-xs">
+          <i class="fas fa-bullhorn"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-black text-slate-900">Owner Advertising &amp; Promotion Rates</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-pp-100 text-pp-800 uppercase">{{ $activeCountry->name ?? 'Nigeria' }}</span>
+          </div>
+          <p class="text-[11px] text-slate-600 mt-0.5">
+            Drive targeted buyers to this listing at <strong>{{ $activeCountry->currency_symbol }}{{ number_format($activeCountry->clicks, 2) }} / click</strong> (CPC) or <strong>{{ $activeCountry->currency_symbol }}{{ number_format($activeCountry->views, 4) }} / view</strong> (Impressions).
+          </p>
+        </div>
+      </div>
+      <a href="{{ route('mylisting.view', $listing->id) }}" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 shrink-0 self-start sm:self-auto cursor-pointer">
+        <i class="fas fa-bolt text-amber-300"></i>
+        <span>Promote in Seller Portal →</span>
+      </a>
+    </div>
+  @endif
+
   <section class="grid lg:grid-cols-[1.7fr_.95fr_.8fr] gap-6">
 
     <!-- MEDIA GALLERY SECTION -->

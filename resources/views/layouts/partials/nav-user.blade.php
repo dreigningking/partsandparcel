@@ -39,11 +39,6 @@
                 <span class="text-base shrink-0">📄</span>
                 <span class="label">Invoices</span>
             </a>
-            <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl {{ Route::is('shipments*') ? 'bg-pp-50 text-pp-700 font-extrabold shadow-2xs' : 'hover:bg-slate-50 text-slate-600 hover:text-slate-900 font-semibold' }} text-xs transition"
-                href="{{ route('shipments') }}">
-                <span class="text-base shrink-0">📦</span>
-                <span class="label">Shipments</span>
-            </a>
         </div>
 
         <!-- 2. BUYING ACCORDION (COLLAPSED BY DEFAULT) -->

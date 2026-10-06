@@ -48,7 +48,6 @@
                         request()->routeIs('admin.discussions*') ||
                         request()->routeIs('admin.promotions*') ||
                         request()->routeIs('admin.coupons*') ||
-                        request()->routeIs('admin.shipments*') ||
                         request()->routeIs('admin.invoices*');
     @endphp
     <div>
@@ -134,14 +133,6 @@
                 @if($activeCouponsCount > 0)
                     <span class="label ml-auto text-[10px] bg-emerald-100 text-emerald-700 rounded-full px-2 font-bold">{{ $activeCouponsCount }}</span>
                 @endif
-            </a>
-
-            <!-- Shipments & Tracking (AdminShipments) -->
-            <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.shipments*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
-                href="{{ route('admin.shipments') }}"
-            >
-                ⇢ <span class="label">Shipments &amp; Tracking</span>
             </a>
 
             <!-- Invoices (AdminInvoices) -->
@@ -317,14 +308,6 @@
                 href="{{ route('admin.settings.subscription-plans') }}"
             >
                 💳 <span class="label">Subscription Plans</span>
-            </a>
-
-            <!-- Promotion Plans (AdminPromotionPlans) -->
-            <a
-                class="nav flex items-center gap-3 p-2.5 rounded-xl {{ request()->routeIs('admin.settings.promotion-plans*') ? 'bg-pp-50 text-pp-700 font-bold' : 'hover:bg-slate-50 text-slate-600' }} text-sm transition"
-                href="{{ route('admin.settings.promotion-plans') }}"
-            >
-                ⚡ <span class="label">Promotion Plans</span>
             </a>
 
             <!-- Staff Accounts (AdminStaff) -->

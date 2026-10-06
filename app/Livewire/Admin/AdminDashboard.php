@@ -76,7 +76,7 @@ class AdminDashboard extends Component
         $oldestDisputeDays = $oldestDispute ? $oldestDispute->created_at->diffInDays(now()) : 0;
 
         $pendingSettlementsCount = Settlement::where('status', 'pending')->count();
-        $pendingSettlementsAmount = Settlement::where('status', 'pending')->sum('net_amount') ?: 0;
+        $pendingSettlementsAmount = Settlement::where('status', 'pending')->sum('amount') ?: 0;
 
         // 4. Marketplace Metrics
         $activeListings = Listing::where('status', 'active')->count();

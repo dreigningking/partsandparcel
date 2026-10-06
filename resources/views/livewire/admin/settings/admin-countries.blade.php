@@ -63,36 +63,38 @@
     </div>
 
     <!-- COUNTRIES TABLE -->
-    <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-soft">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-soft overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 uppercase font-black text-[10px] tracking-wider">
+            <table class="min-w-full text-left text-xs divide-y divide-slate-100 dark:divide-slate-800">
+                <thead class="bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
                     <tr>
-                        <th class="p-4">Country</th>
-                        <th class="p-4 text-center">Code</th>
-                        <th class="p-4">Phone Code</th>
-                        <th class="p-4">Currency</th>
-                        <th class="p-4">Timezone</th>
-                        <th class="p-4">Gateways</th>
-                        <th class="p-4 text-center">States</th>
-                        <th class="p-4 text-center">Status</th>
-                        <th class="p-4 text-center">Default</th>
-                        <th class="p-4 text-right">Actions</th>
+                        <th class="px-4 py-3.5 min-w-[300px]">Country</th>
+                        <th class="px-4 py-3.5 text-center">Code</th>
+                        <th class="px-4 py-3.5">Phone Code</th>
+                        <th class="px-4 py-3.5">Currency</th>
+                        <th class="px-4 py-3.5 text-right">Cost / View</th>
+                        <th class="px-4 py-3.5 text-right">Cost / Click</th>
+                        <th class="px-4 py-3.5">Timezone</th>
+                        <th class="px-4 py-3.5">Gateways</th>
+                        <th class="px-4 py-3.5 text-center">States</th>
+                        <th class="px-4 py-3.5 text-center">Status</th>
+                        <th class="px-4 py-3.5 text-center">Default</th>
+                        <th class="px-4 py-3.5 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60 text-slate-700 dark:text-slate-300">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/50">
                     @forelse ($countries as $country)
-                        <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-700/30 transition">
+                        <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
                             <!-- NAME -->
-                            <td class="p-4">
+                            <td class="px-4 py-3.5 min-w-[300px]">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-xl bg-pp-50 text-pp-700 border border-pp-200 font-black text-xs grid place-items-center uppercase shadow-2xs">
+                                    <div class="w-9 h-9 rounded-xl bg-pp-50 dark:bg-pp-950/60 text-pp-700 dark:text-pp-300 border border-pp-200 dark:border-pp-800/60 font-black text-xs grid place-items-center uppercase shadow-2xs shrink-0">
                                         {{ $country->code }}
                                     </div>
                                     <div>
                                         <b class="font-extrabold text-slate-900 dark:text-white block">{{ $country->name }}</b>
                                         @if ($country->is_default)
-                                            <span class="inline-flex items-center gap-1 text-[9px] font-black uppercase text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded">
+                                            <span class="inline-flex items-center gap-1 text-[9px] font-black uppercase text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
                                                 <i class="fas fa-check-circle text-[8px]"></i> Primary Default
                                             </span>
                                         @endif
@@ -101,51 +103,61 @@
                             </td>
 
                             <!-- CODE -->
-                            <td class="p-4 text-center font-mono font-bold text-slate-900 dark:text-white">
+                            <td class="px-4 py-3.5 text-center font-mono font-bold text-slate-900 dark:text-white">
                                 {{ $country->code }}
                             </td>
 
                             <!-- PHONE CODE -->
-                            <td class="p-4 font-mono font-bold text-slate-600 dark:text-slate-400">
+                            <td class="px-4 py-3.5 font-mono font-bold text-slate-600 dark:text-slate-400">
                                 {{ $country->phone_code ?: '—' }}
                             </td>
 
                             <!-- CURRENCY -->
-                            <td class="p-4">
+                            <td class="px-4 py-3.5">
                                 <span class="font-extrabold text-slate-900 dark:text-white">{{ $country->currency }}</span>
-                                <span class="text-slate-400 ml-1">({{ $country->currency_symbol }})</span>
+                                <span class="text-slate-400 dark:text-slate-500 ml-1">({{ $country->currency_symbol }})</span>
+                            </td>
+
+                            <!-- COST / VIEW -->
+                            <td class="px-4 py-3.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                                <span class="text-slate-400 text-[10px]">{{ $country->currency_symbol }}</span>{{ number_format((float) ($country->views ?? 0), 4) }}
+                            </td>
+
+                            <!-- COST / CLICK -->
+                            <td class="px-4 py-3.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                                <span class="text-slate-400 text-[10px]">{{ $country->currency_symbol }}</span>{{ number_format((float) ($country->clicks ?? 0), 2) }}
                             </td>
 
                             <!-- TIMEZONE -->
-                            <td class="p-4 text-slate-600 dark:text-slate-400 font-medium">
+                            <td class="px-4 py-3.5 text-slate-600 dark:text-slate-400 font-medium">
                                 {{ $country->timezone ?: '—' }}
                             </td>
 
                             <!-- GATEWAYS -->
-                            <td class="p-4">
+                            <td class="px-4 py-3.5">
                                 @if (!empty($country->payment_gateway))
                                     <div class="flex flex-wrap gap-1">
                                         @foreach ((array) $country->payment_gateway as $gw)
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-pp-50 text-pp-700 border border-pp-200">
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-pp-50 dark:bg-pp-950/60 text-pp-700 dark:text-pp-300 border border-pp-200 dark:border-pp-800/60">
                                                 {{ $gw }}
                                             </span>
                                         @endforeach
                                     </div>
                                 @else
-                                    <span class="text-slate-400 italic">None</span>
+                                    <span class="text-slate-400 dark:text-slate-500 italic">None</span>
                                 @endif
                             </td>
 
                             <!-- STATES -->
-                            <td class="p-4 text-center">
+                            <td class="px-4 py-3.5 text-center">
                                 <div class="inline-flex items-center gap-1.5">
-                                    <span class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 font-extrabold text-[11px] text-slate-800 dark:text-slate-200">
+                                    <span class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 font-extrabold text-[11px] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                                         {{ $country->states_count }} states
                                     </span>
                                     <button
                                         type="button"
                                         wire:click="syncStates({{ $country->id }})"
-                                        class="w-6 h-6 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-pp-600 transition grid place-items-center"
+                                        class="w-6 h-6 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-pp-600 transition grid place-items-center"
                                         title="Re-sync states from GeographyService"
                                     >
                                         <i class="fas fa-rotate text-[10px]"></i>
@@ -154,11 +166,11 @@
                             </td>
 
                             <!-- STATUS -->
-                            <td class="p-4 text-center">
+                            <td class="px-4 py-3.5 text-center">
                                 <button
                                     type="button"
                                     wire:click="toggleActive({{ $country->id }})"
-                                    class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase transition cursor-pointer {{ $country->is_active ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' }}"
+                                    class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase transition cursor-pointer {{ $country->is_active ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200' }}"
                                     title="Click to toggle status"
                                 >
                                     <i class="fas fa-circle text-[8px] mr-1"></i>
@@ -167,9 +179,9 @@
                             </td>
 
                             <!-- DEFAULT -->
-                            <td class="p-4 text-center">
+                            <td class="px-4 py-3.5 text-center">
                                 @if ($country->is_default)
-                                    <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-black text-[10px] uppercase">
+                                    <span class="px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 font-black text-[10px] uppercase">
                                         YES
                                     </span>
                                 @else
@@ -184,12 +196,12 @@
                             </td>
 
                             <!-- ACTIONS -->
-                            <td class="p-4 text-right">
+                            <td class="px-4 py-3.5 text-right">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <button
                                         type="button"
                                         wire:click="openEdit({{ $country->id }})"
-                                        class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1"
+                                        class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer flex items-center gap-1"
                                     >
                                         <i class="fas fa-pencil-alt text-[10px]"></i> Edit
                                     </button>
@@ -198,7 +210,7 @@
                                             type="button"
                                             wire:click="deleteCountry({{ $country->id }})"
                                             wire:confirm="Are you sure you want to delete country '{{ $country->name }}' and its states?"
-                                            class="px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                                            class="px-2.5 py-1.5 rounded-lg border border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 transition cursor-pointer"
                                             title="Delete country"
                                         >
                                             <i class="fas fa-trash-alt text-[10px]"></i>
@@ -209,7 +221,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="p-8 text-center text-slate-400 font-medium">
+                            <td colspan="12" class="p-8 text-center text-slate-400 dark:text-slate-500 font-medium">
                                 No countries match your search query. Click "+ Add New Country" to create one.
                             </td>
                         </tr>
@@ -316,6 +328,53 @@
                         />
                         <p class="text-[10px] text-slate-400">Standard PHP timezone identifier (e.g. Africa/Lagos, America/New_York)</p>
                         @error('timezone') <span class="text-rose-600 text-[11px] font-semibold block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <!-- AD PROMOTION RATES (VIEWS & CLICKS) -->
+                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 space-y-3">
+                        <div>
+                            <h4 class="font-black text-slate-900 dark:text-white text-xs flex items-center gap-1.5">
+                                <i class="fas fa-bullhorn text-pp-600"></i>
+                                <span>Promotion &amp; Advertising Rates</span>
+                            </h4>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Define unit pricing charged to sellers in this country when purchasing catalog views or CPC clicks.</p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="font-bold text-slate-700 dark:text-slate-300 block text-xs">Cost per View / Impression</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-2.5 text-xs font-bold text-slate-400">{{ $currency_symbol ?: '₦' }}</span>
+                                    <input
+                                        type="number"
+                                        step="0.0001"
+                                        min="0"
+                                        wire:model="views"
+                                        placeholder="0.0050"
+                                        class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-mono font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-pp-500 transition"
+                                    />
+                                </div>
+                                <p class="text-[10px] text-slate-400">4 decimal precision (e.g. 0.0050, 2.5000)</p>
+                                @error('views') <span class="text-rose-600 text-[11px] font-semibold block">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="space-y-1">
+                                <label class="font-bold text-slate-700 dark:text-slate-300 block text-xs">Cost per Click (CPC)</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-2.5 text-xs font-bold text-slate-400">{{ $currency_symbol ?: '₦' }}</span>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        wire:model="clicks"
+                                        placeholder="20.00"
+                                        class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 font-mono font-bold text-xs text-slate-900 dark:text-white outline-none focus:border-pp-500 transition"
+                                    />
+                                </div>
+                                <p class="text-[10px] text-slate-400">2 decimal precision (e.g. 20.00, 50.00)</p>
+                                @error('clicks') <span class="text-rose-600 text-[11px] font-semibold block">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
                     </div>
 
                     <!-- PAYMENT GATEWAYS -->

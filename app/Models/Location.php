@@ -95,12 +95,15 @@ class Location extends Model
 
     public function getVerificationStatusAttribute(): string
     {
+        if ($this->moderation) {
+            return $this->moderation->status === 'approved' ? 'verified' : $this->moderation->status;
+        }
+
         if (empty($this->utility_bill_path)) {
             return 'unverified';
         }
 
-        $status = $this->moderation?->status ?? 'pending';
-        return $status === 'approved' ? 'verified' : $status;
+        return 'pending';
     }
 
     public function getIsVerifiedAttribute(): bool
@@ -138,5 +141,14 @@ class Location extends Model
     public function isRejected(): bool
     {
         return $this->verification_status === 'rejected';
+    }
+
+    public function getUtilityBillUrlAttribute(): ?string
+    {
+        if (! $this->utility_bill_path) {
+            return null;
+        }
+
+        return str_starts_with($this->utility_bill_path, 'http') ? $this->utility_bill_path : asset('storage/' . $this->utility_bill_path);
     }
 }

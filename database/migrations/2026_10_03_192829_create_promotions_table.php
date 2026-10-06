@@ -11,18 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasTable('promotion_plans')) {
-            Schema::create('promotion_plans', function (Blueprint $table) {
-                $table->id();
-                $table->string('name');
-                $table->string('slug')->nullable();
-                $table->foreignId('country_id')->nullable()->constrained('countries')->nullOnDelete();
-                $table->decimal('views', 10, 4)->default(0.0000); //cost of views
-                $table->decimal('clicks', 10, 2)->default(0.00); //cost of clicks
-                $table->timestamps();
-            });
-        }
-
         if (! Schema::hasTable('promotions')) {
             Schema::create('promotions', function (Blueprint $table) {
                 $table->id();
@@ -61,6 +49,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('coupons');
         Schema::dropIfExists('promotions');
-        Schema::dropIfExists('promotion_plans');
     }
 };

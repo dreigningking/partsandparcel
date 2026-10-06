@@ -82,9 +82,8 @@
                         @else
                             <th class="py-3 px-4">Settlement # &amp; Inv</th>
                             <th class="py-3 px-4">Merchant</th>
-                            <th class="py-3 px-4">Gross</th>
-                            <th class="py-3 px-4">Commission</th>
-                            <th class="py-3 px-4">Net Amount</th>
+                            <th class="py-3 px-4">Payment Ref</th>
+                            <th class="py-3 px-4">Amount</th>
                             <th class="py-3 px-4">Status</th>
                             <th class="py-3 px-4 text-right">Actions</th>
                         @endif
@@ -128,19 +127,22 @@
                                 </td>
                             @else
                                 <td class="py-3.5 px-4 font-mono font-extrabold text-slate-900 dark:text-white">
-                                    #SET-{{ $row->id }} ({{ $row->invoice?->invoice_number }})
+                                    #SET-{{ $row->id }}
+                                    @if($row->invoice)
+                                        <span class="text-xs text-slate-400 block font-normal">({{ $row->invoice->invoice_number }})</span>
+                                    @endif
                                 </td>
                                 <td class="py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200">
                                     {{ $row->seller?->name }}
+                                    @if($row->seller?->business_name)
+                                        <span class="text-xs text-slate-400 block font-normal">{{ $row->seller->business_name }}</span>
+                                    @endif
                                 </td>
-                                <td class="py-3.5 px-4 text-slate-700 dark:text-slate-300">
-                                    ₦{{ number_format($row->gross_amount, 2) }}
-                                </td>
-                                <td class="py-3.5 px-4 text-slate-500">
-                                    -₦{{ number_format($row->commission, 2) }}
+                                <td class="py-3.5 px-4 font-mono text-xs text-slate-600 dark:text-slate-400">
+                                    {{ $row->payment?->reference ?? '—' }}
                                 </td>
                                 <td class="py-3.5 px-4 font-extrabold text-emerald-600">
-                                    ₦{{ number_format($row->net_amount, 2) }}
+                                    {{ $row->currency ?: 'NGN' }} {{ number_format($row->amount, 2) }}
                                 </td>
                                 <td class="py-3.5 px-4">
                                     <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider {{ $row->status === 'settled' ? 'bg-emerald-100 text-emerald-800' : ($row->status === 'eligible' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800') }}">

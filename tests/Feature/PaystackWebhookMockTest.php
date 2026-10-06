@@ -31,7 +31,7 @@ class PaystackWebhookMockTest extends TestCase
     {
         parent::setUp();
         // Fallback secret used by PaystackService when env is testing
-        $this->secret = config('services.paystack.secret_key') ?: 'test_paystack_secret';
+        $this->secret = config('services.paystack.secret') ?: 'test_paystack_secret';
     }
 
     /**

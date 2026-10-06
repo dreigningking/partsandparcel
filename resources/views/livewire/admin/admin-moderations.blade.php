@@ -735,11 +735,11 @@
 
                                 <div class="pt-2">
                                     <a 
-                                        href="{{ route('admin.listings.show', $target->id) }}" 
+                                        href="{{ route('admin.listings.show', $target) }}" 
                                         target="_blank"
                                         class="inline-flex items-center gap-1.5 text-xs font-bold text-pp-600 hover:text-pp-700 dark:text-pp-400 hover:underline"
                                     >
-                                        <span>Open Full Listing Property Page</span>
+                                        <span>Open Full Listing Page</span>
                                         <i class="fas fa-external-link-alt text-[10px]"></i>
                                     </a>
                                 </div>

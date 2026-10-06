@@ -118,10 +118,7 @@ class EscrowAndPaymentTest extends TestCase
         $this->assertDatabaseHas('settlements', [
             'seller_id' => $this->seller->id,
             'invoice_id' => $invoice->id,
-            'gross_amount' => 10000.00,
-            'commission' => 500.00,
-            'refunds' => 0.00,
-            'net_amount' => 9500.00,
+            'amount' => 9500.00,
             'status' => 'pending',
         ]);
     }
@@ -307,8 +304,7 @@ class EscrowAndPaymentTest extends TestCase
         $refundJob->handle($escrowService, app(PaystackService::class), app(FlutterwaveService::class));
 
         $settlement->refresh();
-        $this->assertEquals(30000.00, (float) $settlement->refunds);
-        $this->assertEquals(0.00, (float) $settlement->net_amount);
+        $this->assertEquals(0.00, (float) $settlement->amount);
     }
 
     public function test_dispute_escalation_and_admin_resolution(): void

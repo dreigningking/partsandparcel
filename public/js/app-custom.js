@@ -2,8 +2,26 @@
 // PARTS & PARCEL — SHARED CUSTOM JS UTILITIES
 // ==========================================
 
-// 1. MEGA MENU TRIGGER LOGIC (GLOBAL EVENT DELEGATION & HOVER SUPPORT)
+// 1. MEGA MENU TRIGGER LOGIC (INTENTIONAL HOVER REST DELAY & EVENT DELEGATION)
+let megaMenuOpenTimeout = null;
 let megaMenuCloseTimeout = null;
+let currentHoveredTrigger = null;
+const MEGA_MENU_HOVER_DELAY = 500; // Require 1/2 second hover rest before displaying
+
+function clearMegaMenuOpenTimer() {
+    if (megaMenuOpenTimeout) {
+        clearTimeout(megaMenuOpenTimeout);
+        megaMenuOpenTimeout = null;
+    }
+    currentHoveredTrigger = null;
+}
+
+function clearMegaMenuCloseTimer() {
+    if (megaMenuCloseTimeout) {
+        clearTimeout(megaMenuCloseTimeout);
+        megaMenuCloseTimeout = null;
+    }
+}
 
 function openMegaMenuForTrigger(trigger) {
     if (!trigger) return;
@@ -25,39 +43,79 @@ function openMegaMenuForTrigger(trigger) {
 }
 
 function closeAllMegaMenus() {
+    clearMegaMenuOpenTimer();
+    clearMegaMenuCloseTimer();
     document.querySelectorAll('.mega-menu').forEach(m => m.classList.remove('open'));
     document.querySelectorAll('.nav-trigger').forEach(t => t.classList.remove('open'));
 }
 
-// Hover support on desktop
+// Hover support on desktop with 1-second rest intent delay
 document.addEventListener('mouseover', (e) => {
     const trigger = e.target.closest('.nav-trigger');
     const menu = e.target.closest('.mega-menu');
+
     if (trigger) {
-        if (megaMenuCloseTimeout) clearTimeout(megaMenuCloseTimeout);
-        openMegaMenuForTrigger(trigger);
+        clearMegaMenuCloseTimer();
+
+        // If cursor is still inside the same trigger (e.g. moved over child icon or text), do not reset timer
+        if (currentHoveredTrigger === trigger) {
+            return;
+        }
+
+        clearMegaMenuOpenTimer();
+        currentHoveredTrigger = trigger;
+
+        // If this menu is already open, keep it open without restarting timer
+        if (trigger.classList.contains('open')) {
+            return;
+        }
+
+        // Wait 1 second of resting on the trigger before popping open the megamenu
+        megaMenuOpenTimeout = setTimeout(() => {
+            openMegaMenuForTrigger(trigger);
+            megaMenuOpenTimeout = null;
+        }, MEGA_MENU_HOVER_DELAY);
     } else if (menu) {
-        if (megaMenuCloseTimeout) clearTimeout(megaMenuCloseTimeout);
+        clearMegaMenuCloseTimer();
+        clearMegaMenuOpenTimer();
     }
 });
 
 document.addEventListener('mouseout', (e) => {
     const trigger = e.target.closest('.nav-trigger');
     const menu = e.target.closest('.mega-menu');
+
+    // If leaving a trigger before the 1 second delay finishes, abort opening immediately
+    if (trigger && (!e.relatedTarget || !trigger.contains(e.relatedTarget))) {
+        if (currentHoveredTrigger === trigger) {
+            clearMegaMenuOpenTimer();
+        }
+    }
+
     if (trigger || menu) {
-        if (megaMenuCloseTimeout) clearTimeout(megaMenuCloseTimeout);
+        clearMegaMenuCloseTimer();
         megaMenuCloseTimeout = setTimeout(() => {
             const hoveredTrigger = document.querySelector('.nav-trigger:hover');
             const hoveredMenu = document.querySelector('.mega-menu:hover');
             if (!hoveredTrigger && !hoveredMenu) {
                 closeAllMegaMenus();
             }
-        }, 200);
+        }, 250);
     }
 });
 
+// Cancel pending open and close any open mega menu when scrolling
+window.addEventListener('scroll', () => {
+    clearMegaMenuOpenTimer();
+    if (document.querySelector('.mega-menu.open')) {
+        closeAllMegaMenus();
+    }
+}, { passive: true });
+
 // Click support
 document.addEventListener('click', (e) => {
+    clearMegaMenuOpenTimer();
+
     const chevron = e.target.closest('.nav-chevron');
     if (chevron) {
         e.preventDefault();

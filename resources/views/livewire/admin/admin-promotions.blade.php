@@ -229,7 +229,7 @@
                                         </div>
                                         <div class="min-w-0 max-w-xs">
                                             <a
-                                                href="{{ route('admin.listings.show', ['property' => $promotion->listing->id]) }}"
+                                                href="{{ route('admin.listings.show', ['listing' => $promotion->listing]) }}"
                                                 class="font-extrabold text-slate-900 dark:text-white hover:text-pp-600 transition truncate block"
                                                 title="{{ $promotion->listing->item?->name ?? $promotion->listing->title }}"
                                             >
@@ -430,7 +430,7 @@
                                     </div>
                                 </div>
                                 <a
-                                    href="{{ route('admin.listings.show', ['property' => $selectedPromotion->listing->id]) }}"
+                                    href="{{ route('admin.listings.show', ['listing' => $selectedPromotion->listing]) }}"
                                     class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                                 >
                                     Open Listing

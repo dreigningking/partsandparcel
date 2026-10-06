@@ -75,11 +75,12 @@ class AdminPayouts extends Component
                 ->paginate(12);
         } else {
             $items = Settlement::query()
-                ->with(['seller', 'invoice'])
+                ->with(['seller', 'invoice', 'payment'])
                 ->when($this->search !== '', function (Builder $query) {
                     $query->where(function (Builder $inner) {
                         $inner->whereHas('seller', fn ($q) => $q->where('name', 'like', '%' . $this->search . '%'))
-                            ->orWhereHas('invoice', fn ($q) => $q->where('invoice_number', 'like', '%' . $this->search . '%'));
+                            ->orWhereHas('invoice', fn ($q) => $q->where('invoice_number', 'like', '%' . $this->search . '%'))
+                            ->orWhereHas('payment', fn ($q) => $q->where('reference', 'like', '%' . $this->search . '%'));
                     });
                 })
                 ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
@@ -88,7 +89,7 @@ class AdminPayouts extends Component
         }
 
         $totalPaidOut = Payout::where('status', 'paid')->sum('amount') ?: 0;
-        $pendingSettlementsAmount = Settlement::whereIn('status', ['pending', 'eligible'])->sum('net_amount') ?: 0;
+        $pendingSettlementsAmount = Settlement::whereIn('status', ['pending', 'eligible'])->sum('amount') ?: 0;
 
         return view('livewire.admin.admin-payouts', [
             'items' => $items,

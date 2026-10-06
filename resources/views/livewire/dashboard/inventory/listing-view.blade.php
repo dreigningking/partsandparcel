@@ -684,7 +684,7 @@
                   </div>
                   <div class="pt-2 border-t border-slate-200/60 flex items-baseline justify-between text-xs">
                     <span class="text-slate-500 text-[11px]">Unit Rate:</span>
-                    <span class="font-extrabold text-slate-900">{{ $currencySymbol }}{{ number_format($promotionPlan->clicks, 2) }} / click</span>
+                    <span class="font-extrabold text-slate-900">{{ $currencySymbol }}{{ number_format($sellerCountry->clicks, 2) }} / click</span>
                   </div>
                 </button>
 
@@ -708,7 +708,7 @@
                   </div>
                   <div class="pt-2 border-t border-slate-200/60 flex items-baseline justify-between text-xs">
                     <span class="text-slate-500 text-[11px]">Unit Rate:</span>
-                    <span class="font-extrabold text-slate-900">{{ $currencySymbol }}{{ number_format($promotionPlan->views, 4) }} / view</span>
+                    <span class="font-extrabold text-slate-900">{{ $currencySymbol }}{{ number_format($sellerCountry->views, 4) }} / view</span>
                   </div>
                 </button>
               </div>
@@ -878,7 +878,7 @@
                 <div class="flex items-center justify-between">
                   <span class="text-slate-500">Unit Price:</span>
                   <span class="font-bold text-slate-800">
-                    {{ $currencySymbol }}{{ $promoType === 'clicks' ? number_format($promotionPlan->clicks, 2) : number_format($promotionPlan->views, 4) }}
+                    {{ $currencySymbol }}{{ $promoType === 'clicks' ? number_format($sellerCountry->clicks, 2) : number_format($sellerCountry->views, 4) }}
                   </span>
                 </div>
 

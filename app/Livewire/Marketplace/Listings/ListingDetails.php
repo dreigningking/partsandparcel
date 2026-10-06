@@ -3,6 +3,7 @@
 namespace App\Livewire\Marketplace\Listings;
 
 use App\Models\CartItem;
+use App\Models\Country;
 use App\Models\Discussion;
 use App\Models\Item;
 use App\Models\Listing;
@@ -220,8 +221,32 @@ class ListingDetails extends Component
         }
     }
 
+    public function getActiveCountry(): Country
+    {
+        $user = Auth::user();
+        $country = $user?->country ?? Country::find($user?->country_id) ?? $user?->primaryLocation?->state?->country;
+
+        if (! $country) {
+            $country = $this->listing->seller?->country ?? Country::where('code', 'NG')->first() ?? Country::where('is_default', true)->first();
+        }
+
+        if (! $country) {
+            $country = Country::first() ?? new Country([
+                'name' => 'Nigeria',
+                'currency' => 'NGN',
+                'currency_symbol' => '₦',
+                'views' => 0.0050,
+                'clicks' => 20.00,
+            ]);
+        }
+
+        return $country;
+    }
+
     public function render()
     {
-        return view('livewire.marketplace.listings.listing-details');
+        return view('livewire.marketplace.listings.listing-details', [
+            'activeCountry' => $this->getActiveCountry(),
+        ]);
     }
 }

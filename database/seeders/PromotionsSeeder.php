@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Country;
 use App\Models\Listing;
 use App\Models\Promotion;
-use App\Models\PromotionPlan;
 use Illuminate\Database\Seeder;
 
 class PromotionsSeeder extends Seeder
@@ -13,17 +12,12 @@ class PromotionsSeeder extends Seeder
     public function run(): void
     {
         $nigeria = Country::where('code', 'NG')->first() ?? Country::where('is_default', true)->first();
-
-        // 1. Create Promotion Plan for Nigeria (views 0.0050 per view, clicks 20 naira per click)
-        $plan = PromotionPlan::updateOrCreate(
-            ['slug' => 'nigeria-standard-promotion-plan'],
-            [
-                'name' => 'Nigeria Standard PPC & Impression Plan',
-                'country_id' => $nigeria?->id,
+        if ($nigeria) {
+            $nigeria->update([
                 'views' => 0.0050,
                 'clicks' => 20.00,
-            ]
-        );
+            ]);
+        }
 
         // 2. Active Promotions for Published Listings
         $listings = Listing::where('is_published', true)->where('is_active', true)->get();

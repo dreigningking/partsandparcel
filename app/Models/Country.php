@@ -20,6 +20,8 @@ class Country extends Model
         'is_active',
         'is_default',
         'payment_gateway',
+        'views',
+        'clicks',
     ];
     
 
@@ -29,11 +31,18 @@ class Country extends Model
             'is_active' => 'boolean',
             'is_default' => 'boolean',
             'payment_gateway' => 'array',
+            'views' => 'decimal:4',
+            'clicks' => 'decimal:2',
         ];
     }
 
     public function states(): HasMany
     {
         return $this->hasMany(State::class);
+    }
+
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
     }
 }

@@ -1,4 +1,4 @@
-<x-admin.page title="Advertisements" description="Manage advertisement banner requests, view uploaded payment receipts, and approve placements.">
+<div title="Advertisements" description="Manage advertisement banner requests, view uploaded payment receipts, and approve placements.">
     @if (session('status'))
         <div class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{{ session('status') }}</div>
     @endif
@@ -229,4 +229,4 @@
             </div>
         </div>
     @endif
-</x-admin.page>
+</div>

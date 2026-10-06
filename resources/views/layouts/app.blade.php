@@ -78,7 +78,7 @@
 
       <!-- ICONS & SHARED CUSTOM CSS -->
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-      <link rel="stylesheet" href="{{ asset('css/app-custom.css') }}">
+      <link rel="stylesheet" href="{{ asset('css/app-custom.css') }}?v={{ file_exists(public_path('css/app-custom.css')) ? filemtime(public_path('css/app-custom.css')) : time() }}">
 
       @livewireStyles
       @stack('styles')
@@ -126,7 +126,7 @@
       @livewireScripts
       
       <!-- SHARED CUSTOM JS -->
-      <script src="{{ asset('js/app-custom.js') }}"></script>
+      <script src="{{ asset('js/app-custom.js') }}?v={{ file_exists(public_path('js/app-custom.js')) ? filemtime(public_path('js/app-custom.js')) : time() }}"></script>
       @stack('scripts')
   </body>
 </html>

@@ -52,9 +52,10 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->morphs('paymentable');
             $table->string('reference')->unique();
-            $table->string('provider')->nullable();
+            $table->string('provider')->nullable(); //paystack, flutterwave
             $table->string('status')->default('pending');
             $table->decimal('amount', 15, 2);
+            $table->decimal('escrow_fee', 15, 2)->default(0.00);
             $table->string('currency', 3)->default('NGN');
             $table->timestamp('paid_at')->nullable();
             $table->json('metadata')->nullable();
@@ -76,11 +77,10 @@ return new class extends Migration {
         Schema::create('settlements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('invoice_id')->constrained('invoices')->cascadeOnDelete();
-            $table->decimal('gross_amount', 15, 2)->default(0);
-            $table->decimal('commission', 15, 2)->default(0);
-            $table->decimal('refunds', 15, 2)->default(0);
-            $table->decimal('net_amount', 15, 2)->default(0);
+            $table->foreignId('invoice_id')->nullable()->constrained('invoices')->cascadeOnDelete();
+            $table->foreignId('payment_id')->nullable()->constrained('payments')->nullOnDelete();
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->string('currency', 3)->default('NGN');
             $table->string('status')->default('pending');
             $table->timestamp('eligible_at')->nullable();
             $table->timestamp('settled_at')->nullable();

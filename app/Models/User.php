@@ -29,6 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
         'bio',
         'is_verified',
+        'suspended_at',
         'gender',
         'notification_preferences',
         'country_id',
@@ -66,6 +67,28 @@ class User extends Authenticatable implements MustVerifyEmail
         return parent::resolveRouteBinding($value, $field);
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if (empty($user->country_id)) {
+                $user->country_id = Country::where('is_default', true)->value('id')
+                    ?? Country::value('id')
+                    ?? Country::firstOrCreate(
+                        ['code' => 'NG'],
+                        [
+                            'name' => 'Nigeria',
+                            'phone_code' => '+234',
+                            'currency' => 'NGN',
+                            'currency_symbol' => '₦',
+                            'timezone' => 'Africa/Lagos',
+                            'is_default' => true,
+                            'is_active' => true,
+                        ]
+                    )->id;
+            }
+        });
+    }
+
     protected $hidden = [
         'password',
         'remember_token',
@@ -75,10 +98,16 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'suspended_at' => 'datetime',
             'password' => 'hashed',
             'is_verified' => 'boolean',
             'notification_preferences' => 'array',
         ];
+    }
+
+    public function isSuspended(): bool
+    {
+        return ! is_null($this->suspended_at);
     }
 
     public function notificationPreference(string $channel): bool
@@ -203,6 +232,110 @@ class User extends Authenticatable implements MustVerifyEmail
     public function settlements(): HasMany
     {
         return $this->hasMany(Settlement::class, 'seller_id');
+    }
+
+    public static function currencySymbol(string $currency): string
+    {
+        return match (strtoupper($currency)) {
+            'NGN' => '₦',
+            'USD' => '$',
+            'GBP' => '£',
+            'EUR' => '€',
+            'GHS' => 'GH₵',
+            'KES' => 'KSh',
+            'ZAR' => 'R',
+            default => $currency,
+        };
+    }
+
+    /**
+     * Get user's earnings from settlements grouped by currency.
+     */
+    public function getEarningsByCurrency(): array
+    {
+        $settlements = $this->settlements()
+            ->select('currency', 'status', \Illuminate\Support\Facades\DB::raw('SUM(amount) as total_amount'), \Illuminate\Support\Facades\DB::raw('COUNT(*) as count'))
+            ->groupBy('currency', 'status')
+            ->get();
+
+        $grouped = [];
+        foreach ($settlements as $s) {
+            $curr = strtoupper($s->currency ?: 'NGN');
+            if (! isset($grouped[$curr])) {
+                $grouped[$curr] = [
+                    'currency' => $curr,
+                    'symbol' => static::currencySymbol($curr),
+                    'total' => 0.0,
+                    'settled' => 0.0,
+                    'eligible' => 0.0,
+                    'pending' => 0.0,
+                    'count' => 0,
+                ];
+            }
+            $amount = (float) $s->total_amount;
+            $grouped[$curr]['total'] += $amount;
+            $grouped[$curr]['count'] += (int) $s->count;
+            if ($s->status === 'settled') {
+                $grouped[$curr]['settled'] += $amount;
+            } elseif ($s->status === 'eligible') {
+                $grouped[$curr]['eligible'] += $amount;
+            } elseif ($s->status === 'pending') {
+                $grouped[$curr]['pending'] += $amount;
+            }
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * Get user's spendings from payments (and direct paid invoices) grouped by currency.
+     */
+    public function getSpendingsByCurrency(): array
+    {
+        $payments = $this->payments()
+            ->whereIn('status', ['successful', 'paid', 'held_in_escrow'])
+            ->select('currency', \Illuminate\Support\Facades\DB::raw('SUM(amount) as total_amount'), \Illuminate\Support\Facades\DB::raw('SUM(escrow_fee) as total_escrow_fee'), \Illuminate\Support\Facades\DB::raw('COUNT(*) as count'))
+            ->groupBy('currency')
+            ->get();
+
+        $grouped = [];
+        foreach ($payments as $p) {
+            $curr = strtoupper($p->currency ?: 'NGN');
+            $grouped[$curr] = [
+                'currency' => $curr,
+                'symbol' => static::currencySymbol($curr),
+                'total' => (float) $p->total_amount,
+                'escrow_fee' => (float) ($p->total_escrow_fee ?? 0),
+                'count' => (int) $p->count,
+            ];
+        }
+
+        $directInvoices = $this->buyerInvoices()
+            ->where('payment_method', 'direct')
+            ->where('status', 'paid')
+            ->whereDoesntHave('payments', function ($q) {
+                $q->whereIn('status', ['successful', 'paid', 'held_in_escrow']);
+            })
+            ->select('currency', \Illuminate\Support\Facades\DB::raw('SUM(total) as total_amount'), \Illuminate\Support\Facades\DB::raw('COUNT(*) as count'))
+            ->groupBy('currency')
+            ->get();
+
+        foreach ($directInvoices as $inv) {
+            $curr = strtoupper($inv->currency ?: 'NGN');
+            if (! isset($grouped[$curr])) {
+                $grouped[$curr] = [
+                    'currency' => $curr,
+                    'symbol' => static::currencySymbol($curr),
+                    'total' => 0.0,
+                    'escrow_fee' => 0.0,
+                    'count' => 0,
+                ];
+            }
+            $grouped[$curr]['total'] += (float) $inv->total_amount;
+            $grouped[$curr]['count'] += (int) $inv->count;
+        }
+
+        return $grouped;
     }
 
     public function payouts(): HasMany

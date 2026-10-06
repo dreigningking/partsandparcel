@@ -118,12 +118,13 @@
                                 {{ $inv->created_at->format('M d, Y') }}
                             </td>
                             <td class="py-3.5 px-4 text-right">
-                                <button
-                                    wire:click="showInvoice({{ $inv->id }})"
-                                    class="px-2.5 py-1 rounded-lg bg-pp-50 hover:bg-pp-100 text-pp-700 dark:bg-pp-950 dark:hover:bg-pp-900 text-xs font-bold transition cursor-pointer"
+                                <a
+                                    href="{{ route('admin.invoices.show', $inv) }}"
+                                    class="px-3 py-1 rounded-lg bg-pp-50 hover:bg-pp-100 text-pp-700 dark:bg-pp-950 dark:hover:bg-pp-900 text-xs font-bold transition inline-flex items-center gap-1"
                                 >
-                                    View
-                                </button>
+                                    <span>Manage</span>
+                                    <span>&rarr;</span>
+                                </a>
                             </td>
                         </tr>
                     @empty

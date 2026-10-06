@@ -82,16 +82,20 @@ class EscrowService
             $commission = (float) $invoice->commission;
             $net = max(0, $gross - $commission);
 
+            // Record escrow fee on payment
+            $payment->updateQuietly([
+                'escrow_fee' => $commission,
+            ]);
+
             Settlement::firstOrCreate(
                 [
                     'invoice_id' => $invoice->id,
                 ],
                 [
                     'seller_id' => $invoice->seller_id,
-                    'gross_amount' => $gross,
-                    'commission' => $commission,
-                    'refunds' => 0.00,
-                    'net_amount' => $net,
+                    'payment_id' => $payment->id,
+                    'amount' => $net,
+                    'currency' => $payment->currency ?? $invoice->currency ?? 'NGN',
                     'status' => 'pending',
                     'eligible_at' => null, // Set when delivery/warranty period begins
                 ]
@@ -241,8 +245,7 @@ class EscrowService
      */
     public function deductRefundFromSettlement(Settlement $settlement, float $refundAmount): Settlement
     {
-        $settlement->refunds = (float) $settlement->refunds + $refundAmount;
-        $settlement->net_amount = max(0, (float) $settlement->gross_amount - (float) $settlement->commission - (float) $settlement->refunds);
+        $settlement->amount = max(0, (float) $settlement->amount - $refundAmount);
         $settlement->save();
 
         return $settlement;

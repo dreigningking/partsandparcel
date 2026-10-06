@@ -69,7 +69,7 @@
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Items requiring urgent attention</p>
             
             <div class="space-y-2.5 mt-5">
-                <a class="flex items-center gap-3 p-3.5 rounded-xl bg-rose-50/80 dark:bg-rose-950/30 border border-rose-100/80 dark:border-rose-900/40 hover:bg-rose-100/70 transition" href="{{ route('disputes') }}">
+                <a class="flex items-center gap-3 p-3.5 rounded-xl bg-rose-50/80 dark:bg-rose-950/30 border border-rose-100/80 dark:border-rose-900/40 hover:bg-rose-100/70 transition" href="{{ route('admin.disputes') }}">
                     <span class="w-9 h-9 rounded-lg bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 grid place-items-center font-bold text-base shrink-0">⚖</span>
                     <div class="flex-1 min-w-0">
                         <b class="text-xs text-slate-900 dark:text-slate-100">{{ $activeDisputesCount }} active {{ \Illuminate\Support\Str::plural('dispute', $activeDisputesCount) }}</b>
@@ -87,7 +87,7 @@
                     <span class="text-slate-400 text-sm font-bold">›</span>
                 </a>
 
-                <a class="flex items-center gap-3 p-3.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/30 border border-blue-100/80 dark:border-blue-900/40 hover:bg-blue-100/70 transition" href="#">
+                <a class="flex items-center gap-3 p-3.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/30 border border-blue-100/80 dark:border-blue-900/40 hover:bg-blue-100/70 transition" href="{{ route('admin.moderations') }}">
                     <span class="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 grid place-items-center font-bold text-base shrink-0">✓</span>
                     <div class="flex-1 min-w-0">
                         <b class="text-xs text-slate-900 dark:text-slate-100">{{ $unverifiedUsersCount }} users awaiting verification</b>
@@ -96,7 +96,7 @@
                     <span class="text-slate-400 text-sm font-bold">›</span>
                 </a>
 
-                <a class="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-100/80 dark:border-emerald-900/40 hover:bg-emerald-100/70 transition" href="{{ route('earnings') }}">
+                <a class="flex items-center gap-3 p-3.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-100/80 dark:border-emerald-900/40 hover:bg-emerald-100/70 transition" href="{{ route('admin.payouts') }}">
                     <span class="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 grid place-items-center font-bold text-base shrink-0">↗</span>
                     <div class="flex-1 min-w-0">
                         <b class="text-xs text-slate-900 dark:text-slate-100">{{ $pendingSettlementsCount }} payout batches pending</b>
