@@ -171,10 +171,10 @@ class Discussion extends Model
         return $this->scopeModerationStatus($query, 'rejected');
     }
 
-    public function scopeInCurrentCountry($query, ?string $countryCode = null)
+    public function scopeInCurrentCountry($query, ?int $countryId = null)
     {
-        $code = strtoupper($countryCode ?? session('current_location.country_code', 'NG'));
-
-        return $query->whereHas('user', fn ($q) => $q->where('country_code', $code));
+        $countryId = $countryId ?? session('current_location.country_id');
+        
+        return $query->whereHas('user', fn ($q) => $q->where('country_id', $countryId));
     }
 }

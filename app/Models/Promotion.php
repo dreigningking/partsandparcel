@@ -18,6 +18,7 @@ class Promotion extends Model
         'user_id',
         'listing_id',
         'type',
+        'target_count',
         'achieved_count',
         'status',
     ];
@@ -26,6 +27,7 @@ class Promotion extends Model
     {
         return [
             'achieved_count' => 'integer',
+            'target_count' => 'integer',
         ];
     }
 

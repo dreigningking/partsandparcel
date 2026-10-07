@@ -318,8 +318,16 @@
                       </span>
                     </div>
                     <div class="flex items-baseline justify-between">
-                      <span class="text-xl font-black">{{ number_format($promo->achieved_count) }}</span>
-                      <span class="text-xs text-amber-200">delivered so far</span>
+                      <span class="text-xl font-black">
+                        {{ number_format($promo->achieved_count) }}
+                        @php
+                          $targetQty = (int) ($promo->target_count ?: ($promo->payments?->metadata['quantity'] ?? 0));
+                        @endphp
+                        @if($targetQty > 0)
+                          <span class="text-xs font-normal text-amber-200">/ {{ number_format($targetQty) }}</span>
+                        @endif
+                      </span>
+                      <span class="text-xs text-amber-200">delivered</span>
                     </div>
                   </div>
                 @endforeach
@@ -598,7 +606,7 @@
                   <div class="flex items-baseline justify-between">
                     <span class="text-2xl font-black text-slate-900">{{ number_format($promo->achieved_count) }}</span>
                     @php
-                      $purchased = (int) ($promo->payments?->metadata['quantity'] ?? 0);
+                      $purchased = (int) ($promo->target_count ?: ($promo->payments?->metadata['quantity'] ?? 0));
                     @endphp
                     @if($purchased > 0)
                       <span class="text-xs text-slate-500 font-semibold">of {{ number_format($purchased) }} target</span>

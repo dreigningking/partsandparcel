@@ -10,9 +10,11 @@ use Livewire\Component;
 class CartCounter extends Component
 {
     public int $cartCount = 0;
+    public string $variant = 'desktop';
 
-    public function mount()
+    public function mount(string $variant = 'desktop'): void
     {
+        $this->variant = $variant;
         $this->updateCount();
     }
 

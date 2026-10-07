@@ -4,7 +4,7 @@
     <div class="relative bg-gradient-to-r from-pp-900 via-pp-800 to-slate-900 text-white pt-14 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-md">
         <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
 
-        <div class="max-w-7xl mx-auto relative z-10 text-center space-y-4">
+        <div class="max-w-[1440px] mx-auto relative z-10 text-center space-y-4">
             <!-- Breadcrumb -->
             <nav class="flex items-center justify-center gap-2 text-xs text-pp-200/80 mb-2">
                 <a href="{{ route('welcome') }}" class="hover:text-white transition">Marketplace</a>
@@ -40,7 +40,7 @@
     </div>
 
     <!-- MAIN CONTENT CONTAINER -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20 space-y-8">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20 space-y-8">
 
         <!-- CATEGORIES FILTER TABS BAR -->
         <div class="bg-white rounded-2xl border border-slate-200 p-2 shadow-soft flex items-center gap-2 overflow-x-auto">

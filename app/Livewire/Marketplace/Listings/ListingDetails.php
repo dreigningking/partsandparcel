@@ -39,9 +39,10 @@ class ListingDetails extends Component
     public function mount(Listing $listing)
     {
         $this->listing = $listing->load([
+            'latestModeration',
             'item.deviceModel.category.parent',
             'item.deviceModel.brand',
-            'item.children',
+            'item.children.listing.latestModeration',
             'item.location',
             'seller.primaryLocation',
             'media',

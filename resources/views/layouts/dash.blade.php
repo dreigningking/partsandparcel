@@ -53,6 +53,10 @@
                 darkMode: 'class',
                 theme: {
                     extend: {
+                        screens: {
+                            'lg': '1025px',
+                            'xl': '1225px',
+                        },
                         colors: {
                             pp: {
                                 50: '#f5f3ff',
@@ -122,7 +126,7 @@
             </div>
         </header>
 
-        <main class="p-4 sm:p-6 lg:p-8 max-w-[1500px] mx-auto">
+        <main class="p-4 sm:p-6 lg:p-8 w-full max-w-[1600px] mx-auto">
             {{$slot}}
         </main>
     </div>

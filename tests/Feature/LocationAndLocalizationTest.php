@@ -99,7 +99,8 @@ class LocationAndLocalizationTest extends TestCase
     public function test_listings_are_scoped_by_current_country(): void
     {
         // Merchant in Nigeria
-        $ngMerchant = User::factory()->create(['country_code' => 'NG']);
+        $nigeria = Country::where('code', 'NG')->first();
+        $ngMerchant = User::factory()->create(['country_id' => $nigeria->id]);
         $ngListing = Listing::create([
             'user_id' => $ngMerchant->id,
             'quantity' => 2,
@@ -108,7 +109,8 @@ class LocationAndLocalizationTest extends TestCase
         ]);
 
         // Merchant in US
-        $usMerchant = User::factory()->create(['country_code' => 'US']);
+        $usa = Country::where('code', 'US')->first();
+        $usMerchant = User::factory()->create(['country_id' => $usa->id]);
         $usListing = Listing::create([
             'user_id' => $usMerchant->id,
             'quantity' => 1,
@@ -117,12 +119,12 @@ class LocationAndLocalizationTest extends TestCase
         ]);
 
         // When browsing from Nigeria
-        $ngResults = Listing::inCurrentCountry('NG')->get();
+        $ngResults = Listing::inCurrentCountry($nigeria->id)->get();
         $this->assertTrue($ngResults->contains($ngListing));
         $this->assertFalse($ngResults->contains($usListing));
 
         // When browsing from US
-        $usResults = Listing::inCurrentCountry('US')->get();
+        $usResults = Listing::inCurrentCountry($usa->id)->get();
         $this->assertTrue($usResults->contains($usListing));
         $this->assertFalse($usResults->contains($ngListing));
     }

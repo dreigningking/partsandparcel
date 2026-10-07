@@ -63,6 +63,7 @@ class ResolveVisitorLocation
 
         // Share globally with all views
         View::share('currentLocation', $currentLocation);
+        View::share('currentCountryId', $currentLocation['country_id']);
         View::share('currentCountryCode', $currentLocation['country_code'] ?? 'NG');
         View::share('currentCountryName', $currentLocation['country_name'] ?? 'Nigeria');
         View::share('currentCurrency', $currentLocation['currency'] ?? 'NGN');

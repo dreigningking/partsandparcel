@@ -178,7 +178,19 @@
 
       <!-- AVAILABILITY, LOCATION, POSTED -->
       <div class="mt-4 space-y-2 text-xs">
-        <p><b>Availability:</b> <span class="text-emerald-600 font-bold">{{ $listing->availableQuantity() }} available</span></p>
+        <p><b>Availability:</b> 
+          @if($listing->isAvailable())
+            <span class="text-emerald-600 font-bold">{{ $listing->availableQuantity() }} available</span>
+          @elseif($listing->availableQuantity() <= 0)
+            <span class="text-rose-600 font-bold">Sold Out</span>
+          @elseif(!$listing->latestModeration || $listing->latestModeration->status === 'pending')
+            <span class="text-amber-600 font-bold">Pending Approval</span>
+          @elseif($listing->latestModeration?->status === 'rejected')
+            <span class="text-rose-600 font-bold">Rejected</span>
+          @else
+            <span class="text-slate-500 font-bold">Unavailable</span>
+          @endif
+        </p>
         <p><b>Location:</b> {{ $location?->city ?? 'Computer Village' }}, {{ $location?->state ?? 'Lagos' }} &nbsp;<span class="text-pp-600 font-bold cursor-pointer">View on map</span></p>
         <p><b>Posted:</b> {{ $listing->created_at->diffForHumans() }}</p>
       </div>
@@ -226,7 +238,7 @@
       @endif
 
       <!-- OFFER ON SPECIFIC COMPONENT (SCRAP ONLY WITH AVAILABLE CHILDREN) -->
-      @if($item?->item_type === 'scrap' && $item?->children()->where('status', 'available')->count() > 0)
+      @if($item?->item_type === 'scrap' && $item?->children->filter(fn ($child) => $child->isAvailable())->isNotEmpty())
         <button type="button" 
                 wire:click="$dispatch('open-make-offer', { listing_id: {{ $listing->id }}, seller_id: {{ $seller->id }}, seller_name: '{{ addslashes($seller->business_name ?? $seller->name) }}', component_mode: true })" 
                 class="w-full h-11 mt-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs">
@@ -504,8 +516,8 @@
                         @endif
                       </td>
                       <td class="p-3">
-                        <span class="font-extrabold text-[11px] {{ $child->status === 'available' ? 'text-emerald-600' : 'text-slate-400' }}">
-                          {{ $child->status === 'available' ? '✓ Available' : 'Sold' }}
+                        <span class="font-extrabold text-[11px] {{ $child->isAvailable() ? 'text-emerald-600' : 'text-slate-400' }}">
+                          {{ $child->isAvailable() ? '✓ Available' : 'Sold' }}
                         </span>
                       </td>
                       <td class="p-3 text-[11px] text-slate-600">

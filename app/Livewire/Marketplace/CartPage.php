@@ -208,6 +208,7 @@ class CartPage extends Component
 
         app(CartService::class)->updateQuantity($itemId, $targetQty, $user);
         $this->loadCart();
+        $this->dispatch('cart-updated');
     }
 
     public function removeItem($sellerId, $itemId)
@@ -216,6 +217,7 @@ class CartPage extends Component
 
         app(CartService::class)->removeItem($itemId, $user);
         $this->loadCart();
+        $this->dispatch('cart-updated');
     }
 
     public function proceedToCheckout($sellerId)

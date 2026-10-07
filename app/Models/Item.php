@@ -86,6 +86,44 @@ class Item extends Model
         return $query->where('item_type', 'scrap');
     }
 
+    public function isAvailable(): bool
+    {
+        $directListing = $this->relationLoaded('listing') ? $this->listing : $this->listing()->first();
+        if ($directListing) {
+            return $directListing->isAvailable();
+        }
+
+        if ($this->parent_id) {
+            $parent = $this->relationLoaded('parent') ? $this->parent : $this->parent()->first();
+            $parentListing = $parent?->relationLoaded('listing') ? $parent->listing : $parent?->listing()->first();
+            if ($parentListing) {
+                return $parentListing->isAvailable();
+            }
+        }
+
+        return false;
+    }
+
+    public function getStatusAttribute(): string
+    {
+        return $this->isAvailable() ? 'available' : 'unavailable';
+    }
+
+    public function scopeAvailable($query)
+    {
+        return $query->where(function ($sub) {
+            $sub->whereHas('listing', function ($q) {
+                $q->available();
+            })->orWhere(function ($childQuery) {
+                $childQuery->whereNotNull('parent_id')
+                    ->whereDoesntHave('listing')
+                    ->whereHas('parent.listing', function ($q) {
+                        $q->available();
+                    });
+            });
+        });
+    }
+
     public function getPrimaryImageAttribute(): ?Media
     {
         if ($this->relationLoaded('media')) {

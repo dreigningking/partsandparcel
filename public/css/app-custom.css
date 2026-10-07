@@ -23,6 +23,29 @@ body, * { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-se
     background: #94a3b8;
 }
 
+/* ULTRA-SLIM SCROLLBAR FOR COMPACT CATEGORY BAR */
+.custom-scrollbar-slim {
+    overflow-y: hidden !important;
+}
+.custom-scrollbar-slim::-webkit-scrollbar {
+    height: 3px;
+}
+.custom-scrollbar-slim::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar-slim::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 9999px;
+}
+.custom-scrollbar-slim::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+}
+
+/* GLOBAL HORIZONTAL OVERFLOW GUARD */
+html, body {
+    overflow-x: clip;
+}
+
 /* MEGA MENU STYLES */
 .mega-menu { display: none; }
 .mega-menu.open { 
@@ -121,7 +144,7 @@ body, * { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-se
     margin-left: 76px !important;
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1024px) {
     .sidebar {
         width: 280px !important;
         transform: translateX(-100%);
@@ -134,6 +157,47 @@ body, * { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-se
 
     .main-area {
         margin-left: 0 !important;
+    }
+}
+
+@media (min-width: 1025px) and (max-width: 1224px) {
+    .sidebar:not(.expanded) {
+        width: 76px !important;
+    }
+
+    .sidebar:not(.expanded) .label,
+    .sidebar:not(.expanded) .section,
+    .sidebar:not(.expanded) .section-label,
+    .sidebar:not(.expanded) .chevron,
+    .sidebar:not(.expanded) .chevron-wrapper,
+    .sidebar:not(.expanded) .section-title-text,
+    .sidebar:not(.expanded) .user-meta,
+    .sidebar:not(.expanded) .brand-text,
+    .sidebar:not(.expanded) .logo-toggle {
+        display: none !important;
+    }
+
+    .sidebar:not(.expanded) .nav-item,
+    .sidebar:not(.expanded) .nav,
+    .sidebar:not(.expanded) .section-title,
+    .sidebar:not(.expanded) .sidebar-brand-header {
+        justify-content: center !important;
+    }
+
+    .sidebar:not(.expanded) .sidebar-brand-header {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+
+    .sidebar:not(.expanded) .sub {
+        max-height: none !important;
+        overflow: visible !important;
+        padding-left: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    .main-area:not(.expanded) {
+        margin-left: 76px !important;
     }
 }
 

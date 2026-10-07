@@ -233,8 +233,15 @@ function closeAll() {
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const main = document.getElementById('main');
-    if (sidebar) sidebar.classList.toggle('collapsed');
-    if (main) main.classList.toggle('collapsed');
+    const isMediumScreen = window.innerWidth >= 1025 && window.innerWidth < 1225;
+
+    if (isMediumScreen) {
+        if (sidebar) sidebar.classList.toggle('expanded');
+        if (main) main.classList.toggle('expanded');
+    } else {
+        if (sidebar) sidebar.classList.toggle('collapsed');
+        if (main) main.classList.toggle('collapsed');
+    }
 }
 
 function toggleMobileSidebar() {

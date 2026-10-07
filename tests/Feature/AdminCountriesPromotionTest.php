@@ -130,4 +130,89 @@ class AdminCountriesPromotionTest extends TestCase
             ->test(ListingDetails::class, ['listing' => $this->listing])
             ->assertDontSee('Owner Advertising & Promotion Rates');
     }
+
+    public function test_seller_can_initiate_promotion_and_target_count_is_stored(): void
+    {
+        Livewire::actingAs($this->seller)
+            ->test(ListingView::class, ['listing' => $this->listing])
+            ->call('setActiveTab', 'promotions')
+            ->call('setPromoType', 'clicks')
+            ->set('promoQuantity', 25)
+            ->call('processPromotionPayment');
+
+        $promotion = \App\Models\Promotion::where('listing_id', $this->listing->id)->latest()->first();
+        $this->assertNotNull($promotion);
+        $this->assertEquals('clicks', $promotion->type);
+        $this->assertEquals(25, $promotion->target_count);
+        $this->assertEquals(0, $promotion->achieved_count);
+
+        $payment = \App\Models\Payment::where('paymentable_id', $promotion->id)->first();
+        $this->assertNotNull($payment);
+        $this->assertEquals(500.00, (float) $payment->amount); // 25 * 20.00 = 500.00
+        $this->assertEquals(25, $payment->metadata['target_count']);
+    }
+
+    public function test_seller_can_initiate_views_promotion_with_target_count(): void
+    {
+        Livewire::actingAs($this->seller)
+            ->test(ListingView::class, ['listing' => $this->listing])
+            ->call('setActiveTab', 'promotions')
+            ->call('setPromoType', 'views')
+            ->set('promoQuantity', 10000)
+            ->call('processPromotionPayment');
+
+        $promotion = \App\Models\Promotion::where('listing_id', $this->listing->id)->where('type', 'views')->latest()->first();
+        $this->assertNotNull($promotion);
+        $this->assertEquals('views', $promotion->type);
+        $this->assertEquals(10000, $promotion->target_count);
+        $this->assertEquals(0, $promotion->achieved_count);
+
+        $payment = \App\Models\Payment::where('paymentable_id', $promotion->id)->first();
+        $this->assertNotNull($payment);
+        $this->assertEquals(50.00, (float) $payment->amount); // 10000 * 0.0050 = 50.00
+        $this->assertEquals(10000, $payment->metadata['target_count']);
+    }
+
+    public function test_payment_callback_activates_promotion_and_preserves_target_count(): void
+    {
+        $promotion = \App\Models\Promotion::create([
+            'user_id' => $this->seller->id,
+            'listing_id' => $this->listing->id,
+            'type' => 'clicks',
+            'target_count' => 50,
+            'achieved_count' => 0,
+            'status' => 'pending',
+        ]);
+
+        $payment = \App\Models\Payment::create([
+            'user_id' => $this->seller->id,
+            'paymentable_id' => $promotion->id,
+            'paymentable_type' => \App\Models\Promotion::class,
+            'reference' => 'PROM-TEST12345',
+            'provider' => 'paystack',
+            'status' => 'pending',
+            'amount' => 1000.00,
+            'currency' => 'NGN',
+            'metadata' => [
+                'payment_type' => 'promotion',
+                'promotion_id' => $promotion->id,
+                'listing_id' => $this->listing->id,
+                'type' => 'clicks',
+                'quantity' => 50,
+                'target_count' => 50,
+            ],
+        ]);
+
+        $response = $this->actingAs($this->seller)->get(route('payment.callback', [
+            'reference' => 'PROM-TEST12345',
+            'provider' => 'paystack',
+            'mock_success' => 1,
+        ]));
+
+        $response->assertRedirect(route('mylisting.view', $this->listing->id));
+
+        $promotion->refresh();
+        $this->assertEquals('active', $promotion->status);
+        $this->assertEquals(50, $promotion->target_count);
+    }
 }

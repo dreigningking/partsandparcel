@@ -17,6 +17,7 @@ return new class extends Migration
                 $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
                 $table->foreignId('listing_id')->nullable()->constrained('listings')->nullOnDelete();
                 $table->enum('type', ['views', 'clicks'])->default('clicks');
+                $table->unsignedInteger('target_count')->default(0);
                 $table->unsignedInteger('achieved_count')->default(0);
                 $table->enum('status', ['pending', 'active', 'inactive', 'completed'])->default('pending');
                 $table->timestamps();

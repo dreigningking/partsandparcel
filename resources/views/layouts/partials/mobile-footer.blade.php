@@ -12,18 +12,7 @@
     <span class="text-base">💬</span>
     <span>Community</span>
   </a>
-  @php
-    $mobileCartCount = app(\App\Services\Commercial\CartService::class)->getCartCount(auth()->user());
-  @endphp
-  <a href="{{ route('cart') }}" class="flex flex-col items-center text-[10px] font-semibold text-slate-600 relative">
-    <span class="text-base">🛒</span>
-    <span>Cart</span>
-    @if($mobileCartCount > 0)
-      <span class="absolute -top-1 right-2 min-w-3.5 h-3.5 px-1 bg-pp-600 text-white rounded-full text-[9px] font-bold grid place-items-center">
-        {{ $mobileCartCount > 99 ? '99+' : $mobileCartCount }}
-      </span>
-    @endif
-  </a>
+  @livewire('components.header.cart-counter', ['variant' => 'mobile'], key('mobile-cart-counter'))
   <button type="button" onclick="handleMobileAccountClick()" class="flex flex-col items-center text-[10px] font-semibold text-slate-600 cursor-pointer">
     <span class="text-base">👤</span>
     <span>Account</span>

@@ -263,7 +263,7 @@
                             <!-- DELIVERED / ACHIEVED COUNT -->
                             <td class="px-5 py-4 whitespace-nowrap">
                                 @php
-                                    $targetQty = (int) ($promotion->payments?->metadata['quantity'] ?? 0);
+                                    $targetQty = (int) ($promotion->target_count ?: ($promotion->payments?->metadata['quantity'] ?? 0));
                                 @endphp
                                 <div class="font-black text-slate-900 dark:text-white text-sm">
                                     {{ number_format($promotion->achieved_count) }}
@@ -417,7 +417,7 @@
                             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Campaign Deliverable</span>
                             <span class="mt-1 font-extrabold text-sm text-slate-900 dark:text-white">
                                 {{ number_format($selectedPromotion->achieved_count) }} {{ $selectedPromotion->type }}
-                                @if ($target = ($selectedPromotion->payments?->metadata['quantity'] ?? null))
+                                @if ($target = ($selectedPromotion->target_count ?: ($selectedPromotion->payments?->metadata['quantity'] ?? null)))
                                     <span class="text-xs font-normal text-slate-400 block font-sans">Target: {{ number_format((int)$target) }} {{ $selectedPromotion->type }}</span>
                                 @endif
                             </span>
@@ -610,19 +610,35 @@
                         @error('editType') <p class="text-[11px] text-rose-500 font-semibold mt-1">{{ $message }}</p> @enderror
                     </div>
 
-                    <!-- ACHIEVED COUNT -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                            Delivered / Achieved Deliverable Count
-                        </label>
-                        <input
-                            type="number"
-                            min="0"
-                            wire:model="editAchievedCount"
-                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-pp-500"
-                        />
-                        <span class="text-[10px] text-slate-400 mt-1 block">Number of clicks or views delivered to this listing.</span>
-                        @error('editAchievedCount') <p class="text-[11px] text-rose-500 font-semibold mt-1">{{ $message }}</p> @enderror
+                    <!-- TARGET & ACHIEVED COUNTS -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                Target Volume Count
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                wire:model="editTargetCount"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-pp-500"
+                            />
+                            <span class="text-[10px] text-slate-400 mt-1 block">Purchased volume goal (target_count).</span>
+                            @error('editTargetCount') <p class="text-[11px] text-rose-500 font-semibold mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                Delivered / Achieved Count
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                wire:model="editAchievedCount"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-pp-500"
+                            />
+                            <span class="text-[10px] text-slate-400 mt-1 block">Number of clicks or views delivered.</span>
+                            @error('editAchievedCount') <p class="text-[11px] text-rose-500 font-semibold mt-1">{{ $message }}</p> @enderror
+                        </div>
                     </div>
 
                     <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">

@@ -232,4 +232,118 @@ class GuestCartAndWishlistFlowTest extends TestCase
             'delivery_method' => 'buyer_responsible',
         ]);
     }
+
+    public function test_cart_counter_reacts_to_cart_updated_in_both_desktop_and_mobile_variants(): void
+    {
+        // Initial state with empty cart
+        $desktopCounter = Livewire::test(\App\Livewire\Components\Header\CartCounter::class, ['variant' => 'desktop'])
+            ->assertSet('cartCount', 0)
+            ->assertDontSee('bg-pp-600 text-white text-[10px]');
+
+        $mobileCounter = Livewire::test(\App\Livewire\Components\Header\CartCounter::class, ['variant' => 'mobile'])
+            ->assertSet('cartCount', 0)
+            ->assertSee('Cart');
+
+        // Add item to cart
+        app(CartService::class)->addToCart(null, $this->listing1, 2);
+
+        // Dispatch cart-updated event
+        $desktopCounter->dispatch('cart-updated')
+            ->assertSet('cartCount', 2)
+            ->assertSee('2');
+
+        $mobileCounter->dispatch('cart-updated')
+            ->assertSet('cartCount', 2)
+            ->assertSee('2');
+    }
+
+    public function test_adding_item_to_cart_from_listing_details_dispatches_event_and_updates_mobile_cart_counter(): void
+    {
+        Livewire::test(ListingDetails::class, ['listing' => $this->listing1])
+            ->call('addToCart')
+            ->assertDispatched('cart-updated');
+
+        Livewire::test(\App\Livewire\Components\Header\CartCounter::class, ['variant' => 'mobile'])
+            ->assertSet('cartCount', 1)
+            ->assertSee('1');
+    }
+
+    public function test_listing_availability_is_determined_by_published_active_approved_moderation_and_positive_quantity(): void
+    {
+        $listing = $this->listing1;
+        $listing->update([
+            'is_published' => true,
+            'is_active' => true,
+            'quantity' => 5,
+            'reserved_quantity' => 0,
+            'sold_quantity' => 0,
+        ]);
+
+        // 1. Pending moderation: not available
+        \App\Models\Moderation::updateOrCreate(
+            ['moderatable_type' => $listing->getMorphClass(), 'moderatable_id' => $listing->id],
+            ['status' => 'pending', 'action' => 'created']
+        );
+        $listing = $listing->fresh();
+        $this->assertFalse($listing->isAvailable());
+
+        // 2. Approved moderation: available
+        \App\Models\Moderation::where('moderatable_type', $listing->getMorphClass())
+            ->where('moderatable_id', $listing->id)
+            ->update(['status' => 'approved']);
+        $listing = $listing->fresh();
+        $this->assertTrue($listing->isAvailable());
+
+        // 3. Sold out: not available
+        $listing->update(['sold_quantity' => 5]);
+        $this->assertFalse($listing->isAvailable());
+
+        // 4. Inactive: not available
+        $listing->update(['sold_quantity' => 0, 'is_active' => false]);
+        $this->assertFalse($listing->isAvailable());
+
+        // 5. Unpublished: not available
+        $listing->update(['is_active' => true, 'is_published' => false]);
+        $this->assertFalse($listing->isAvailable());
+    }
+
+    public function test_scrap_listing_with_children_renders_listing_details_without_unknown_status_column_error(): void
+    {
+        $scrapItem = Item::create([
+            'user_id' => $this->seller1->id,
+            'model_id' => $this->listing1->item->model_id,
+            'item_type' => 'scrap',
+            'name' => 'Dell Salvage Unit',
+            'condition_status' => 'faulty',
+        ]);
+
+        $child1 = Item::create([
+            'user_id' => $this->seller1->id,
+            'parent_id' => $scrapItem->id,
+            'model_id' => $scrapItem->model_id,
+            'item_type' => 'part',
+            'name' => 'Motherboard Part',
+            'condition_status' => 'working',
+        ]);
+
+        $scrapListing = Listing::create([
+            'user_id' => $this->seller1->id,
+            'item_id' => $scrapItem->id,
+            'price' => 75000,
+            'quantity' => 1,
+            'is_published' => true,
+            'is_active' => true,
+        ]);
+
+        \App\Models\Moderation::updateOrCreate(
+            ['moderatable_type' => $scrapListing->getMorphClass(), 'moderatable_id' => $scrapListing->id],
+            ['status' => 'approved', 'action' => 'created']
+        );
+
+        $test = Livewire::test(ListingDetails::class, ['listing' => $scrapListing]);
+        $test->assertStatus(200);
+        $test->assertSee('Dell Salvage Unit');
+        $test->assertSee('Motherboard Part');
+        $test->assertSee('Offer on Specific Component');
+    }
 }

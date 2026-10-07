@@ -22,7 +22,7 @@
     </a>
 
     <!-- CART (LIVEWIRE REACTIVE COUNTER) -->
-    @livewire('components.header.cart-counter')
+    @livewire('components.header.cart-counter', ['variant' => 'desktop'], key('header-cart-counter'))
 
     @auth
         <!-- MESSAGES BUTTON & REAL-TIME BADGE -->
@@ -122,10 +122,18 @@
             </svg>
         </button>
 
-        <!-- GUEST BUTTONS: LOGIN & REGISTER -->
-        <div class="flex items-center gap-2 ml-1">
+        <!-- GUEST COMPACT LOGIN ICON (VISIBLE FROM 1025px TO 1224px) -->
+        <a href="{{ route('login') }}" class="hidden lg:flex xl:hidden p-2.5 rounded-xl hover:bg-slate-100 text-slate-700 border border-slate-200/80 transition ml-1" title="Login to your account" aria-label="Login">
+            <svg class="w-5 h-5 text-slate-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
+        </a>
+
+        <!-- GUEST BUTTONS: LOGIN & REGISTER (VISIBLE ON 1225px AND ABOVE) -->
+        <div class="hidden xl:flex items-center gap-2 ml-1">
             <a href="{{ route('login') }}" class="px-3.5 py-2 rounded-xl border border-slate-200 hover:border-pp-300 text-xs font-bold text-slate-700 hover:text-pp-700 hover:bg-slate-50 transition shadow-2xs">
-                Log in
+                Login
             </a>
             <a href="{{ route('register') }}" class="px-4 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white text-xs font-extrabold transition shadow-xs hover:shadow flex items-center gap-1.5">
                 <span>Register</span>

@@ -5,7 +5,7 @@
     <!-- Subtle background pattern overlay -->
     <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
 
-    <div class="max-w-7xl mx-auto relative z-10">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
       <!-- Breadcrumb -->
       <nav class="flex items-center gap-2 text-xs text-pp-200/80 mb-6">
         <a href="{{ route('welcome') }}" class="hover:text-white transition">Marketplace</a>
@@ -18,7 +18,7 @@
   </div>
 
   <!-- MAIN CONTAINER (Negative margin to overlap header banner) -->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20 space-y-8">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20 space-y-8">
     
     <!-- USER DETAILS CARD -->
     <div class="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-soft">

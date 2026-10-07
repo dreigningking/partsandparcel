@@ -315,9 +315,12 @@ class ListingView extends Component
             'user_id' => $user->id,
             'listing_id' => $this->listing->id,
             'type' => $this->promoType,
+            'target_count' => $this->promoQuantity,
             'achieved_count' => 0,
             'status' => $isFree ? 'active' : 'pending',
         ]);
+
+        $unitPrice = $this->promoType === 'clicks' ? (float) ($country->clicks ?? 20.00) : (float) ($country->views ?? 0.0050);
 
         // Create Payment record
         $payment = Payment::create([
@@ -334,10 +337,11 @@ class ListingView extends Component
                 'payment_type' => 'promotion',
                 'promotion_id' => $promotion->id,
                 'listing_id' => $this->listing->id,
-                'plan_id' => $plan->id ?? null,
+                'country_id' => $country->id ?? null,
                 'type' => $this->promoType,
                 'quantity' => $this->promoQuantity,
-                'unit_price' => $this->promoType === 'clicks' ? (float) $plan->clicks : (float) $plan->views,
+                'target_count' => $this->promoQuantity,
+                'unit_price' => $unitPrice,
                 'subtotal' => $subtotal,
                 'discount' => $this->couponDiscount,
                 'coupon_code' => $couponCode,

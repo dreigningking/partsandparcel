@@ -1,4 +1,4 @@
-<div class="space-y-6 max-w-7xl mx-auto pb-16">
+<div class="space-y-6 w-full max-w-[1600px] mx-auto pb-16">
 
     <!-- BREADCRUMBS & TOP HEADER -->
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 shadow-2xs">

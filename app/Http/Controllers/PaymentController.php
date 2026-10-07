@@ -83,19 +83,23 @@ class PaymentController extends Controller
             if ($isPromotion) {
                 $listingId = $payment->metadata['listing_id'] ?? null;
                 $type = $payment->metadata['type'] ?? 'clicks';
-                $quantity = (int) ($payment->metadata['quantity'] ?? 0);
+                $quantity = (int) ($payment->metadata['target_count'] ?? $payment->metadata['quantity'] ?? 0);
 
                 // Activate existing pending Promotion record or create new
                 $promotionId = $payment->paymentable_id ?? ($payment->metadata['promotion_id'] ?? null);
                 $promotion = $promotionId ? \App\Models\Promotion::find($promotionId) : null;
 
                 if ($promotion) {
-                    $promotion->update(['status' => 'active']);
+                    $promotion->update([
+                        'status' => 'active',
+                        'target_count' => $promotion->target_count ?: $quantity,
+                    ]);
                 } else {
                     $promotion = \App\Models\Promotion::create([
                         'user_id' => $payment->user_id,
                         'listing_id' => $listingId,
                         'type' => $type,
+                        'target_count' => $quantity,
                         'achieved_count' => 0,
                         'status' => 'active',
                     ]);

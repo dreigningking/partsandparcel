@@ -1,4 +1,4 @@
-<div class="relative flex-1 max-w-[680px] mx-4" x-data="{ open: true }" @click.outside="open = false">
+<div class="relative flex-1 min-w-0 max-w-[680px] mx-2 lg:mx-3 xl:mx-4" x-data="{ open: true }" @click.outside="open = false">
   <form wire:submit.prevent="submitSearch" class="hidden md:flex items-center border border-slate-200 rounded-xl overflow-hidden h-11 w-full shadow-sm focus-within:border-pp-500 focus-within:ring-2 focus-within:ring-pp-500/20 transition bg-white">
     <div class="h-full px-3.5 bg-slate-50 border-r border-slate-200 text-xs font-semibold text-slate-600 flex items-center gap-1.5 shrink-0">
       <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.307-.066l.003-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 003.03 2.198l.019.009.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clip-rule="evenodd"/></svg>
@@ -9,7 +9,7 @@
       type="text" 
       wire:model.live.debounce.200ms="query"
       @focus="open = true"
-      class="flex-1 h-full px-4 outline-none text-sm text-slate-800 placeholder:text-slate-400" 
+      class="flex-1 min-w-0 h-full px-3 lg:px-4 outline-none text-sm text-slate-800 placeholder:text-slate-400" 
       placeholder="Search device, model (e.g. iPhone 12, Corolla, CAT Excavator) or part..." 
       autocomplete="off"
     />

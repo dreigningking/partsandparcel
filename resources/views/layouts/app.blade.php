@@ -53,6 +53,10 @@
             darkMode: 'class',
             theme: {
                 extend: {
+                    screens: {
+                        'lg': '1025px',
+                        'xl': '1225px',
+                    },
                     colors: {
                         pp: {
                             50: '#f5f3ff',

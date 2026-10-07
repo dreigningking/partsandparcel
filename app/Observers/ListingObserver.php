@@ -149,8 +149,8 @@ class ListingObserver
         $autoApprove = (bool) \App\Models\Setting::getValue('auto_approve_listings', false);
         $status = $autoApprove ? 'approved' : 'pending';
 
-        $existing = Moderation::where('moderatable_type', Listing::class)
-            ->where('moderatable_id', $listing->id)
+        $existing = Moderation::where('moderatable_id', $listing->id)
+            ->whereIn('moderatable_type', [$listing->getMorphClass(), Listing::class])
             ->first();
 
         if ($existing) {
@@ -164,7 +164,7 @@ class ListingObserver
         }
 
         Moderation::create([
-            'moderatable_type' => Listing::class,
+            'moderatable_type' => $listing->getMorphClass(),
             'moderatable_id' => $listing->id,
             'action' => $action,
             'status' => $status,

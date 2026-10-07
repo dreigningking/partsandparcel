@@ -192,11 +192,31 @@ class Listing extends Model
         return max(0, $this->quantity - $this->reserved_quantity - $this->sold_quantity);
     }
 
-    public function scopeInCurrentCountry(Builder $query, ?string $countryCode = null)
+    public function isAvailable(): bool
     {
-        $code = strtoupper($countryCode ?? session('current_location.country_code', 'NG'));
+        return (bool) (
+            $this->is_published
+            && $this->is_active
+            && $this->latestModeration?->status === 'approved'
+            && $this->quantity > 0
+            && $this->availableQuantity() > 0
+        );
+    }
 
-        return $query->whereHas('seller', fn ($q) => $q->where('country_code', $code));
+    public function scopeAvailable(Builder $query): Builder
+    {
+        return $query->where('is_published', true)
+            ->where('is_active', true)
+            ->where('quantity', '>', 0)
+            ->whereRaw('(COALESCE(quantity, 0) - COALESCE(reserved_quantity, 0) - COALESCE(sold_quantity, 0)) > 0')
+            ->approved();
+    }
+
+    public function scopeInCurrentCountry(Builder $query, ?int $countryId = null)
+    {
+        $countryId = $countryId ?? session('current_location.country_id');
+
+        return $query->whereHas('seller', fn ($q) => $q->where('country_id', $countryId));
     }
 
     public function getPrimaryImageAttribute(): ?Media

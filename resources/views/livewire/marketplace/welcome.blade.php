@@ -52,7 +52,7 @@
 
           <!-- ACTION BUTTONS -->
           <div class="flex flex-wrap items-center gap-3 pt-1">
-            <a href="category.html" class="px-7 py-3.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-md transition transform hover:-translate-y-0.5 flex items-center gap-2">
+            <a href="{{route('category')}}" class="px-7 py-3.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-md transition transform hover:-translate-y-0.5 flex items-center gap-2">
               <span>Browse Marketplace</span>
               <span>→</span>
             </a>
@@ -129,7 +129,7 @@
         <h2 class="text-xl font-extrabold text-slate-900">Featured Marketplace Listings</h2>
         <p class="text-xs text-slate-500 mt-0.5">Verified sellers in Lagos, Abuja, Port Harcourt &amp; Computer Village</p>
       </div>
-      <a href="category.html" class="text-xs font-bold text-pp-600 hover:underline flex items-center gap-1">View all 50K+ listings →</a>
+      <a href="{{route('category')}}" class="text-xs font-bold text-pp-600 hover:underline flex items-center gap-1">View all 50K+ listings →</a>
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">

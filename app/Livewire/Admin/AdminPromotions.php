@@ -44,6 +44,8 @@ class AdminPromotions extends Component
 
     public int $editAchievedCount = 0;
 
+    public int $editTargetCount = 0;
+
     public function updatingSearch(): void
     {
         $this->resetPage();
@@ -99,6 +101,7 @@ class AdminPromotions extends Component
         $this->editStatus = $promotion->status;
         $this->editType = $promotion->type;
         $this->editAchievedCount = (int) $promotion->achieved_count;
+        $this->editTargetCount = (int) ($promotion->target_count ?? 0);
 
         $this->resetValidation();
         $this->showEditModal = true;
@@ -117,6 +120,7 @@ class AdminPromotions extends Component
             'editStatus' => ['required', Rule::in(['pending', 'active', 'inactive', 'completed'])],
             'editType' => ['required', Rule::in(['clicks', 'views'])],
             'editAchievedCount' => ['required', 'integer', 'min:0'],
+            'editTargetCount' => ['required', 'integer', 'min:0'],
         ]);
 
         $promotion = Promotion::query()->findOrFail($this->selectedPromotionId);
@@ -124,6 +128,7 @@ class AdminPromotions extends Component
             'status' => $this->editStatus,
             'type' => $this->editType,
             'achieved_count' => $this->editAchievedCount,
+            'target_count' => $this->editTargetCount,
         ]);
 
         session()->flash('status', __('Promotion campaign updated successfully.'));
@@ -203,6 +208,7 @@ class AdminPromotions extends Component
             'editStatus' => $this->editStatus,
             'editType' => $this->editType,
             'editAchievedCount' => $this->editAchievedCount,
+            'editTargetCount' => $this->editTargetCount,
         ]);
     }
 }
