@@ -190,8 +190,14 @@ class AdminCountries extends Component
             ->orderBy('name', 'asc')
             ->get();
 
+        $availableGateways = \App\Models\Setting::getValue('gateways', ['paystack', 'flutterwave', 'opay']);
+        if (is_string($availableGateways)) {
+            $availableGateways = json_decode($availableGateways, true) ?: ['paystack', 'flutterwave', 'opay'];
+        }
+
         return view('livewire.admin.settings.admin-countries', [
             'countries' => $countries,
+            'availableGateways' => $availableGateways,
         ]);
     }
 }

@@ -132,6 +132,14 @@ trait HasMedia
         }
 
         $mediaType = $this->determineMediaType($mimeType, $extension);
+        $maxKb = static::getMaxMediaSizeKb($mediaType);
+        if ($size > ($maxKb * 1024)) {
+            $maxMb = round($maxKb / 1024);
+            // Clean up temporary stored file if uploaded
+            Storage::disk($disk)->delete($filePath);
+            throw new \InvalidArgumentException("Uploaded {$mediaType} exceeds maximum allowed size of {$maxMb}MB.");
+        }
+
         $width = null;
         $height = null;
 

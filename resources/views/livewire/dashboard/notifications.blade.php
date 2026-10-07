@@ -19,6 +19,9 @@
       <button wire:click="setTab('all')" class="px-3 py-1.5 rounded-lg {{ $activeTab === 'all' ? 'bg-pp-600 text-white' : 'text-slate-600 hover:bg-slate-50' }} transition">
         All Alerts ({{ $counts['all'] }})
       </button>
+      <button wire:click="setTab('wishlist')" class="px-3 py-1.5 rounded-lg {{ $activeTab === 'wishlist' ? 'bg-pp-600 text-white' : 'text-slate-600 hover:bg-slate-50' }} transition">
+        Wishlist ({{ $counts['wishlist'] }})
+      </button>
       <button wire:click="setTab('transactions')" class="px-3 py-1.5 rounded-lg {{ $activeTab === 'transactions' ? 'bg-pp-600 text-white' : 'text-slate-600 hover:bg-slate-50' }} transition">
         Transactions ({{ $counts['transactions'] }})
       </button>

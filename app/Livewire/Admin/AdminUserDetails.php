@@ -52,6 +52,18 @@ class AdminUserDetails extends Component
         session()->flash('status', __('User account has been unsuspended.'));
     }
 
+    public function toggleFreezePayout(): void
+    {
+        $this->user->update([
+            'freeze_payout' => ! (bool) $this->user->freeze_payout,
+        ]);
+        $this->user->refresh();
+        $msg = $this->user->freeze_payout
+            ? __('User payouts have been frozen. Current and future settlements are locked.')
+            : __('User payouts have been unfrozen.');
+        session()->flash('status', $msg);
+    }
+
     public function delete(): mixed
     {
         if (auth()->id() === $this->user->id) {

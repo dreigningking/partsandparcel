@@ -18,3 +18,5 @@ Schedule::job(new SubscriptionExpiredJob)->daily();
 Schedule::job(new SubscriptionAutoRenewJob)->hourly();
 Schedule::job(new AbandonedCartJob)->daily();
 Schedule::job(new ModerationNotifierJob)->hourly();
+Schedule::job(new \App\Jobs\ProcessOrderFulfillmentTimelinesJob)->hourly();
+Schedule::job(new \App\Jobs\ReleasePaymentJob)->hourly();

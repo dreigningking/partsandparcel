@@ -169,6 +169,12 @@ class AdminGeneral extends Component
                 'unit' => 'hours',
                 'icon' => 'fas fa-shopping-cart',
             ],
+            'cart_reaction_gap_days' => [
+                'label' => 'Abandoned Cart Reaction Gap',
+                'description' => 'Minimum days to wait before sending another abandoned cart reminder to the same customer.',
+                'unit' => 'days',
+                'icon' => 'fas fa-calendar-alt',
+            ],
             'prohibited_words' => [
                 'label' => 'Prohibited Content Words',
                 'description' => 'Comma-separated keywords or phrases that trigger automatic moderation flags in titles and descriptions.',
@@ -231,6 +237,13 @@ class AdminGeneral extends Component
                 'icon' => 'fas fa-eye',
             ],
 
+            // Community
+            'auto_approve_discussion' => [
+                'label' => 'Auto-Approve Community Discussions',
+                'description' => 'When enabled, new community threads and discussions are approved immediately without pending moderation.',
+                'icon' => 'fas fa-comments',
+            ],
+
             // Timelines
             'order_processing_to_cancel_hours' => [
                 'label' => 'Buyer Cancellation Grace Period',
@@ -291,6 +304,12 @@ class AdminGeneral extends Component
                 'description' => 'Hours allowed for a vendor to ship or mark replacement items as ready for pickup. If not marked within this timeframe, the order is auto-refunded.',
                 'unit' => 'hours',
                 'icon' => 'fas fa-undo-alt',
+            ],
+            'order_accepted_to_settlement_eligible_hours' => [
+                'label' => 'Settlement Payout Eligibility Clearance Window',
+                'description' => 'Hours required after order acceptance before a seller settlement becomes eligible for automated payout disbursement.',
+                'unit' => 'hours',
+                'icon' => 'fas fa-money-check-alt',
             ],
         ];
     }

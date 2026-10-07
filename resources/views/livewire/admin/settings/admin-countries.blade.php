@@ -371,33 +371,21 @@
                     <!-- PAYMENT GATEWAYS -->
                     <div class="space-y-1.5 pt-1">
                         <label class="font-bold text-slate-700 dark:text-slate-300 block">Supported Payment Gateways</label>
-                        <p class="text-[10px] text-slate-400 mb-1.5">Select the gateways configured for escrow and payouts in this country:</p>
-                        <div class="grid grid-cols-2 gap-2">
-                            <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    value="paystack"
-                                    wire:model="payment_gateway"
-                                    class="w-4 h-4 rounded text-pp-600 focus:ring-pp-500 border-slate-300"
-                                />
-                                <div>
-                                    <strong class="font-bold text-slate-900 dark:text-white block text-xs">Paystack</strong>
-                                    <span class="text-[10px] text-slate-400">Card, Transfer, NUBAN</span>
-                                </div>
-                            </label>
-
-                            <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    value="flutterwave"
-                                    wire:model="payment_gateway"
-                                    class="w-4 h-4 rounded text-pp-600 focus:ring-pp-500 border-slate-300"
-                                />
-                                <div>
-                                    <strong class="font-bold text-slate-900 dark:text-white block text-xs">Flutterwave</strong>
-                                    <span class="text-[10px] text-slate-400">Multi-currency, Payouts</span>
-                                </div>
-                            </label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            @foreach ($availableGateways as $gw)
+                                <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/40 cursor-pointer hover:border-pp-300 transition">
+                                    <input
+                                        type="checkbox"
+                                        value="{{ $gw }}"
+                                        wire:model="payment_gateway"
+                                        class="w-4 h-4 rounded text-pp-600 focus:ring-pp-500 border-slate-300"
+                                    />
+                                    <div>
+                                        <strong class="font-bold text-slate-900 dark:text-white block text-xs capitalize">{{ $gw }}</strong>
+                                        <span class="text-[10px] text-slate-400">Escrow & Payout</span>
+                                    </div>
+                                </label>
+                            @endforeach
                         </div>
                         @error('payment_gateway') <span class="text-rose-600 text-[11px] font-semibold block">{{ $message }}</span> @enderror
                     </div>

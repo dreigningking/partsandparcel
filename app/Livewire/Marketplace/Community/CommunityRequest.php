@@ -408,9 +408,10 @@ class CommunityRequest extends Component
 
     public function submitResponse()
     {
-        if (trim($this->responseText) === '') {
-            return;
-        }
+        $this->validate([
+            'responseText' => ['required', 'string', 'min:2', new \App\Rules\ProhibitedWordsRule],
+            'composerItemDescription' => ['nullable', 'string', new \App\Rules\ProhibitedWordsRule],
+        ]);
 
         $user = Auth::user();
         if (! $user) {

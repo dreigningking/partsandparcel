@@ -37,26 +37,28 @@ class DiscussionObserver
 
     protected function createModerationRecord(Discussion $discussion, string $action): void
     {
-        $alreadyPending = Moderation::where('moderatable_type', Discussion::class)
+        $autoApprove = (bool) \App\Models\Setting::getValue('auto_approve_discussion', true);
+        $status = $autoApprove ? 'approved' : 'pending';
+
+        $existing = Moderation::where('moderatable_type', Discussion::class)
             ->where('moderatable_id', $discussion->id)
-            ->where('status', 'pending')
-            ->exists();
+            ->first();
 
-        if ($alreadyPending) {
+        if ($existing) {
+            if ($existing->status === 'pending' || (! $autoApprove && $action === 'updated')) {
+                $existing->update([
+                    'action' => $action,
+                    'status' => $status,
+                ]);
+            }
             return;
-        }
-
-        $autoApprove = false;
-        if ($action === 'created') {
-            $settingVal = \App\Models\Setting::where('name', 'auto_approve_discussion')->value('value');
-            $autoApprove = in_array((string) $settingVal, ['1', 'true', 'yes'], true);
         }
 
         Moderation::create([
             'moderatable_type' => Discussion::class,
             'moderatable_id' => $discussion->id,
             'action' => $action,
-            'status' => $autoApprove ? 'approved' : 'pending',
+            'status' => $status,
             'reason' => null,
             'moderated_by' => $autoApprove ? ($discussion->user_id ?? null) : null,
         ]);

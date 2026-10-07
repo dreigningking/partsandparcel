@@ -14,7 +14,7 @@ class AdminDisputeDetails extends Component
     
     public function render()
     {
-        return view('livewire.admin.admin-dispute-details');
+        return view('livewire.admin.admin-dispute-view');
     }
 
 }

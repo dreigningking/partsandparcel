@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \App\Models\Media::observe(\App\Observers\MediaObserver::class);
+        \App\Models\User::observe(\App\Observers\UserObserver::class);
 
         \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
             'listing' => \App\Models\Listing::class,

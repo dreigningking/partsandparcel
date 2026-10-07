@@ -18,6 +18,10 @@ class Settlement extends Model
         'amount',
         'currency',
         'status',
+        'payout_reference',
+        'provider',
+        'metadata',
+        'bank_details',
         'eligible_at',
         'settled_at',
     ];
@@ -26,6 +30,8 @@ class Settlement extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'metadata' => 'array',
+            'bank_details' => 'array',
             'eligible_at' => 'datetime',
             'settled_at' => 'datetime',
         ];

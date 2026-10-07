@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Cart;
+use App\Models\Setting;
 use App\Notifications\AbandonedCartNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -17,23 +18,29 @@ class AbandonedCartJob implements ShouldQueue
 
     public function handle(): void
     {
-        $abandonedCarts = Cart::where('updated_at', '<=', now()->subHours(24))
+        $reactionHours = max(1, (int) Setting::getValue('abandoned_cart_reaction_hours', 24));
+        $gapDays = max(1, (int) Setting::getValue('cart_reaction_gap_days', 30));
+
+        $abandonedCarts = Cart::where('updated_at', '<=', now()->subHours($reactionHours))
             ->has('items')
             ->with(['buyer', 'items'])
             ->get();
 
         foreach ($abandonedCarts as $cart) {
             $buyer = $cart->buyer;
-            if (! $buyer) continue;
+            if (! $buyer) {
+                continue;
+            }
 
-            // Ensure buyer hasn't received an abandoned cart notification in the last 48 hours
-            $alreadyNotified = $buyer->notifications()
-                ->where('type', AbandonedCartNotification::class)
-                ->where('created_at', '>=', now()->subHours(48))
-                ->exists();
+            // Ensure buyer hasn't received an abandoned cart notification within the configured gap days
+            $canSendEmail = is_null($buyer->last_abandoned_cart_email_at)
+                || $buyer->last_abandoned_cart_email_at->lessThanOrEqualTo(now()->subDays($gapDays));
 
-            if (! $alreadyNotified) {
+            if ($canSendEmail) {
                 $buyer->notify(new AbandonedCartNotification($cart));
+                $buyer->updateQuietly([
+                    'last_abandoned_cart_email_at' => now(),
+                ]);
                 Log::info("Sent abandoned cart notification to buyer #{$buyer->id} for cart #{$cart->id}");
             }
         }

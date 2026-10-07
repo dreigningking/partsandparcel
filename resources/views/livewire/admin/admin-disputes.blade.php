@@ -118,7 +118,13 @@
                             <td class="py-3.5 px-4 text-slate-400 text-[11px]">
                                 {{ $disp->created_at->format('M d, Y') }}
                             </td>
-                            <td class="py-3.5 px-4 text-right">
+                            <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
+                                <a
+                                    href="{{ route('admin.disputes.show', $disp->id) }}"
+                                    class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 text-xs font-bold transition inline-block"
+                                >
+                                    Inspect Case
+                                </a>
                                 <button
                                     wire:click="showDispute({{ $disp->id }})"
                                     class="px-2.5 py-1 rounded-lg bg-pp-50 hover:bg-pp-100 text-pp-700 dark:bg-pp-950 dark:hover:bg-pp-900 text-xs font-bold transition cursor-pointer"

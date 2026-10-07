@@ -21,6 +21,7 @@ return new class extends Migration {
                 $table->json('payment_gateway')->nullable(); // arranged in the order of preference for payment gateways
                 $table->decimal('views', 10, 4)->default(0.0000); // cost of views
                 $table->decimal('clicks', 10, 2)->default(0.00); // cost of clicks
+                
                 $table->timestamps();
             });
         }

@@ -113,19 +113,24 @@ class OfferView extends Component
             ];
         }
 
-        // Trace root
-        $root = $this->offer;
-        while ($root->parent_id && $root->parent) {
-            $root = $root->parent;
+        // Find the root offer id
+        $rootId = $this->offer->parent_id ?: $this->offer->id;
+        $root = Offer::find($rootId);
+        while ($root && $root->parent_id) {
+            $root = Offer::find($root->parent_id);
+            if ($root) {
+                $rootId = $root->id;
+            }
         }
 
-        // Trace forward
-        $chain = collect([$root]);
-        $current = $root;
-        while ($child = Offer::with(['sender', 'recipient', 'items'])->where('parent_id', $current->id)->first()) {
-            $chain->push($child);
-            $current = $child;
-        }
+        // Fetch all offers linked to this negotiation thread in chronological order
+        $chain = Offer::with(['sender.primaryLocation', 'recipient.primaryLocation', 'items'])
+            ->where(function ($q) use ($rootId) {
+                $q->where('id', $rootId)
+                  ->orWhere('parent_id', $rootId);
+            })
+            ->orderBy('id', 'asc')
+            ->get();
 
         return $chain->values()->map(function ($off, $index) {
             return [
@@ -177,6 +182,82 @@ class OfferView extends Component
         $this->loadOffer();
     }
 
+    public function submitCounterOffer()
+    {
+        $user = Auth::user();
+        if (! $user) {
+            session()->flash('warning', 'Please sign in to negotiate offers.');
+            return redirect()->route('login');
+        }
+
+        if (! $this->offer) {
+            session()->flash('error', 'Offer record not found.');
+            return;
+        }
+
+        try {
+            $negotiationService = app(NegotiationService::class);
+            $newOffer = $negotiationService->submitCounterOffer($user, $this->offer, [
+                'price' => $this->counterPrice,
+                'discount' => $this->counterDiscount,
+                'warranty_days' => $this->warrantyPeriod,
+                'warranty_terms' => $this->warrantyTerms,
+                'terms' => $this->counterNotes,
+            ]);
+
+            session()->flash('message', 'Counter-offer submitted successfully!');
+            return redirect()->route('offers.view', ['offer_id' => 'OFF-' . $newOffer->id]);
+        } catch (\Throwable $e) {
+            session()->flash('error', $e->getMessage());
+        }
+    }
+
+    public function declineOffer()
+    {
+        $user = Auth::user();
+        if (! $user) {
+            session()->flash('warning', 'Please sign in to decline this offer.');
+            return redirect()->route('login');
+        }
+
+        if (! $this->offer) {
+            session()->flash('error', 'Offer record not found.');
+            return;
+        }
+
+        if ($user->id !== $this->offer->recipient_id) {
+            session()->flash('error', 'Unauthorized: Only the recipient can decline this offer.');
+            return;
+        }
+
+        $this->offer->update(['status' => 'declined']);
+        session()->flash('message', 'Offer declined.');
+        $this->loadOffer();
+    }
+
+    public function cancelOffer()
+    {
+        $user = Auth::user();
+        if (! $user) {
+            session()->flash('warning', 'Please sign in to cancel this offer.');
+            return redirect()->route('login');
+        }
+
+        if (! $this->offer) {
+            session()->flash('error', 'Offer record not found.');
+            return;
+        }
+
+        if ($user->id !== $this->offer->sender_id) {
+            session()->flash('error', 'Unauthorized: Only the sender can cancel this offer.');
+            return;
+        }
+
+        $this->offer->update(['status' => 'cancelled']);
+        session()->flash('message', 'Offer cancelled.');
+        $this->loadOffer();
+    }
+
     public function acceptOffer()
     {
         $user = Auth::user();
@@ -189,7 +270,7 @@ class OfferView extends Component
             try {
                 $invoice = app(NegotiationService::class)->acceptOffer($user, $this->offer);
                 session()->flash('message', "Offer accepted! Invoice {$invoice->invoice_number} generated for payment.");
-                return redirect()->route('invoices.view', $invoice->invoice_number);
+                return redirect()->route('invoices');
             } catch (\Throwable $e) {
                 session()->flash('error', $e->getMessage());
                 return;
@@ -197,7 +278,7 @@ class OfferView extends Component
         }
 
         session()->flash('message', 'Offer accepted! Reserving items for checkout.');
-        return redirect()->route('checkout');
+        return redirect()->route('invoices');
     }
 
     public function render()

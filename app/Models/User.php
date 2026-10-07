@@ -33,6 +33,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'gender',
         'notification_preferences',
         'country_id',
+        'last_abandoned_cart_email_at',
+        'freeze_payout',
     ];
 
     public function sluggable(): array
@@ -101,6 +103,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'suspended_at' => 'datetime',
             'password' => 'hashed',
             'is_verified' => 'boolean',
+            'freeze_payout' => 'boolean',
+            'last_abandoned_cart_email_at' => 'datetime',
             'notification_preferences' => 'array',
         ];
     }
@@ -139,13 +143,65 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role_id !== null;
     }
 
+    public function isSuperAdmin(): bool
+    {
+        if (! $this->isAdmin() || ! $this->role) {
+            return false;
+        }
+
+        return in_array($this->role->slug, ['super_admin', 'super-admin', 'admin'], true) || $this->role->hasPermission('*');
+    }
+
     public function hasPermission(string $permission): bool
     {
         if (! $this->isAdmin() || ! $this->role) {
             return false;
         }
 
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
         return $this->role->hasPermission($permission);
+    }
+
+    public function hasAnyPermission(array $permissions): bool
+    {
+        if (! $this->isAdmin() || ! $this->role) {
+            return false;
+        }
+
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        foreach ($permissions as $permission) {
+            if ($this->role->hasPermission($permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Retrieve or create the default Customer Support account used for automated onboarding chats.
+     */
+    public static function getSupportUser(): self
+    {
+        $supportRole = Role::whereIn('slug', ['customer_support', 'super_admin'])->first();
+
+        return static::where('email', 'support@partsandparcel.com')
+            ->orWhere('role_id', $supportRole?->id)
+            ->first() ?? static::firstOrCreate(
+                ['email' => 'support@partsandparcel.com'],
+                [
+                    'name' => 'Parts & Parcel Support',
+                    'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(32)),
+                    'role_id' => $supportRole?->id,
+                    'email_verified_at' => now(),
+                ]
+            );
     }
 
     // Relationships

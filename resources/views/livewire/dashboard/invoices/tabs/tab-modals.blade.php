@@ -474,4 +474,38 @@
     </div>
   @endif
 
+  <!-- ========================================================================= -->
+  <!-- 7. UNILATERAL CANCELLATION MODAL -->
+  <!-- ========================================================================= -->
+  @if ($showCancelModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4">
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-200">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-sm font-extrabold text-rose-700 flex items-center gap-2">
+            <i class="fas fa-ban"></i> Cancel Order
+          </h3>
+          <button wire:click="closeModals" type="button" class="text-slate-400 hover:text-slate-600 text-lg cursor-pointer">×</button>
+        </div>
+
+        <p class="text-xs text-slate-600 leading-relaxed">
+          Are you sure you want to cancel this order?
+          @if ($invoice->status === 'paid')
+            Since payment was already completed in escrow, an automatic refund will be queued for the buyer.
+          @endif
+        </p>
+
+        <div>
+          <label class="font-bold text-slate-700 block mb-1 text-xs">Reason for Cancellation *</label>
+          <textarea wire:model="cancelReason" rows="3" placeholder="Please explain why you are cancelling this order..." class="w-full p-2.5 rounded-xl border border-slate-200 text-xs focus:border-rose-500 outline-none"></textarea>
+          @error('cancelReason') <span class="text-rose-500 text-[11px]">{{ $message }}</span> @enderror
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button wire:click="closeModals" type="button" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer">Back</button>
+          <button wire:click="confirmCancelOrder" type="button" class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-xs cursor-pointer">Confirm Cancellation</button>
+        </div>
+      </div>
+    </div>
+  @endif
+
 </div>

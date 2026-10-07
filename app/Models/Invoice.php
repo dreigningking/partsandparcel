@@ -39,6 +39,14 @@ class Invoice extends Model
         'issued_at',
         'accepted_at',
         'paid_at',
+        'shipped_at',
+        'ready_for_pickup_at',
+        'delivered_at',
+        'auto_cancel_warned_at',
+        'admin_followup_notified_at',
+        'cancelled_at',
+        'cancelled_by',
+        'cancellation_reason',
         'completed_at',
         'due_at',
     ];
@@ -80,6 +88,11 @@ class Invoice extends Model
         };
     }
 
+    public function currencySymbol(): string
+    {
+        return $this->currency_symbol;
+    }
+
     protected function casts(): array
     {
         return [
@@ -91,9 +104,20 @@ class Invoice extends Model
             'issued_at' => 'datetime',
             'accepted_at' => 'datetime',
             'paid_at' => 'datetime',
+            'shipped_at' => 'datetime',
+            'ready_for_pickup_at' => 'datetime',
+            'delivered_at' => 'datetime',
+            'auto_cancel_warned_at' => 'datetime',
+            'admin_followup_notified_at' => 'datetime',
+            'cancelled_at' => 'datetime',
             'completed_at' => 'datetime',
             'due_at' => 'datetime',
         ];
+    }
+
+    public function cancelledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
     public function buyer(): BelongsTo

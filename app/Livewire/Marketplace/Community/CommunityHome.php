@@ -279,8 +279,8 @@ class CommunityHome extends Component
         $this->validate([
             'formType' => 'required|in:item,service,advice',
             'formCategory' => 'required',
-            'formTitle' => 'required|min:5|max:180',
-            'formDesc' => 'required|min:10',
+            'formTitle' => ['required', 'min:5', 'max:180', new \App\Rules\ProhibitedWordsRule],
+            'formDesc' => ['required', 'min:10', new \App\Rules\ProhibitedWordsRule],
             'formMedia.*' => 'nullable|file|mimes:jpg,jpeg,png,webp,mp4,mov,webm,pdf,doc,docx|max:25600',
         ], [
             'formType.in' => 'Please select a valid request type: Product/Part, Repair/Service, or Question/Advice.',

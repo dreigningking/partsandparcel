@@ -7,6 +7,7 @@ use App\Services\Notification\FcmService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class AbandonedCartNotification extends Notification implements ShouldQueue
@@ -17,7 +18,20 @@ class AbandonedCartNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['mail', 'database', 'broadcast'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $itemCount = $this->cart->items()->count();
+
+        return (new MailMessage)
+            ->subject('Items waiting in your cart — Parts & Parcel')
+            ->greeting("Hello {$notifiable->name},")
+            ->line("You left {$itemCount} item(s) in your shopping cart.")
+            ->line("Popular items sell quickly on Parts & Parcel. Complete your checkout today with escrow-protected payments.")
+            ->action('Return to My Cart', route('cart'))
+            ->line('Thank you for choosing Parts & Parcel!');
     }
 
     public function toDatabase(object $notifiable): array

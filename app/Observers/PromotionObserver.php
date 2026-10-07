@@ -29,15 +29,20 @@ class PromotionObserver
      */
     protected function createModerationRecord(Promotion $promotion, string $action): void
     {
-        // Check if the promotion has a plan and the plan type is blog_post or newsletter
-        $plan = method_exists($promotion, 'plan') ? $promotion->plan : null;
-        if (! $plan || ! in_array($plan->type ?? null, ['blog_post', 'newsletter'], true)) {
-            return;
-        }
+        $autoApprove = (bool) Setting::getValue('auto_approve_promotions', true);
+        $status = $autoApprove ? 'approved' : 'pending';
 
-        // Check the setting for content.generation
-        $contentGeneration = Setting::getValue('content.generation', 'auto');
-        if ($contentGeneration !== 'manual') {
+        $existing = Moderation::where('moderatable_type', Promotion::class)
+            ->where('moderatable_id', $promotion->id)
+            ->first();
+
+        if ($existing) {
+            if ($existing->status === 'pending' || (! $autoApprove && $action === 'updated')) {
+                $existing->update([
+                    'action' => $action,
+                    'status' => $status,
+                ]);
+            }
             return;
         }
 
@@ -46,9 +51,9 @@ class PromotionObserver
             'moderatable_type' => Promotion::class,
             'moderatable_id' => $promotion->id,
             'action' => $action,
-            'status' => 'pending',
+            'status' => $status,
             'reason' => null,
-            'moderated_by' => null,
+            'moderated_by' => $autoApprove ? ($promotion->user_id ?? null) : null,
         ]);
     }
 }

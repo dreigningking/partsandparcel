@@ -69,7 +69,7 @@
           @php
             $authorName = $discussion?->user?->name ?? 'TechSam';
             $authorAvatar = strtoupper(substr($authorName, 0, 2));
-            $authorLocation = $discussion?->location_text ?? ($discussion?->user?->primaryLocation?->city ? "{$discussion->user->primaryLocation->city}, {$discussion->user->primaryLocation->state}" : ($discussion?->attachments['location'] ?? 'Computer Village, Ikeja, Lagos'));
+            $authorLocation = $discussion->location ? "{$discussion->location->city}, {$discussion->location->state->name}" : "{$discussion->user->primaryLocation->city}, {$discussion->user->primaryLocation->state->name}";
             $postedTime = $discussion ? $discussion->created_at->diffForHumans() : '2 hours ago';
             $categoryName = $discussion?->category?->name ?? 'Electronics';
             $brandName = $discussion?->brand?->name ?? '';

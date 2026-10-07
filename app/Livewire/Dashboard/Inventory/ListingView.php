@@ -114,6 +114,7 @@ class ListingView extends Component
             'editPrice' => ['required', 'numeric', 'min:0'],
             'editQuantity' => ['required', 'integer', 'min:0'],
             'is_published' => ['required', 'boolean'],
+            'editWarrantyTerms' => ['nullable', 'string', new \App\Rules\ProhibitedWordsRule],
         ]);
 
         $this->listing->update([

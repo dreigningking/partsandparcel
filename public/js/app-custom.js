@@ -276,11 +276,29 @@ function openSection(s) {
 // 6B. ADMIN ACCORDION GROUPS
 const adminNavGroups = ["market", "trust", "content_blog", "finance", "system"];
 function openGroup(id) {
-    document.querySelectorAll(".sidebar .sub").forEach((el) => {
-        if (el.id !== id) el.classList.remove("open");
+    adminNavGroups.forEach((groupId) => {
+        const sub = document.getElementById(groupId);
+        const btn = document.getElementById('btn-' + groupId) || document.querySelector(`[onclick*="openGroup('${groupId}')"]`);
+        const chevron = btn ? btn.querySelector('.chevron-icon') : null;
+
+        if (groupId === id) {
+            if (sub) {
+                const isOpen = sub.classList.toggle("open");
+                if (btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                if (chevron) {
+                    if (isOpen) {
+                        chevron.classList.add('rotate-180');
+                    } else {
+                        chevron.classList.remove('rotate-180');
+                    }
+                }
+            }
+        } else {
+            if (sub) sub.classList.remove("open");
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
     });
-    const target = document.getElementById(id);
-    if (target) target.classList.toggle("open");
 }
 
 // 7. COLOR MODE THEME SWITCHER

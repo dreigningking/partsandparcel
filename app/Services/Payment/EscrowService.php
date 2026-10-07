@@ -8,6 +8,7 @@ use App\Models\Issue;
 use App\Models\Payment;
 use App\Models\Revenue;
 use App\Models\Settlement;
+use App\Models\Setting;
 use App\Models\Subscription;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -48,7 +49,9 @@ class EscrowService
     }
 
     /**
-     * Process invoice payment state, platform revenue, and escrow settlement.
+     * Process invoice payment state and escrow notifications.
+     * Note: Transaction commission is zero; only escrow fees apply.
+     * Settlement creation is deferred until package acceptance.
      */
     protected function processInvoicePayment(Payment $payment): void
     {
@@ -57,116 +60,85 @@ class EscrowService
         $invoice->update([
             'status' => 'paid',
             'paid_at' => now(),
+            'commission' => 0.00,
         ]);
 
         app(\App\Services\Commercial\NegotiationService::class)->handleInvoicePaid($invoice);
 
-        // Record platform commission revenue
-        if ((float) $invoice->commission > 0) {
+        // Record escrow fee as platform service fee revenue if fee was collected
+        if ((float) $payment->escrow_fee > 0) {
             Revenue::firstOrCreate(
                 [
                     'payment_id' => $payment->id,
                     'invoice_id' => $invoice->id,
-                    'type' => 'commission',
+                    'type' => 'service_fee',
                 ],
                 [
-                    'amount' => $invoice->commission,
+                    'amount' => $payment->escrow_fee,
                     'currency' => $payment->currency ?? 'NGN',
                 ]
             );
         }
 
-        // If using platform escrow, initialize settlement record for seller
-        if ($invoice->isPlatformEscrow()) {
-            $gross = (float) $invoice->total;
-            $commission = (float) $invoice->commission;
-            $net = max(0, $gross - $commission);
-
-            // Record escrow fee on payment
-            $payment->updateQuietly([
-                'escrow_fee' => $commission,
-            ]);
-
-            Settlement::firstOrCreate(
-                [
-                    'invoice_id' => $invoice->id,
-                ],
-                [
-                    'seller_id' => $invoice->seller_id,
-                    'payment_id' => $payment->id,
-                    'amount' => $net,
-                    'currency' => $payment->currency ?? $invoice->currency ?? 'NGN',
-                    'status' => 'pending',
-                    'eligible_at' => null, // Set when delivery/warranty period begins
-                ]
-            );
-
-            if ($invoice->seller) {
-                $invoice->seller->notify(new \App\Notifications\PaymentHeldInEscrowNotification($invoice));
-            }
+        // Notify seller that payment is securely held in platform escrow
+        if ($invoice->isPlatformEscrow() && $invoice->seller) {
+            $invoice->seller->notify(new \App\Notifications\PaymentHeldInEscrowNotification($invoice));
         }
     }
 
     /**
-     * Process subscription plan payment.
+     * Create seller settlement record upon buyer package acceptance (or auto-acceptance).
+     * Calculates seller net proceeds as payment amount minus platform escrow fee.
+     * Snapshots seller bank details into settlement and calculates eligibility timeline.
      */
-    protected function processSubscriptionPayment(Payment $payment): void
+    public function createSettlementOnAcceptance(Invoice $invoice): ?Settlement
     {
-        $subscription = $payment->subscription;
-        $plan = $subscription->plan;
-
-        $startsAt = now();
-        $endsAt = match ($plan?->billing_interval) {
-            'yearly' => now()->addYear(),
-            'quarterly' => now()->addMonths(3),
-            default => now()->addMonth(),
-        };
-
-        $subscription->update([
-            'status' => 'active',
-            'starts_at' => $startsAt,
-            'ends_at' => $endsAt,
-            'response_limit' => $plan?->response_limit ?? $subscription->response_limit,
-        ]);
-
-        Revenue::firstOrCreate(
-            [
-                'payment_id' => $payment->id,
-                'type' => 'subscription',
-            ],
-            [
-                'invoice_id' => null,
-                'amount' => $payment->amount,
-                'currency' => $payment->currency ?? 'NGN',
-            ]
-        );
-    }
-
-    /**
-     * Start inspection & warranty countdown on delivery or item receipt.
-     * Escrow release eligibility timer = delivered_at + max(warranty_days, default_hours).
-     */
-    public function startInspectionWarrantyWindow(Invoice $invoice): ?Settlement
-    {
-        $settlement = $invoice->settlement;
-        if (! $settlement) {
+        if (! $invoice->isPlatformEscrow()) {
             return null;
         }
 
-        $warrantyDays = $invoice->maxWarrantyDays();
-
-        if ($warrantyDays && $warrantyDays > 0) {
-            $eligibleAt = now()->addDays($warrantyDays);
-        } else {
-            $defaultHours = (int) config('services.escrow.default_inspection_hours', 48);
-            $eligibleAt = now()->addHours($defaultHours);
+        if ($invoice->settlement) {
+            return $invoice->settlement;
         }
 
-        $settlement->update([
+        $payment = $invoice->payments()->where('status', 'successful')->latest()->first() ?? $invoice->payment;
+        $gross = $payment ? (float) $payment->amount : (float) $invoice->total;
+        $escrowFee = $payment ? (float) $payment->escrow_fee : 0.0;
+        $net = max(0.00, round($gross - $escrowFee, 2));
+
+        $seller = $invoice->seller;
+        $bankAccount = $seller
+            ? ($seller->bankAccounts()->where('is_default', true)->first() ?? $seller->bankAccounts()->first())
+            : null;
+
+        $bankDetails = $bankAccount ? [
+            'bank_name' => $bankAccount->bank_name,
+            'bank_code' => $bankAccount->bank_code,
+            'account_number' => $bankAccount->account_number,
+            'account_name' => $bankAccount->account_name,
+            'recipient_code' => $bankAccount->recipient_code,
+            'currency' => $bankAccount->currency,
+        ] : null;
+
+        $eligibleHours = (int) Setting::getValue('order_accepted_to_settlement_eligible_hours', 24);
+        $warrantyDays = $invoice->maxWarrantyDays();
+        $eligibleAt = now()->addHours($eligibleHours);
+        if ($warrantyDays && $warrantyDays > 0) {
+            $eligibleAt = $eligibleAt->addDays($warrantyDays);
+        }
+
+        $settlement = Settlement::create([
+            'invoice_id' => $invoice->id,
+            'seller_id' => $invoice->seller_id,
+            'payment_id' => $payment?->id,
+            'amount' => $net,
+            'currency' => $payment?->currency ?? $invoice->currency ?? 'NGN',
+            'status' => 'pending',
             'eligible_at' => $eligibleAt,
+            'bank_details' => $bankDetails,
         ]);
 
-        // Also update invoice items warranty start and end dates
+        // Start warranty tracking dates on invoice items if configured
         foreach ($invoice->items as $item) {
             if ($item->warranty_period_days && $item->warranty_period_days > 0) {
                 $item->update([
@@ -180,10 +152,24 @@ class EscrowService
     }
 
     /**
+     * Start inspection & warranty countdown on delivery or item receipt.
+     * Creates or updates settlement record for package acceptance.
+     */
+    public function startInspectionWarrantyWindow(Invoice $invoice): ?Settlement
+    {
+        return $this->createSettlementOnAcceptance($invoice);
+    }
+
+    /**
      * Check if a settlement is eligible for release.
      */
     public function canReleaseSettlement(Settlement $settlement): bool
     {
+        // 0. Seller payout must not be frozen
+        if ($settlement->seller && $settlement->seller->freeze_payout) {
+            return false;
+        }
+
         // 1. Must have an eligible_at date that has passed
         if (! $settlement->eligible_at || $settlement->eligible_at->isFuture()) {
             return false;

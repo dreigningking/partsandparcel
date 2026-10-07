@@ -300,27 +300,72 @@
       </div>
 
       <!-- ACTIVE ACTIONS BASED ON ROLE AND STAGE -->
+      <!-- ACTIVE ACTIONS BASED ON ROLE AND STAGE -->
       @if ($isSeller)
-        @if (! $isShipped)
+        @if ($this->isFulfillmentWarningActive())
+          <div class="p-4 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-900 flex items-start gap-3 shadow-xs">
+            <div class="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="flex-1 text-xs">
+              <h4 class="font-extrabold uppercase text-rose-950">Fulfillment Deadline Warning!</h4>
+              <p class="mt-0.5 text-rose-900 leading-relaxed">
+                You have not yet dispatched or prepared this package. This order will be <strong>automatically cancelled and refunded</strong> in approximately <strong>{{ $this->autoCancelHoursRemaining }} hours</strong> if not fulfilled.
+              </p>
+            </div>
+          </div>
+        @endif
+
+        @if (! $isShipped && ! $invoice->ready_for_pickup_at)
           <div class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h4 class="text-xs font-black text-amber-950 uppercase tracking-wider flex items-center gap-2">
-                <i class="fas fa-box text-amber-600"></i> Action Required: Package Ready to Ship
+                <i class="fas fa-box text-amber-600"></i> Action Required: Order Awaiting Fulfillment
               </h4>
               <p class="text-xs text-amber-900 mt-1">
-                The buyer's funds are securely locked in platform escrow. Please dispatch the package and submit shipping details.
+                The buyer's funds are securely locked in platform escrow. Please dispatch the package or mark it ready for self-pickup.
               </p>
             </div>
-            <button wire:click="openShipmentModal" type="button" class="px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-2 shrink-0 cursor-pointer">
-              <i class="fas fa-truck"></i>
-              <span>Mark Shipped &amp; Add Tracking</span>
-            </button>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              <button wire:click="markReadyForPickup" type="button" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-2 cursor-pointer">
+                <i class="fas fa-store"></i>
+                <span>Mark Ready for Pickup</span>
+              </button>
+              <button wire:click="openShipmentModal" type="button" class="px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-2 cursor-pointer">
+                <i class="fas fa-truck"></i>
+                <span>Mark Shipped &amp; Add Tracking</span>
+              </button>
+              @if ($this->canCancelOrder())
+                <button wire:click="openCancelModal" type="button" class="px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition flex items-center gap-1.5 cursor-pointer">
+                  <i class="fas fa-ban"></i>
+                  <span>Cancel Order</span>
+                </button>
+              @endif
+            </div>
+          </div>
+        @elseif ($invoice->ready_for_pickup_at && ! $isDelivered)
+          <div class="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-xs text-blue-900 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0">
+                <i class="fas fa-store"></i>
+              </div>
+              <div>
+                <p class="font-bold">Ready for Customer Pickup</p>
+                <p class="text-blue-700 text-[11px] mt-0.5">Package was marked ready on {{ $invoice->ready_for_pickup_at->format('M d, Y H:i') }}. Awaiting customer collection.</p>
+              </div>
+            </div>
+            @if ($this->canCancelOrder())
+              <button wire:click="openCancelModal" type="button" class="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-ban"></i>
+                <span>Cancel</span>
+              </button>
+            @endif
           </div>
         @elseif ($isShipped && ! $isDelivered)
           <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-center justify-between gap-4">
             <div>
               <p class="font-bold text-slate-900">Package In Transit to Buyer</p>
-              <p class="text-slate-500 text-[11px] mt-0.5">Dispatched via {{ $outboundShipment->provider_name }} ({{ $outboundShipment->tracking_number }}). Awaiting delivery confirmation by the buyer.</p>
+              <p class="text-slate-500 text-[11px] mt-0.5">Dispatched via {{ $outboundShipment?->provider_name ?? 'Courier' }} ({{ $outboundShipment?->tracking_number ?? 'Waybill' }}). Awaiting delivery confirmation by the buyer.</p>
             </div>
             <button wire:click="switchTab('shipment')" type="button" class="text-xs font-bold text-pp-600 hover:underline cursor-pointer">
               View Tracking Tab →
@@ -344,10 +389,41 @@
       @endif
 
       @if ($isBuyer)
-        @if (! $isShipped)
-          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700">
-            <h4 class="font-bold text-slate-900">Seller is Preparing Your Order</h4>
-            <p class="text-slate-500 text-[11px] mt-0.5">Your payment is securely held in Parts &amp; Parcel Escrow. The seller has been instructed to dispatch the package.</p>
+        @if (! $isShipped && ! $invoice->ready_for_pickup_at)
+          <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h4 class="font-bold text-slate-900">Seller is Preparing Your Order</h4>
+              <p class="text-slate-500 text-[11px] mt-0.5">Your payment is securely held in Parts &amp; Parcel Escrow. The seller has been instructed to fulfill the package.</p>
+            </div>
+            @if ($this->canCancelOrder())
+              <button wire:click="openCancelModal" type="button" class="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer">
+                <i class="fas fa-ban"></i>
+                <span>Cancel Order</span>
+              </button>
+            @endif
+          </div>
+        @elseif ($invoice->ready_for_pickup_at && ! $isDelivered)
+          <div class="p-5 rounded-2xl bg-pp-50/70 border border-pp-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h4 class="text-xs font-black text-pp-950 uppercase tracking-wider flex items-center gap-2">
+                <i class="fas fa-store text-pp-600"></i> Your Package is Ready for Pickup!
+              </h4>
+              <p class="text-xs text-pp-900 mt-1">
+                The seller has prepared your package for collection at their location. Once collected, please confirm below.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button wire:click="openReceiveConfirmModal" type="button" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-2 shrink-0 cursor-pointer">
+                <i class="fas fa-box-open"></i>
+                <span>I've Picked Up Package</span>
+              </button>
+              @if ($this->canCancelOrder())
+                <button wire:click="openCancelModal" type="button" class="px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition flex items-center gap-1.5 cursor-pointer">
+                  <i class="fas fa-ban"></i>
+                  <span>Cancel</span>
+                </button>
+              @endif
+            </div>
           </div>
         @elseif ($isShipped && ! $isDelivered)
           <div class="p-5 rounded-2xl bg-pp-50/70 border border-pp-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -356,7 +432,7 @@
                 <i class="fas fa-truck-moving text-pp-600"></i> Your Package is in Transit!
               </h4>
               <p class="text-xs text-pp-900 mt-1">
-                Dispatched via <strong>{{ $outboundShipment->provider_name }}</strong> (Tracking #{{ $outboundShipment->tracking_number }}).
+                Dispatched via <strong>{{ $outboundShipment?->provider_name ?? 'Courier' }}</strong> (Tracking #{{ $outboundShipment?->tracking_number ?? 'Waybill' }}).
                 When the package arrives, please confirm reception below.
               </p>
             </div>
@@ -727,17 +803,28 @@
             <span class="text-2xl font-black text-slate-950">{{ $invoice->currency_symbol }}{{ number_format($invoice->total ?? 0) }}</span>
           </div>
 
-          @if ($invoiceSettlement)
+          @if ($invoice->isPlatformEscrow())
+            @php
+              $payoutGross = $invoicePayment ? (float) $invoicePayment->amount : (float) ($invoice->total ?? 0);
+              $payoutFee = $invoicePayment ? (float) $invoicePayment->escrow_fee : (float) ($escrowFee ?? 0);
+              $netSellerProceeds = max(0.00, round($payoutGross - $payoutFee, 2));
+            @endphp
             <div class="pt-2 border-t border-dashed border-slate-200 flex justify-between items-center text-xs">
               <span class="text-slate-500 font-bold flex items-center gap-1.5">
-                <i class="fas fa-hand-holding-dollar text-emerald-600"></i> Net Seller Earnings (Settlement):
+                <i class="fas fa-hand-holding-dollar text-emerald-600"></i> Net Seller Proceeds (Amount - Escrow Fee):
               </span>
               <div class="flex items-center gap-1.5">
-                <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase {{ $invoiceSettlement->status === 'settled' ? 'bg-emerald-100 text-emerald-800' : ($invoiceSettlement->status === 'eligible' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800') }}">
-                  {{ $invoiceSettlement->status }}
-                </span>
+                @if ($invoiceSettlement)
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase {{ $invoiceSettlement->status === 'settled' ? 'bg-emerald-100 text-emerald-800' : ($invoiceSettlement->status === 'eligible' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800') }}">
+                    {{ $invoiceSettlement->status }}
+                  </span>
+                @else
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-slate-100 text-slate-700">
+                    Pending Acceptance
+                  </span>
+                @endif
                 <span class="text-sm font-black text-emerald-700">
-                  {{ $invoiceSettlement->currency_symbol }}{{ number_format($invoiceSettlement->amount, 2) }}
+                  {{ $invoice->currency_symbol }}{{ number_format($invoiceSettlement ? $invoiceSettlement->amount : $netSellerProceeds, 2) }}
                 </span>
               </div>
             </div>

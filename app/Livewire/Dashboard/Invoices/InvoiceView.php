@@ -14,6 +14,7 @@ use App\Models\Replacement;
 use App\Models\ReturnRecord;
 use App\Models\ServiceJob;
 use App\Models\ServiceReview;
+use App\Models\Setting;
 use App\Models\Settlement;
 use App\Models\Shipment;
 use App\Models\WarrantyClaim;
@@ -128,6 +129,10 @@ class InvoiceView extends Component
     public string $warrantyResolutionNotes = '';
     public string $warrantyRejectEvidence = '';
 
+    // Unilateral Cancellation Modal
+    public bool $showCancelModal = false;
+    public string $cancelReason = '';
+
     public function switchTab(string $tab): void
     {
         if (in_array($tab, ['details', 'service', 'shipment', 'issue', 'dispute', 'replacement', 'refund', 'warranty'])) {
@@ -207,6 +212,7 @@ class InvoiceView extends Component
         $this->showBuyerReplacementRejectModal = false;
         $this->showWarrantyModal = false;
         $this->showSellerWarrantyModal = false;
+        $this->showCancelModal = false;
     }
 
     public function toggleFinancialSummary(): void
@@ -397,10 +403,38 @@ class InvoiceView extends Component
             ]);
         }
 
+        $this->invoice->update([
+            'shipped_at' => now(),
+        ]);
+
         $this->showShipmentModal = false;
         $this->invoice->refresh();
 
         session()->flash('seller_success', "Package marked as shipped! Tracking #{$shipment->tracking_number} recorded. The buyer has been notified.");
+    }
+
+    /**
+     * Seller marks package ready for buyer self-pickup.
+     */
+    public function markReadyForPickup(): void
+    {
+        $user = Auth::user();
+        if (! $this->isSeller && (! $user || ! method_exists($user, 'isAdmin') || ! $user->isAdmin())) {
+            session()->flash('error', 'Only the seller can mark the package as ready for pickup.');
+            return;
+        }
+
+        $this->invoice->update([
+            'ready_for_pickup_at' => now(),
+        ]);
+
+        $this->invoice->refresh();
+
+        if ($this->invoice->buyer) {
+            $this->invoice->buyer->notify(new \App\Notifications\PackageReadyForPickupNotification($this->invoice));
+        }
+
+        session()->flash('seller_success', 'Package marked as ready for pickup! The buyer has been notified.');
     }
 
     /**
@@ -424,6 +458,10 @@ class InvoiceView extends Component
             ]);
         }
 
+        $this->invoice->update([
+            'delivered_at' => now(),
+        ]);
+
         $this->showReceiveConfirmModal = false;
         $this->invoice->refresh();
 
@@ -441,11 +479,144 @@ class InvoiceView extends Component
             'completed_at' => now(),
         ]);
 
-        app(EscrowService::class)->startInspectionWarrantyWindow($this->invoice);
+        app(EscrowService::class)->createSettlementOnAcceptance($this->invoice);
 
         $this->invoice->refresh();
 
         session()->flash('buyer_payment_success', 'Deal successfully completed! Escrow settlement has been finalized for the seller. You can now leave your verified review.');
+    }
+
+    /**
+     * Check if current user can unilaterally cancel this invoice.
+     * Order can be cancelled unilaterally before payment, or after payment within order_processing_to_cancel_hours.
+     * Once shipped or delivered, cancellation is locked (must use dispute/return workflow).
+     */
+    public function canCancelOrder(): bool
+    {
+        if (! $this->invoice) {
+            return false;
+        }
+
+        if (in_array($this->invoice->status, ['cancelled', 'accepted', 'completed', 'disputed'])) {
+            return false;
+        }
+
+        if ($this->invoice->shipped_at || $this->invoice->delivered_at) {
+            return false;
+        }
+
+        if ($this->invoice->status !== 'paid') {
+            return true;
+        }
+
+        $cancelHours = (int) Setting::getValue('order_processing_to_cancel_hours', 24);
+        if ($this->invoice->paid_at && $this->invoice->paid_at->lt(now()->subHours($cancelHours))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Open unilateral order cancellation modal.
+     */
+    public function openCancelModal(): void
+    {
+        if (! $this->canCancelOrder()) {
+            session()->flash('error', 'Cancellation window has elapsed or order cannot be cancelled at this stage.');
+            return;
+        }
+
+        $this->cancelReason = '';
+        $this->showCancelModal = true;
+    }
+
+    /**
+     * Unilaterally cancel order. Counterparty is notified without requiring confirmation.
+     */
+    public function confirmCancelOrder(): void
+    {
+        $this->validate([
+            'cancelReason' => 'required|string|min:5|max:500',
+        ]);
+
+        if (! $this->canCancelOrder()) {
+            session()->flash('error', 'Order cannot be cancelled at this stage.');
+            $this->showCancelModal = false;
+            return;
+        }
+
+        $user = Auth::user();
+        $wasPaid = ($this->invoice->status === 'paid');
+
+        $this->invoice->update([
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+            'cancelled_by' => $user->id,
+            'cancellation_reason' => $this->cancelReason,
+        ]);
+
+        if ($wasPaid) {
+            $payment = $this->invoice->payments()->where('status', 'successful')->latest()->first() ?? $this->invoice->payment;
+            if ($payment) {
+                $refund = \App\Models\Refund::create([
+                    'invoice_id' => $this->invoice->id,
+                    'payment_id' => $payment->id,
+                    'buyer_id' => $this->invoice->buyer_id,
+                    'seller_id' => $this->invoice->seller_id,
+                    'amount' => (float) $this->invoice->total,
+                    'status' => 'pending',
+                    'reason' => "Order unilaterally cancelled by {$user->name}: {$this->cancelReason}",
+                ]);
+                \App\Jobs\RefundPaymentJob::dispatch($refund->id);
+            }
+        }
+
+        $counterparty = ($user->id === $this->invoice->seller_id) ? $this->invoice->buyer : $this->invoice->seller;
+        if ($counterparty) {
+            $counterparty->notify(new \App\Notifications\OrderCancelledNotification(
+                $this->invoice,
+                $user,
+                false,
+                $this->cancelReason
+            ));
+        }
+
+        $this->showCancelModal = false;
+        $this->invoice->refresh();
+
+        session()->flash('buyer_notice', 'Order has been successfully cancelled.');
+    }
+
+    /**
+     * Check if seller fulfillment warning is active.
+     */
+    public function isFulfillmentWarningActive(): bool
+    {
+        if (! $this->invoice || $this->invoice->status !== 'paid') {
+            return false;
+        }
+
+        if ($this->invoice->shipped_at || $this->invoice->ready_for_pickup_at) {
+            return false;
+        }
+
+        $warningHours = (int) Setting::getValue('order_processing_to_auto_cancel_warning_hours', 48);
+        return $this->invoice->paid_at && $this->invoice->paid_at->lte(now()->subHours($warningHours));
+    }
+
+    /**
+     * Calculate remaining hours before order auto-cancellation.
+     */
+    public function getAutoCancelHoursRemainingProperty(): int
+    {
+        if (! $this->invoice || ! $this->invoice->paid_at) {
+            return 0;
+        }
+
+        $autoCancelHours = (int) Setting::getValue('order_processing_to_auto_cancel_hours', 72);
+        $deadline = $this->invoice->paid_at->copy()->addHours($autoCancelHours);
+        return max(0, (int) now()->diffInHours($deadline, false));
     }
 
     /**
@@ -1036,13 +1207,13 @@ class InvoiceView extends Component
         $offerDiscount = (float) $this->invoice->discount;
         $couponDisc = $this->couponDiscount;
         $totalPayable = max(0.00, round($subtotal + $escrowFee - $offerDiscount - $couponDisc, 2));
-        $commission = round(max(0.00, $subtotal - $offerDiscount - $couponDisc) * 0.05, 2);
+        $commission = 0.00;
 
         $this->invoice->update([
             'payment_method' => 'platform',
             'discount' => $offerDiscount + $couponDisc,
             'total' => $totalPayable,
-            'commission' => $commission,
+            'commission' => 0.00,
             'status' => 'paid',
             'paid_at' => now(),
         ]);

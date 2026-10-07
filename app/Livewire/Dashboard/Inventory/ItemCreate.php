@@ -336,7 +336,8 @@ class ItemCreate extends Component
         $maxFileKb = max(1024, max($maxImageKb, $maxVideoKb));
 
         $this->validate([
-            'name' => 'required|string|max:255',
+            'name' => ['required', 'string', 'max:255', new \App\Rules\ProhibitedWordsRule],
+            'description' => ['nullable', 'string', new \App\Rules\ProhibitedWordsRule],
             'item_type' => 'required|in:whole,part,scrap',
             'condition_status' => 'required|in:new,used,refurbished,faulty',
             'location_id' => 'required|exists:locations,id',

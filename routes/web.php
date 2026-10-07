@@ -41,7 +41,6 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Dashboard\Disputes\DisputesList;
 use App\Livewire\Dashboard\Disputes\DisputeView;
-use App\Livewire\Dashboard\Earnings;
 use App\Livewire\Dashboard\Inventory\ItemCreate;
 use App\Livewire\Dashboard\Inventory\ItemsList;
 use App\Livewire\Dashboard\Inventory\ItemView;
@@ -53,6 +52,7 @@ use App\Livewire\Dashboard\Locations;
 use App\Livewire\Dashboard\Messages\MessageConversation;
 use App\Livewire\Dashboard\Messages\MessageList;
 use App\Livewire\Dashboard\Notifications;
+use App\Livewire\Dashboard\Offers\OfferNegotiations;
 use App\Livewire\Dashboard\Offers\OffersList;
 use App\Livewire\Dashboard\Offers\OfferView;
 use App\Livewire\Dashboard\Overview;
@@ -61,8 +61,6 @@ use App\Livewire\Dashboard\Requests\MyRequests;
 use App\Livewire\Dashboard\Requests\MyRequestView;
 use App\Livewire\Dashboard\Responses\MyResponses;
 use App\Livewire\Dashboard\Responses\MyResponseView;
-use App\Livewire\Dashboard\Shipments\ShipmentsList;
-use App\Livewire\Dashboard\Shipments\ShipmentView;
 use App\Livewire\Dashboard\SubscriptionConfirmation;
 use App\Livewire\Dashboard\SubscriptionPlans;
 use App\Livewire\Dashboard\Subscriptions;
@@ -133,6 +131,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('messages/conversation', MessageConversation::class)->name('conversation');
     Route::get('offers', OffersList::class)->name('offers');
     Route::get('offers/{offer_id?}', OfferView::class)->name('offers.view');
+    Route::get('negotiations', OfferNegotiations::class)->name('negotiations');
 
     Route::get('invoices', InvoicesList::class)->name('invoices');
     Route::get('invoices/{invoice_id?}', InvoiceView::class)->name('invoices.view');
@@ -164,52 +163,70 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->as('admin.')->group(function () {
     Route::get('/', AdminDashboard::class)->name('index');
     Route::get('dashboard', AdminDashboard::class)->name('dashboard');
-    Route::get('moderations', AdminModerations::class)->name('moderations');
-    Route::get('analytics', AdminAnalytics::class)->name('analytics');
+    Route::middleware('permission:manage_moderation')->get('moderations', AdminModerations::class)->name('moderations');
+    Route::middleware('permission:view_analytics')->get('analytics', AdminAnalytics::class)->name('analytics');
     
     // MARKETPLACE
-    Route::get('users', AdminUsers::class)->name('users');
-    Route::get('users/{user}', AdminUserDetails::class)->name('users.show');
-    Route::get('subscriptions', AdminSubscriptions::class)->name('subscriptions');
-    Route::get('listings', AdminListings::class)->name('properties');
-    Route::get('listings/{listing}', AdminListingDetails::class)->name('properties.show');
-    Route::get('manage-listings', AdminListings::class)->name('listings');
-    Route::get('manage-listings/{listing}', AdminListingDetails::class)->name('listings.show');
-    
-    Route::get('discussions', AdminDiscussions::class)->name('discussions');
-    Route::get('discussions/{discussion}', AdminDiscussionView::class)->name('discussions.view');
-    
-    Route::get('promotions', AdminPromotions::class)->name('promotions');
-    
-    Route::get('coupons', AdminCoupons::class)->name('coupons');
-    Route::get('coupons/create', AdminCouponCreate::class)->name('coupons.create');
-    Route::get('coupons/{coupon}/edit', AdminCouponEdit::class)->name('coupons.edit');
-    Route::get('coupons/edit/{coupon?}', AdminCouponEdit::class);
-    
-    Route::get('invoices', AdminInvoices::class)->name('invoices');
-    Route::get('invoices/{invoice}', AdminInvoiceView::class)->name('invoices.show');
+    Route::middleware('permission:manage_users')->group(function () {
+        Route::get('users', AdminUsers::class)->name('users');
+        Route::get('users/{user}', AdminUserDetails::class)->name('users.show');
+    });
 
-    // TRUST & RESOLUTION
-    Route::get('disputes', AdminDisputes::class)->name('disputes');
-    Route::get('disputes/{dispute}', AdminDisputeView::class)->name('disputes.show');
+    Route::middleware('permission:manage_subscriptions')->get('subscriptions', AdminSubscriptions::class)->name('subscriptions');
+
+    Route::middleware('permission:manage_listings')->group(function () {
+        Route::get('listings', AdminListings::class)->name('properties');
+        Route::get('listings/{listing}', AdminListingDetails::class)->name('properties.show');
+        Route::get('manage-listings', AdminListings::class)->name('listings');
+        Route::get('manage-listings/{listing}', AdminListingDetails::class)->name('listings.show');
+    });
+    
+    Route::middleware('permission:moderate_discussions')->group(function () {
+        Route::get('discussions', AdminDiscussions::class)->name('discussions');
+        Route::get('discussions/{discussion}', AdminDiscussionView::class)->name('discussions.view');
+    });
+    
+    Route::middleware('permission:manage_promotions')->get('promotions', AdminPromotions::class)->name('promotions');
+    
+    Route::middleware('permission:manage_coupons')->group(function () {
+        Route::get('coupons', AdminCoupons::class)->name('coupons');
+        Route::get('coupons/create', AdminCouponCreate::class)->name('coupons.create');
+        Route::get('coupons/{coupon}/edit', AdminCouponEdit::class)->name('coupons.edit');
+        Route::get('coupons/edit/{coupon?}', AdminCouponEdit::class);
+    });
+    
+    Route::middleware('permission:view_invoices')->group(function () {
+        Route::get('invoices', AdminInvoices::class)->name('invoices');
+        Route::get('invoices/{invoice}', AdminInvoiceView::class)->name('invoices.show');
+    });
+
+    // TRUST & SUPPORT
+    Route::middleware('permission:resolve_disputes')->group(function () {
+        Route::get('disputes', AdminDisputes::class)->name('disputes');
+        Route::get('disputes/{id?}', AdminDisputeView::class)->name('disputes.show');
+    });
+
+    Route::middleware('permission:manage_support')->get('support', \App\Livewire\Admin\AdminSupportConversations::class)->name('support');
 
     // CONTENT & BLOG
-    Route::get('blog', AdminBlog::class)->name('blog');
-    Route::get('blog/create', AdminBlogPostCreate::class)->name('blog.create');
-    Route::get('blog/comments', AdminBlogComments::class)->name('blog.comments');
-    Route::get('blog/{post}', AdminBlogPostShow::class)->name('blog.show');
-    Route::get('blog/{post}/edit', AdminBlogPostEdit::class)->name('blog.edit');
+    Route::middleware('permission:manage_blog,manage_blog_comments')->group(function () {
+        Route::get('blog', AdminBlog::class)->name('blog');
+        Route::get('blog/create', AdminBlogPostCreate::class)->name('blog.create');
+        Route::get('blog/comments', AdminBlogComments::class)->name('blog.comments');
+        Route::get('blog/{post}', AdminBlogPostShow::class)->name('blog.show');
+        Route::get('blog/{post}/edit', AdminBlogPostEdit::class)->name('blog.edit');
+    });
 
     // FINANCE & REVENUE
-    Route::get('payments', AdminPayments::class)->name('payments');
-    Route::get('revenue', AdminRevenue::class)->name('revenue');
-    Route::get('payouts', AdminPayouts::class)->name('payouts');
+    Route::middleware('permission:manage_payments')->get('payments', AdminPayments::class)->name('payments');
+    Route::middleware('permission:view_revenue')->get('revenue', AdminRevenue::class)->name('revenue');
+    Route::middleware('permission:manage_payouts')->get('payouts', AdminPayouts::class)->name('payouts');
 
     // NOTIFICATIONS
     Route::get('notifications', AdminNotifications::class)->name('notifications');
 
-    // System Settings
-    Route::prefix('settings')->name('settings.')->group(function () {
+    // SYSTEM SETTINGS (Super Admin Exclusive via manage_settings permission)
+    Route::middleware('permission:manage_settings')->prefix('settings')->name('settings.')->group(function () {
         Route::get('general', AdminGeneral::class)->name('general');
         Route::get('categories', AdminCategories::class)->name('categories');
         Route::get('countries', AdminCountries::class)->name('countries');

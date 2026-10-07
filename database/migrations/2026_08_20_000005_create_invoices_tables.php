@@ -28,6 +28,14 @@ return new class extends Migration {
             $table->timestamp('issued_at')->nullable();
             $table->timestamp('accepted_at')->nullable();
             $table->timestamp('paid_at')->nullable();
+            $table->timestamp('shipped_at')->nullable();
+            $table->timestamp('ready_for_pickup_at')->nullable();
+            $table->timestamp('delivered_at')->nullable();
+            $table->timestamp('auto_cancel_warned_at')->nullable();
+            $table->timestamp('admin_followup_notified_at')->nullable();
+            $table->timestamp('cancelled_at')->nullable();
+            $table->foreignId('cancelled_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('cancellation_reason')->nullable()->after('cancelled_by');
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('due_at')->nullable();
             $table->timestamps();

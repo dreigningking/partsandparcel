@@ -82,8 +82,13 @@ return new class extends Migration {
             $table->decimal('amount', 15, 2)->default(0);
             $table->string('currency', 3)->default('NGN');
             $table->string('status')->default('pending');
+            $table->string('payout_reference')->nullable();
+            $table->string('provider')->nullable();
+            $table->json('metadata')->nullable();
+            $table->json('bank_details')->nullable();
             $table->timestamp('eligible_at')->nullable();
             $table->timestamp('settled_at')->nullable();
+            
             $table->timestamps();
             $table->index(['seller_id', 'status']);
         });

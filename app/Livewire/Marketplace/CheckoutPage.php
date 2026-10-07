@@ -361,6 +361,14 @@ class CheckoutPage extends Component
                 'warranty_period_days' => 14,
                 'warranty_terms' => 'Standard seller inspection warranty',
             ]);
+
+            if (! empty($cItem['listing_id'])) {
+                $listing = Listing::find($cItem['listing_id']);
+                if ($listing) {
+                    $listing->sold_quantity = ($listing->sold_quantity ?? 0) + (int) ($cItem['quantity'] ?? 1);
+                    $listing->save();
+                }
+            }
         }
 
         // Record coupon usage if applied

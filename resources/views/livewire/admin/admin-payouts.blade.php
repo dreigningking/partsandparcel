@@ -133,7 +133,14 @@
                                     @endif
                                 </td>
                                 <td class="py-3.5 px-4 font-bold text-slate-800 dark:text-slate-200">
-                                    {{ $row->seller?->name }}
+                                    <div class="flex items-center gap-1.5">
+                                        <span>{{ $row->seller?->name }}</span>
+                                        @if($row->seller?->freeze_payout)
+                                            <span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300" title="Payouts Frozen">
+                                                <i class="fas fa-snowflake"></i> Frozen
+                                            </span>
+                                        @endif
+                                    </div>
                                     @if($row->seller?->business_name)
                                         <span class="text-xs text-slate-400 block font-normal">{{ $row->seller->business_name }}</span>
                                     @endif
@@ -156,6 +163,13 @@
                                             class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition cursor-pointer"
                                         >
                                             Mark Eligible
+                                        </button>
+                                    @elseif($row->status === 'eligible')
+                                        <button
+                                            wire:click="markSettlementPaid({{ $row->id }})"
+                                            class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition cursor-pointer"
+                                        >
+                                            Mark Paid
                                         </button>
                                     @else
                                         <span class="text-slate-400 text-[11px]">{{ ucfirst($row->status) }}</span>

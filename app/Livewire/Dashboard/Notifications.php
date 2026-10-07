@@ -53,6 +53,7 @@ class Notifications extends Component
 
         $counts = [
             'all' => (clone $allQuery)->count(),
+            'wishlist' => (clone $allQuery)->where('data->category', 'wishlist')->count(),
             'transactions' => (clone $allQuery)->where('data->category', 'transactions')->count(),
             'offers' => (clone $allQuery)->where('data->category', 'offers')->count(),
             'community' => (clone $allQuery)->where('data->category', 'community')->count(),

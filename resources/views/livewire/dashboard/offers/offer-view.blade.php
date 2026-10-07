@@ -204,10 +204,22 @@
           </button>
         @endif
 
+        @if ($isSender && $offer && $offer->status === 'pending')
+          <button wire:click="cancelOffer" wire:confirm="Are you sure you want to cancel this pending offer?" class="flex-1 sm:flex-none px-4 py-3 rounded-xl border border-rose-200 text-rose-700 hover:bg-rose-50 font-extrabold text-xs shadow-2xs transition cursor-pointer flex items-center justify-center gap-1.5">
+            <i class="fas fa-ban"></i>
+            <span>Cancel Offer</span>
+          </button>
+        @endif
+
         @if ($canCounter)
           <button wire:click="openCounterDrawer(false)" class="flex-1 sm:flex-none px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5">
             <i class="fas fa-pen-to-square"></i>
             <span>Make Counter Offer</span>
+          </button>
+
+          <button wire:click="declineOffer" wire:confirm="Are you sure you want to decline this offer?" class="flex-1 sm:flex-none px-4 py-3 rounded-xl border border-rose-300 text-rose-700 hover:bg-rose-50 font-extrabold text-xs shadow-2xs transition cursor-pointer flex items-center justify-center gap-1.5">
+            <i class="fas fa-times-circle"></i>
+            <span>Decline Offer</span>
           </button>
         @endif
 
@@ -224,6 +236,14 @@
         @elseif ($offer && $offer->status === 'countered')
           <span class="text-xs font-bold text-slate-500 bg-slate-100 px-4 py-2.5 rounded-xl flex items-center gap-1.5">
             <i class="fas fa-arrow-turn-down text-slate-400"></i> Countered in next round
+          </span>
+        @elseif ($offer && $offer->status === 'declined')
+          <span class="text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 px-4 py-2.5 rounded-xl flex items-center gap-1.5">
+            <i class="fas fa-times-circle text-rose-500"></i> Offer Declined
+          </span>
+        @elseif ($offer && $offer->status === 'cancelled')
+          <span class="text-xs font-bold text-slate-500 bg-slate-100 px-4 py-2.5 rounded-xl flex items-center gap-1.5">
+            <i class="fas fa-ban text-slate-400"></i> Offer Cancelled by Sender
           </span>
         @elseif ($isSender && ! $canEdit)
           <span class="text-xs font-bold text-slate-500 bg-slate-100 px-4 py-2.5 rounded-xl">

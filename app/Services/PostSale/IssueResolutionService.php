@@ -4,6 +4,7 @@ namespace App\Services\PostSale;
 
 use App\Jobs\RefundPaymentJob;
 use App\Models\Dispute;
+use App\Models\DisputeEvidence;
 use App\Models\DisputeItem;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
@@ -366,11 +367,11 @@ class IssueResolutionService
      * Generalized Dispute creation for platform mediation.
      */
     public function openDispute(
-        Invoice $invoice,
+        Invoice|Issue $invoice,
         User $opener,
-        User $respondent,
-        string $type,
-        string $reason,
+        User|string $respondent = '',
+        string $type = 'rejection_contested',
+        string $reason = '',
         ?int $issueId = null,
         ?int $replacementId = null,
         ?int $warrantyClaimId = null,
@@ -378,6 +379,25 @@ class IssueResolutionService
         ?string $evidence = null,
         array $disputeItems = []
     ): Dispute {
+        if ($invoice instanceof Issue) {
+            $issue = $invoice;
+            $invoice = $issue->invoice;
+            $issueId = $issue->id;
+            if (is_string($respondent)) {
+                $reason = $respondent;
+                $respondent = $issue->reported_by === $opener->id
+                    ? ($invoice->seller_id === $opener->id ? $invoice->buyer : $invoice->seller)
+                    : ($issue->reporter ?? $invoice->buyer);
+            }
+            if (empty($reason) && is_string($type)) {
+                $reason = $type;
+                $type = 'rejection_contested';
+            }
+            if ($issue->status !== 'escalated') {
+                $issue->update(['status' => 'escalated']);
+            }
+        }
+
         return DB::transaction(function () use (
             $invoice, $opener, $respondent, $type, $reason,
             $issueId, $replacementId, $warrantyClaimId, $returnId,
@@ -424,29 +444,38 @@ class IssueResolutionService
         User $admin,
         string $decision, // 'buyer_favor' | 'seller_favor' | 'split'
         ?float $refundAmount = null,
-        ?string $resolutionNotes = null
+        ?string $resolutionNotes = null,
+        bool $requireReturn = false,
+        ?string $internalNotes = null
     ): Dispute {
-        return DB::transaction(function () use ($dispute, $admin, $decision, $refundAmount, $resolutionNotes) {
+        return DB::transaction(function () use ($dispute, $admin, $decision, $refundAmount, $resolutionNotes, $requireReturn, $internalNotes) {
             $invoice = $dispute->invoice ?? $dispute->issue?->invoice;
 
-            if ($decision === 'buyer_favor' && $invoice) {
+            if (in_array($decision, ['buyer_favor', 'split']) && $invoice) {
                 $calculatedAmount = $refundAmount ?? (float) $invoice->total;
 
-                $refund = Refund::create([
-                    'invoice_id' => $invoice->id,
-                    'payment_id' => $invoice->latestSuccessfulPayment?->id,
-                    'buyer_id' => $invoice->buyer_id,
-                    'seller_id' => $invoice->seller_id,
-                    'amount' => $calculatedAmount,
-                    'status' => 'pending',
-                    'reason' => "Dispute resolved in buyer favor: {$resolutionNotes}",
-                ]);
+                if ($calculatedAmount > 0) {
+                    $refund = Refund::create([
+                        'invoice_id' => $invoice->id,
+                        'payment_id' => $invoice->latestSuccessfulPayment?->id,
+                        'buyer_id' => $invoice->buyer_id,
+                        'seller_id' => $invoice->seller_id,
+                        'amount' => $calculatedAmount,
+                        'status' => 'pending',
+                        'reason' => "Dispute resolved (" . ($decision === 'split' ? 'Split Settlement' : 'Buyer Favor') . "): {$resolutionNotes}",
+                    ]);
 
-                RefundPaymentJob::dispatch($refund->id);
+                    RefundPaymentJob::dispatch($refund->id);
+                }
             }
 
             $dispute->update([
                 'status' => 'resolved',
+                'decision' => $decision,
+                'refund_amount' => $refundAmount,
+                'require_return' => $requireReturn,
+                'resolution_notes' => $resolutionNotes,
+                'internal_notes' => $internalNotes,
                 'resolved_by' => $admin->id,
                 'resolved_at' => now(),
                 'resolution' => "Decision: {$decision}. Notes: {$resolutionNotes}",
@@ -487,6 +516,60 @@ class IssueResolutionService
 
             return $dispute;
         });
+    }
+
+    /**
+     * Arbitrator issues an evidence requisition to buyer or seller.
+     */
+    public function requestEvidence(
+        Dispute $dispute,
+        User $admin,
+        string $targetParty,
+        string $title,
+        ?string $instructions = null,
+        string $deadlinePreset = '24_hours'
+    ): DisputeEvidence {
+        $deadline = match ($deadlinePreset) {
+            '12_hours' => now()->addHours(12),
+            '48_hours' => now()->addHours(48),
+            default => now()->addHours(24),
+        };
+
+        $targetUserId = $targetParty === 'buyer'
+            ? ($dispute->invoice?->buyer_id ?? $dispute->opened_by)
+            : ($dispute->invoice?->seller_id ?? $dispute->respondent_id);
+
+        return DisputeEvidence::create([
+            'dispute_id' => $dispute->id,
+            'requested_by' => $admin->id,
+            'target_party' => $targetParty,
+            'target_user_id' => $targetUserId,
+            'title' => $title,
+            'instructions' => $instructions,
+            'deadline_preset' => $deadlinePreset,
+            'deadline_at' => $deadline,
+            'status' => 'pending',
+        ]);
+    }
+
+    /**
+     * Party submits requested evidence exhibits and explanatory statement.
+     */
+    public function submitEvidence(
+        DisputeEvidence $evidence,
+        User $submitter,
+        ?string $partyNotes = null,
+        array $files = []
+    ): DisputeEvidence {
+        $evidence->update([
+            'status' => 'submitted',
+            'party_notes' => $partyNotes,
+            'files' => $files,
+            'submitted_at' => now(),
+            'submitted_by' => $submitter->id,
+        ]);
+
+        return $evidence;
     }
 
     /**

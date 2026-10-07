@@ -50,8 +50,8 @@ class CommunityRequestsTest extends TestCase
         $this->actingAs($this->requester);
 
         \Livewire\Livewire::test(\App\Livewire\Marketplace\Community\CommunityHome::class)
-            ->set('formType', 'Product / Part')
-            ->set('formCategory', $this->category->name)
+            ->set('formType', 'item')
+            ->set('formCategory', (string) $this->category->id)
             ->set('formTitle', 'Need HP EliteBook 840 G5 Motherboard urgently')
             ->set('formDesc', 'Tested working motherboard needed in Computer Village Ikeja.')
             ->set('formLocation', 'Ikeja, Lagos')
@@ -82,9 +82,10 @@ class CommunityRequestsTest extends TestCase
         \Livewire\Livewire::test(\App\Livewire\Marketplace\Community\CommunityRequest::class, ['id' => $discussion->id])
             ->set('responseText', 'I have a clean pull board available at our shop in Computer Village.')
             ->set('isOfferActive', true)
-            ->set('composerOfferPrice', '80000')
-            ->set('composerOfferWarranty', '14 days')
-            ->set('composerOfferDelivery', 'Buyer pickup')
+            ->set('composerItemDescription', 'HP EliteBook 840 G5 Motherboard')
+            ->set('composerItemPrice', '80000')
+            ->set('composerItemWarranty', 14)
+            ->set('composerOfferDelivery', 'buyer_responsible')
             ->set('composerOfferMessage', 'Tested 100% working. Bring your laptop.')
             ->call('submitResponse');
 

@@ -29,7 +29,7 @@
                 <span class="label">Messages</span>
                 <span class="label ml-auto w-2 h-2 rounded-full bg-pp-600"></span>
             </a>
-            <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl {{ Route::is('offers*') ? 'bg-pp-50 text-pp-700 font-extrabold shadow-2xs' : 'hover:bg-slate-50 text-slate-600 hover:text-slate-900 font-semibold' }} text-xs transition"
+            <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl {{ Route::is('offers*') || Route::is('negotiations*') ? 'bg-pp-50 text-pp-700 font-extrabold shadow-2xs' : 'hover:bg-slate-50 text-slate-600 hover:text-slate-900 font-semibold' }} text-xs transition"
                 href="{{ route('offers') }}">
                 <span class="text-base shrink-0">🏷️</span>
                 <span class="label">Offers</span>

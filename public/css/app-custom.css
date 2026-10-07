@@ -63,6 +63,7 @@ body, * { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-se
 }
 
 .sidebar.collapsed .label,
+.sidebar.collapsed .section,
 .sidebar.collapsed .section-label,
 .sidebar.collapsed .chevron,
 .sidebar.collapsed .chevron-wrapper,
@@ -75,8 +76,31 @@ body, * { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-se
 
 .sidebar.collapsed .nav-item,
 .sidebar.collapsed .nav,
-.sidebar.collapsed .section-title {
+.sidebar.collapsed .section-title,
+.sidebar.collapsed .sidebar-brand-header {
     justify-content: center !important;
+}
+
+.sidebar.collapsed .sidebar-brand-header {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.sidebar.collapsed .sub {
+    max-height: none !important;
+    overflow: visible !important;
+    padding-left: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* ACCORDION CHEVRON ICON ROTATION */
+.chevron-icon {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section[aria-expanded="true"] .chevron-icon,
+.nav-segment:has(.sub.open) .chevron-icon {
+    transform: rotate(180deg);
 }
 
 .submenu {

@@ -37,9 +37,28 @@ class AdminPayouts extends Component
     public function markSettlementEligible(int $id): void
     {
         $settlement = Settlement::findOrFail($id);
+        if ($settlement->seller && $settlement->seller->freeze_payout) {
+            session()->flash('error', __("Cannot mark eligible: Seller payouts are frozen."));
+            return;
+        }
         $settlement->status = 'eligible';
         $settlement->save();
         session()->flash('status', __("Settlement #{$settlement->id} marked as eligible for payout."));
+    }
+
+    public function markSettlementPaid(int $id): void
+    {
+        $settlement = Settlement::findOrFail($id);
+        if ($settlement->seller && $settlement->seller->freeze_payout) {
+            session()->flash('error', __("Cannot process payout: Seller payouts are frozen."));
+            return;
+        }
+        $settlement->update([
+            'status' => 'settled',
+            'settled_at' => now(),
+            'payout_reference' => 'PAYOUT-' . strtoupper(\Illuminate\Support\Str::random(10)),
+        ]);
+        session()->flash('status', __("Settlement #{$settlement->id} marked as settled/paid."));
     }
 
     public function markPayoutCompleted(int $id): void

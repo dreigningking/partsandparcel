@@ -145,7 +145,7 @@ version2{
 }
 #Admin
 Payment{
-  Payout | Settlement
+  Payout
   Revenue
 }
 
@@ -159,36 +159,4 @@ Dispute{
   ReturnItem
   ReturnRecord
 }
-
-[SettingsSeeder.php](file;file:///c%3A/laragon/www/partsandparcel/database/seeders/SettingsSeeder.php) 
-We want to work on the impact of the different settings in the settings seeder on different aspects of the project. 
-Verify that all these settings are present in required areas of the application and well programmed.
-1. auto_approve_listings: when listing is created, we must create a moderation record maybe in the ListingObserver. The status of the moderation record depends on this setting
-2. abandoned_cart_reaction_hours: if a customer has items in cart that are older than the hours in this setting, send an email to them. Don't send another email if one has been sent already.. you can use the user table to keep track of when last email was sent.
-3. cart_reaction_gap_days: how long before abandoned cart is check for sending reminders.
-4. prohibited_words: each word is checked against title and description used in listings, discussions and responses
-5. gateways: these are the payment gateways to be used in the application and in country update
-6. max_media_image_size: wherever image is uploaded, check the size. If it exceeds the max size (mb), reject the upload.
-7. max_media_image_width: wherever image is uploaded, check the width. If it exceeds the max width (px), adjust image by ProcessMediaImageJob.
-8. max_media_image_height: wherever image is uploaded, check the height. If it exceeds the max height (px), adjust image by ProcessMediaImageJob.
-9. max_media_video_size: wherever video is uploaded, check the size. If it exceeds the max size (mb), reject the upload.
-10.max_media_document_size: wherever document is uploaded, check the size. If it exceeds the max size (mb), reject the upload.
-11.auto_approve_promotions: when promotion is created, we must create a moderation record maybe in the PromotionObserver. The status of the moderation record depends on this setting
-12.minimum_promotion_clicks: minimum number of clicks promotions user can buy in a single transaction. check listing details page
-13.minimum_promotion_views: minimum number of views promotions user can buy in a single transaction. check listing details page
-14.auto_approve_discussion: when discussion is created, we must create a moderation record maybe in the DiscussionObserver. The status of the moderation record depends on this setting
-15.order_processing_to_cancel_hours: hours allowed for buyer & seller to cancel a paid invoice. Ensure both cancel and that cancellation is within the allowed timeframe. check invoice-view
-16.order_processing_to_auto_cancel_warning_hours: if seller does not ship or mark invoice ready for pickup, automatically cancel invoice within this timeframe. show warning to seller, send email to seller 
-17.order_processing_to_auto_cancel_hours: if seller does not mark shipped or mark invoice ready for pickup, automatically cancel invoice after this timeframe. 
-18.order_pickup_allowance_hours: after seller marks invoice ready for pickup, if buyer doesn't mark packaged as picked (when delivery is self pickup) within this timeframe, item is automatically marked as picked
-19.order_shipped_to_delivery_hours: if item is not delivered within timeframe, trigger email to admin to follow-up. shipment is marked delivered when buyer marks it received. use this to determine escrow status
-20.order_delivered_to_auto_reception_hours: Hours after delivery confirmation before the system automatically marks the package as received if not yet accepted
-21.order_delivered_to_auto_acceptance_hours: Inspection window after package delivery before order is auto-accepted and payout settlement is queued. Also ensure that settlement record is created immediately.
-22.order_rejected_to_returned_hours: if seller requests return, notify buyer. Hours after allowed for buyer to mark return as shipped. shipped, issue may be marked as resolved.
-23.order_returned_to_auto_acceptance_hours: Inspection window after package return before order is auto-accepted and refund/Replacement is queued. Also ensure that refund/Replacement record is created immediately.
-24.order_replacement_to_auto_refund_hours: when seller does not mark replacement as shipped/ready for pickup within this timeframe, automatically refund the buyer.
-
-
-
-
 

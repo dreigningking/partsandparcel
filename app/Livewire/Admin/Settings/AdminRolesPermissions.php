@@ -44,85 +44,131 @@ class AdminRolesPermissions extends Component
      * @var array<string, array{label: string, description: string, group: string, icon: string}>
      */
     public array $availablePermissions = [
-        'manage_users' => [
-            'label' => 'Manage Users',
-            'description' => 'Create, edit, suspend, assign roles, and manage all platform user accounts.',
-            'group' => 'User Management',
-            'icon' => 'fas fa-users-cog',
+        // 1. Platform Overview
+        'view_dashboard' => [
+            'label' => 'View Dashboard',
+            'description' => 'Access administrative control center and inspect core platform KPIs.',
+            'group' => 'Platform Overview',
+            'icon' => 'fas fa-tachometer-alt',
         ],
-        'view_users' => [
-            'label' => 'View Users',
-            'description' => 'Browse customer, merchant, and staff profiles, contact info, and activity histories.',
-            'group' => 'User Management',
-            'icon' => 'fas fa-user-check',
-        ],
-        'manage_catalog' => [
-            'label' => 'Manage Catalog',
-            'description' => 'Manage marketplace categories, vehicle & equipment brands, and hardware device models.',
-            'group' => 'Catalog & Inventory',
-            'icon' => 'fas fa-boxes',
-        ],
-        'manage_escrow' => [
-            'label' => 'Manage Escrow',
-            'description' => 'Full control over platform escrow releases, security holds, and payment disputes.',
-            'group' => 'Finances & Escrow',
-            'icon' => 'fas fa-shield-alt',
-        ],
-        'view_escrow' => [
-            'label' => 'View Escrow',
-            'description' => 'Inspect platform escrow balances, transaction hold statuses, and payout schedules.',
-            'group' => 'Finances & Escrow',
-            'icon' => 'fas fa-money-check-alt',
-        ],
-        'issue_refunds' => [
-            'label' => 'Issue Refunds',
-            'description' => 'Authorize and execute buyer refunds for cancelled orders or verified dispute returns.',
-            'group' => 'Finances & Escrow',
-            'icon' => 'fas fa-hand-holding-usd',
-        ],
-        'view_financial_reports' => [
-            'label' => 'View Financial Reports',
-            'description' => 'Access revenue analytics, commission ledgers, subscription earnings, and payout logs.',
-            'group' => 'Finances & Escrow',
+        'view_analytics' => [
+            'label' => 'View Analytics & Reports',
+            'description' => 'Access revenue analytics, customer traffic metrics, and activity charts.',
+            'group' => 'Platform Overview',
             'icon' => 'fas fa-chart-line',
         ],
-        'resolve_disputes' => [
-            'label' => 'Resolve Disputes',
-            'description' => 'Review dispute claims, examine buyer/seller evidence, order returns, and issue rulings.',
-            'group' => 'Disputes & Support',
-            'icon' => 'fas fa-gavel',
+        'manage_moderation' => [
+            'label' => 'Manage Moderation',
+            'description' => 'Review and approve/reject listings, profile identity verifications, and user updates.',
+            'group' => 'Platform Overview',
+            'icon' => 'fas fa-flag',
         ],
-        'manage_tickets' => [
-            'label' => 'Manage Tickets',
-            'description' => 'Handle customer support tickets, answer helpdesk inquiries, and triage issues.',
-            'group' => 'Disputes & Support',
-            'icon' => 'fas fa-headset',
-        ],
-        'view_orders' => [
-            'label' => 'View Orders',
-            'description' => 'Track orders, invoices, shipment tracking details, delivery logs, and receipts.',
-            'group' => 'Disputes & Support',
-            'icon' => 'fas fa-shopping-bag',
-        ],
-        'moderate_discussions' => [
-            'label' => 'Moderate Discussions',
-            'description' => 'Moderate community discussion threads, comments, and reported user contributions.',
-            'group' => 'Community & Content',
-            'icon' => 'fas fa-comments',
+
+        // 2. Marketplace Operations
+        'manage_users' => [
+            'label' => 'Manage Users',
+            'description' => 'Browse customer/merchant profiles, suspend accounts, and manage payout freeze controls.',
+            'group' => 'Marketplace Operations',
+            'icon' => 'fas fa-users-cog',
         ],
         'manage_subscriptions' => [
             'label' => 'Manage Subscriptions',
-            'description' => 'Configure vendor tier plans, monthly pricing, commission rates, and feature limits.',
-            'group' => 'Platform Settings',
+            'description' => 'Inspect vendor subscriptions, assign merchant tiers, and monitor subscription histories.',
+            'group' => 'Marketplace Operations',
             'icon' => 'fas fa-award',
         ],
+        'manage_listings' => [
+            'label' => 'Manage Listings',
+            'description' => 'Inspect, activate, pause, or remove items and marketplace listings.',
+            'group' => 'Marketplace Operations',
+            'icon' => 'fas fa-boxes',
+        ],
+        'manage_promotions' => [
+            'label' => 'Manage Promotions',
+            'description' => 'Review, approve, and manage promotional listing boosts and sponsorships.',
+            'group' => 'Marketplace Operations',
+            'icon' => 'fas fa-rocket',
+        ],
+        'manage_coupons' => [
+            'label' => 'Manage Coupons & Discounts',
+            'description' => 'Create, edit, and deactivate discount promo codes and marketing vouchers.',
+            'group' => 'Marketplace Operations',
+            'icon' => 'fas fa-ticket-alt',
+        ],
+        'view_invoices' => [
+            'label' => 'View Orders & Invoices',
+            'description' => 'Track orders, invoices, shipment tracking logs, delivery receipts, and fulfillment status.',
+            'group' => 'Marketplace Operations',
+            'icon' => 'fas fa-file-invoice',
+        ],
+
+        // 3. Trust & Customer Support
+        'manage_support' => [
+            'label' => 'Customer Support Desk',
+            'description' => 'Access the helpdesk, triage customer support conversations, and reply to user tickets.',
+            'group' => 'Trust & Support',
+            'icon' => 'fas fa-headset',
+        ],
+        'resolve_disputes' => [
+            'label' => 'Resolve Disputes',
+            'description' => 'Review dispute claims, examine evidence, order returns, and issue arbitration rulings.',
+            'group' => 'Trust & Support',
+            'icon' => 'fas fa-gavel',
+        ],
+        'moderate_discussions' => [
+            'label' => 'Moderate Discussions',
+            'description' => 'Moderate community discussion threads, questions, comments, and reported user contributions.',
+            'group' => 'Trust & Support',
+            'icon' => 'fas fa-comments',
+        ],
+
+        // 4. Content & Blog
+        'manage_blog' => [
+            'label' => 'Manage Blog Posts',
+            'description' => 'Draft, edit, publish, and delete blog articles, tutorials, and announcements.',
+            'group' => 'Content & Blog',
+            'icon' => 'fas fa-newspaper',
+        ],
+        'manage_blog_comments' => [
+            'label' => 'Manage Blog Comments',
+            'description' => 'Review, approve, and moderate reader comments on published blog articles.',
+            'group' => 'Content & Blog',
+            'icon' => 'fas fa-comment-dots',
+        ],
+
+        // 5. Finances & Escrow
+        'manage_payments' => [
+            'label' => 'Manage Payments & Escrow',
+            'description' => 'Monitor payment gateway transactions, verify webhook charges, and view escrow balances.',
+            'group' => 'Finances & Escrow',
+            'icon' => 'fas fa-shield-alt',
+        ],
+        'view_revenue' => [
+            'label' => 'View Revenue',
+            'description' => 'Inspect platform fee earnings, escrow fee margins, and commission ledgers.',
+            'group' => 'Finances & Escrow',
+            'icon' => 'fas fa-coins',
+        ],
+        'manage_payouts' => [
+            'label' => 'Manage Payouts',
+            'description' => 'Authorize and release seller payouts, inspect seller bank details, and process settlements.',
+            'group' => 'Finances & Escrow',
+            'icon' => 'fas fa-hand-holding-usd',
+        ],
+
+        // 6. System Administration (Super Admin Only)
         'manage_settings' => [
-            'label' => 'Manage Settings',
-            'description' => 'Configure global marketplace settings, media upload limits, promotions, and timelines.',
-            'group' => 'Platform Settings',
+            'label' => 'Manage System Settings',
+            'description' => 'Exclusive root control over global settings, geography, categories, roles, and staff.',
+            'group' => 'System Administration',
             'icon' => 'fas fa-cogs',
         ],
     ];
+
+    public function mount(): void
+    {
+        abort_unless(auth()->user()?->isSuperAdmin(), 403, 'Unauthorized. Only Super Administrators can manage roles and permissions.');
+    }
 
     public function openCreateRole(): void
     {

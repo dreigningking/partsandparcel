@@ -22,6 +22,11 @@
                         Suspended
                     </span>
                 @endif
+                @if($user->freeze_payout)
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/60">
+                        <i class="fas fa-snowflake mr-1"></i>Payouts Frozen
+                    </span>
+                @endif
             </h1>
             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                 Account verification review, KYC documents, locations validation, activity engagements, and administrative controls.
@@ -38,6 +43,16 @@
             </a>
 
             @if(auth()->id() !== $user->id)
+                <button
+                    type="button"
+                    wire:click="toggleFreezePayout"
+                    wire:confirm="{{ $user->freeze_payout ? 'Unfreeze payouts for this user?' : 'Freeze payouts for this user? All current and future settlements will be locked.' }}"
+                    class="px-3.5 py-2 rounded-xl {{ $user->freeze_payout ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800' }} font-bold text-xs transition flex items-center gap-1.5"
+                >
+                    <i class="fas fa-snowflake text-xs"></i>
+                    <span>{{ $user->freeze_payout ? 'Unfreeze Payouts' : 'Freeze Payouts' }}</span>
+                </button>
+
                 @if(! $user->isSuspended())
                     <button
                         type="button"
