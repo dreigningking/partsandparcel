@@ -28,6 +28,24 @@ return new class extends Migration {
             $table->timestamps();
         });
 
+        Schema::create('warranty_claims', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('invoice_item_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete();
+            $table->enum('status', ['pending', 'accepted', 'rejected', 'disputed', 'resolved'])->default('pending');
+            $table->enum('claim_type', ['defect', 'hardware_failure', 'malfunction', 'wear_tear'])->default('defect');
+            $table->text('description');
+            $table->text('evidence')->nullable();
+            $table->text('seller_notes')->nullable();
+            $table->timestamp('responded_at')->nullable();
+            $table->timestamp('resolved_at')->nullable();
+            $table->timestamp('disputed_at')->nullable();
+            $table->timestamps();
+            $table->index(['invoice_id', 'status']);
+        });
+
         Schema::create('returns', function (Blueprint $table) {
             $table->id();
             $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
@@ -45,6 +63,7 @@ return new class extends Migration {
             $table->timestamp('accepted_at')->nullable();
             $table->timestamp('disputed_at')->nullable();
             $table->timestamps();
+            
         });
 
         Schema::create('return_items', function (Blueprint $table) {
@@ -76,6 +95,7 @@ return new class extends Migration {
             $table->timestamp('rejected_at')->nullable();
             $table->timestamp('disputed_at')->nullable();
             $table->timestamps();
+            
         });
 
         Schema::create('replacement_items', function (Blueprint $table) {
@@ -88,24 +108,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('warranty_claims', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('invoice_item_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete();
-            $table->enum('status', ['pending', 'accepted', 'rejected', 'disputed', 'resolved'])->default('pending');
-            $table->enum('claim_type', ['defect', 'hardware_failure', 'malfunction', 'wear_tear'])->default('defect');
-            $table->text('description');
-            $table->text('evidence')->nullable();
-            $table->text('seller_notes')->nullable();
-            $table->timestamp('responded_at')->nullable();
-            $table->timestamp('resolved_at')->nullable();
-            $table->timestamp('disputed_at')->nullable();
-            $table->timestamps();
-            $table->index(['invoice_id', 'status']);
-        });
-
         Schema::create('disputes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('invoice_id')->nullable()->constrained('invoices')->cascadeOnDelete();
@@ -116,13 +118,7 @@ return new class extends Migration {
             $table->foreignId('refund_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('opened_by')->constrained('users')->cascadeOnDelete();
             $table->foreignId('respondent_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->enum('type', [
-                'rejection_contested',
-                'replacement_defective',
-                'return_fraud_abuse',
-                'warranty_denial',
-                'mutual_deadlock',
-            ])->default('rejection_contested');
+            $table->enum('type', ['rejection_contested','replacement_defective','return_fraud_abuse','warranty_denial','mutual_deadlock',])->default('rejection_contested');
             $table->string('status')->default('open');
             $table->text('reason');
             $table->text('evidence')->nullable();
@@ -140,6 +136,7 @@ return new class extends Migration {
             $table->text('evidence')->nullable();
             $table->timestamps();
         });
+
     }
 
     public function down(): void

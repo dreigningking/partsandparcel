@@ -35,7 +35,7 @@ return new class extends Migration {
             $table->timestamp('admin_followup_notified_at')->nullable();
             $table->timestamp('cancelled_at')->nullable();
             $table->foreignId('cancelled_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->text('cancellation_reason')->nullable()->after('cancelled_by');
+            $table->text('cancellation_reason')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('due_at')->nullable();
             $table->timestamps();

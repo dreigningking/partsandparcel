@@ -14,8 +14,8 @@ return new class extends Migration
         if (! Schema::hasTable('promotions')) {
             Schema::create('promotions', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('user_id')->constrained('users')->nullOnDelete();
-                $table->foreignId('listing_id')->constrained('listings')->nullOnDelete();
+                $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+                $table->foreignId('listing_id')->nullable()->constrained('listings')->nullOnDelete();
                 $table->enum('type', ['views', 'clicks'])->default('clicks');
                 $table->unsignedInteger('achieved_count')->default(0);
                 $table->enum('status', ['pending', 'active', 'inactive', 'completed'])->default('pending');
