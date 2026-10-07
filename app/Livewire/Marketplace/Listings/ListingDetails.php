@@ -12,6 +12,7 @@ use App\Models\ViewedEntity;
 use App\Models\Wishlist;
 use App\Notifications\ListingReportedNotification;
 use App\Services\Commercial\CartService;
+use App\Services\Promotion\PromotionService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -128,40 +129,17 @@ class ListingDetails extends Component
 
     protected function logViewedEntity(): void
     {
-        $userAgent = request()->userAgent() ?? '';
-        $deviceType = 'desktop';
-        if (preg_match('/(tablet|ipad|playbook)|(android(?!.*(mobi|opera mini)))/i', $userAgent)) {
-            $deviceType = 'tablet';
-        } elseif (preg_match('/(up.browser|up.link|mmp|symbian|smartphone|midp|wap|phone|android|iemobile)/i', $userAgent)) {
-            $deviceType = 'mobile';
-        }
+        /** @var PromotionService $promoService */
+        $promoService = app(PromotionService::class);
 
-        if (Auth::check()) {
-            ViewedEntity::updateOrCreate(
-                [
-                    'user_id' => Auth::id(),
-                    'viewable_id' => $this->listing->id,
-                    'viewable_type' => Listing::class,
-                ],
-                [
-                    'ip_address' => request()->ip() ?? '127.0.0.1',
-                    'user_agent' => substr($userAgent, 0, 255),
-                    'device_type' => $deviceType,
-                ]
-            );
-        } else {
-            ViewedEntity::firstOrCreate(
-                [
-                    'user_id' => null,
-                    'ip_address' => request()->ip() ?? '127.0.0.1',
-                    'viewable_id' => $this->listing->id,
-                    'viewable_type' => Listing::class,
-                ],
-                [
-                    'user_agent' => substr($userAgent, 0, 255),
-                    'device_type' => $deviceType,
-                ]
-            );
+        if (! $promoService->hasVisitorViewed($this->listing)) {
+            $promoService->recordViewedEntity($this->listing);
+
+            // If the listing has an active promotion, increment achieved_count
+            $activePromo = $this->listing->activePromotion;
+            if ($activePromo) {
+                $promoService->incrementPromotionIfApplicable($activePromo);
+            }
         }
     }
 

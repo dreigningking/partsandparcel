@@ -61,9 +61,9 @@ class LocationAndLocalizationTest extends TestCase
 
     public function test_logged_in_user_resolves_location_from_profile(): void
     {
+        $usa = Country::where('code', 'US')->first();
         $user = User::factory()->create([
-            'country_code' => 'US',
-            'currency' => 'USD',
+            'country_id' => $usa->id,
         ]);
 
         $service = app(LocationService::class);

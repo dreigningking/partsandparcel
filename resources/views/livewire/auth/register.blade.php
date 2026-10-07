@@ -15,7 +15,7 @@
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Country <span class="text-rose-500">*</span></label>
                     <x-searchable-select
                         wire:model.live="country_id"
-                        :options="$countries->map(fn($c) => ['value' => $c->id, 'label' => ($c->flag ? $c->flag . ' ' : '') . $c->name])"
+                        :options="$countries->map(fn($c) => ['value' => $c->id, 'label' => $c->name])"
                         placeholder="Select your country"
                         search-placeholder="Search countries..."
                     />

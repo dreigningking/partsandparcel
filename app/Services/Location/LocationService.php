@@ -21,9 +21,10 @@ class LocationService
 
         // 1. If user is logged in, resolve from user profile
         if ($user = $request->user()) {
-            $userCountry = Country::where('code', strtoupper($user->country_code ?? 'NG'))
-                ->where('is_active', true)
-                ->first() ?? $this->getDefaultCountry();
+            $userCountry = $user->country
+                ?? Country::find($user->country_id)
+                ?? Country::where('code', strtoupper($user->country_code ?? 'NG'))->where('is_active', true)->first()
+                ?? $this->getDefaultCountry();
 
             $primaryLocation = $user->primaryLocation;
 

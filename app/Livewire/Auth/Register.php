@@ -66,7 +66,7 @@ class Register extends Component
             'countries' => Country::query()
                 ->where('is_active', true)
                 ->orderBy('name','asc')
-                ->get(['id', 'name', 'flag']),
+                ->get(['id', 'name']),
         ]);
     }
 }

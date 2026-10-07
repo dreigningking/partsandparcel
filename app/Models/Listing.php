@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -269,6 +270,13 @@ class Listing extends Model
     public function promotions(): HasMany
     {
         return $this->hasMany(Promotion::class);
+    }
+
+    public function activePromotion(): HasOne
+    {
+        return $this->hasOne(Promotion::class)
+            ->where('status', 'active')
+            ->whereColumn('achieved_count', '<', 'target_count');
     }
 
     public function invoiceItems(): MorphMany

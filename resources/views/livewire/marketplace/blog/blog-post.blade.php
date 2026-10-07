@@ -355,6 +355,9 @@
                     @endif
                 </div>
 
+                <!-- 2B. FEATURED PROMOTED LISTING -->
+                <livewire:components.promotions.blog-page-promotion />
+
                 <!-- 3. RELATED GUIDES IN SAME CATEGORY -->
                 @if ($relatedPosts->count() > 0)
                     <div class="bg-white rounded-3xl border border-slate-200/80 p-6 space-y-4 shadow-soft">
