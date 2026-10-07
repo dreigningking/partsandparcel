@@ -39,7 +39,7 @@ return new class extends Migration
                 $table->string('gender')->nullable();
                 $table->timestamp('suspended_at')->nullable();
                 $table->boolean('is_verified')->default(false);
-                $table->json('notification_preferences')->default(json_encode(['email' => true, 'in_app' => true, 'push' => true]));
+                $table->json('notification_preferences')->nullable();
                 $table->timestamp('last_abandoned_cart_email_at')->nullable();
                 $table->boolean('freeze_payout')->default(false);
                 $table->foreignId('country_id')->constrained()->onDelete('cascade');

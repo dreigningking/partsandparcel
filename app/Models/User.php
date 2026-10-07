@@ -37,6 +37,10 @@ class User extends Authenticatable implements MustVerifyEmail
         'freeze_payout',
     ];
 
+    protected $attributes = [
+        'notification_preferences' => '{"email":true,"in_app":true,"push":true}',
+    ];
+
     public function sluggable(): array
     {
         return [
@@ -88,7 +92,19 @@ class User extends Authenticatable implements MustVerifyEmail
                         ]
                     )->id;
             }
+            if (empty($user->notification_preferences)) {
+                $user->notification_preferences = ['email' => true, 'in_app' => true, 'push' => true];
+            }
         });
+    }
+
+    public function getNotificationPreferencesAttribute($value): array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        return $value ? (json_decode($value, true) ?: ['email' => true, 'in_app' => true, 'push' => true]) : ['email' => true, 'in_app' => true, 'push' => true];
     }
 
     protected $hidden = [
