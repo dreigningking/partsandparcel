@@ -12,6 +12,7 @@ use App\Models\Offer;
 use App\Models\OfferItem;
 use App\Models\Response;
 use App\Models\ServiceJob;
+use App\Models\Setting;
 use App\Models\Shipment;
 use App\Models\ShipmentItem;
 use App\Models\User;
@@ -29,6 +30,12 @@ class NegotiationService
             'platform_delivery', 'platform_responsible' => 'platform_responsible',
             default => 'buyer_responsible',
         };
+    }
+
+    public function getOfferExpiration(): \Carbon\Carbon
+    {
+        $days = (int) Setting::getValue('offer_expiration_days', 3);
+        return now()->addDays(max(1, $days));
     }
 
     /**
@@ -50,7 +57,7 @@ class NegotiationService
             'discount' => $discount,
             'terms' => $terms,
             'status' => 'pending',
-            'expires_at' => now()->addHours(48),
+            'expires_at' => $this->getOfferExpiration(),
         ]);
 
         OfferItem::create([
@@ -190,7 +197,7 @@ class NegotiationService
         $deliveryMethod = $this->mapDeliveryMethod($data['delivery_method'] ?? 'buyer_responsible');
         $discount = (float) ($data['discount'] ?? 0);
         $terms = $data['terms'] ?? $data['message'] ?? null;
-        $expiresAt = ! empty($data['expires_at']) ? \Carbon\Carbon::parse($data['expires_at']) : now()->addHours(48);
+        $expiresAt = ! empty($data['expires_at']) ? \Carbon\Carbon::parse($data['expires_at']) : $this->getOfferExpiration();
 
         $offer = Offer::create([
             'sender_id' => $responder->id,
@@ -298,7 +305,7 @@ class NegotiationService
             'discount' => (float) ($counterData['discount'] ?? $previousOffer->discount),
             'terms' => $counterData['terms'] ?? $counterData['message'] ?? $previousOffer->terms,
             'status' => 'pending',
-            'expires_at' => now()->addHours(48),
+            'expires_at' => $this->getOfferExpiration(),
         ]);
 
         // Duplicate and adjust items
@@ -387,6 +394,19 @@ class NegotiationService
             return $offer->invoice ?? Invoice::where('offer_id', $offer->id)->firstOrFail();
         }
 
+        // Verify listing availability and lock reserved_quantity for all items in the offer
+        foreach ($offer->items->where('type', 'item') as $oItem) {
+            if ($oItem->listing_id) {
+                $listing = Listing::find($oItem->listing_id);
+                if ($listing) {
+                    if ($listing->availableQuantity() < $oItem->quantity) {
+                        throw new \DomainException("Item '{$listing->title}' is no longer available in the requested quantity ({$listing->availableQuantity()} left). Offers are non-binding and subject to availability until payment.");
+                    }
+                    $listing->increment('reserved_quantity', $oItem->quantity);
+                }
+            }
+        }
+
         $offer->update(['status' => 'accepted']);
 
         // Determine Buyer and Seller
@@ -397,8 +417,14 @@ class NegotiationService
             $buyerId = $offer->discussion->user_id;
             $sellerId = ($offer->sender_id === $buyerId) ? $offer->recipient_id : $offer->sender_id;
         } else {
-            $buyerId = $offer->recipient_id;
-            $sellerId = $offer->sender_id;
+            $listingItem = $offer->items->first(fn ($i) => ! empty($i->listing_id) && $i->listing);
+            if ($listingItem && $listingItem->listing) {
+                $sellerId = $listingItem->listing->user_id;
+                $buyerId = ($offer->sender_id === $sellerId) ? $offer->recipient_id : $offer->sender_id;
+            } else {
+                $buyerId = ($user->id === $offer->recipient_id && $offer->sender_id) ? $offer->sender_id : $offer->recipient_id;
+                $sellerId = ($buyerId === $offer->sender_id) ? $offer->recipient_id : $offer->sender_id;
+            }
         }
 
         $buyer = User::with('primaryLocation')->find($buyerId);
@@ -436,13 +462,13 @@ class NegotiationService
                 'origin_contact_phone' => $originLoc?->phone ?: $senderUser?->phone,
                 'origin_address_line_1' => $originLoc?->address_line_1 ?: 'Origin Address',
                 'origin_city' => $originLoc?->city ?: 'Lagos',
-                'origin_state' => $originLoc?->state?->name ?? (is_string($originLoc?->state) ? $originLoc->state : 'Lagos'),
+                'origin_state' => $originLoc?->state?->name ?? '',
                 'destination_location_id' => $destLoc?->id,
                 'destination_contact_name' => $destLoc?->contact_name ?: $receiverUser?->name,
                 'destination_contact_phone' => $destLoc?->phone ?: $receiverUser?->phone,
                 'destination_address_line_1' => $destLoc?->address_line_1 ?: 'Destination Address',
                 'destination_city' => $destLoc?->city ?: 'Lagos',
-                'destination_state' => $destLoc?->state?->name ?? (is_string($destLoc?->state) ? $destLoc->state : 'Lagos'),
+                'destination_state' => $destLoc?->state?->name ?? '',
                 'fee' => $sItem->subtotal(),
                 'notes' => $sItem->description,
             ]);

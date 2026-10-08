@@ -22,6 +22,7 @@ class SubscriptionPlan extends Model
         'features',
         'is_active',
         'is_default',
+        'sort_order',
     ];
 
     protected function casts(): array
@@ -35,6 +36,7 @@ class SubscriptionPlan extends Model
             'features' => 'array',
             'is_active' => 'boolean',
             'is_default' => 'boolean',
+            'sort_order' => 'integer',
         ];
     }
 
@@ -46,6 +48,11 @@ class SubscriptionPlan extends Model
     public function prices(): HasMany
     {
         return $this->hasMany(SubscriptionPlanPrice::class);
+    }
+
+    public function scopeOrdered(Builder $query): Builder
+    {
+        return $query->orderBy('sort_order', 'asc')->orderBy('id', 'asc');
     }
 
     /**
@@ -65,12 +72,26 @@ class SubscriptionPlan extends Model
     /**
      * Get price record for country or currency.
      */
-    public function getPriceFor(?string $currency = 'NGN', ?string $countryCode = 'NG'): ?SubscriptionPlanPrice
+    public function getPriceFor(?string $currency = 'NGN', ?string $countryCode = 'NG', ?int $countryId = null): ?SubscriptionPlanPrice
     {
+        if ($countryId) {
+            if ($this->relationLoaded('prices')) {
+                $matchedByCountry = $this->prices->firstWhere('country_id', $countryId);
+                if ($matchedByCountry) {
+                    return $matchedByCountry;
+                }
+            } else {
+                $matchedByCountry = $this->prices()->where('country_id', $countryId)->first();
+                if ($matchedByCountry) {
+                    return $matchedByCountry;
+                }
+            }
+        }
+
         if ($this->relationLoaded('prices')) {
             $matched = $this->prices->first(function ($p) use ($currency, $countryCode) {
-                return ($countryCode && $p->country?->code === $countryCode)
-                    || ($currency && $p->country?->currency === $currency);
+                return ($countryCode && strcasecmp((string) $p->country?->code, (string) $countryCode) === 0)
+                    || ($currency && strcasecmp((string) $p->country?->currency, (string) $currency) === 0);
             });
             if ($matched) {
                 return $matched;
@@ -88,11 +109,15 @@ class SubscriptionPlan extends Model
     }
 
     /**
-     * Effective monthly price for currency.
+     * Effective monthly price for currency and country.
      */
-    public function getMonthlyPrice(string $currency = 'NGN', string $countryCode = 'NG'): float
+    public function getMonthlyPrice(?string $currency = null, ?string $countryCode = null, ?int $countryId = null): float
     {
-        $priceRecord = $this->getPriceFor($currency, $countryCode);
+        $currency = $currency ?? session('current_location.currency', 'NGN');
+        $countryCode = $countryCode ?? session('current_location.country_code', 'NG');
+        $countryId = $countryId ?? session('current_location.country_id');
+
+        $priceRecord = $this->getPriceFor($currency, $countryCode, $countryId);
 
         return $priceRecord ? (float) $priceRecord->price_monthly : (float) ($this->price ?? 0.00);
     }
@@ -102,9 +127,13 @@ class SubscriptionPlan extends Model
         return $this->getMonthlyPrice();
     }
 
-    public function getAnnualPrice(string $currency = 'NGN', string $countryCode = 'NG'): float
+    public function getAnnualPrice(?string $currency = null, ?string $countryCode = null, ?int $countryId = null): float
     {
-        $priceRecord = $this->getPriceFor($currency, $countryCode);
+        $currency = $currency ?? session('current_location.currency', 'NGN');
+        $countryCode = $countryCode ?? session('current_location.country_code', 'NG');
+        $countryId = $countryId ?? session('current_location.country_id');
+
+        $priceRecord = $this->getPriceFor($currency, $countryCode, $countryId);
         if ($priceRecord && (float) $priceRecord->price_annual > 0) {
             return (float) $priceRecord->price_annual;
         }
@@ -113,7 +142,8 @@ class SubscriptionPlan extends Model
             return (float) $this->price_annual;
         }
 
-        return (float) ($this->features['price_annual'] ?? ($this->getMonthlyPrice($currency, $countryCode) * 10));
+        $monthly = $this->getMonthlyPrice($currency, $countryCode, $countryId);
+        return (float) ($this->features['price_annual'] ?? ($monthly * 10));
     }
 
     public function getAnnualPriceAttribute(): float

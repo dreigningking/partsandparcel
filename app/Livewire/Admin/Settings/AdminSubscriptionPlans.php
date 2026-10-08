@@ -42,6 +42,8 @@ class AdminSubscriptionPlans extends Component
 
     public bool $is_default = false;
 
+    public int $sort_order = 0;
+
     // Feature toggles
     public bool $priority_placement = false;
 
@@ -68,6 +70,7 @@ class AdminSubscriptionPlans extends Component
         $this->escrow_cap = null;
         $this->is_active = true;
         $this->is_default = false;
+        $this->sort_order = 0;
         $this->priority_placement = false;
         $this->verified_badge = false;
         $this->dedicated_support = false;
@@ -105,6 +108,7 @@ class AdminSubscriptionPlans extends Component
         $this->escrow_cap = $plan->escrow_cap !== null ? (string) $plan->escrow_cap : null;
         $this->is_active = (bool) $plan->is_active;
         $this->is_default = (bool) $plan->is_default;
+        $this->sort_order = (int) ($plan->sort_order ?? 0);
 
         $features = $plan->features ?? [];
         $this->priority_placement = (bool) ($features['priority_placement'] ?? false);
@@ -190,6 +194,7 @@ class AdminSubscriptionPlans extends Component
             'listing_limit' => ['required', 'integer', 'min:0'],
             'escrow_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
             'escrow_cap' => ['nullable', 'numeric', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
             'priceRows' => ['required', 'array', 'min:1'],
             'priceRows.*.country_id' => ['required', 'exists:countries,id'],
             'priceRows.*.price_monthly' => ['required', 'numeric', 'min:0'],
@@ -228,6 +233,7 @@ class AdminSubscriptionPlans extends Component
                 'features' => $features,
                 'is_active' => $this->is_active,
                 'is_default' => $this->is_default,
+                'sort_order' => $this->sort_order,
             ]
         );
 
@@ -293,7 +299,7 @@ class AdminSubscriptionPlans extends Component
                         });
                 });
             })
-            ->orderByDesc('is_default')
+            ->orderBy('sort_order', 'asc')
             ->orderBy('id', 'asc');
 
         $plans = $plansQuery->get();

@@ -96,7 +96,7 @@ class MyRequestView extends Component
                         'id' => $off->id,
                         'vendor_id' => $off->sender_id,
                         'vendor_name' => $off->sender?->business_name ?: $off->sender?->name ?: 'Vendor Store',
-                        'vendor_city' => $off->sender?->primaryLocation?->city ? "{$off->sender->primaryLocation->city}, {$off->sender->primaryLocation->state}" : 'Nigeria',
+                        'vendor_city' => $off->sender?->primaryLocation?->city ? "{$off->sender->primaryLocation->city}, {$off->sender->primaryLocation->state->name}" : 'Nigeria',
                         'vendor_verified' => (bool) $off->sender?->is_verified,
                         'price' => $off->total(),
                         'warranty' => $off->maxWarrantyDays() ? "{$off->maxWarrantyDays()} DAYS" : 'Standard',

@@ -285,7 +285,7 @@ class CartService
 
             $seller = User::with('primaryLocation.state')->find($sellerId);
             $loc = $seller?->primaryLocation;
-            $stateName = $loc?->state?->name ?? (is_string($loc?->state) ? $loc?->state : null);
+            $stateName = $loc?->state?->name ?? '';
             $locationName = $loc
                 ? collect([$loc->city, $stateName])->filter()->implode(', ')
                 : 'Computer Village, Ikeja, Lagos';

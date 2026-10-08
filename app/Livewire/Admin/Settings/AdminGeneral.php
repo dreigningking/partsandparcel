@@ -311,6 +311,12 @@ class AdminGeneral extends Component
                 'unit' => 'hours',
                 'icon' => 'fas fa-money-check-alt',
             ],
+            'offer_expiration_days' => [
+                'label' => 'Offer Expiration Window',
+                'description' => 'Number of days an offer remains active and pending before expiring automatically.',
+                'unit' => 'days',
+                'icon' => 'fas fa-hourglass-half',
+            ],
         ];
     }
 

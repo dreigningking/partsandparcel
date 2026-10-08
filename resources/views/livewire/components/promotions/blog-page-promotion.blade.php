@@ -32,7 +32,7 @@
       $sellerName = $listing->seller?->business_name ?: ($listing->seller?->name ?? 'Verified Seller');
       $locationObj = $listing->item?->location ?? $listing->seller?->primaryLocation;
       $city = $locationObj?->city;
-      $stateName = $locationObj?->state?->name ?? ($locationObj?->state ?: 'Nigeria');
+      $stateName = $locationObj?->state?->name ?? 'Nigeria';
       $locationLabel = $city ? "{$city}, {$stateName}" : $stateName;
       $currencySymbol = $currentCurrencySymbol ?? ($listing->seller?->country?->currency_symbol ?? '₦');
     @endphp

@@ -30,6 +30,12 @@
                 <div class="bg-pp-600 h-1 transition-all duration-300" style="width: {{ ($currentStep / $totalSteps) * 100 }}%"></div>
             </div>
 
+            <!-- NON-BINDING & AVAILABILITY DISCLAIMER BANNER -->
+            <div class="px-6 py-2.5 bg-amber-50 border-b border-amber-200 text-amber-900 text-[11px] flex items-center gap-2 shrink-0">
+                <i class="fas fa-info-circle text-amber-600 shrink-0"></i>
+                <span>Offers are subject to item availability and non-binding until payment is completed.</span>
+            </div>
+
             <!-- DRAWER BODY (SCROLLABLE) -->
             <div class="flex-1 min-h-0 overflow-y-auto p-6 space-y-5 text-xs">
 
@@ -38,8 +44,24 @@
                     @php $item = $items[$currentStep - 1]; @endphp
                     <div class="space-y-4">
                         <div class="p-4 rounded-2xl bg-pp-50/80 border border-pp-100 space-y-2">
-                            <span class="text-[10px] uppercase font-extrabold text-pp-700 tracking-wider">Item {{ $currentStep }} of {{ $itemsCount }}</span>
-                            <h4 class="text-sm font-extrabold text-slate-900 leading-snug">{{ $item['title'] }}</h4>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] uppercase font-extrabold text-pp-700 tracking-wider">Item {{ $currentStep }} of {{ $itemsCount }}</span>
+                                @if (!empty($item['is_new']))
+                                    <button type="button" wire:click="removeItemFromCounter({{ $currentStep - 1 }})" class="text-rose-600 hover:text-rose-800 font-bold text-[11px] cursor-pointer">
+                                        <i class="fas fa-trash-alt mr-1"></i> Remove Added Item
+                                    </button>
+                                @endif
+                            </div>
+
+                            @if (!empty($item['is_new']))
+                                <div>
+                                    <label class="block font-bold text-slate-700 mb-1">Item Title / Description</label>
+                                    <input type="text" wire:model="items.{{ $currentStep - 1 }}.title" class="w-full p-2.5 rounded-xl border border-slate-200 bg-white font-bold text-xs text-slate-900 outline-none focus:border-pp-500" placeholder="e.g. 16GB RAM, Charging Adapter" />
+                                </div>
+                            @else
+                                <h4 class="text-sm font-extrabold text-slate-900 leading-snug">{{ $item['title'] }}</h4>
+                            @endif
+
                             <div class="flex items-center gap-3 text-[11px] text-slate-500 font-medium">
                                 <span>Quantity: <strong class="text-slate-800">{{ $item['quantity'] }}</strong></span>
                                 <span>·</span>
@@ -47,11 +69,14 @@
                             </div>
                         </div>
 
-                        <!-- PRICE NEGOTIATION BLOCK -->
+                        <!-- PRICE NEGOTIATION BLOCK: LAST OFFER VS YOUR OFFER -->
                         <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
                             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                                 <span class="font-extrabold text-slate-800">Unit Price Negotiation</span>
-                                <span class="text-slate-400 text-[11px]">Proposed: ₦{{ number_format($item['original_price']) }}</span>
+                                <div class="text-right">
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 block">Last Offer (Other Party)</span>
+                                    <span class="font-extrabold text-slate-900 text-xs">₦{{ number_format($item['original_price']) }}</span>
+                                </div>
                             </div>
 
                             @if ($item['is_negotiable'])
@@ -66,17 +91,20 @@
                             @endif
                         </div>
 
-                        <!-- WARRANTY NEGOTIATION BLOCK -->
+                        <!-- WARRANTY NEGOTIATION BLOCK: LAST OFFER VS YOUR OFFER -->
                         <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
                             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                                 <span class="font-extrabold text-slate-800">Warranty Coverage</span>
-                                <span class="text-slate-400 text-[11px]">{{ $item['original_warranty_days'] ?? 14 }} Days</span>
+                                <div class="text-right">
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 block">Last Offer (Other Party)</span>
+                                    <span class="font-extrabold text-slate-900 text-xs">{{ $item['original_warranty_days'] ?? 14 }} Days</span>
+                                </div>
                             </div>
 
                             @if ($item['is_warranty_negotiable'])
                                 <div class="space-y-3">
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Counter Warranty Period (Days)</label>
+                                        <label class="block font-bold text-slate-700 mb-1">Your Counter Warranty Period (Days)</label>
                                         <div class="grid grid-cols-3 gap-2">
                                             <button type="button" wire:click="$set('items.{{ $currentStep - 1 }}.counter_warranty_days', 7)" class="py-2 rounded-xl border text-center font-bold text-xs transition cursor-pointer {{ ($item['counter_warranty_days'] ?? 14) == 7 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700 font-black' : 'border-slate-200 text-slate-700' }}">7 Days</button>
                                             <button type="button" wire:click="$set('items.{{ $currentStep - 1 }}.counter_warranty_days', 14)" class="py-2 rounded-xl border text-center font-bold text-xs transition cursor-pointer {{ ($item['counter_warranty_days'] ?? 14) == 14 ? 'border-2 border-pp-600 bg-pp-50 text-pp-700 font-black' : 'border-slate-200 text-slate-700' }}">14 Days</button>
@@ -84,7 +112,7 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Warranty Scope &amp; Terms</label>
+                                        <label class="block font-bold text-slate-700 mb-1">Your Counter Warranty Scope &amp; Terms</label>
                                         <textarea wire:model="items.{{ $currentStep - 1 }}.counter_warranty_terms" rows="2" class="w-full p-2.5 rounded-xl border border-slate-200 text-slate-800 text-xs outline-none focus:border-pp-500" placeholder="e.g. Standard replacement warranty covering factory defects..."></textarea>
                                     </div>
                                 </div>
@@ -112,7 +140,10 @@
                         <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
                             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                                 <span class="font-extrabold text-slate-800">Pickup Fee Negotiation</span>
-                                <span class="text-slate-400 text-[11px]">Proposed: ₦{{ number_format($originalPickupFee) }}</span>
+                                <div class="text-right">
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 block">Last Offer (Other Party)</span>
+                                    <span class="font-extrabold text-slate-900 text-xs">₦{{ number_format($originalPickupFee) }}</span>
+                                </div>
                             </div>
 
                             <div>
@@ -139,7 +170,10 @@
                         <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
                             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                                 <span class="font-extrabold text-slate-800">Delivery Fee Negotiation</span>
-                                <span class="text-slate-400 text-[11px]">Proposed: ₦{{ number_format($originalDeliveryFee) }}</span>
+                                <div class="text-right">
+                                    <span class="text-[10px] uppercase font-bold text-slate-400 block">Last Offer (Other Party)</span>
+                                    <span class="font-extrabold text-slate-900 text-xs">₦{{ number_format($originalDeliveryFee) }}</span>
+                                </div>
                             </div>
 
                             <div>
@@ -153,6 +187,17 @@
                 <!-- STEP D: SPECIAL REQUESTS & FINAL REVIEW (reviewStepNum) -->
                 @else
                     <div class="space-y-4">
+                        <!-- ADD ANOTHER ITEM TO COUNTER OFFER (ADDS STEP) -->
+                        <div class="p-4 rounded-2xl border-2 border-dashed border-pp-300 bg-pp-50/40 flex items-center justify-between">
+                            <div>
+                                <span class="font-extrabold text-slate-900 block text-xs">Bundle More Items into Offer</span>
+                                <span class="text-[11px] text-slate-500">Add an extra part, component, or item step to this proposal.</span>
+                            </div>
+                            <button type="button" wire:click="addNewItemToCounter" class="px-3 py-2 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5 shrink-0">
+                                <i class="fas fa-plus"></i> Add Item Step
+                            </button>
+                        </div>
+
                         <!-- SPECIAL SERVICE REQUESTS BUILDER -->
                         <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
                             <span class="font-extrabold text-slate-800 flex items-center gap-1.5">

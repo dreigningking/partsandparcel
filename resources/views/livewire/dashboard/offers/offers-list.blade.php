@@ -1,10 +1,10 @@
 <div class="space-y-6">
   
-  <!-- PAGE HEADER & TOP FILTER TABS (All, Sent, Received) -->
+  <!-- PAGE HEADER & DIRECTION FILTER (All, Sent, Received) -->
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-extrabold text-slate-950">Offers &amp; Negotiations Inbox</h1>
-      <p class="text-xs text-slate-500 mt-0.5">Review, negotiate, and respond to buyer package offers &amp; community hub proposals.</p>
+      <h1 class="text-2xl font-extrabold text-slate-950">Offers &amp; Active Deal Negotiations</h1>
+      <p class="text-xs text-slate-500 mt-0.5">Manage deal proposals, multi-round negotiations, and package offers across buyers and sellers.</p>
     </div>
 
     <!-- TOP FILTER TABS (Only All, Sent, Received) -->
@@ -44,7 +44,15 @@
     </div>
   </div>
 
-  <!-- SECONDARY FILTER LINE (Accepted, Pending, Countered, Declined, Expired, Cancelled) -->
+  <!-- NON-BINDING NOTICE BANNER -->
+  <div class="rounded-2xl border border-amber-200 bg-amber-50/60 p-3.5 flex items-start gap-3 text-xs text-amber-900">
+    <i class="fas fa-info-circle text-amber-600 mt-0.5 shrink-0 text-sm"></i>
+    <p class="leading-relaxed">
+      <strong>Important Notice:</strong> Offers and counter-offers are non-binding and subject to item availability until payment is completed. Stock is temporarily held once an invoice is issued and locked upon checkout payment.
+    </p>
+  </div>
+
+  <!-- SECONDARY FILTER LINE (All, Pending, Countered, Accepted, Declined, Expired, Cancelled) -->
   <div class="bg-slate-50/80 p-2 rounded-2xl border border-slate-200/80 flex items-center gap-1.5 overflow-x-auto text-xs font-bold scrollbar-none">
     <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 pl-2 pr-1 shrink-0 flex items-center gap-1">
       <i class="fas fa-filter text-[10px]"></i> Status:
@@ -73,7 +81,7 @@
       wire:click="setStatus('countered')"
       class="px-3 py-1.5 rounded-xl transition cursor-pointer shrink-0 flex items-center gap-1.5 {{ $statusFilter === 'countered' ? 'bg-purple-600 text-white shadow-2xs font-extrabold' : 'text-purple-800 hover:bg-purple-50' }}"
     >
-      <span>Countered</span>
+      <span>Countered / Multi-Round</span>
       <span class="text-[10px] px-1.5 py-0.2 rounded-full {{ $statusFilter === 'countered' ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-900' }} font-bold">{{ $statusCounts['countered'] }}</span>
     </button>
 
@@ -141,42 +149,38 @@
     </div>
   @endif
 
-  <!-- OFFERS & NEGOTIATIONS STREAM -->
+  <!-- UNIFIED OFFERS & NEGOTIATIONS STREAM -->
   <div class="space-y-4">
-    @forelse ($userOffers as $offer)
+    @forelse ($threads as $thread)
       @php
-        $user = auth()->user();
-        $isSender = $user && ($user->id === $offer->sender_id);
-        $isRecipient = $user && ($user->id === $offer->recipient_id);
-        $otherParty = $isSender ? $offer->recipient : $offer->sender;
-        $partyRole = $isSender ? 'Recipient' : 'Sender';
-        $location = $otherParty?->primaryLocation?->city ? "{$otherParty->primaryLocation->city}, {$otherParty->primaryLocation->state}" : 'Nigeria';
-        $itemCount = $offer->items->count();
-        $primaryItem = $offer->items->first();
-        $isAccepted = ($offer->status === 'accepted');
-        $isCountered = ($offer->status === 'countered');
-        $isDeclined = ($offer->status === 'declined');
-        $isExpired = ($offer->status === 'expired');
-        $isCancelled = ($offer->status === 'cancelled');
-        $actionNeeded = $isRecipient && ($offer->status === 'pending');
-
-        // Check if offer is part of multi-round negotiation
-        $isNegotiationChain = (bool) ($offer->parent_id || $offer->counterOffers->isNotEmpty());
-        $rootId = $offer->parent_id ?: $offer->id;
+        $latest = $thread->latest_offer;
+        $isAccepted = ($thread->status === 'accepted');
+        $isDeclined = ($thread->status === 'declined');
+        $isExpired = ($thread->status === 'expired');
+        $isCancelled = ($thread->status === 'cancelled');
+        $actionNeeded = $thread->action_required;
+        $otherParty = $thread->other_party;
+        $location = $otherParty?->primaryLocation?->city ? "{$otherParty->primaryLocation->city}, " . ($otherParty->primaryLocation->state->name ?? 'Nigeria') : 'Nigeria';
+        $itemsCount = $thread->items->count();
+        $primaryItem = $thread->primary_item;
       @endphp
 
       <div class="bg-white rounded-3xl p-6 space-y-4 shadow-soft transition {{ $actionNeeded ? 'border-2 border-pp-500 ring-2 ring-pp-100' : ($isAccepted ? 'border-2 border-emerald-400 bg-emerald-50/10' : 'border border-slate-200 hover:border-slate-300') }}">
         
         <!-- HEADER ROW -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs border-b border-slate-100 pb-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3 text-xs">
           <div class="flex items-center gap-2 flex-wrap">
-            @if ($offer->cart_id)
+            <span class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 font-extrabold text-[10px] flex items-center gap-1">
+              <i class="fas fa-handshake"></i> SESSION #{{ $thread->root_id }} · {{ $thread->rounds_count }} {{ Str::plural('Round', $thread->rounds_count) }}
+            </span>
+
+            @if ($thread->cart_id)
               <span class="px-2.5 py-0.5 rounded-full bg-pp-100 text-pp-800 font-extrabold text-[10px] flex items-center gap-1">
-                <i class="fas fa-shopping-cart text-pp-600"></i> SOURCE: BUYER CART
+                <i class="fas fa-shopping-cart text-pp-600"></i> SOURCE: CART
               </span>
-            @elseif ($offer->discussion_id)
+            @elseif ($thread->discussion_id)
               <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-[10px] flex items-center gap-1">
-                <i class="fas fa-users text-emerald-600"></i> SOURCE: COMMUNITY HUB
+                <i class="fas fa-users text-emerald-600"></i> SOURCE: HUB
               </span>
             @else
               <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 font-extrabold text-[10px]">
@@ -184,45 +188,38 @@
               </span>
             @endif
 
-            @if ($isNegotiationChain)
-              <span class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 font-extrabold text-[10px] flex items-center gap-1">
-                <i class="fas fa-handshake text-purple-600"></i> NEGOTIATION THREAD
-              </span>
-            @endif
-
             <span class="text-slate-300">·</span>
             <span class="font-bold text-slate-900">
-              {{ $partyRole }}: {{ $otherParty?->business_name ?: $otherParty?->name ?: 'Marketplace User' }} ({{ $location }})
+              Counterparty: {{ $otherParty?->business_name ?: $otherParty?->name ?: 'Marketplace User' }} ({{ $location }})
             </span>
             <span class="text-slate-300">·</span>
-            <span class="text-slate-400">{{ $offer->created_at->diffForHumans() }}</span>
+            <span class="text-slate-400">Last activity {{ $thread->updated_at->diffForHumans() }}</span>
           </div>
 
-          <!-- STATUS BADGE -->
           <div>
             @if ($isAccepted)
               <span class="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white font-extrabold text-[11px] flex items-center gap-1">
-                <i class="fas fa-check-circle"></i> ACCEPTED &amp; RESERVED
-              </span>
-            @elseif ($isCountered)
-              <span class="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 font-extrabold text-[11px] flex items-center gap-1">
-                <i class="fas fa-rotate"></i> COUNTERED
+                <i class="fas fa-check-circle"></i> DEAL ACCEPTED
               </span>
             @elseif ($isDeclined)
-              <span class="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[11px] flex items-center gap-1">
-                <i class="fas fa-times-circle"></i> DECLINED
+              <span class="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-extrabold text-[11px]">
+                NEGOTIATION CLOSED
               </span>
             @elseif ($isExpired)
               <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-extrabold text-[11px]">
-                EXPIRED
+                OFFER EXPIRED
               </span>
             @elseif ($isCancelled)
               <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-extrabold text-[11px]">
                 CANCELLED
               </span>
+            @elseif ($actionNeeded)
+              <span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-[11px] animate-pulse">
+                YOUR TURN TO RESPOND
+              </span>
             @else
-              <span class="px-2.5 py-0.5 rounded-full {{ $actionNeeded ? 'bg-amber-100 text-amber-900 animate-pulse border border-amber-300' : 'bg-slate-100 text-slate-700' }} font-extrabold text-[11px]">
-                {{ $actionNeeded ? 'ACTION REQUIRED' : 'PENDING RESPONSE' }}
+              <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-extrabold text-[11px]">
+                AWAITING COUNTERPARTY
               </span>
             @endif
           </div>
@@ -232,75 +229,71 @@
         <div class="grid sm:grid-cols-12 gap-4 items-center">
           <div class="sm:col-span-6 flex items-start gap-4">
             <div class="w-12 h-12 rounded-2xl bg-pp-50 text-pp-600 grid place-items-center text-xl shrink-0">
-              💻
+              @if ($primaryItem?->type === 'service') ⚡ @elseif ($primaryItem?->type === 'delivery') 🚚 @else 📦 @endif
             </div>
             <div class="space-y-1">
               <div class="flex items-center gap-2 flex-wrap">
                 <h4 class="text-sm font-extrabold text-slate-900">
-                  {{ $primaryItem?->description ?? 'Custom Proposal' }}
+                  {{ $primaryItem?->description ?? 'Custom Proposal Session' }}
                 </h4>
-                @if ($itemCount > 1)
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">+{{ $itemCount - 1 }} more items</span>
+                @if ($itemsCount > 1)
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                    +{{ $itemsCount - 1 }} more items
+                  </span>
                 @endif
               </div>
-              
+
               <p class="text-xs text-slate-500">
-                Fulfillment: <strong>{{ $offer->delivery_method === 'seller_responsible' ? 'Seller Delivery' : 'Buyer Pickup' }}</strong> · Warranty: <strong>{{ $offer->maxWarrantyDays() ? "{$offer->maxWarrantyDays()} Days" : 'Standard' }}</strong>
+                Delivery: <strong>{{ $latest->delivery_method === 'seller_responsible' ? 'Seller Delivery' : 'Buyer Pickup' }}</strong> · Warranty: <strong>{{ $latest->maxWarrantyDays() ? "{$latest->maxWarrantyDays()} Days" : 'Standard' }}</strong>
+                @if ($thread->expires_at)
+                  · <span class="text-slate-400">Expires: {{ $thread->expires_at->diffForHumans() }}</span>
+                @endif
               </p>
 
-              @if ($offer->terms)
-                <p class="text-xs text-slate-600 italic">"{{ Str::limit($offer->terms, 90) }}"</p>
+              @if ($latest->terms)
+                <p class="text-xs text-slate-600 italic">Latest Note: "{{ Str::limit($latest->terms, 85) }}"</p>
               @endif
             </div>
           </div>
 
           <div class="sm:col-span-3 text-left sm:text-right space-y-0.5">
-            <span class="text-xs text-slate-400 block font-medium">Proposed Net Total:</span>
-            <span class="text-2xl font-extrabold text-slate-950">₦{{ number_format($offer->total()) }}</span>
-            @if ($offer->discount > 0)
-              <span class="text-[10px] text-pp-700 font-bold block">Discounted (-₦{{ number_format($offer->discount) }})</span>
+            <span class="text-xs text-slate-400 block font-medium">Latest Proposal:</span>
+            <span class="text-2xl font-extrabold text-slate-950">₦{{ number_format($thread->latest_total) }}</span>
+            @if ($thread->original_total != $thread->latest_total)
+              <span class="text-[10px] text-slate-500 font-bold block">
+                Started at: ₦{{ number_format($thread->original_total) }}
+              </span>
             @endif
           </div>
 
-          <div class="sm:col-span-3 flex flex-col gap-2">
-            <a href="{{ route('offers.view', ['offer_id' => 'OFF-' . $offer->id]) }}" class="w-full py-2.5 px-4 rounded-xl {{ $actionNeeded ? 'bg-pp-600 hover:bg-pp-700 text-white font-black' : 'bg-slate-900 hover:bg-slate-800 text-white font-extrabold' }} text-xs text-center shadow-xs transition block">
-              View Negotiation &amp; Respond →
+          <div class="sm:col-span-3 flex flex-col sm:flex-row items-center gap-2">
+            <button
+              type="button"
+              @click="$dispatch('open-quick-view-offer', { offerId: {{ $latest->id }} })"
+              class="w-full sm:w-auto flex-1 py-2.5 px-3 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs text-center transition cursor-pointer"
+            >
+              Quick View
+            </button>
+
+            <a
+              href="{{ route('offers.view', ['offer_id' => 'OFF-' . $latest->id]) }}"
+              class="w-full sm:w-auto flex-1 py-2.5 px-4 rounded-xl {{ $actionNeeded ? 'bg-pp-600 hover:bg-pp-700 text-white font-black' : 'bg-slate-900 hover:bg-slate-800 text-white font-extrabold' }} text-xs text-center shadow-xs transition block"
+            >
+              Enter Deal Room →
             </a>
-            @if ($actionNeeded)
-              <span class="text-[10px] text-amber-700 font-extrabold text-center">Your response is required</span>
-            @endif
           </div>
         </div>
-
       </div>
     @empty
-      <!-- EMPTY STATE -->
       <div class="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4 shadow-soft">
-        <div class="w-16 h-16 rounded-3xl bg-pp-50 text-pp-600 grid place-items-center text-2xl mx-auto">
+        <div class="w-16 h-16 rounded-3xl bg-purple-50 text-purple-600 grid place-items-center text-2xl mx-auto">
           <i class="fas fa-handshake"></i>
         </div>
         <div class="space-y-1">
           <h3 class="font-extrabold text-slate-900 text-base">No Offers or Negotiations Found</h3>
           <p class="text-xs text-slate-500 max-w-md mx-auto">
-            You don't have any offers in the <strong>{{ ucfirst($activeTab) }}</strong> category with status <strong>{{ ucfirst($statusFilter) }}</strong>.
+            You don't have any deals matching this filter. Once you propose or receive offers on marketplace items, they will appear here with full negotiation tracking!
           </p>
-        </div>
-        <div class="flex items-center justify-center gap-3 pt-2">
-          @if ($statusFilter !== 'all' || $activeTab !== 'all' || !empty($searchQuery))
-            <button
-              type="button"
-              wire:click="$set('statusFilter', 'all'); $set('activeTab', 'all'); $set('searchQuery', '')"
-              class="py-2.5 px-5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition cursor-pointer"
-            >
-              Reset Filters
-            </button>
-          @endif
-          <a href="{{ route('cart') }}" class="py-2.5 px-5 rounded-xl bg-pp-600 text-white font-bold text-xs hover:bg-pp-700 transition">
-            Go to Cart
-          </a>
-          <a href="{{ route('community') }}" class="py-2.5 px-5 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
-            Browse Community RFQs
-          </a>
         </div>
       </div>
     @endforelse

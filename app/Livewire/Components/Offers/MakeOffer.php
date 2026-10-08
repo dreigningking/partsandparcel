@@ -3,8 +3,10 @@
 namespace App\Livewire\Components\Offers;
 
 use App\Models\Cart;
+use App\Models\Country;
 use App\Models\Listing;
 use App\Models\Location;
+use App\Models\State;
 use App\Models\User;
 use App\Services\Commercial\NegotiationService;
 use Illuminate\Support\Facades\Auth;
@@ -33,8 +35,8 @@ class MakeOffer extends Component
     public bool $showNewAddressForm = false;
     public string $newAddressLabel = 'Home';
     public string $newAddressLine = '';
-    public string $newCity = 'Ikeja';
-    public string $newState = 'Lagos';
+    public string $newCity = '';
+    public string $newState = '';
 
     // Itemized list of items included in this offer
     public array $offerItems = [];
@@ -48,9 +50,23 @@ class MakeOffer extends Component
     public string $repairDetails = '';
     public string $offerNote = '';
 
+    // Single-item / backward-compatibility properties
+    public ?string $proposedPrice = null;
+    public int $warrantyDays = 14;
+    public string $warrantyTerms = '14-day replacement and inspection warranty';
+    public bool $isNegotiable = true;
+    public bool $isWarrantyNegotiable = true;
+
     #[On('open-make-offer')]
-    public function loadOfferDrawer($payload = null): void
+    public function loadOfferDrawer($payload = null)
     {
+        // Require authentication to make an offer
+        if (! Auth::check()) {
+            $this->isOpen = false;
+            session()->flash('warning', 'Please sign in to make an offer.');
+            return redirect()->route('login');
+        }
+
         // Reset state
         $this->cartId = null;
         $this->sellerId = null;
@@ -81,6 +97,12 @@ class MakeOffer extends Component
         // Load items: from single listing OR from buyer's cart for this seller
         $this->loadItems();
 
+        if (empty($this->offerItems)) {
+            $this->isOpen = false;
+            session()->flash('error', 'No items found to submit an offer for.');
+            return;
+        }
+
         // Dynamically compute wizard steps: Step 1..N for items, Step N+1 for Shipment, Step N+2 for Special Request
         $itemCount = count($this->offerItems);
         $this->totalSteps = max(3, $itemCount + 2);
@@ -92,6 +114,9 @@ class MakeOffer extends Component
     public function loadAddresses(): void
     {
         $user = Auth::user();
+        $this->savedAddresses = [];
+        $this->deliveryAddressId = null;
+
         if ($user) {
             $addresses = Location::with('state')->where('user_id', $user->id)->get();
             if ($addresses->isNotEmpty()) {
@@ -100,18 +125,16 @@ class MakeOffer extends Component
                     'label' => $a->label ?: ($a->name ?: 'Address'),
                     'address' => $a->address_line_1,
                     'city' => $a->city,
-                    'state' => $a->state?->name ?? (is_string($a->state) ? $a->state : ''),
+                    'state' => $a->state?->name ?? ' NA',
                 ])->toArray();
                 $this->deliveryAddressId = $this->savedAddresses[0]['id'];
+                $this->showNewAddressForm = false;
                 return;
             }
         }
 
-        $this->savedAddresses = [
-            ['id' => 1, 'label' => 'Home', 'address' => '12 Computer Village Rd', 'city' => 'Ikeja', 'state' => 'Lagos'],
-            ['id' => 2, 'label' => 'Workshop / Shop', 'address' => 'Plaza 3, Shop 14, Computer Village', 'city' => 'Ikeja', 'state' => 'Lagos']
-        ];
-        $this->deliveryAddressId = 1;
+        // No demo addresses: if user has no saved address, prompt the new address form directly
+        $this->showNewAddressForm = true;
     }
 
     public function loadItems(): void
@@ -134,12 +157,12 @@ class MakeOffer extends Component
                         'id' => 1,
                         'listing_id' => $listing->id,
                         'title' => $listing->title ?? ($listing->item?->name ?? 'Listing #' . $listing->id),
-                        'specs' => $listing->condition ? ucfirst($listing->condition) : 'Tested',
+                        'specs' => $listing->item?->condition_status ? ucfirst($listing->item->condition_status) : 'Tested',
                         'price' => (float) $listing->price,
                         'quantity' => 1,
                         'icon' => '📦',
                         'is_negotiable' => (bool) $listing->is_negotiable,
-                        'proposed_price' => (string) $listing->price,
+                        'proposed_price' => (((float) $listing->price) == (int) $listing->price) ? (string) (int) $listing->price : (string) (float) $listing->price,
                         'is_warranty_negotiable' => (bool) $listing->is_warranty_negotiable,
                         'listing_warranty_days' => $listingDays,
                         'listing_warranty_terms' => $listingTerms,
@@ -153,6 +176,8 @@ class MakeOffer extends Component
                 if (! $this->allowShipping) {
                     $this->deliveryMode = 'pickup';
                 }
+
+                $this->syncFirstItemProperties();
                 return;
             }
         }
@@ -181,12 +206,12 @@ class MakeOffer extends Component
                         'id' => $item->id,
                         'listing_id' => $item->listing_id,
                         'title' => $listing?->title ?? ($listing?->item?->name ?? "Item #{$item->id}"),
-                        'specs' => $listing?->condition ? ucfirst($listing->condition) : 'Tested',
+                        'specs' => $listing?->item?->condition_status ? ucfirst($listing->item->condition_status) : 'Tested',
                         'price' => (float) $item->unit_price,
                         'quantity' => (int) $item->quantity,
                         'icon' => $listing?->item?->item_type === 'part' ? '⚙️' : ($listing?->item?->item_type === 'scrap' ? '🛠️' : '💻'),
                         'is_negotiable' => (bool) ($listing?->is_negotiable ?? true),
-                        'proposed_price' => (string) $item->unit_price,
+                        'proposed_price' => (((float) $item->unit_price) == (int) $item->unit_price) ? (string) (int) $item->unit_price : (string) (float) $item->unit_price,
                         'is_warranty_negotiable' => (bool) ($listing?->is_warranty_negotiable ?? false),
                         'listing_warranty_days' => $listingDays,
                         'listing_warranty_terms' => $listingTerms,
@@ -200,11 +225,13 @@ class MakeOffer extends Component
                 if (! $this->allowShipping) {
                     $this->deliveryMode = 'pickup';
                 }
+
+                $this->syncFirstItemProperties();
                 return;
             }
         }
 
-        // Case 3: Guest cart session for this seller
+        // Case 3: Guest cart session for this seller (migrated when logged in)
         $guestCart = Session::get('guest_cart', []);
         $sellerKey = $this->sellerId ?? '';
         if (isset($guestCart[$sellerKey]) && ! empty($guestCart[$sellerKey])) {
@@ -218,17 +245,18 @@ class MakeOffer extends Component
 
                 $listingDays = $listing->warranty_period_days;
                 $listingTerms = $listing->warranty_terms ?: ($listingDays ? "{$listingDays}-day replacement and inspection warranty" : 'Standard inspection warranty');
+                $rawGuestPrice = (float) ($itemData['unit_price'] ?? $listing->price);
 
                 $this->offerItems[] = [
                     'id' => 'guest_' . $lid,
                     'listing_id' => $listing->id,
                     'title' => $listing->title ?? ($listing->item?->name ?? "Item #{$listing->id}"),
-                    'specs' => $listing->condition ? ucfirst($listing->condition) : 'Standard',
-                    'price' => (float) ($itemData['unit_price'] ?? $listing->price),
+                    'specs' => $listing->item?->condition_status ? ucfirst($listing->item->condition_status) : 'Standard',
+                    'price' => $rawGuestPrice,
                     'quantity' => (int) ($itemData['quantity'] ?? 1),
                     'icon' => $listing->item?->item_type === 'part' ? '⚙️' : ($listing->item?->item_type === 'scrap' ? '🛠️' : '💻'),
                     'is_negotiable' => (bool) $listing->is_negotiable,
-                    'proposed_price' => (string) ($itemData['unit_price'] ?? $listing->price),
+                    'proposed_price' => ($rawGuestPrice == (int) $rawGuestPrice) ? (string) (int) $rawGuestPrice : (string) $rawGuestPrice,
                     'is_warranty_negotiable' => (bool) $listing->is_warranty_negotiable,
                     'listing_warranty_days' => $listingDays,
                     'listing_warranty_terms' => $listingTerms,
@@ -242,30 +270,39 @@ class MakeOffer extends Component
             if (! $this->allowShipping) {
                 $this->deliveryMode = 'pickup';
             }
+
+            $this->syncFirstItemProperties();
             return;
         }
 
-        // Fallback demo items if no DB or session items found
-        $this->offerItems = [
-            [
-                'id' => 101,
-                'listing_id' => null,
-                'title' => 'HP EliteBook 840 G5 Motherboard',
-                'specs' => 'Tested Working · Grade A',
-                'price' => 85000,
-                'quantity' => 1,
-                'icon' => '💻',
-                'is_negotiable' => true,
-                'proposed_price' => '80000',
-                'is_warranty_negotiable' => true,
-                'listing_warranty_days' => 14,
-                'listing_warranty_terms' => '14-day replacement and inspection warranty',
-                'proposed_warranty_days' => 14,
-                'proposed_warranty_terms' => '14-day replacement and inspection warranty',
-                'allow_shipping' => true,
-            ]
-        ];
-        $this->allowShipping = true;
+        // No demo items fallback: leave empty if no valid listings found
+        $this->offerItems = [];
+        $this->allowShipping = false;
+        $this->proposedPrice = null;
+    }
+
+    public function syncFirstItemProperties(): void
+    {
+        if (! empty($this->offerItems)) {
+            $first = $this->offerItems[0];
+            $this->proposedPrice = (string) ($first['proposed_price'] ?? $first['price']);
+            $this->warrantyDays = (int) ($first['proposed_warranty_days'] ?? $first['listing_warranty_days'] ?? 14);
+            $this->warrantyTerms = (string) ($first['proposed_warranty_terms'] ?? $first['listing_warranty_terms'] ?? '14-day replacement and inspection warranty');
+            $this->isNegotiable = (bool) ($first['is_negotiable'] ?? true);
+            $this->isWarrantyNegotiable = (bool) ($first['is_warranty_negotiable'] ?? true);
+        }
+    }
+
+    public function updatedProposedPrice($value): void
+    {
+        if (isset($this->offerItems[0])) {
+            $this->offerItems[0]['proposed_price'] = (string) $value;
+        }
+    }
+
+    public function setWarrantyDays(int $days): void
+    {
+        $this->setItemWarrantyDays(0, $days);
     }
 
     public function setItemWarrantyDays(int $index, int $days): void
@@ -278,6 +315,11 @@ class MakeOffer extends Component
 
         $this->offerItems[$index]['proposed_warranty_days'] = $days;
         $this->offerItems[$index]['proposed_warranty_terms'] = "{$days}-day inspection and replacement warranty";
+
+        if ($index === 0) {
+            $this->warrantyDays = $days;
+            $this->warrantyTerms = "{$days}-day inspection and replacement warranty";
+        }
     }
 
     public function nextStep(): void
@@ -341,32 +383,31 @@ class MakeOffer extends Component
 
         $user = Auth::user();
         if ($user) {
+            $stateId = null;
+            if ($this->newState) {
+                $stateId = State::where('country_id', $user->country_id)
+                    ->where(function ($q) {
+                        $q->where('name', $this->newState)->orWhere('code', $this->newState);
+                    })->value('id');
+            }
+
+            $countryId = $user->country_id ?? Country::where('is_default', true)->value('id');
+
             $location = Location::create([
                 'user_id' => $user->id,
-                'name' => $this->newAddressLabel,
-                'label' => $this->newAddressLabel,
+                'label' => $this->newAddressLabel ?: 'Delivery Address',
                 'address_line_1' => $this->newAddressLine,
-                'city' => $this->newCity,
-                'state_id' => null,
-                'country_code' => $user->country_code ?? 'NG',
+                'city' => $this->newCity ?: 'City',
+                'state_id' => $stateId,
+                'country_id' => $countryId,
+                'is_default' => empty($this->savedAddresses),
             ]);
 
             $this->loadAddresses();
             $this->deliveryAddressId = $location->id;
-        } else {
-            $newId = count($this->savedAddresses) + 1;
-            $this->savedAddresses[] = [
-                'id' => $newId,
-                'label' => $this->newAddressLabel,
-                'address' => $this->newAddressLine,
-                'city' => $this->newCity,
-                'state' => $this->newState,
-            ];
-            $this->deliveryAddressId = $newId;
+            $this->showNewAddressForm = false;
+            $this->newAddressLine = '';
         }
-
-        $this->showNewAddressForm = false;
-        $this->newAddressLine = '';
     }
 
     public function submitPackageOffer()
@@ -380,6 +421,11 @@ class MakeOffer extends Component
         if (empty($this->offerItems)) {
             session()->flash('error', 'No items found in this cart to submit an offer for.');
             return;
+        }
+
+        // Sync legacy single-item properties if set
+        if ($this->proposedPrice !== null && isset($this->offerItems[0])) {
+            $this->offerItems[0]['proposed_price'] = (string) $this->proposedPrice;
         }
 
         $sellerId = (int) $this->sellerId;
@@ -432,7 +478,7 @@ class MakeOffer extends Component
     public function render()
     {
         $originalSubtotal = collect($this->offerItems)->sum(fn ($i) => (float) $i['price'] * (int) $i['quantity']);
-        $proposedSubtotal = collect($this->offerItems)->sum(fn ($i) => (float) str_replace(',', '', (string) $i['proposed_price']) * (int) $i['quantity']);
+        $proposedSubtotal = collect($this->offerItems)->sum(fn ($i) => (float) str_replace(',', '', (string) ($i['proposed_price'] ?? $i['price'])) * (int) $i['quantity']);
         $savings = max(0, $originalSubtotal - $proposedSubtotal);
 
         return view('livewire.components.offers.make-offer', [

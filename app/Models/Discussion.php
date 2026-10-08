@@ -62,10 +62,10 @@ class Discussion extends Model
     public function getLocationTextAttribute(): string
     {
         if ($this->location) {
-            return "{$this->location->city}, {$this->location->state}";
+            return "{$this->location->city}, {$this->location->state->name}";
         }
         if ($this->user?->primaryLocation?->city) {
-            return "{$this->user->primaryLocation->city}, {$this->user->primaryLocation->state}";
+            return "{$this->user->primaryLocation->city}, {$this->user->primaryLocation->state->name}";
         }
         return $this->attachments['location'] ?? 'Nigeria';
     }

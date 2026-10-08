@@ -90,9 +90,9 @@ class CommunityHome extends Component
             };
 
             $loc = $d->location
-                ? "{$d->location->city}, {$d->location->state}"
+                ? "{$d->location->city}, {$d->location->state->name}"
                 : ($d->user?->primaryLocation?->city
-                    ? "{$d->user->primaryLocation->city}, {$d->user->primaryLocation->state}"
+                    ? "{$d->user->primaryLocation->city}, {$d->user->primaryLocation->state->name}"
                     : ($d->attachments['location'] ?? 'Lagos, Nigeria'));
 
             $budget = $d->budget ?: ($d->attachments['budget'] ?? 'Flexible');
@@ -340,7 +340,7 @@ class CommunityHome extends Component
             $locId = (int) $this->formLocation;
             $locObj = Location::find($locId);
             if ($locObj) {
-                $locationStr = "{$locObj->city}, {$locObj->state}";
+                $locationStr = "{$locObj->city}, {$locObj->state->name}";
             }
         }
 

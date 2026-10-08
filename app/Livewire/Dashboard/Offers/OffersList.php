@@ -10,16 +10,16 @@ use Livewire\Component;
 #[Layout('layouts.dash')]
 class OffersList extends Component
 {
-    public $activeTab = 'all'; // Top filter: 'all', 'sent', 'received'
-    public $statusFilter = 'all'; // Secondary filter: 'all', 'pending', 'countered', 'accepted', 'declined', 'expired', 'cancelled'
-    public $searchQuery = '';
+    public string $activeTab = 'all'; // Top filter: 'all', 'sent', 'received'
+    public string $statusFilter = 'all'; // Secondary filter: 'all', 'pending', 'countered', 'accepted', 'declined', 'expired', 'cancelled'
+    public string $searchQuery = '';
 
-    public function setDirection(string $direction)
+    public function setDirection(string $direction): void
     {
         $this->activeTab = in_array($direction, ['all', 'sent', 'received']) ? $direction : 'all';
     }
 
-    public function setStatus(string $status)
+    public function setStatus(string $status): void
     {
         $this->statusFilter = $status;
     }
@@ -27,7 +27,7 @@ class OffersList extends Component
     public function render()
     {
         $user = Auth::user();
-        $userOffers = collect();
+        $threads = collect();
         $directionCounts = [
             'all' => 0,
             'sent' => 0,
@@ -44,64 +44,114 @@ class OffersList extends Component
         ];
 
         if ($user) {
-            $baseQuery = Offer::where(function ($q) use ($user) {
+            // Fetch all offers involving user with eager loading
+            $allUserOffers = Offer::with([
+                'sender.primaryLocation.state',
+                'recipient.primaryLocation.state',
+                'items.listing',
+                'parent.items',
+                'counterOffers.items',
+                'cart',
+                'discussion',
+            ])
+            ->where(function ($q) use ($user) {
                 $q->where('sender_id', $user->id)
                   ->orWhere('recipient_id', $user->id);
+            })
+            ->latest('id')
+            ->get();
+
+            // Group offers into negotiation deal threads by root offer ID
+            $groupedThreads = $allUserOffers->groupBy(function ($offer) {
+                return $offer->parent_id ?: $offer->id;
+            });
+
+            $processedThreads = $groupedThreads->map(function ($offersInThread, $rootId) use ($user) {
+                $rootOffer = $offersInThread->firstWhere('id', $rootId) ?? $offersInThread->sortBy('id')->first();
+                $latestOffer = $offersInThread->sortByDesc('id')->first();
+                $roundsCount = $offersInThread->count();
+
+                $isUserSenderOfLatest = ($latestOffer->sender_id === $user->id);
+                $isUserSenderOfRoot = ($rootOffer->sender_id === $user->id);
+                $otherParty = $isUserSenderOfLatest ? $latestOffer->recipient : $latestOffer->sender;
+                $actionRequired = (! $isUserSenderOfLatest && $latestOffer->status === 'pending');
+
+                return (object) [
+                    'root_id' => $rootId,
+                    'root_offer' => $rootOffer,
+                    'latest_offer' => $latestOffer,
+                    'rounds_count' => $roundsCount,
+                    'other_party' => $otherParty,
+                    'is_user_sender' => $isUserSenderOfRoot,
+                    'action_required' => $actionRequired,
+                    'status' => $latestOffer->status,
+                    'primary_item' => $latestOffer->items->first() ?? $rootOffer->items->first(),
+                    'items' => $latestOffer->items->isNotEmpty() ? $latestOffer->items : $rootOffer->items,
+                    'latest_total' => $latestOffer->total(),
+                    'original_total' => $rootOffer->total(),
+                    'updated_at' => $latestOffer->updated_at ?? $latestOffer->created_at,
+                    'created_at' => $rootOffer->created_at,
+                    'expires_at' => $latestOffer->expires_at,
+                    'delivery_method' => $latestOffer->delivery_method,
+                    'cart_id' => $latestOffer->cart_id ?? $rootOffer->cart_id,
+                    'discussion_id' => $latestOffer->discussion_id ?? $rootOffer->discussion_id,
+                ];
             });
 
             // 1. Top filter counts (All, Sent, Received)
-            $directionCounts['all'] = (clone $baseQuery)->count();
-            $directionCounts['sent'] = Offer::where('sender_id', $user->id)->count();
-            $directionCounts['received'] = Offer::where('recipient_id', $user->id)->count();
+            $directionCounts['all'] = $processedThreads->count();
+            $directionCounts['sent'] = $processedThreads->where('is_user_sender', true)->count();
+            $directionCounts['received'] = $processedThreads->where('is_user_sender', false)->count();
 
-            // 2. Base query scoped by active direction
+            // 2. Base collection scoped by active direction
             $scopedByDirection = match ($this->activeTab) {
-                'sent' => Offer::where('sender_id', $user->id),
-                'received' => Offer::where('recipient_id', $user->id),
-                default => clone $baseQuery,
+                'sent' => $processedThreads->where('is_user_sender', true),
+                'received' => $processedThreads->where('is_user_sender', false),
+                default => $processedThreads,
             };
 
             // 3. Status counts within selected direction
-            $statusCounts['all'] = (clone $scopedByDirection)->count();
-            $statusCounts['pending'] = (clone $scopedByDirection)->where('status', 'pending')->count();
-            $statusCounts['countered'] = (clone $scopedByDirection)->where('status', 'countered')->count();
-            $statusCounts['accepted'] = (clone $scopedByDirection)->where('status', 'accepted')->count();
-            $statusCounts['declined'] = (clone $scopedByDirection)->where('status', 'declined')->count();
-            $statusCounts['expired'] = (clone $scopedByDirection)->where('status', 'expired')->count();
-            $statusCounts['cancelled'] = (clone $scopedByDirection)->where('status', 'cancelled')->count();
+            $statusCounts['all'] = $scopedByDirection->count();
+            $statusCounts['pending'] = $scopedByDirection->where('status', 'pending')->count();
+            $statusCounts['countered'] = $scopedByDirection->filter(fn ($t) => $t->status === 'countered' || $t->rounds_count > 1)->count();
+            $statusCounts['accepted'] = $scopedByDirection->where('status', 'accepted')->count();
+            $statusCounts['declined'] = $scopedByDirection->where('status', 'declined')->count();
+            $statusCounts['expired'] = $scopedByDirection->where('status', 'expired')->count();
+            $statusCounts['cancelled'] = $scopedByDirection->where('status', 'cancelled')->count();
 
-            // 4. Main Query with eager loading for fully dynamic display
-            $query = (clone $scopedByDirection)->with([
-                'sender.primaryLocation',
-                'recipient.primaryLocation',
-                'items.listing',
-                'cart',
-                'discussion',
-                'parent.items',
-                'counterOffers.items',
-            ]);
-
-            // Apply Status Filter
+            // 4. Apply status filter
+            $filteredThreads = $scopedByDirection;
             if ($this->statusFilter !== 'all') {
-                $query->where('status', $this->statusFilter);
+                if ($this->statusFilter === 'countered') {
+                    $filteredThreads = $filteredThreads->filter(fn ($t) => $t->status === 'countered' || $t->rounds_count > 1);
+                } else {
+                    $filteredThreads = $filteredThreads->where('status', $this->statusFilter);
+                }
             }
 
-            // Apply Search Query
+            // 5. Apply search query
             if (! empty($this->searchQuery)) {
-                $term = '%' . $this->searchQuery . '%';
-                $query->where(function ($q) use ($term) {
-                    $q->whereHas('items', fn ($sub) => $sub->where('description', 'like', $term))
-                      ->orWhere('terms', 'like', $term)
-                      ->orWhereHas('sender', fn ($sub) => $sub->where('name', 'like', $term)->orWhere('business_name', 'like', $term))
-                      ->orWhereHas('recipient', fn ($sub) => $sub->where('name', 'like', $term)->orWhere('business_name', 'like', $term));
+                $term = strtolower(trim($this->searchQuery));
+                $filteredThreads = $filteredThreads->filter(function ($t) use ($term) {
+                    $itemName = strtolower($t->primary_item?->description ?? '');
+                    $partyName = strtolower($t->other_party?->name ?? '');
+                    $bizName = strtolower($t->other_party?->business_name ?? '');
+                    $terms = strtolower($t->latest_offer?->terms ?? '');
+                    $rootIdStr = (string) $t->root_id;
+
+                    return str_contains($itemName, $term)
+                        || str_contains($partyName, $term)
+                        || str_contains($bizName, $term)
+                        || str_contains($terms, $term)
+                        || str_contains($rootIdStr, $term);
                 });
             }
 
-            $userOffers = $query->latest('id')->get();
+            $threads = $filteredThreads->sortByDesc('updated_at')->values();
         }
 
         return view('livewire.dashboard.offers.offers-list', [
-            'userOffers' => $userOffers,
+            'threads' => $threads,
             'directionCounts' => $directionCounts,
             'statusCounts' => $statusCounts,
         ]);

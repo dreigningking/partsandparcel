@@ -239,17 +239,19 @@
                                     <div>
                                         <div class="flex items-center justify-between mb-1">
                                             <label class="text-[11px] font-bold text-slate-700">Delivery Destination Address <span class="text-rose-500">*</span></label>
-                                            <button type="button" wire:click="$toggle('showNewAddressForm')" class="text-[10px] font-bold text-pp-600 hover:underline">
-                                                {{ $showNewAddressForm ? 'Cancel' : '+ Add Address' }}
-                                            </button>
+                                            @if (count($savedAddresses) > 0)
+                                                <button type="button" wire:click="$toggle('showNewAddressForm')" class="text-[10px] font-bold text-pp-600 hover:underline">
+                                                    {{ $showNewAddressForm ? 'Cancel' : '+ Add Address' }}
+                                                </button>
+                                            @endif
                                         </div>
 
-                                        @if ($showNewAddressForm)
+                                        @if ($showNewAddressForm || empty($savedAddresses))
                                             <div class="p-3 bg-white rounded-xl border border-pp-200 space-y-2 mb-2">
                                                 <input type="text" wire:model="newAddressLine" placeholder="Street Address line..." class="w-full p-2 border border-slate-200 rounded-lg text-xs" />
                                                 <div class="grid grid-cols-2 gap-2">
-                                                    <input type="text" wire:model="newCity" placeholder="City (e.g. Ikeja)" class="p-2 border border-slate-200 rounded-lg text-xs" />
-                                                    <input type="text" wire:model="newState" placeholder="State (e.g. Lagos)" class="p-2 border border-slate-200 rounded-lg text-xs" />
+                                                    <input type="text" wire:model="newCity" placeholder="City" class="p-2 border border-slate-200 rounded-lg text-xs" />
+                                                    <input type="text" wire:model="newState" placeholder="State" class="p-2 border border-slate-200 rounded-lg text-xs" />
                                                 </div>
                                                 <button type="button" wire:click="saveNewAddress" class="w-full py-1.5 bg-pp-600 text-white rounded-lg font-bold text-[11px]">Save &amp; Select Address</button>
                                             </div>

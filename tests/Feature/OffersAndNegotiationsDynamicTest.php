@@ -224,7 +224,7 @@ class OffersAndNegotiationsDynamicTest extends TestCase
 
         $this->actingAs($this->buyer);
 
-        $response = $this->get(route('negotiations'));
+        $response = $this->get(route('offers'));
         $response->assertStatus(200);
         $response->assertSee('Active Deal Negotiations');
         $response->assertSee('Toyota Camry 2018 Alternator OEM');

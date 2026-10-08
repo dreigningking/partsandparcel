@@ -119,6 +119,7 @@
             <table class="min-w-full text-left text-xs">
                 <thead class="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     <tr>
+                        <th class="px-4 py-3.5 text-center">Order</th>
                         <th class="px-5 py-3.5">Plan Details</th>
                         <th class="px-5 py-3.5">Marketplace Entitlements</th>
                         <th class="px-5 py-3.5">Escrow Fee</th>
@@ -131,6 +132,13 @@
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                     @forelse ($plans as $plan)
                         <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                            <!-- SORT ORDER -->
+                            <td class="px-4 py-4 text-center whitespace-nowrap">
+                                <span class="inline-flex items-center justify-center w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-xs font-black text-slate-700 dark:text-slate-300">
+                                    {{ $plan->sort_order }}
+                                </span>
+                            </td>
+
                             <!-- PLAN DETAILS -->
                             <td class="px-5 py-4">
                                 <div class="flex items-center gap-3">
@@ -268,7 +276,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-5 py-12 text-center text-slate-400">
+                            <td colspan="8" class="px-5 py-12 text-center text-slate-400">
                                 <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3 text-lg">
                                     <i class="fas fa-layer-group"></i>
                                 </div>
@@ -307,8 +315,8 @@
 
                 <form wire:submit="savePlan" class="space-y-4">
                     <!-- BASIC IDENTITY -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="sm:col-span-1">
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                                 Plan Name <span class="text-rose-500">*</span>
                             </label>
@@ -321,9 +329,9 @@
                             @error('name') <p class="text-[11px] text-rose-500 font-semibold mt-1">{{ $message }}</p> @enderror
                         </div>
 
-                        <div>
+                        <div class="sm:col-span-1">
                             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                                Slug <span class="text-slate-400 font-normal">(Optional, auto-generated)</span>
+                                Slug <span class="text-slate-400 font-normal">(Optional)</span>
                             </label>
                             <input
                                 type="text"
@@ -332,6 +340,20 @@
                                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-mono text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-pp-500"
                             />
                             @error('slug') <p class="text-[11px] text-rose-500 font-semibold mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="sm:col-span-1">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                Display Order <span class="text-slate-400 font-normal">(Sort Order)</span>
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                wire:model="sort_order"
+                                placeholder="0"
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-pp-500"
+                            />
+                            @error('sort_order') <p class="text-[11px] text-rose-500 font-semibold mt-1">{{ $message }}</p> @enderror
                         </div>
                     </div>
 

@@ -209,6 +209,40 @@ class CounterOfferDrawer extends Component
         }
     }
 
+    public function addNewItemToCounter(): void
+    {
+        $this->items[] = [
+            'id' => 'new_' . uniqid(),
+            'listing_id' => null,
+            'title' => 'Additional Item / Component',
+            'type' => 'item',
+            'quantity' => 1,
+            'original_price' => 0.00,
+            'counter_price' => 0.00,
+            'original_warranty_days' => 14,
+            'counter_warranty_days' => 14,
+            'original_warranty_terms' => '14-day replacement warranty',
+            'counter_warranty_terms' => '14-day replacement warranty',
+            'is_negotiable' => true,
+            'is_warranty_negotiable' => true,
+            'is_new' => true,
+        ];
+        $this->calculateTotalSteps();
+        $this->currentStep = count($this->items);
+        $this->recalculateTotals();
+    }
+
+    public function removeItemFromCounter(int $index): void
+    {
+        if (isset($this->items[$index]) && ! empty($this->items[$index]['is_new'])) {
+            unset($this->items[$index]);
+            $this->items = array_values($this->items);
+            $this->calculateTotalSteps();
+            $this->currentStep = max(1, min($this->currentStep, $this->totalSteps));
+            $this->recalculateTotals();
+        }
+    }
+
     public function recalculateTotals()
     {
         $itemsTotal = collect($this->items)->sum(fn ($i) => (float) ($i['counter_price'] ?? 0) * (int) ($i['quantity'] ?? 1));

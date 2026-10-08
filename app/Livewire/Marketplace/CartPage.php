@@ -72,7 +72,7 @@ class CartPage extends Component
                     'label' => $a->name ?? 'Address',
                     'address' => $a->address_line_1,
                     'city' => $a->city,
-                    'state' => $a->state,
+                    'state' => $a->state->name,
                 ])->toArray();
                 $this->deliveryAddressId = $this->savedAddresses[0]['id'] ?? null;
                 return;

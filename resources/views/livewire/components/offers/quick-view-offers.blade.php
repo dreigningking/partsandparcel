@@ -20,6 +20,12 @@
                 </button>
             </div>
 
+            <!-- NON-BINDING & AVAILABILITY DISCLAIMER BANNER -->
+            <div class="px-6 py-2.5 bg-amber-50 border-b border-amber-200 text-amber-900 text-[11px] flex items-center gap-2 shrink-0">
+                <i class="fas fa-info-circle text-amber-600 shrink-0"></i>
+                <span>Offers are subject to item availability and non-binding until payment is completed.</span>
+            </div>
+
             <!-- FLASH NOTIFICATIONS -->
             @if (session()->has('message'))
                 <div class="mx-6 mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
@@ -35,28 +41,46 @@
                 </div>
             @endif
 
-            <!-- PAGINATION / SLIDER HEADER -->
+            <!-- ROUNDS SLIDER & ITEM STEPPER -->
             @if (count($rounds) > 0)
                 @php
                     $currentRound = $rounds[$currentRoundIndex];
                     $totalRounds = count($rounds);
+                    $offerItems = $currentRound['items'] ?? [];
+                    $totalItems = count($offerItems);
                 @endphp
 
-                <div class="px-6 py-3 bg-pp-50/70 border-b border-pp-100 flex items-center justify-between text-xs">
-                    <button wire:click="previousRound" @disabled($currentRoundIndex === 0) class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer">
-                        <i class="fas fa-chevron-left text-[10px]"></i> Prev
+                <!-- ROUND CONTROLS -->
+                <div class="px-6 py-2.5 bg-pp-50/70 border-b border-pp-100 flex items-center justify-between text-xs shrink-0">
+                    <button wire:click="previousRound" @disabled($currentRoundIndex === 0) class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer">
+                        <i class="fas fa-chevron-left text-[10px]"></i> Prev Round
                     </button>
 
-                    <div class="text-center font-extrabold text-pp-800">
+                    <div class="text-center font-extrabold text-pp-800 text-xs">
                         Round {{ $currentRoundIndex + 1 }} of {{ $totalRounds }}
                     </div>
 
-                    <button wire:click="nextRound" @disabled($currentRoundIndex === $totalRounds - 1) class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer">
-                        Next <i class="fas fa-chevron-right text-[10px]"></i>
+                    <button wire:click="nextRound" @disabled($currentRoundIndex === $totalRounds - 1) class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white font-bold text-slate-700 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer">
+                        Next Round <i class="fas fa-chevron-right text-[10px]"></i>
                     </button>
                 </div>
 
-                <!-- DRAWER BODY - ACTIVE SLIDE CONTENT -->
+                <!-- ITEM-BY-ITEM WIZARD STEPPER (IF MULTIPLE ITEMS) -->
+                @if ($totalItems > 1)
+                    <div class="px-6 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs shrink-0">
+                        <button wire:click="prevItemStep" @disabled($itemStep <= 1) class="text-[11px] font-bold text-slate-600 hover:text-slate-900 disabled:opacity-30 cursor-pointer">
+                            <i class="fas fa-arrow-left text-[9px] mr-1"></i> Prev Item
+                        </button>
+                        <span class="text-[11px] font-extrabold text-slate-800">
+                            Item {{ min($itemStep, $totalItems) }} of {{ $totalItems }}
+                        </span>
+                        <button wire:click="nextItemStep" @disabled($itemStep >= $totalItems) class="text-[11px] font-bold text-slate-600 hover:text-slate-900 disabled:opacity-30 cursor-pointer">
+                            Next Item <i class="fas fa-arrow-right text-[9px] ml-1"></i>
+                        </button>
+                    </div>
+                @endif
+
+                <!-- DRAWER BODY - ACTIVE CONTENT -->
                 <div class="flex-1 min-h-0 overflow-y-auto p-6 space-y-4 text-xs">
                     
                     <div class="p-4 rounded-2xl bg-white border-2 border-pp-500 space-y-3 shadow-2xs">
@@ -72,14 +96,33 @@
                             </span>
                         </div>
 
+                        <!-- ITEM FOCUS BREAKDOWN -->
+                        @if ($totalItems > 0 && isset($offerItems[$itemStep - 1]))
+                            @php $activeItem = $offerItems[$itemStep - 1]; @endphp
+                            <div class="p-3 rounded-xl bg-pp-50/60 border border-pp-100 space-y-1.5">
+                                <span class="text-[9px] uppercase font-black text-pp-700 tracking-wider">Item Details</span>
+                                <h4 class="font-extrabold text-slate-900 text-xs">{{ $activeItem['description'] }}</h4>
+                                <div class="flex items-center gap-3 text-[11px] text-slate-600 font-semibold">
+                                    <span>Quantity: <strong class="text-slate-900">{{ $activeItem['quantity'] }}</strong></span>
+                                    <span>·</span>
+                                    <span>Unit Price: <strong class="text-pp-700">₦{{ number_format($activeItem['unit_price']) }}</strong></span>
+                                </div>
+                                @if ($activeItem['warranty_period_days'])
+                                    <div class="text-[10px] text-slate-500 mt-1">
+                                        <i class="fas fa-shield-alt text-emerald-600 mr-1"></i> {{ $activeItem['warranty_period_days'] }} Days ({{ $activeItem['warranty_terms'] ?: 'Inspection warranty' }})
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
                         <div class="space-y-1">
-                            <span class="text-slate-400 font-medium block">Proposed Price:</span>
+                            <span class="text-slate-400 font-medium block">Total Proposed Price:</span>
                             <span class="text-2xl font-black text-slate-950">{{ $currentRound['price'] }}</span>
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 text-slate-600">
                             <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase block">Warranty</span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase block">Overall Warranty</span>
                                 <span class="font-bold text-slate-800">{{ $currentRound['warranty'] }}</span>
                             </div>
 
@@ -94,7 +137,7 @@
                         </div>
 
                         <div class="text-[10px] text-slate-400 flex items-center justify-between">
-                            <span>Root Parent ID: <strong class="text-slate-600">{{ $currentRound['parent_id'] ?? 'Main Offer' }}</strong></span>
+                            <span>Negotiation Ref: <strong class="text-slate-600">#OFF-{{ $currentRound['id'] }}</strong></span>
                             <span><i class="fas fa-clock mr-1"></i> {{ $currentRound['time'] }}</span>
                         </div>
                     </div>
@@ -127,6 +170,11 @@
                     <a href="{{ route('offers.view', ['offer_id' => 'OFF-' . $currentRound['id']]) }}" class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs text-center transition block">
                         Open Full Offer Thread →
                     </a>
+                </div>
+            @else
+                <div class="p-8 text-center text-slate-500 text-xs">
+                    <i class="fas fa-inbox text-3xl text-slate-300 mb-2 block"></i>
+                    <span>No active offers recorded for this request yet.</span>
                 </div>
             @endif
 

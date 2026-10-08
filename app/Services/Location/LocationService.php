@@ -37,7 +37,7 @@ class LocationService
                 'currency_symbol' => $userCountry->currency_symbol,
                 'timezone' => $userCountry->timezone,
                 'city' => $primaryLocation?->city,
-                'state' => $primaryLocation?->state,
+                'state' => $primaryLocation?->state->name,
                 'source' => 'user_profile',
             ];
 
@@ -180,15 +180,19 @@ class LocationService
     /**
      * Format money in local currency without cross-rate conversion.
      */
-    public function formatMoney(float|int $amount, ?string $currency = null): string
+    public function formatMoney(float|int|string|null $amount = 0, ?string $currency = null): string
     {
-        $symbol = '₦';
+        $value = (float) ($amount ?? 0.0);
         $curr = $currency ?? session('current_location.currency', 'NGN');
 
-        if ($curr === 'USD') {
-            $symbol = '$';
-        }
+        $symbol = match ($curr) {
+            'USD' => '$',
+            'GBP' => '£',
+            'EUR' => '€',
+            'NGN' => '₦',
+            default => session('current_location.currency_symbol', '₦') ?: '₦',
+        };
 
-        return $symbol . ' ' . number_format($amount, 2);
+        return $symbol . ' ' . number_format($value, 2);
     }
 }

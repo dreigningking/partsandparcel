@@ -55,6 +55,7 @@ class SettingsSeeder extends Seeder
             ['name' => 'order_returned_to_auto_acceptance_hours', 'value' => '12', 'type' => 'integer', 'segment' => 'timelines'],
             ['name' => 'order_replacement_to_auto_refund_hours', 'value' => '48', 'type' => 'integer', 'segment' => 'timelines'],
             ['name' => 'order_accepted_to_settlement_eligible_hours', 'value' => '24', 'type' => 'integer', 'segment' => 'timelines'],
+            ['name' => 'offer_expiration_days', 'value' => '3', 'type' => 'integer', 'segment' => 'timelines'],
         ];
 
         foreach ($settings as $setting) {

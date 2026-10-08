@@ -36,6 +36,7 @@ class SubscriptionPlansSeeder extends Seeder
                 ],
                 'is_active' => true,
                 'is_default' => true,
+                'sort_order' => 1,
             ],
             [
                 'name' => 'Pro Technician & Vendor',
@@ -60,6 +61,7 @@ class SubscriptionPlansSeeder extends Seeder
                 ],
                 'is_active' => true,
                 'is_default' => false,
+                'sort_order' => 2,
             ],
             [
                 'name' => 'Enterprise Salvage & Dealer',
@@ -84,6 +86,7 @@ class SubscriptionPlansSeeder extends Seeder
                 ],
                 'is_active' => true,
                 'is_default' => false,
+                'sort_order' => 3,
             ],
         ];
 
@@ -100,6 +103,7 @@ class SubscriptionPlansSeeder extends Seeder
                     'features' => $planData['features'],
                     'is_active' => $planData['is_active'],
                     'is_default' => $planData['is_default'],
+                    'sort_order' => $planData['sort_order'] ?? 0,
                 ]
             );
 

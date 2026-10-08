@@ -31,6 +31,7 @@ class CommunityRequest extends Component
 
     // Response Composer
     public string $responseText = '';
+    public string $composerOfferPrice = '';
     public bool $isOfferActive = false;
     public ?int $composerListingId = null;
     public string $composerItemDescription = '';
@@ -187,7 +188,7 @@ class CommunityRequest extends Component
                         'user_id' => $r->user_id,
                         'author' => $r->user?->business_name ?: $r->user?->name ?: 'Vendor',
                         'verified' => (bool) ($r->user?->is_verified ?? false),
-                        'location' => $r->user?->primaryLocation?->city ? "{$r->user->primaryLocation->city}, {$r->user->primaryLocation->state}" : 'Lagos, Nigeria',
+                        'location' => $r->user?->primaryLocation?->city ? "{$r->user->primaryLocation->city}, {$r->user->primaryLocation->state->name}" : 'Lagos, Nigeria',
                         'time' => $r->created_at->diffForHumans(),
                         'text' => $r->body,
                         'negotiation' => $negotiation,

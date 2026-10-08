@@ -136,7 +136,7 @@ class CheckoutPage extends Component
             $this->sellerId = (string) $seller->id;
             $this->sellerName = $seller->business_name ?: $seller->name;
             $loc = $seller->primaryLocation;
-            $stateName = $loc?->state?->name ?? (is_string($loc?->state) ? $loc?->state : null);
+            $stateName = $loc?->state?->name ?? null;
             $this->sellerLocation = $loc
                 ? collect([$loc->city, $stateName])->filter()->implode(', ')
                 : 'Computer Village, Ikeja, Lagos';
@@ -165,7 +165,7 @@ class CheckoutPage extends Component
                     'label' => $l->label ?: ($l->name ?: 'Address'),
                     'address_line_1' => $l->address_line_1,
                     'city' => $l->city,
-                    'state' => $l->state?->name ?? (is_string($l->state) ? $l->state : ''),
+                    'state' => $l->state?->name ?? '',
                     'phone' => $l->phone,
                 ])->toArray();
                 $this->selectedAddressId = $locations->first()->id;
@@ -317,7 +317,7 @@ class CheckoutPage extends Component
             $rawFee = round($itemSubtotal * ($this->escrowPercentage / 100), 2);
             $this->escrowFee = ($this->escrowCap !== null && $rawFee > $this->escrowCap) ? (float) $this->escrowCap : $rawFee;
         }
-        $isPlatform = ($this->paymentMethod === 'platform');
+        $isPlatform = in_array($this->paymentMethod, ['platform', 'escrow']);
         $activeEscrowFee = $isPlatform ? $this->escrowFee : 0;
         $discount = $isPlatform ? $this->couponDiscount : 0;
         $totalPayable = max(0.00, round($itemSubtotal + $activeEscrowFee - $discount, 2));
@@ -327,6 +327,17 @@ class CheckoutPage extends Component
 
         $seller = User::with('country')->find($sellerId);
         $currency = $seller?->country?->currency ?: 'NGN';
+
+        // Verify item availability before checkout
+        foreach ($this->cartItems as $cItem) {
+            if (! empty($cItem['listing_id'])) {
+                $listing = Listing::find($cItem['listing_id']);
+                if ($listing && $listing->availableQuantity() < (int) ($cItem['quantity'] ?? 1)) {
+                    session()->flash('error', "Item '{$cItem['title']}' is no longer available in the requested quantity ({$listing->availableQuantity()} left). Please update your cart.");
+                    return;
+                }
+            }
+        }
 
         // Create the Invoice
         $invoice = Invoice::create([
@@ -365,7 +376,11 @@ class CheckoutPage extends Component
             if (! empty($cItem['listing_id'])) {
                 $listing = Listing::find($cItem['listing_id']);
                 if ($listing) {
-                    $listing->sold_quantity = ($listing->sold_quantity ?? 0) + (int) ($cItem['quantity'] ?? 1);
+                    if ($isPlatform) {
+                        $listing->reserved_quantity = ($listing->reserved_quantity ?? 0) + (int) ($cItem['quantity'] ?? 1);
+                    } else {
+                        $listing->sold_quantity = ($listing->sold_quantity ?? 0) + (int) ($cItem['quantity'] ?? 1);
+                    }
                     $listing->save();
                 }
             }

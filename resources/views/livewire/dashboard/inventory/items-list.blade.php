@@ -274,7 +274,7 @@
                 @if($loc)
                   <span class="text-xs font-bold text-slate-800 whitespace-nowrap block">{{ $loc->label }}</span>
                   @php
-                    $locAddress = collect([$loc->address_line_1, $loc->city, $loc->state])->filter()->implode(', ');
+                    $locAddress = collect([$loc->address_line_1, $loc->city, $loc->state->name])->filter()->implode(', ');
                   @endphp
                   @if($locAddress)
                     <span class="text-[10px] text-slate-500 block whitespace-nowrap">{{ $locAddress }}</span>

@@ -141,31 +141,19 @@
                 <span class="text-xl font-extrabold text-slate-950">₦{{ number_format($sellerSubtotal) }}</span>
               </div>
 
-              <!-- TWO EXPLICIT ACTION BUTTONS -->
-              <div class="grid sm:grid-cols-2 gap-3">
-                <!-- BUTTON 1: MAKE CUSTOM OFFER -->
-                <button wire:click="$dispatch('open-make-offer', { seller_id: '{{ $sellerCart['id'] }}', seller_name: '{{ addslashes($sellerCart['name']) }}', cart_id: '{{ $sellerCart['cart_id'] }}' })" class="p-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-2xs transition flex items-center gap-3 cursor-pointer text-left">
-                  <div class="w-9 h-9 rounded-xl bg-slate-800 text-white grid place-items-center shrink-0">
-                    <i class="fas fa-handshake text-pp-400 text-sm"></i>
-                  </div>
-                  <div>
-                    <div class="font-extrabold text-xs">Make Custom Offer</div>
-                    <div class="text-[10px] text-slate-400 font-normal mt-0.5">Submit custom price &amp; delivery proposal</div>
-                  </div>
-                </button>
-
-                <!-- BUTTON 2: PROCEED TO CHECKOUT -->
-                <button type="button" wire:click="proceedToCheckout('{{ $sellerCart['seller_slug'] ?? $sellerCart['id'] }}')" class="p-3.5 rounded-2xl bg-pp-600 hover:bg-pp-700 text-white font-bold text-xs shadow-xs transition flex items-center justify-between gap-2 text-left cursor-pointer">
+              <!-- PROCEED TO CHECKOUT ACTION BUTTON -->
+              <div>
+                <button type="button" wire:click="proceedToCheckout('{{ $sellerCart['seller_slug'] ?? $sellerCart['id'] }}')" class="w-full p-4 rounded-2xl bg-pp-600 hover:bg-pp-700 text-white font-bold text-sm shadow-xs transition flex items-center justify-between gap-3 text-left cursor-pointer">
                   <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-pp-500 text-white grid place-items-center shrink-0">
-                      <i class="fas fa-shopping-bag text-sm"></i>
+                    <div class="w-10 h-10 rounded-xl bg-pp-500 text-white grid place-items-center shrink-0">
+                      <i class="fas fa-shopping-bag text-base"></i>
                     </div>
                     <div>
-                      <div class="font-extrabold text-xs">Proceed to Checkout</div>
-                      <div class="text-[10px] text-pp-200 font-normal mt-0.5">Select pickup or seller delivery &amp; pay</div>
+                      <div class="font-extrabold text-sm">Proceed to Checkout</div>
+                      <div class="text-[11px] text-pp-200 font-normal mt-0.5">Select delivery / pickup &amp; complete payment</div>
                     </div>
                   </div>
-                  <i class="fas fa-arrow-right text-xs shrink-0"></i>
+                  <i class="fas fa-arrow-right text-sm shrink-0"></i>
                 </button>
               </div>
             </div>

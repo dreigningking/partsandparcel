@@ -3,6 +3,7 @@
 namespace App\Livewire\Dashboard;
 
 use App\Models\Payment;
+use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Services\Commercial\SubscriptionService;
 use Illuminate\Support\Facades\Auth;
@@ -58,11 +59,7 @@ class Subscriptions extends Component
 
         $billingHistory = $user
             ? Payment::where('user_id', $user->id)
-                ->where(function ($query) {
-                    $query->whereNotNull('subscription_id')
-                        ->orWhere('metadata->payment_type', 'subscription')
-                        ->orWhere('metadata->payment_type', 'subscription_renewal');
-                })
+                ->where('paymentable_type',Subscription::class)
                 ->latest()
                 ->take(10)
                 ->get()

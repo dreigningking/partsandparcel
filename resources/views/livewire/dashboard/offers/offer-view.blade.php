@@ -78,14 +78,22 @@
     $canCounter = $offer ? $offer->canBeCounteredBy($user) : false;
     $canAccept = $offer ? $offer->canBeAcceptedBy($user) : false;
     $canAct = $canCounter || $canAccept;
-    $currentTotal = $offer ? $offer->total() : 265000;
-    $currentDiscount = $offer ? (float) $offer->discount : 5000;
+    $currentTotal = $offer ? $offer->total() : 0;
+    $currentDiscount = $offer ? (float) $offer->discount : 0;
     $itemsList = $offer ? $offer->items : collect([
       (object) ['description' => 'HP EliteBook 840 G5 Laptop', 'type' => 'item', 'quantity' => 1, 'unit_price' => 250000, 'warranty_period_days' => 14, 'warranty_terms' => 'Clean board testing warranty'],
       (object) ['description' => '16GB DDR4 RAM Upgrade Service', 'type' => 'service', 'quantity' => 1, 'unit_price' => 10000, 'warranty_period_days' => 14, 'warranty_terms' => 'Module testing warranty'],
       (object) ['description' => 'Express Seller Delivery to Destination', 'type' => 'delivery', 'quantity' => 1, 'unit_price' => 10000, 'warranty_period_days' => null, 'warranty_terms' => 'Verified rider dispatch'],
     ]);
   @endphp
+
+  <!-- NON-BINDING & AVAILABILITY NOTICE BANNER -->
+  <div class="rounded-2xl border border-amber-200 bg-amber-50/70 p-3.5 flex items-start gap-3 text-xs text-amber-900">
+    <i class="fas fa-info-circle text-amber-600 mt-0.5 shrink-0 text-sm"></i>
+    <p class="leading-relaxed">
+      <strong>Important Notice:</strong> Offers and counter-offers are non-binding and subject to item availability until payment is completed. Stock is reserved upon offer acceptance and confirmed when invoice payment succeeds.
+    </p>
+  </div>
 
   <!-- SECTION 1: LATEST ACTIVE OFFER (FULLY EXPANDED AT TOP) -->
   <div class="bg-white rounded-3xl border-2 {{ $canAct ? 'border-pp-600' : ($canEdit ? 'border-amber-400' : 'border-slate-200') }} p-6 sm:p-8 space-y-6 shadow-soft relative">
@@ -214,7 +222,7 @@
         @if ($canCounter)
           <button wire:click="openCounterDrawer(false)" class="flex-1 sm:flex-none px-5 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5">
             <i class="fas fa-pen-to-square"></i>
-            <span>Make Counter Offer</span>
+            <span>Counter / Add Items</span>
           </button>
 
           <button wire:click="declineOffer" wire:confirm="Are you sure you want to decline this offer?" class="flex-1 sm:flex-none px-4 py-3 rounded-xl border border-rose-300 text-rose-700 hover:bg-rose-50 font-extrabold text-xs shadow-2xs transition cursor-pointer flex items-center justify-center gap-1.5">

@@ -17,6 +17,32 @@ class QuickViewOffers extends Component
     public string $authorName = '';
     public array $rounds = [];
     public int $currentRoundIndex = 0;
+    public int $itemStep = 1;
+
+    public function nextItemStep(): void
+    {
+        $itemsCount = count($this->rounds[$this->currentRoundIndex]['items'] ?? []);
+        $totalItemSteps = max(1, $itemsCount + 2); // 1..N items, N+1 shipment, N+2 summary
+        if ($this->itemStep < $totalItemSteps) {
+            $this->itemStep++;
+        }
+    }
+
+    public function prevItemStep(): void
+    {
+        if ($this->itemStep > 1) {
+            $this->itemStep--;
+        }
+    }
+
+    public function goToItemStep(int $step): void
+    {
+        $itemsCount = count($this->rounds[$this->currentRoundIndex]['items'] ?? []);
+        $totalItemSteps = max(1, $itemsCount + 2);
+        if ($step >= 1 && $step <= $totalItemSteps) {
+            $this->itemStep = $step;
+        }
+    }
 
     // Counter-offer form state
     public bool $showCounterForm = false;
@@ -75,59 +101,29 @@ class QuickViewOffers extends Component
                             'can_accept' => $off->canBeAcceptedBy($user),
                             'can_counter' => $off->canBeCounteredBy($user),
                             'can_edit' => $off->canBeEditedBy($user),
+                            'items' => $off->items->map(fn ($it) => [
+                                'id' => $it->id,
+                                'description' => $it->description,
+                                'type' => $it->type,
+                                'quantity' => (int) $it->quantity,
+                                'unit_price' => (float) $it->unit_price,
+                                'warranty_period_days' => $it->warranty_period_days,
+                                'warranty_terms' => $it->warranty_terms,
+                            ])->toArray(),
                         ];
                     })->toArray();
 
                     $this->currentRoundIndex = max(0, count($this->rounds) - 1);
+                    $this->itemStep = 1;
                     $this->isOpen = true;
                     return;
                 }
             }
         }
 
-        // Demo sample fallback if response has no DB records (only for author)
-        $this->authorName = 'Abel Electronics';
-        $this->rounds = [
-            [
-                'id' => 101,
-                'round' => 1,
-                'parent_id' => null,
-                'from' => 'Abel Electronics (Seller)',
-                'to' => 'TechSam (You)',
-                'raw_price' => 85000,
-                'price' => '₦85,000',
-                'warranty' => '14-Day Warranty',
-                'warranty_days' => 14,
-                'delivery' => 'Buyer Pickup',
-                'delivery_method' => 'buyer_pickup',
-                'message' => 'Original motherboard, clean condition. Tested working.',
-                'time' => '2 hours ago',
-                'status' => 'Countered',
-                'can_accept' => false,
-                'can_counter' => false,
-            ],
-            [
-                'id' => 105,
-                'round' => 2,
-                'parent_id' => 101,
-                'from' => 'Abel Electronics (Seller)',
-                'to' => 'TechSam (You)',
-                'raw_price' => 80000,
-                'price' => '₦80,000',
-                'warranty' => '14-Day Warranty',
-                'warranty_days' => 14,
-                'delivery' => 'Buyer Pickup',
-                'delivery_method' => 'buyer_pickup',
-                'message' => '₦80,000 final offer brother. Clean board with 14-day replacement warranty.',
-                'time' => '15 mins ago',
-                'status' => 'Pending',
-                'can_accept' => true,
-                'can_counter' => true,
-            ],
-        ];
-
-        $this->currentRoundIndex = max(0, count($this->rounds) - 1);
-        $this->isOpen = true;
+        // Clean empty state if no DB records found
+        $this->rounds = [];
+        $this->dispatch('flash-message', type: 'info', message: 'No offer records found for this negotiation.');
     }
 
     public function previousRound()

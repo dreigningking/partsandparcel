@@ -104,7 +104,7 @@
       @livewire('components.messaging.message-drawer')
       @livewire('components.messaging.conversation-drawer')
       @livewire('components.offers.quick-view-offers')
-      @livewire('components.offers.make-offer')
+      @livewire('components.offers.listing-offer-drawer')
       @livewire('components.offers.counter-offer-drawer')
       @livewire('components.report-modal')
       @livewire('components.add-location-modal')

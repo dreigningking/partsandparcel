@@ -97,7 +97,8 @@ class Offer extends Model
 
     public function total(): float
     {
-        return max(0, $this->subtotal() - (float) $this->discount);
+        return (float) $this->subtotal();
+        // return max(0, $this->subtotal() - (float) $this->discount);
     }
 
     public function maxWarrantyDays(): ?int

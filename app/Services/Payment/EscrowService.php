@@ -63,6 +63,18 @@ class EscrowService
             'commission' => 0.00,
         ]);
 
+        // Convert reserved quantity to sold quantity for listing invoice items
+        foreach ($invoice->items as $invItem) {
+            if ($invItem->itemable_type === \App\Models\Listing::class && $invItem->itemable_id) {
+                $listing = \App\Models\Listing::find($invItem->itemable_id);
+                if ($listing) {
+                    $qty = (int) $invItem->quantity;
+                    $listing->decrement('reserved_quantity', min($qty, (int) $listing->reserved_quantity));
+                    $listing->increment('sold_quantity', $qty);
+                }
+            }
+        }
+
         app(\App\Services\Commercial\NegotiationService::class)->handleInvoicePaid($invoice);
 
         // Record escrow fee as platform service fee revenue if fee was collected

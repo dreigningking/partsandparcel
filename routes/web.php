@@ -52,7 +52,6 @@ use App\Livewire\Dashboard\Locations;
 use App\Livewire\Dashboard\Messages\MessageConversation;
 use App\Livewire\Dashboard\Messages\MessageList;
 use App\Livewire\Dashboard\Notifications;
-use App\Livewire\Dashboard\Offers\OfferNegotiations;
 use App\Livewire\Dashboard\Offers\OffersList;
 use App\Livewire\Dashboard\Offers\OfferView;
 use App\Livewire\Dashboard\Overview;
@@ -74,6 +73,7 @@ use App\Livewire\Marketplace\Community\CommunityRequest;
 use App\Livewire\Marketplace\Listings\Category;
 use App\Livewire\Marketplace\Listings\ListingDetails;
 use App\Livewire\Marketplace\Listings\SearchPage;
+use App\Livewire\Marketplace\Pricing;
 use App\Livewire\Marketplace\UserProfile;
 use App\Livewire\Marketplace\Welcome;
 use Illuminate\Support\Facades\Artisan;
@@ -109,6 +109,7 @@ Route::get('blog', BlogList::class)->name('blog.index');
 Route::get('blog/{post:slug}', BlogPost::class)->name('blog.show');
 Route::get('cart', CartPage::class)->name('cart');
 Route::get('checkout', CheckoutPage::class)->name('checkout');
+Route::get('pricing', Pricing::class)->name('pricing');
 Route::get('help', Overview::class)->name('help');
 
 // Payments & Webhooks
@@ -131,7 +132,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('messages/conversation', MessageConversation::class)->name('conversation');
     Route::get('offers', OffersList::class)->name('offers');
     Route::get('offers/{offer_id?}', OfferView::class)->name('offers.view');
-    Route::get('negotiations', OfferNegotiations::class)->name('negotiations');
 
     Route::get('invoices', InvoicesList::class)->name('invoices');
     Route::get('invoices/{invoice_id?}', InvoiceView::class)->name('invoices.view');

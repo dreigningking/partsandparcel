@@ -78,7 +78,7 @@
       <span class="text-base font-black text-slate-900 mt-1 block truncate">
         {{ $item->location?->city ?? 'Main Warehouse' }}
       </span>
-      <span class="text-[11px] text-slate-500 mt-0.5 block truncate">{{ $item->location?->address_line_1 ?: ($item->location?->state ?? 'Nigeria') }}</span>
+      <span class="text-[11px] text-slate-500 mt-0.5 block truncate">{{ $item->location?->address_line_1 ?: ($item->location?->state->name ?? 'Nigeria') }}</span>
     </div>
 
     <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs">

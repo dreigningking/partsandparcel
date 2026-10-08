@@ -216,11 +216,18 @@
         </button>
 
         @if($canMakeOffer)
-          <button type="button" 
-                  wire:click="$dispatch('open-make-offer', { listing_id: {{ $listing->id }}, seller_id: {{ $seller->id }}, seller_name: '{{ addslashes($seller->business_name ?? $seller->name) }}' })" 
-                  class="h-11 bg-pp-600 text-white hover:bg-pp-700 rounded-lg font-bold text-sm transition cursor-pointer shadow-2xs">
-            Make an Offer
-          </button>
+          @auth
+            <button type="button" 
+                    wire:click="$dispatch('open-listing-offer', { listing_id: {{ $listing->id }}, seller_id: {{ $seller->id }}, seller_name: '{{ addslashes($seller->business_name ?? $seller->name) }}' })" 
+                    class="h-11 bg-pp-600 text-white hover:bg-pp-700 rounded-lg font-bold text-sm transition cursor-pointer shadow-2xs">
+              Make an Offer
+            </button>
+          @else
+            <a href="{{ route('login') }}" 
+               class="h-11 bg-pp-600 text-white hover:bg-pp-700 rounded-lg font-bold text-sm transition cursor-pointer shadow-2xs flex items-center justify-center text-center">
+              Make an Offer
+            </a>
+          @endauth
         @endif
       </div>
 
