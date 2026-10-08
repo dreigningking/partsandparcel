@@ -1,7 +1,7 @@
 
 <!-- HERO SECTION - CLEAN LIGHT BACKGROUND WITH COMPOSITE COLLAGE -->
 <div>
-  <section class="bg-gradient-to-b from-slate-50 via-white to-slate-50 border-b border-slate-200/80 py-10 lg:py-16 relative overflow-hidden">
+  <section class="hero-section bg-gradient-to-b from-slate-50 via-white to-slate-50 border-b border-slate-200/80 py-10 lg:py-16 relative overflow-hidden">
     <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
       <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
         

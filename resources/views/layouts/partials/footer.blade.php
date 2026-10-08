@@ -169,7 +169,7 @@
             </a>
           </li>
           <li>
-            <a href="{{ route('help') }}#contact" class="hover:text-pp-600 transition">
+            <a href="{{ route('contact') }}" class="hover:text-pp-600 transition">
               <span>Contact</span>
             </a>
           </li>

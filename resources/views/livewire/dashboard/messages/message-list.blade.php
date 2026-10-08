@@ -26,7 +26,7 @@
       <div class="flex-1 min-h-0 overflow-y-auto divide-y divide-slate-100 custom-scrollbar">
         @forelse($conversations as $conv)
           @php
-            $isSupport = $conv->contextable_type === \App\Models\User::class;
+            $isSupport = $conv->isSupport();
             $title = $isSupport ? 'Customer Support' : ($conv->contextable->name ?? 'Conversation #' . $conv->id);
             $latest = $conv->latestMessage;
             $isSelected = (int) $activeConversationId === (int) $conv->id;
@@ -97,7 +97,7 @@
     <div class="flex-1 flex flex-col min-w-0 bg-slate-50/50 {{ $activeConversationId ? 'flex' : 'hidden lg:flex' }}">
       @if ($activeConversation)
         @php
-          $isSupport = $activeConversation->contextable_type === \App\Models\User::class;
+          $isSupport = $activeConversation->isSupport();
           $chatTitle = $isSupport ? 'Customer Support' : ($activeConversation->contextable->name ?? 'Conversation');
         @endphp
         

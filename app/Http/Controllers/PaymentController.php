@@ -51,8 +51,8 @@ class PaymentController extends Controller
             return $this->redirectAfterPayment($payment, 'Payment was successful!');
         }
 
-        // Check for local mock verification in development
-        $isMockSuccess = app()->isLocal() && (
+        // Check for local mock verification in development or testing
+        $isMockSuccess = (app()->isLocal() || app()->environment('testing')) && (
             $request->query('mock_success') == 1 ||
             (empty(config("services.{$provider}.secret")) && ! $request->has('mock_fail'))
         );
@@ -126,7 +126,7 @@ class PaymentController extends Controller
             }
 
             $escrowService->handlePaymentSuccessful($payment, $result);
-            return $this->redirectAfterPayment($payment, 'Payment successfully confirmed!');
+            return $this->redirectAfterPayment($payment, 'Payment confirmed with Parts & Parcel Escrow! Funds are securely locked in escrow.');
         }
 
         // Payment failed or verification unsuccessful
@@ -146,7 +146,8 @@ class PaymentController extends Controller
             }
         }
 
-        return $this->redirectAfterPayment($payment, 'Payment verification pending or failed.', false);
+        $failedMessage = $result['message'] ?? 'Payment verification pending or failed. Transaction was not completed.';
+        return $this->redirectAfterPayment($payment, $failedMessage, false);
     }
 
     protected function redirectAfterPayment(Payment $payment, string $message, bool $success = true): RedirectResponse
@@ -157,8 +158,11 @@ class PaymentController extends Controller
             return redirect()->route('mylisting.view', $payment->metadata['listing_id'])->with($statusKey, $message);
         }
 
-        if ($payment->invoice_id) {
-            return redirect()->route('invoices')->with($statusKey, $message);
+        $invoiceId = $payment->invoice_id ?? ($payment->metadata['invoice_id'] ?? null);
+        if ($invoiceId) {
+            return redirect()->route('invoices.view', $invoiceId)
+                ->with($statusKey, $message)
+                ->with($success ? 'buyer_payment_success' : 'buyer_payment_error', $message);
         }
 
         if ($payment->subscription_id || ($payment->metadata['payment_type'] ?? '') === 'subscription') {

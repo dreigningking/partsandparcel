@@ -68,10 +68,17 @@
     </div>
   @endif
 
-  @if (session()->has('buyer_payment_success'))
+  @if (session()->has('buyer_payment_success') || session()->has('success'))
     <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-xs">
       <i class="fas fa-shield-alt text-emerald-600 text-base"></i>
-      <span>{{ session('buyer_payment_success') }}</span>
+      <span>{{ session('buyer_payment_success') ?: session('success') }}</span>
+    </div>
+  @endif
+
+  @if (session()->has('buyer_payment_error') || session()->has('error'))
+    <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs font-bold flex items-center gap-2 shadow-xs">
+      <i class="fas fa-circle-xmark text-rose-600 text-base"></i>
+      <span>{{ session('buyer_payment_error') ?: session('error') }}</span>
     </div>
   @endif
 

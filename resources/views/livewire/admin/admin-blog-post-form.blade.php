@@ -148,17 +148,52 @@
                     @error('status') <p class="text-xs text-rose-600 font-semibold mt-1">{{ $message }}</p> @enderror
                 </div>
 
-                <!-- CATEGORY -->
-                <div class="space-y-1">
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Category <span class="text-rose-500">*</span></label>
-                    <select wire:model="category_id" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-pp-500 cursor-pointer">
-                        <option value="">-- Select Category --</option>
-                        @foreach ($categories as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('category_id') <p class="text-xs text-rose-600 font-semibold mt-1">{{ $message }}</p> @enderror
+                <!-- ARTICLE TYPE (BLOG VS HELP) -->
+                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 space-y-2">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                        Article Type
+                    </label>
+                    <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                        <label class="flex items-center gap-2 p-2 rounded-xl border transition cursor-pointer {{ !$is_help ? 'bg-pp-50 border-pp-500 text-pp-700 dark:bg-pp-950/60 dark:text-pp-300' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400' }}">
+                            <input type="radio" value="0" wire:model.live="is_help" class="text-pp-600 focus:ring-pp-500">
+                            <span>Blog Post</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-xl border transition cursor-pointer {{ $is_help ? 'bg-amber-50 border-amber-500 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400' }}">
+                            <input type="radio" value="1" wire:model.live="is_help" class="text-amber-600 focus:ring-amber-500">
+                            <span>Help Article</span>
+                        </label>
+                    </div>
                 </div>
+
+                @if ($is_help)
+                    <!-- HELP TOPIC -->
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            <i class="fas fa-circle-question text-amber-500 text-xs"></i>
+                            <span>Help Center Topic <span class="text-rose-500">*</span></span>
+                        </label>
+                        <select wire:model="helpTopic" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-pp-500 cursor-pointer">
+                            <option value="">-- Select Help Topic --</option>
+                            @foreach (\App\Models\Post::HELP_TOPICS as $topic)
+                                <option value="{{ $topic }}">{{ $topic }}</option>
+                            @endforeach
+                        </select>
+                        @error('helpTopic') <p class="text-xs text-rose-600 font-semibold mt-1">{{ $message }}</p> @enderror
+                        <p class="text-[10px] text-slate-400">Determines which directory on the /help page this article appears under.</p>
+                    </div>
+                @else
+                    <!-- BLOG CATEGORY -->
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Category <span class="text-rose-500">*</span></label>
+                        <select wire:model="category_id" class="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-pp-500 cursor-pointer">
+                            <option value="">-- Select Category --</option>
+                            @foreach ($categories as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('category_id') <p class="text-xs text-rose-600 font-semibold mt-1">{{ $message }}</p> @enderror
+                    </div>
+                @endif
 
                 <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
                     <button

@@ -59,7 +59,6 @@ use App\Livewire\Dashboard\Profile;
 use App\Livewire\Dashboard\Requests\MyRequests;
 use App\Livewire\Dashboard\Requests\MyRequestView;
 use App\Livewire\Dashboard\Responses\MyResponses;
-use App\Livewire\Dashboard\Responses\MyResponseView;
 use App\Livewire\Dashboard\SubscriptionConfirmation;
 use App\Livewire\Dashboard\SubscriptionPlans;
 use App\Livewire\Dashboard\Subscriptions;
@@ -70,6 +69,9 @@ use App\Livewire\Marketplace\CartPage;
 use App\Livewire\Marketplace\CheckoutPage;
 use App\Livewire\Marketplace\Community\CommunityHome;
 use App\Livewire\Marketplace\Community\CommunityRequest;
+use App\Livewire\Marketplace\Contact;
+use App\Livewire\Marketplace\Help;
+use App\Livewire\Marketplace\HelpArticle;
 use App\Livewire\Marketplace\Listings\Category;
 use App\Livewire\Marketplace\Listings\ListingDetails;
 use App\Livewire\Marketplace\Listings\SearchPage;
@@ -110,7 +112,9 @@ Route::get('blog/{post:slug}', BlogPost::class)->name('blog.show');
 Route::get('cart', CartPage::class)->name('cart');
 Route::get('checkout', CheckoutPage::class)->name('checkout');
 Route::get('pricing', Pricing::class)->name('pricing');
-Route::get('help', Overview::class)->name('help');
+Route::get('help', Help::class)->name('help');
+Route::get('help/{post:slug}', HelpArticle::class)->name('help.show');
+Route::get('contact', Contact::class)->name('contact');
 
 // Payments & Webhooks
 Route::get('payment/callback', [\App\Http\Controllers\PaymentController::class, 'callback'])->name('payment.callback');
@@ -148,7 +152,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('myrequests/{id?}', MyRequestView::class)->name('myrequest.view');
     //Selling
     Route::get('myresponses', MyResponses::class)->name('myresponses');
-    Route::get('myresponses/{id?}', MyResponseView::class)->name('myresponse.view');
+    Route::get('myresponses/{id?}', fn () => redirect()->route('myresponses'))->name('myresponse.view');
     Route::get('myitems', ItemsList::class)->name('myitems');
     Route::get('myitems/create', ItemCreate::class)->name('item.create');
     Route::get('myitems/{item}', ItemView::class)->name('item.view');
@@ -245,3 +249,25 @@ Route::get('clear-cache', function () {
     Artisan::call('route:clear');
     return 'Cache cleared!';
 });
+
+
+/* test routes */
+Route::get('moderate-all', function() {
+    \App\Models\Moderation::where('status','pending')->update(['status' => 'approved']);
+    return 'All listings approved!';
+});
+Route::get('create-moderation',function(){
+    foreach(\App\Models\Listing::whereDoesntHave('moderations')->get() as $listing) {
+        \App\Models\Moderation::create([
+            'status' => 'approved',
+            'moderatable_type' => 'App\Models\Listing',
+            'moderatable_id' => $listing->id,
+            'created_by' => 1,
+            'moderated_by' => 1,
+            'action' => 'created',
+        ]);
+    }
+    return 'Moderations created for all listings without moderation!';
+
+});
+

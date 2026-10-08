@@ -60,13 +60,29 @@
     @endif
 
     <!-- KPI STATS CARDS -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Articles</span>
-                <span class="w-8 h-8 rounded-xl bg-pp-100 dark:bg-pp-900/60 text-pp-700 dark:text-pp-300 grid place-items-center text-xs"><i class="fas fa-newspaper"></i></span>
+                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</span>
+                <span class="w-8 h-8 rounded-xl bg-pp-100 dark:bg-pp-900/60 text-pp-700 dark:text-pp-300 grid place-items-center text-xs"><i class="fas fa-layer-group"></i></span>
             </div>
             <div class="mt-2 text-2xl font-black text-slate-900 dark:text-white">{{ $totalPosts }}</div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Blog Posts</span>
+                <span class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 grid place-items-center text-xs"><i class="fas fa-newspaper"></i></span>
+            </div>
+            <div class="mt-2 text-2xl font-black text-indigo-600">{{ $blogPostsCount }}</div>
+        </div>
+
+        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Help Guides</span>
+                <span class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 grid place-items-center text-xs"><i class="fas fa-circle-question"></i></span>
+            </div>
+            <div class="mt-2 text-2xl font-black text-amber-600">{{ $helpPostsCount }}</div>
         </div>
 
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
@@ -79,33 +95,31 @@
 
         <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
             <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Drafts</span>
-                <span class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 grid place-items-center text-xs"><i class="fas fa-pencil-alt"></i></span>
-            </div>
-            <div class="mt-2 text-2xl font-black text-slate-600">{{ $draftPosts }}</div>
-        </div>
-
-        <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
-            <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pending Comments</span>
-                <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 grid place-items-center text-xs"><i class="fas fa-clock"></i></span>
+                <span class="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 grid place-items-center text-xs"><i class="fas fa-comments"></i></span>
             </div>
-            <div class="mt-2 text-2xl font-black text-amber-600">{{ $pendingCommentsCount }}</div>
+            <div class="mt-2 text-2xl font-black text-rose-600">{{ $pendingCommentsCount }}</div>
         </div>
     </div>
 
     <!-- SEARCH & FILTERS -->
     <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div class="relative">
                 <input
                     wire:model.live.debounce.300ms="search"
                     type="text"
-                    placeholder="Search by title, excerpt, tag, author..."
+                    placeholder="Search by title, excerpt, tag..."
                     class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-medium text-slate-900 dark:text-white outline-none focus:border-pp-500"
                 />
                 <i class="fas fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
             </div>
+
+            <select wire:model.live="type" class="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-medium text-slate-900 dark:text-white outline-none focus:border-pp-500 cursor-pointer">
+                <option value="">All Types (Blog &amp; Help)</option>
+                <option value="blog">Blog Articles Only</option>
+                <option value="help">Help Center Guides Only</option>
+            </select>
 
             <select wire:model.live="category" class="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-medium text-slate-900 dark:text-white outline-none focus:border-pp-500 cursor-pointer">
                 <option value="">All Categories</option>
@@ -175,9 +189,16 @@
                             </td>
 
                             <td class="px-4 py-4">
-                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-pp-50 text-pp-700 border border-pp-100">
-                                    {{ $post->category?->name ?? 'Uncategorized' }}
-                                </span>
+                                @if ($post->is_help)
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+                                        <i class="fas fa-circle-question text-[10px]"></i>
+                                        <span>{{ $post->help_topic ?? 'Help' }}</span>
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-pp-50 text-pp-700 border border-pp-100">
+                                        {{ $post->category?->name ?? 'Uncategorized' }}
+                                    </span>
+                                @endif
                             </td>
 
                             <td class="px-4 py-4 text-slate-800 dark:text-slate-200 font-bold">

@@ -2,11 +2,17 @@
 
 namespace App\Livewire\Dashboard\Requests;
 
+use App\Jobs\NotifyDiscussionEditedJob;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Conversation;
+use App\Models\DeviceModel;
 use App\Models\Discussion;
 use App\Models\Offer;
 use App\Models\Response;
 use App\Services\Commercial\NegotiationService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -30,10 +36,20 @@ class MyRequestView extends Component
     public string $postedTime = '2 hours ago';
     public array $mediaUrls = [];
 
-    // Offers & Responses
+    // Offers & Responses (Limited to last 5)
     public array $offers = [];
     public array $responses = [];
-    public string $replyText = '';
+
+    // Edit Request Modal State & Form Fields
+    public bool $showEditModal = false;
+    public string $editTitle = '';
+    public string $editBody = '';
+    public string $editBudget = '';
+    public ?int $editCategoryId = null;
+    public ?int $editBrandId = null;
+    public ?int $editModelId = null;
+    public string $editUrgency = 'Flexible';
+    public string $editFulfillment = 'Flexible';
 
     public function mount($id = null)
     {
@@ -64,7 +80,7 @@ class MyRequestView extends Component
 
             if ($d) {
                 $this->discussion = $d;
-                $this->isOwner = ($user && $user->id === $d->user_id);
+                $this->isOwner = ($user && (int) $user->id === (int) $d->user_id);
 
                 $this->title = $d->title;
                 $this->body = $d->body;
@@ -114,9 +130,26 @@ class MyRequestView extends Component
                 }
                 $this->offers = $loadedOffers;
 
-                // Responses
+                // Load ONLY the last 5 responses & identify those with offers/replies
                 $loadedResponses = [];
-                foreach ($d->responses()->with('user.primaryLocation')->latest()->get() as $resp) {
+                $recentResponses = $d->responses()
+                    ->with(['user.primaryLocation', 'offers.items'])
+                    ->latest()
+                    ->take(5)
+                    ->get();
+
+                foreach ($recentResponses as $resp) {
+                    $attachedOffer = $resp->offers->first();
+                    $hasAttachedOffers = ! is_null($attachedOffer);
+                    $hasConversation = Conversation::where('contextable_type', Discussion::class)
+                        ->where('contextable_id', $d->id)
+                        ->whereHas('participants', fn ($q) => $q->where('user_id', $resp->user_id))
+                        ->whereHas('messages')
+                        ->exists();
+
+                    $hasReplies = $hasAttachedOffers || $hasConversation;
+                    $offerPrice = $hasAttachedOffers ? $attachedOffer->total() : null;
+
                     $loadedResponses[] = [
                         'id' => $resp->id,
                         'user_name' => $resp->user?->business_name ?: $resp->user?->name ?: 'Community Member',
@@ -124,6 +157,15 @@ class MyRequestView extends Component
                         'body' => $resp->body,
                         'time' => $resp->created_at->diffForHumans(),
                         'is_requester' => ($resp->user_id === $d->user_id),
+                        'has_replies' => $hasReplies,
+                        'reply_count' => $resp->offers->count(),
+                        'has_offer' => $hasAttachedOffers,
+                        'offer_id' => $attachedOffer?->id,
+                        'offer_price' => $offerPrice,
+                        'offer_status' => $attachedOffer?->status,
+                        'offer_warranty' => $attachedOffer?->maxWarrantyDays() ? "{$attachedOffer->maxWarrantyDays()} DAYS" : 'Standard',
+                        'offer_delivery' => $attachedOffer?->delivery_method === 'seller_responsible' ? 'Seller Delivery' : ($attachedOffer?->delivery_method === 'platform_responsible' ? 'Platform Courier' : 'Buyer Pickup'),
+                        'offer_terms' => $attachedOffer?->terms,
                     ];
                 }
                 $this->responses = $loadedResponses;
@@ -173,24 +215,149 @@ class MyRequestView extends Component
             ],
         ];
 
+        // Demo responses (up to 5) with offer indicators
         $this->responses = [
             [
-                'id' => 1,
+                'id' => 101,
                 'user_name' => 'Abel Electronics',
                 'user_city' => 'Computer Village, Ikeja',
                 'body' => 'Is your unit the UMA graphics or discrete AMD graphics version? We have both available.',
                 'time' => '3 hours ago',
                 'is_requester' => false,
+                'has_replies' => true,
+                'reply_count' => 1,
+                'has_offer' => true,
+                'offer_id' => 9021,
+                'offer_price' => 80000,
+                'offer_status' => 'pending',
+                'offer_warranty' => '14 DAYS',
+                'offer_delivery' => 'Buyer Pickup (Computer Village)',
+                'offer_terms' => 'Fully tested with 14 days replacement warranty. Pick up at our shop or we can arrange dispatch.',
             ],
             [
-                'id' => 2,
-                'user_name' => 'You (Requester)',
-                'user_city' => 'Ikeja, Lagos',
-                'body' => 'Mine is the standard Intel UHD UMA graphics board. No discrete Radeon chip.',
+                'id' => 102,
+                'user_name' => 'Seth Tech Hub',
+                'user_city' => 'Oregun, Ikeja',
+                'body' => 'We have clean pull boards for G5 and G6 models in stock with thermal testing report.',
                 'time' => '2 hours ago',
-                'is_requester' => true,
+                'is_requester' => false,
+                'has_replies' => true,
+                'reply_count' => 1,
+                'has_offer' => true,
+                'offer_id' => 9022,
+                'offer_price' => 82000,
+                'offer_status' => 'pending',
+                'offer_warranty' => '30 DAYS',
+                'offer_delivery' => 'Seller Free Delivery Included',
+                'offer_terms' => '30 days warranty included. Fast same-day dispatch anywhere in Lagos.',
+            ],
+            [
+                'id' => 103,
+                'user_name' => 'Lagos Component Exchange',
+                'user_city' => 'Alaba International',
+                'body' => 'Please confirm if you also need the internal heatsink and fan assembly.',
+                'time' => '1 hour ago',
+                'is_requester' => false,
+                'has_replies' => false,
+                'reply_count' => 0,
+                'has_offer' => false,
+                'offer_id' => null,
+                'offer_price' => null,
+                'offer_status' => null,
+                'offer_warranty' => null,
+                'offer_delivery' => null,
+                'offer_terms' => null,
             ],
         ];
+    }
+
+    public function openEditModal(): void
+    {
+        if ($this->discussion) {
+            $this->editTitle = $this->discussion->title;
+            $this->editBody = $this->discussion->body;
+            $this->editBudget = $this->discussion->budget ?: ($this->discussion->attachments['budget'] ?? '');
+            $this->editCategoryId = $this->discussion->category_id;
+            $this->editBrandId = $this->discussion->brand_id;
+            $this->editModelId = $this->discussion->model_id;
+            $this->editUrgency = $this->discussion->urgency ?? 'Flexible';
+            $this->editFulfillment = $this->discussion->fulfillment ?? 'Flexible';
+        } else {
+            $this->editTitle = $this->title;
+            $this->editBody = $this->body;
+            $this->editBudget = $this->budget;
+            $this->editUrgency = $this->urgency;
+            $this->editFulfillment = $this->fulfillment;
+        }
+
+        $this->resetValidation();
+        $this->showEditModal = true;
+    }
+
+    public function closeEditModal(): void
+    {
+        $this->showEditModal = false;
+        $this->resetValidation();
+    }
+
+    public function saveRequest(): void
+    {
+        $this->validate([
+            'editTitle' => 'required|string|min:5|max:200',
+            'editBody' => 'required|string|min:10|max:3000',
+            'editBudget' => 'nullable|string|max:100',
+            'editCategoryId' => 'nullable|exists:categories,id',
+            'editBrandId' => 'nullable|exists:brands,id',
+            'editModelId' => 'nullable|exists:device_models,id',
+            'editUrgency' => 'nullable|string|max:50',
+            'editFulfillment' => 'nullable|string|max:50',
+        ]);
+
+        if ($this->discussion && $this->isOwner) {
+            $attachments = $this->discussion->attachments ?? [];
+            $attachments['urgency'] = $this->editUrgency ?: 'Flexible';
+            $attachments['fulfillment'] = $this->editFulfillment ?: 'Flexible';
+            if ($this->editBudget) {
+                $attachments['budget'] = $this->editBudget;
+            }
+
+            $this->discussion->update([
+                'title' => $this->editTitle,
+                'body' => $this->editBody,
+                'budget' => $this->editBudget,
+                'category_id' => $this->editCategoryId,
+                'brand_id' => $this->editBrandId,
+                'model_id' => $this->editModelId,
+                'attachments' => $attachments,
+            ]);
+
+            // Cache latest edit timestamp for debouncing
+            $timestamp = now()->timestamp;
+            Cache::put(
+                "discussion_edit_timestamp_{$this->discussion->id}",
+                $timestamp,
+                now()->addMinutes(30)
+            );
+
+            // Dispatch notification job with 5-minute debounce delay
+            NotifyDiscussionEditedJob::dispatch(
+                $this->discussion->id,
+                $timestamp
+            )->delay(now()->addMinutes(5));
+
+            $this->showEditModal = false;
+            session()->flash('message', 'Request updated successfully! All responders and watchers will be notified.');
+            $this->loadRequestData();
+        } else {
+            // Demo mode fallback
+            $this->title = $this->editTitle;
+            $this->body = $this->editBody;
+            $this->budget = $this->editBudget;
+            $this->urgency = $this->editUrgency;
+            $this->fulfillment = $this->editFulfillment;
+            $this->showEditModal = false;
+            session()->flash('message', 'Request updated successfully in preview mode.');
+        }
     }
 
     public function markFulfilled(): void
@@ -263,33 +430,23 @@ class MyRequestView extends Component
         }
     }
 
-    public function postReply(): void
+    public function openQuickViewOffer(int $responseId): void
     {
-        $this->validate([
-            'replyText' => 'required|min:3|max:1000',
-        ]);
-
-        $user = Auth::user();
-        if (! $user) {
-            return;
-        }
-
-        if ($this->discussion) {
-            Response::create([
-                'discussion_id' => $this->discussion->id,
-                'user_id' => $user->id,
-                'body' => $this->replyText,
-                'status' => 'visible',
-            ]);
-
-            $this->replyText = '';
-            session()->flash('message', 'Your reply has been posted.');
-            $this->loadRequestData();
-        }
+        $this->dispatch('open-quick-view-offer', response_id: $responseId);
     }
 
     public function render()
     {
-        return view('livewire.dashboard.requests.my-request-view');
+        $categories = Category::whereNull('parent_id')->orderBy('name')->get();
+        $brands = Brand::orderBy('name')->get();
+        $deviceModels = $this->editBrandId
+            ? DeviceModel::where('brand_id', $this->editBrandId)->orderBy('name')->get()
+            : collect();
+
+        return view('livewire.dashboard.requests.my-request-view', [
+            'categories' => $categories,
+            'brands' => $brands,
+            'deviceModels' => $deviceModels,
+        ]);
     }
 }

@@ -69,7 +69,11 @@
           @php
             $authorName = $discussion?->user?->name ?? 'TechSam';
             $authorAvatar = strtoupper(substr($authorName, 0, 2));
-            $authorLocation = $discussion->location ? "{$discussion->location->city}, {$discussion->location->state->name}" : "{$discussion->user->primaryLocation->city}, {$discussion->user->primaryLocation->state->name}";
+            $authorLocation = $discussion?->location 
+              ? "{$discussion->location->city}, " . ($discussion->location->state?->name ?? 'Nigeria') 
+              : ($discussion?->user?->primaryLocation 
+                ? "{$discussion->user->primaryLocation->city}, " . ($discussion->user->primaryLocation->state?->name ?? 'Nigeria') 
+                : 'Nigeria');
             $postedTime = $discussion ? $discussion->created_at->diffForHumans() : '2 hours ago';
             $categoryName = $discussion?->category?->name ?? 'Electronics';
             $brandName = $discussion?->brand?->name ?? '';
@@ -286,6 +290,28 @@
           </div>
           <p class="text-xs text-slate-600 leading-relaxed border-t border-pp-100 pt-3">
             Discussion authors cannot submit responses to their own request. You can edit the request specifications at any time, review vendor proposals below, or open quick view offers.
+          </p>
+        </div>
+      @elseif($currentUserResponse)
+        <!-- ALREADY SUBMITTED RESPONSE NOTICE CARD -->
+        <div class="bg-gradient-to-r from-pp-50/50 via-white to-pp-50/30 rounded-3xl border border-pp-200 p-6 space-y-3 shadow-soft">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-2xl bg-pp-600 text-white grid place-items-center text-base shrink-0 shadow-2xs">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-extrabold text-slate-950">Response Already Submitted</h3>
+                <p class="text-xs text-slate-500">You have already submitted a response to this community request.</p>
+              </div>
+            </div>
+            <button wire:click="openUserResponseModal" class="px-4 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0">
+              <i class="fas fa-eye text-xs"></i>
+              <span>View Your Response</span>
+            </button>
+          </div>
+          <p class="text-xs text-slate-600 leading-relaxed border-t border-pp-100 pt-3">
+            Each vendor can submit one active response per request. You can view your full proposal and negotiation thread in the sidebar or via the button above.
           </p>
         </div>
       @else
@@ -543,10 +569,25 @@
                 </div>
 
                 <!-- RIGHT SIDE: HELPFUL & REPORT -->
-                <div class="flex items-center gap-4">
-                  <button class="flex items-center gap-1 font-semibold hover:text-pp-600 transition cursor-pointer">
-                    <i class="far fa-thumbs-up text-slate-400 text-xs"></i> Helpful
-                  </button>
+                <div class="flex items-center gap-3">
+                  @auth
+                    @php
+                      $isLiked = !empty($resp['is_liked']);
+                      $likesCount = $resp['likes_count'] ?? 0;
+                    @endphp
+                    <button
+                      type="button"
+                      wire:click="toggleHelpful({{ $resp['id'] }})"
+                      class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold transition cursor-pointer {{ $isLiked ? 'bg-pp-100 text-pp-800 border border-pp-200 font-extrabold shadow-2xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-transparent' }}"
+                      title="{{ $isLiked ? 'Marked as helpful (Click to unlike)' : 'Mark as helpful' }}"
+                    >
+                      <i class="{{ $isLiked ? 'fas text-pp-600' : 'far text-slate-400' }} fa-thumbs-up text-xs"></i>
+                      <span>Helpful</span>
+                      <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black {{ $isLiked ? 'bg-pp-200 text-pp-900' : 'bg-white text-slate-700 shadow-2xs' }}">
+                        {{ $likesCount }}
+                      </span>
+                    </button>
+                  @endauth
 
                   @php
                     $isRespReported = in_array($resp['id'], $reportedResponseIds ?? []);
@@ -568,7 +609,48 @@
 
     <!-- RIGHT COLUMN: SIDEBAR WIDGETS -->
     <div class="lg:col-span-4 space-y-6">
-      
+
+      @if($currentUserResponse)
+        <!-- WIDGET: YOUR SUBMITTED RESPONSE -->
+        <div class="bg-gradient-to-br from-pp-50/70 via-white to-pp-50/30 rounded-3xl border-2 border-pp-300 p-6 space-y-4 shadow-soft">
+          <div class="flex items-center justify-between border-b border-pp-100 pb-3">
+            <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <i class="fas fa-reply text-pp-600"></i> Your Submitted Response
+            </h3>
+            <span class="px-2.5 py-0.5 rounded-full bg-pp-100 text-pp-800 font-black text-[10px]">
+              #RESP-{{ $currentUserResponse->id }}
+            </span>
+          </div>
+
+          <div class="space-y-2">
+            <p class="text-xs text-slate-700 leading-relaxed font-medium line-clamp-3">
+              "{{ $currentUserResponse->body }}"
+            </p>
+            <span class="text-[11px] text-slate-400 block">
+              Submitted {{ $currentUserResponse->created_at->diffForHumans() }}
+            </span>
+          </div>
+
+          @if($currentUserResponse->offers && $currentUserResponse->offers->isNotEmpty())
+            @php $myLatestOffer = $currentUserResponse->offers->last(); @endphp
+            <div class="p-3.5 rounded-2xl bg-white border border-pp-200 space-y-1 text-xs shadow-2xs">
+              <span class="text-[10px] text-slate-400 font-bold uppercase block">Commercial Proposal:</span>
+              <span class="text-base font-black text-slate-950">₦{{ number_format($myLatestOffer->total()) }}</span>
+              <span class="text-[11px] text-pp-700 font-bold block">Status: {{ ucfirst($myLatestOffer->status) }}</span>
+            </div>
+          @endif
+
+          <button
+            type="button"
+            wire:click="openUserResponseModal"
+            class="w-full py-2.5 px-4 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs text-center shadow-xs hover:shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <i class="fas fa-eye text-xs"></i>
+            <span>View Response Details</span>
+          </button>
+        </div>
+      @endif
+
       <!-- COMBINED WIDGET: REQUEST OVERVIEW & STATUS -->
       <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-soft">
         <h3 class="text-xs font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
@@ -854,6 +936,110 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  @endif
+
+  <!-- USER SUBMITTED RESPONSE MODAL -->
+  @if ($showUserResponseModal && $currentUserResponse)
+    <div
+      class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+      x-data
+      @keydown.escape.window="$wire.closeUserResponseModal()"
+    >
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150 space-y-0">
+        
+        <!-- MODAL HEADER -->
+        <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between gap-3 bg-slate-50/60">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base font-black text-slate-950">Your Response</h3>
+              <span class="px-2.5 py-0.5 rounded-full bg-pp-100 text-pp-800 text-[10px] font-extrabold">
+                #RESP-{{ $currentUserResponse->id }}
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Submitted {{ $currentUserResponse->created_at->format('M d, Y · h:i A') }}</p>
+          </div>
+          <button
+            type="button"
+            wire:click="closeUserResponseModal"
+            class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 grid place-items-center transition cursor-pointer shrink-0"
+          >
+            <i class="fas fa-times text-xs"></i>
+          </button>
+        </div>
+
+        <!-- MODAL BODY -->
+        <div class="p-5 sm:p-6 space-y-4 text-xs">
+          
+          <!-- RESPONSE TEXT -->
+          <div class="space-y-1.5">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Your Message</span>
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs sm:text-sm text-slate-800 leading-relaxed font-medium whitespace-pre-line">
+              {{ $currentUserResponse->body }}
+            </div>
+          </div>
+
+          <!-- ATTACHED OFFER DETAILS IF PRESENT -->
+          @if ($currentUserResponse->offers && $currentUserResponse->offers->isNotEmpty())
+            @php $userOffer = $currentUserResponse->offers->last(); @endphp
+            <div class="p-4 rounded-2xl bg-pp-50/60 border border-pp-200 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-black uppercase tracking-wider text-pp-800 flex items-center gap-1.5">
+                  <i class="fas fa-handshake text-xs"></i> Attached Proposal
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase {{ $userOffer->status === 'accepted' ? 'bg-emerald-100 text-emerald-800' : ($userOffer->status === 'countered' ? 'bg-amber-100 text-amber-900' : 'bg-pp-100 text-pp-800') }}">
+                  {{ strtoupper($userOffer->status) }}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3 text-xs pt-1">
+                <div>
+                  <span class="text-slate-400 text-[10px] block font-bold">TOTAL PROPOSED</span>
+                  <span class="text-lg font-black text-slate-950">₦{{ number_format($userOffer->total()) }}</span>
+                </div>
+                <div>
+                  <span class="text-slate-400 text-[10px] block font-bold">FULFILLMENT</span>
+                  <span class="font-extrabold text-slate-800">
+                    {{ $userOffer->delivery_method === 'seller_responsible' ? 'Seller Delivery' : 'Buyer Pickup' }}
+                  </span>
+                </div>
+              </div>
+
+              @if ($userOffer->maxWarrantyDays())
+                <div class="text-[11px] text-slate-600 border-t border-pp-100 pt-2">
+                  Warranty: <strong>{{ $userOffer->maxWarrantyDays() }} Days Warranty</strong>
+                </div>
+              @endif
+
+              <div class="pt-2">
+                <a
+                  href="{{ route('offers.view', ['offer_id' => 'OFF-' . $userOffer->id]) }}"
+                  class="w-full py-2.5 px-4 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs text-center shadow-xs transition block"
+                >
+                  Open Negotiation Thread →
+                </a>
+              </div>
+            </div>
+          @else
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-slate-500 text-xs">
+              <i class="fas fa-info-circle text-slate-400 mr-1"></i> This response was submitted as general community advice without an attached commercial offer.
+            </div>
+          @endif
+
+        </div>
+
+        <!-- MODAL FOOTER -->
+        <div class="p-4 sm:p-5 border-t border-slate-100 flex items-center justify-end bg-slate-50/50">
+          <button
+            type="button"
+            wire:click="closeUserResponseModal"
+            class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-xs transition cursor-pointer"
+          >
+            Close
+          </button>
+        </div>
+
       </div>
     </div>
   @endif

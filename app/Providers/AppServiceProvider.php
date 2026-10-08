@@ -26,18 +26,6 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\Media::observe(\App\Observers\MediaObserver::class);
         \App\Models\User::observe(\App\Observers\UserObserver::class);
 
-        \Illuminate\Database\Eloquent\Relations\Relation::morphMap([
-            'listing' => \App\Models\Listing::class,
-            'post' => \App\Models\Post::class,
-            'discussion' => \App\Models\Discussion::class,
-            'user' => \App\Models\User::class,
-            'offer' => \App\Models\Offer::class,
-            'item' => \App\Models\Item::class,
-            'response' => \App\Models\Response::class,
-            'conversation' => \App\Models\Conversation::class,
-            'conversation_message' => \App\Models\ConversationMessage::class,
-        ]);
-
         Blade::directive('money', function ($expression) {
             return "<?php echo app(\\App\\Services\\Location\\LocationService::class)->formatMoney($expression); ?>";
         });

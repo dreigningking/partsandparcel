@@ -39,6 +39,24 @@ class SubscriptionPlansAndPricingTest extends TestCase
         $response->assertSee('Enterprise Salvage & Dealer');
     }
 
+    public function test_help_page_is_publicly_accessible(): void
+    {
+        $response = $this->get(route('help'));
+        $response->assertStatus(200);
+        $response->assertSee('How can we help you today?');
+        $response->assertSee('Escrow & Secure Payments');
+        $response->assertSee('Frequently Asked Questions');
+    }
+
+    public function test_contact_page_is_publicly_accessible(): void
+    {
+        $response = $this->get(route('contact'));
+        $response->assertStatus(200);
+        $response->assertSee('Contact Parts & Parcel');
+        $response->assertSee('Send Our Team a Message');
+        $response->assertSee('Logistics & Hub Locations');
+    }
+
     public function test_subscription_plans_page_is_accessible_to_authenticated_users(): void
     {
         $user = User::factory()->create();

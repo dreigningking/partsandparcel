@@ -53,7 +53,7 @@
             <div class="flex-1 overflow-y-auto divide-y divide-slate-100 custom-scrollbar">
                 @forelse($conversations as $conv)
                     @php
-                        $user = $conv->contextable;
+                        $user = $conv->customer_user;
                         $latest = $conv->latestMessage;
                         $isSelected = $selectedConversationId === $conv->id;
                         $unread = $conv->unread_count ?? 0;
@@ -126,7 +126,7 @@
         <div class="flex-1 flex flex-col min-w-0 bg-slate-50/40 {{ $selectedConversationId ? 'flex' : 'hidden lg:flex' }}">
             @if($activeConversation)
                 @php
-                    $customer = $activeConversation->contextable;
+                    $customer = $activeConversation->customer_user;
                 @endphp
                 <!-- HEADER BAR -->
                 <div class="h-16 px-5 border-b border-slate-200 bg-white flex items-center justify-between shrink-0 shadow-2xs">

@@ -15,6 +15,15 @@ class Post extends Model
 {
     use HasMedia, SoftDeletes;
 
+    public const HELP_TOPICS = [
+        'Buying & Making Offers',
+        'Escrow & Secure Payments',
+        'Shipping & Deliveries',
+        'Seller Tiers & Plans',
+        'Community Requests (RFQs)',
+        'Disputes & Mediation',
+    ];
+
     protected $fillable = [
         'user_id',
         'category_id',
@@ -25,13 +34,51 @@ class Post extends Model
         'status',
         'published_at',
         'tags',
+        'is_help',
     ];
 
     protected function casts(): array
     {
         return [
             'published_at' => 'datetime',
+            'is_help' => 'boolean',
         ];
+    }
+
+    public function scopeBlog(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('is_help', false);
+    }
+
+    public function scopeHelp(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('is_help', true);
+    }
+
+    public function scopePublished(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('status', 'published')->whereNotNull('published_at');
+    }
+
+    public function scopeForTopic(\Illuminate\Database\Eloquent\Builder $query, string $topic): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('tags', 'like', '%' . $topic . '%');
+    }
+
+    public function getHelpTopicAttribute(): ?string
+    {
+        if (! $this->is_help) {
+            return null;
+        }
+
+        $tagList = array_map('trim', explode(',', (string) $this->tags));
+        foreach (self::HELP_TOPICS as $topic) {
+            if (in_array($topic, $tagList, true) || stripos((string) $this->tags, $topic) !== false) {
+                return $topic;
+            }
+        }
+
+        return $tagList[0] ?? 'General Help';
     }
 
     public function getRouteKeyName()
@@ -81,6 +128,20 @@ class Post extends Model
         }
 
         return $this->watchlists()->where('user_id', $user->id)->exists();
+    }
+
+    public function likes(): MorphMany
+    {
+        return $this->morphMany(Like::class, 'likeable');
+    }
+
+    public function isLikedBy(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        return $this->likes()->where('user_id', $user->id)->exists();
     }
 
     public function getFeaturedImageUrlAttribute(): ?string

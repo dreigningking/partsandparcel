@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\InvoiceItem;
+use App\Models\Item;
 use App\Models\Listing;
 use App\Models\Moderation;
 use App\Models\Report;
@@ -51,19 +52,13 @@ class AdminListingDetails extends Component
 
     public function approve(): void
     {
-        $hasPending = Moderation::where(function ($q) {
-            $q->where('moderatable_type', 'listing')
-                ->orWhere('moderatable_type', Listing::class);
-        })
+        $hasPending = Moderation::where('moderatable_type', Listing::class)
             ->where('moderatable_id', $this->listing->id)
             ->where('status', 'pending')
             ->exists();
 
         if ($hasPending) {
-            Moderation::where(function ($q) {
-                $q->where('moderatable_type', 'listing')
-                    ->orWhere('moderatable_type', Listing::class);
-            })
+            Moderation::where('moderatable_type', Listing::class)
                 ->where('moderatable_id', $this->listing->id)
                 ->where('status', 'pending')
                 ->update([
@@ -111,19 +106,13 @@ class AdminListingDetails extends Component
             'rejectionReason' => 'required|string|min:5|max:1000',
         ]);
 
-        $hasPending = Moderation::where(function ($q) {
-            $q->where('moderatable_type', 'listing')
-                ->orWhere('moderatable_type', Listing::class);
-        })
+        $hasPending = Moderation::where('moderatable_type', Listing::class)
             ->where('moderatable_id', $this->listing->id)
             ->where('status', 'pending')
             ->exists();
 
         if ($hasPending) {
-            Moderation::where(function ($q) {
-                $q->where('moderatable_type', 'listing')
-                    ->orWhere('moderatable_type', Listing::class);
-            })
+            Moderation::where('moderatable_type', Listing::class)
                 ->where('moderatable_id', $this->listing->id)
                 ->where('status', 'pending')
                 ->update([
@@ -285,13 +274,11 @@ class AdminListingDetails extends Component
         // Sales history from InvoiceItem
         $salesQuery = InvoiceItem::query()
             ->where(function ($q) {
-                $q->where(function ($sub) {
-                    $sub->where('itemable_type', 'listing')
-                        ->where('itemable_id', $this->listing->id);
-                });
+                $q->where('itemable_type', Listing::class)
+                    ->where('itemable_id', $this->listing->id);
                 if ($this->listing->item_id) {
                     $q->orWhere(function ($sub) {
-                        $sub->where('itemable_type', 'item')
+                        $sub->where('itemable_type', Item::class)
                             ->where('itemable_id', $this->listing->item_id);
                     });
                 }
@@ -315,10 +302,7 @@ class AdminListingDetails extends Component
 
         // Moderation audit records
         $moderations = Moderation::query()
-            ->where(function ($q) {
-                $q->where('moderatable_type', 'listing')
-                    ->orWhere('moderatable_type', Listing::class);
-            })
+            ->where('moderatable_type', Listing::class)
             ->where('moderatable_id', $this->listing->id)
             ->with('moderator')
             ->latest('created_at')

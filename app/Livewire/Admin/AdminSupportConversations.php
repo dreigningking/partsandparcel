@@ -85,8 +85,8 @@ class AdminSupportConversations extends Component
         $supportUser = User::getSupportUser();
 
         $conversationsQuery = Conversation::query()
-            ->whereIn('contextable_type', [User::class, 'user'])
-            ->with(['contextable', 'latestMessage.sender'])
+            ->support()
+            ->with(['contextable', 'participants.user', 'creator', 'latestMessage.sender'])
             ->withCount([
                 'messages as unread_count' => function ($query) use ($supportUser) {
                     $query->whereNull('read_at')
@@ -96,10 +96,16 @@ class AdminSupportConversations extends Component
 
         if (! empty($this->search)) {
             $term = '%' . $this->search . '%';
-            $conversationsQuery->whereHasMorph('contextable', [User::class], function ($q) use ($term) {
-                $q->where('name', 'like', $term)
-                    ->orWhere('email', 'like', $term)
-                    ->orWhere('business_name', 'like', $term);
+            $conversationsQuery->where(function ($query) use ($term) {
+                $query->whereHasMorph('contextable', [User::class], function ($q) use ($term) {
+                    $q->where('name', 'like', $term)
+                        ->orWhere('email', 'like', $term)
+                        ->orWhere('business_name', 'like', $term);
+                })->orWhereHas('participants.user', function ($q) use ($term) {
+                    $q->where('name', 'like', $term)
+                        ->orWhere('email', 'like', $term)
+                        ->orWhere('business_name', 'like', $term);
+                });
             });
         }
 
@@ -111,7 +117,7 @@ class AdminSupportConversations extends Component
         $messages = collect();
 
         if ($this->selectedConversationId) {
-            $activeConversation = Conversation::with(['contextable'])->find($this->selectedConversationId);
+            $activeConversation = Conversation::with(['contextable', 'participants.user', 'creator'])->find($this->selectedConversationId);
             if ($activeConversation) {
                 $messages = ConversationMessage::with('sender')
                     ->where('conversation_id', $activeConversation->id)
@@ -125,7 +131,7 @@ class AdminSupportConversations extends Component
             'activeConversation' => $activeConversation,
             'messages' => $messages,
             'totalUnreadCount' => ConversationMessage::whereHas('conversation', function ($q) {
-                $q->whereIn('contextable_type', [User::class, 'user']);
+                $q->support();
             })->whereNull('read_at')->where('sender_id', '!=', $supportUser->id)->count(),
         ]);
     }

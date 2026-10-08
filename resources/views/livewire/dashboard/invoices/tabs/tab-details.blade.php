@@ -1050,7 +1050,7 @@
             <i class="fas fa-credit-card"></i> 2. Buyer Payment
           </span>
           @if ($invoicePayment)
-            <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase {{ in_array($invoicePayment->status, ['successful', 'paid', 'held_in_escrow']) ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-500/20 text-slate-300' }}">
+            <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase {{ in_array($invoicePayment->status, ['successful', 'paid', 'held_in_escrow']) ? 'bg-emerald-500/20 text-emerald-300' : ($invoicePayment->status === 'failed' ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300') }}">
               {{ $invoicePayment->status }}
             </span>
           @elseif ($invoice->status === 'paid' && $invoice->payment_method === 'direct')

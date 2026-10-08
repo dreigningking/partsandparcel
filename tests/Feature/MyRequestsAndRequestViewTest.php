@@ -9,9 +9,15 @@ use App\Models\Discussion;
 use App\Models\Invoice;
 use App\Models\Offer;
 use App\Models\OfferItem;
+use App\Jobs\NotifyDiscussionEditedJob;
 use App\Models\Response;
 use App\Models\User;
+use App\Models\Watchlist;
+use App\Notifications\DiscussionEditedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -234,10 +240,17 @@ class MyRequestsAndRequestViewTest extends TestCase
             'status' => 'open',
         ]);
 
+        $response = Response::create([
+            'discussion_id' => $discussion->id,
+            'user_id' => $this->vendor->id,
+            'body' => 'I have the original OEM radiator in stock.',
+        ]);
+
         $offer = Offer::create([
             'sender_id' => $this->vendor->id,
             'recipient_id' => $this->user->id,
             'discussion_id' => $discussion->id,
+            'response_id' => $response->id,
             'delivery_method' => 'seller_responsible',
             'status' => 'pending',
         ]);
@@ -254,7 +267,8 @@ class MyRequestsAndRequestViewTest extends TestCase
         // Accept offer
         Livewire::actingAs($this->user)
             ->test(MyRequestView::class, ['id' => $discussion->id])
-            ->assertSee('Original OEM Nissan Radiator')
+            ->assertSee('Offer Attached')
+            ->assertSee('View Offer')
             ->assertSee('₦70,000.00')
             ->call('acceptOffer', $offer->id);
 
@@ -267,28 +281,83 @@ class MyRequestsAndRequestViewTest extends TestCase
         ]);
     }
 
-    public function test_user_can_post_comment_reply_from_my_request_view(): void
+    public function test_user_can_edit_request_and_queue_debounce_notification(): void
     {
+        Queue::fake();
+
         $discussion = Discussion::create([
             'user_id' => $this->user->id,
             'category_id' => $this->category->id,
             'type' => 'item',
             'title' => 'Mercedes C200 Side Mirror Glass',
             'body' => 'Driver side heated glass needed.',
+            'budget' => '₦40,000',
             'status' => 'open',
         ]);
 
         Livewire::actingAs($this->user)
             ->test(MyRequestView::class, ['id' => $discussion->id])
-            ->set('replyText', 'Does this include the blind spot indicator triangle?')
-            ->call('postReply')
-            ->assertSee('Does this include the blind spot indicator triangle?');
+            ->assertSet('isOwner', true)
+            ->call('openEditModal')
+            ->assertSet('showEditModal', true)
+            ->set('editTitle', 'Mercedes C200 Side Mirror Glass (Heated OEM)')
+            ->set('editBody', 'Driver side heated glass needed with auto-dimming.')
+            ->set('editBudget', '₦45,000')
+            ->call('saveRequest')
+            ->assertSet('showEditModal', false)
+            ->assertSee('Mercedes C200 Side Mirror Glass (Heated OEM)')
+            ->assertSee('Driver side heated glass needed with auto-dimming.');
 
-        $this->assertDatabaseHas('responses', [
-            'discussion_id' => $discussion->id,
-            'user_id' => $this->user->id,
-            'body' => 'Does this include the blind spot indicator triangle?',
+        $this->assertDatabaseHas('discussions', [
+            'id' => $discussion->id,
+            'title' => 'Mercedes C200 Side Mirror Glass (Heated OEM)',
+            'budget' => '₦45,000',
         ]);
+
+        Queue::assertPushed(NotifyDiscussionEditedJob::class);
+    }
+
+    public function test_only_last_5_responses_are_displayed_and_replies_identified(): void
+    {
+        $discussion = Discussion::create([
+            'user_id' => $this->user->id,
+            'category_id' => $this->category->id,
+            'type' => 'item',
+            'title' => 'Toyota Rav4 Alternator',
+            'body' => '2016 Rav4 2.5L Alternator needed.',
+            'status' => 'open',
+        ]);
+
+        // Create 7 responses
+        $responses = [];
+        for ($i = 1; $i <= 7; $i++) {
+            $responses[] = Response::create([
+                'discussion_id' => $discussion->id,
+                'user_id' => $this->vendor->id,
+                'body' => "Response inquiry number {$i}",
+            ]);
+        }
+
+        // Attach an offer to response #7
+        Offer::create([
+            'sender_id' => $this->vendor->id,
+            'recipient_id' => $this->user->id,
+            'discussion_id' => $discussion->id,
+            'response_id' => $responses[6]->id,
+            'delivery_method' => 'seller_responsible',
+            'status' => 'pending',
+        ]);
+
+        Livewire::actingAs($this->user)
+            ->test(MyRequestView::class, ['id' => $discussion->id])
+            ->assertCount('responses', 5)
+            ->assertSee('Response inquiry number 7')
+            ->assertSee('Offer Attached')
+            ->assertSee('View Offer')
+            ->assertDontSee('Response inquiry number 1')
+            ->assertDontSee('Response inquiry number 2')
+            ->call('openQuickViewOffer', $responses[6]->id)
+            ->assertDispatched('open-quick-view-offer', response_id: $responses[6]->id);
     }
 
     public function test_demo_fallback_for_non_existent_request_id(): void
@@ -298,5 +367,83 @@ class MyRequestsAndRequestViewTest extends TestCase
             ->assertSee('Looking for HP EliteBook 840 G5 Motherboard')
             ->assertSee('Abel Electronics')
             ->assertSee('Seth Tech Hub');
+    }
+
+    public function test_notify_discussion_edited_job_sends_notification_to_responders_and_watchers(): void
+    {
+        Notification::fake();
+
+        $discussion = Discussion::create([
+            'user_id' => $this->user->id,
+            'category_id' => $this->category->id,
+            'type' => 'item',
+            'title' => 'Toyota Camry ECU',
+            'body' => 'ECU unit needed.',
+            'status' => 'open',
+        ]);
+
+        $watcher = User::factory()->create(['email' => 'watcher@example.com']);
+        Watchlist::create([
+            'user_id' => $watcher->id,
+            'watchable_type' => Discussion::class,
+            'watchable_id' => $discussion->id,
+        ]);
+
+        $responder = User::factory()->create(['email' => 'responder@example.com']);
+        Response::create([
+            'discussion_id' => $discussion->id,
+            'user_id' => $responder->id,
+            'body' => 'I have this part available.',
+        ]);
+
+        $timestamp = now()->timestamp;
+        Cache::put("discussion_edit_timestamp_{$discussion->id}", $timestamp, 300);
+
+        $job = new NotifyDiscussionEditedJob($discussion->id, $timestamp);
+        $job->handle();
+
+        // Notification should be sent to watcher and responder, but NOT the discussion owner ($this->user)
+        Notification::assertSentTo(
+            [$watcher, $responder],
+            DiscussionEditedNotification::class
+        );
+        Notification::assertNotSentTo(
+            [$this->user],
+            DiscussionEditedNotification::class
+        );
+    }
+
+    public function test_notify_discussion_edited_job_debounces_when_newer_edit_timestamp_exists(): void
+    {
+        Notification::fake();
+
+        $discussion = Discussion::create([
+            'user_id' => $this->user->id,
+            'category_id' => $this->category->id,
+            'type' => 'item',
+            'title' => 'Toyota Camry ECU',
+            'body' => 'ECU unit needed.',
+            'status' => 'open',
+        ]);
+
+        $responder = User::factory()->create(['email' => 'responder2@example.com']);
+        Response::create([
+            'discussion_id' => $discussion->id,
+            'user_id' => $responder->id,
+            'body' => 'I have this part available.',
+        ]);
+
+        $firstTimestamp = 1000;
+        $newerTimestamp = 2000;
+
+        // Cache contains the newer timestamp from a subsequent edit
+        Cache::put("discussion_edit_timestamp_{$discussion->id}", $newerTimestamp, 300);
+
+        // Run the older job with the older timestamp
+        $job = new NotifyDiscussionEditedJob($discussion->id, $firstTimestamp);
+        $job->handle();
+
+        // No notification should have been sent by the older job because it was debounced
+        Notification::assertNothingSent();
     }
 }

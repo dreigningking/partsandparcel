@@ -4,9 +4,9 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Mail\Mailables\Address;
 use Illuminate\Queue\SerializesModels;
 
 class ContactMessage extends Mailable
@@ -19,12 +19,17 @@ class ContactMessage extends Mailable
 
     public function envelope(): Envelope
     {
+        $fromAddress = config('mail.from.address') ?: 'support@partsandparcel.com';
+        $fromName = config('mail.from.name') ?: config('app.name', 'Parts & Parcel');
+        $topic = $this->contactData['topic'] ?? 'General Inquiry';
+        $subject = $this->contactData['subject'] ?? 'New Contact Inquiry';
+
         return new Envelope(
-            from: new Address($this->contactData['email'], $this->contactData['name']),
+            from: new Address($fromAddress, $fromName),
             replyTo: [
                 new Address($this->contactData['email'], $this->contactData['name'])
             ],
-            subject: 'Contact Form Message: ' . $this->contactData['subject'],
+            subject: "[{$topic}] {$subject} — Parts & Parcel Support",
         );
     }
 

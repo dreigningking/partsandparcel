@@ -11,6 +11,9 @@ use App\Models\Location;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\Commercial\CartService;
+use App\Services\Payment\EscrowService;
+use App\Services\Payment\FlutterwaveService;
+use App\Services\Payment\PaystackService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -41,6 +44,9 @@ class CheckoutPage extends Component
 
     // Payment Option selection ('platform' vs 'direct')
     public $paymentMethod = 'platform';
+
+    // Payment Gateway Provider selection ('paystack' vs 'flutterwave')
+    public string $paymentProvider = 'paystack';
 
     // Fee Configuration (Computed from user subscription plan)
     public float $escrowPercentage = 10.0;
@@ -86,7 +92,16 @@ class CheckoutPage extends Component
             }
         }
 
+        $this->paymentProvider = config('services.payment.default_gateway', 'paystack');
+
         $this->loadCheckoutData();
+    }
+
+    public function setPaymentProvider(string $provider): void
+    {
+        if (in_array($provider, ['paystack', 'flutterwave'])) {
+            $this->paymentProvider = $provider;
+        }
     }
 
     public function saveNewAddress()
@@ -407,30 +422,80 @@ class CheckoutPage extends Component
             : 'Buyer pickup selected (no shipment necessary).';
 
         if ($isPlatform) {
+            $provider = in_array($this->paymentProvider, ['paystack', 'flutterwave'])
+                ? $this->paymentProvider
+                : config('services.payment.default_gateway', 'paystack');
+
+            $reference = 'PAY-' . strtoupper(Str::random(12));
+
             // Only platform payments are recorded in the payments table
-            Payment::create([
+            $payment = Payment::create([
                 'user_id' => $user->id,
                 'paymentable_id' => $invoice->id,
                 'paymentable_type' => Invoice::class,
-                'reference' => 'PAY-' . strtoupper(Str::random(12)),
-                'provider' => 'paystack',
+                'reference' => $reference,
+                'provider' => $provider,
                 'status' => 'pending',
                 'amount' => $totalPayable,
-                'currency' => $user->currency ?? 'NGN',
+                'escrow_fee' => $this->escrowFee,
+                'currency' => $user->currency ?? $currency ?? 'NGN',
                 'metadata' => [
                     'invoice_id' => $invoice->id,
                     'coupon_code' => $this->appliedCouponId ? Coupon::find($this->appliedCouponId)?->code : null,
                     'discount' => $discount,
+                    'escrow_fee' => $this->escrowFee,
+                    'delivery_method' => $this->deliveryMethod,
                 ],
             ]);
 
-            session()->flash('message', "Invoice {$invoice->invoice_number} created with Parts & Parcel Escrow protection! {$deliveryText}");
+            // If 100% discount, mark successful without payment gateway
+            if ($totalPayable <= 0.0) {
+                app(EscrowService::class)->handlePaymentSuccessful($payment);
+                session()->flash('buyer_payment_success', "Invoice {$invoice->invoice_number} paid via promo discount with Escrow Protection! {$deliveryText}");
+                return redirect()->route('invoices.view', $invoice->id);
+            }
+
+            // Redirect user to payment gateway
+            $callbackUrl = route('payment.callback', [
+                'reference' => $reference,
+                'provider' => $provider,
+            ]);
+
+            $authorizationUrl = null;
+            $gatewayKey = config("services.{$provider}.secret");
+
+            if (empty($gatewayKey) && (app()->isLocal() || app()->environment('testing'))) {
+                $authorizationUrl = route('payment.callback', [
+                    'reference' => $reference,
+                    'provider' => $provider,
+                    'mock_success' => 1,
+                ]);
+            } else {
+                try {
+                    if ($provider === 'flutterwave') {
+                        $response = app(FlutterwaveService::class)->initialize($payment, $callbackUrl);
+                        $authorizationUrl = $response['link'] ?? $response['authorization_url'] ?? null;
+                    } else {
+                        $response = app(PaystackService::class)->initialize($payment, $callbackUrl);
+                        $authorizationUrl = $response['authorization_url'] ?? null;
+                    }
+                } catch (\Throwable $e) {
+                    session()->flash('error', 'Failed to communicate with payment gateway: ' . $e->getMessage());
+                    return redirect()->route('invoices.view', $invoice->id);
+                }
+            }
+
+            if ($authorizationUrl) {
+                return redirect()->away($authorizationUrl);
+            }
+
+            session()->flash('error', 'Could not initialize payment with ' . ucfirst($provider) . '. Please proceed to the invoice to complete payment.');
+            return redirect()->route('invoices.view', $invoice->id);
         } else {
             // Direct payments happen directly between buyer and seller; not recorded in payments table
             session()->flash('message', "Invoice {$invoice->invoice_number} generated for direct transfer. {$deliveryText} Please transfer directly to seller's bank account.");
+            return redirect()->route('invoices.view', $invoice->id);
         }
-
-        return redirect()->route('invoices');
     }
 
     public function render()

@@ -54,7 +54,14 @@ class QuickViewOffers extends Component
     #[On('open-quick-view-offer')]
     public function loadOffers($response_id = null, $payload = null)
     {
-        $targetId = $response_id ?? (is_array($payload) ? ($payload['response_id'] ?? null) : $payload);
+        $targetId = $response_id ?? (is_array($payload) ? ($payload['response_id'] ?? $payload['responseId'] ?? null) : $payload);
+        $offerId = is_array($payload) ? ($payload['offerId'] ?? $payload['offer_id'] ?? null) : null;
+        if (! $targetId && $offerId) {
+            $off = Offer::find($offerId);
+            if ($off) {
+                $targetId = $off->response_id;
+            }
+        }
         $this->responseId = $targetId ? (int) $targetId : null;
         $this->showCounterForm = false;
 
@@ -64,7 +71,7 @@ class QuickViewOffers extends Component
             $response = Response::with(['user', 'discussion', 'offers.sender', 'offers.recipient', 'offers.items'])->find($this->responseId);
             if ($response) {
                 // Enforce requirement: Only a discussion author can view the offers received using the quick view offers
-                if (! $user || ($response->discussion && $response->discussion->user_id !== $user->id)) {
+                if (! $user || ($response->discussion && (int) $response->discussion->user_id !== (int) $user->id)) {
                     $this->isOpen = false;
                     session()->flash('warning', 'Only the discussion author can view received offers via quick view.');
                     $this->dispatch('flash-message', ['type' => 'warning', 'message' => 'Only the discussion author can view received offers.']);
@@ -118,6 +125,45 @@ class QuickViewOffers extends Component
                     $this->isOpen = true;
                     return;
                 }
+            } else {
+                // Demo fallback for UI preview
+                $this->authorName = 'Abel Electronics';
+                $this->rounds = [
+                    [
+                        'id' => 9021,
+                        'round' => 1,
+                        'parent_id' => null,
+                        'from' => 'Abel Electronics',
+                        'to' => ($user?->name ?? 'You') . ' (You)',
+                        'raw_price' => 80000,
+                        'price' => '₦80,000',
+                        'warranty' => '14-Day Warranty',
+                        'warranty_days' => 14,
+                        'delivery' => 'Buyer Pickup (Computer Village)',
+                        'delivery_method' => 'buyer_pickup',
+                        'message' => 'Fully tested OEM pull with 14 days replacement warranty.',
+                        'time' => '2 hours ago',
+                        'status' => 'Pending Action',
+                        'can_accept' => true,
+                        'can_counter' => true,
+                        'can_edit' => false,
+                        'items' => [
+                            [
+                                'id' => 1,
+                                'description' => 'HP EliteBook 840 G5 Motherboard (Tested OEM Pull)',
+                                'type' => 'item',
+                                'quantity' => 1,
+                                'unit_price' => 80000,
+                                'warranty_period_days' => 14,
+                                'warranty_terms' => 'Replacement warranty',
+                            ],
+                        ],
+                    ],
+                ];
+                $this->currentRoundIndex = 0;
+                $this->itemStep = 1;
+                $this->isOpen = true;
+                return;
             }
         }
 

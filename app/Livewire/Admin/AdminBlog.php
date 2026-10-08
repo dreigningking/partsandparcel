@@ -27,6 +27,9 @@ class AdminBlog extends Component
     #[Url(as: 'category')]
     public ?int $category = null;
 
+    #[Url(as: 'type')]
+    public string $type = '';
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -38,6 +41,11 @@ class AdminBlog extends Component
     }
 
     public function updatedCategory(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedType(): void
     {
         $this->resetPage();
     }
@@ -80,6 +88,8 @@ class AdminBlog extends Component
             })
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->category, fn (Builder $query) => $query->where('category_id', $this->category))
+            ->when($this->type === 'blog', fn (Builder $query) => $query->where('is_help', false))
+            ->when($this->type === 'help', fn (Builder $query) => $query->where('is_help', true))
             ->latest('created_at')
             ->paginate(12);
 
@@ -87,6 +97,8 @@ class AdminBlog extends Component
         $totalPosts = Post::count();
         $publishedPosts = Post::where('status', 'published')->count();
         $draftPosts = Post::where('status', 'draft')->count();
+        $helpPostsCount = Post::help()->count();
+        $blogPostsCount = Post::blog()->count();
 
         return view('livewire.admin.admin-blog', [
             'posts' => $posts,
@@ -96,6 +108,8 @@ class AdminBlog extends Component
             'totalPosts' => $totalPosts,
             'publishedPosts' => $publishedPosts,
             'draftPosts' => $draftPosts,
+            'helpPostsCount' => $helpPostsCount,
+            'blogPostsCount' => $blogPostsCount,
         ]);
     }
 }

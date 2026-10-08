@@ -14,7 +14,7 @@
     HERO SECTION (CONSISTENT WITH MARKETPLACE BANNER)
     ============================================================ -->
     <section class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-        <div class="bg-gradient-to-r from-pp-50 via-white to-pp-50/50 rounded-2xl border border-pp-100 p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-2xs">
+        <div class="bg-gradient-to-r via-white to-pp-50/50 rounded-2xl border border-pp-100 p-6 sm:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-2xs">
             <div class="max-w-xl">
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
                     Community <span class="text-pp-600">Hub</span>

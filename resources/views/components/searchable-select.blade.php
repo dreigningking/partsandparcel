@@ -7,6 +7,7 @@
     'value' => null,
     'required' => false,
     'disabled' => false,
+    'clearable' => true,
     'class' => '',
     'buttonClass' => '',
 ])
@@ -43,7 +44,21 @@
         @else
             selected: @js($value),
         @endif
+        initialWasNull: false,
         options: @js($normalizedOptions),
+        clearable: {{ $clearable ? 'true' : 'false' }},
+        disabled: {{ $disabled ? 'true' : 'false' }},
+
+        init() {
+            if (this.selected === null || this.selected === undefined) {
+                this.initialWasNull = true;
+            }
+        },
+
+        get hasSelection() {
+            return this.selected !== null && this.selected !== undefined && this.selected !== '';
+        },
+
         get filteredOptions() {
             if (!this.search || !this.search.trim()) return this.options;
             const q = this.search.toLowerCase().trim();
@@ -52,22 +67,39 @@
                 (opt.subtitle && opt.subtitle.toLowerCase().includes(q))
             );
         },
+
         get selectedLabel() {
-            if (this.selected === null || this.selected === undefined || this.selected === '') {
+            if (!this.hasSelection) {
                 return '{{ $placeholder }}';
             }
             const found = this.options.find(opt => String(opt.value) === String(this.selected));
             return found ? found.label : '{{ $placeholder }}';
         },
+
         select(val) {
+            if (this.clearable && String(this.selected) === String(val)) {
+                this.clear();
+                this.open = false;
+                return;
+            }
             this.selected = val;
             this.open = false;
             this.search = '';
             this.$dispatch('input', val);
             this.$dispatch('change', val);
         },
+
+        clear() {
+            if (this.disabled) return;
+            const resetVal = this.initialWasNull ? null : '';
+            this.selected = resetVal;
+            this.search = '';
+            this.$dispatch('input', resetVal);
+            this.$dispatch('change', resetVal);
+        },
+
         onOpen() {
-            if ({{ $disabled ? 'true' : 'false' }}) return;
+            if (this.disabled) return;
             this.open = !this.open;
             if (this.open) {
                 this.search = '';
@@ -82,24 +114,44 @@
     class="relative w-full {{ $class }}"
 >
     @if($name)
-        <input type="hidden" name="{{ $name }}" :value="selected">
+        <input type="hidden" name="{{ $name }}" :value="hasSelection ? selected : ''">
     @endif
 
     <!-- TRIGGER BUTTON -->
-    <button
-        type="button"
+    <div
+        role="button"
+        tabindex="0"
         @click="onOpen()"
-        :disabled="{{ $disabled ? 'true' : 'false' }}"
-        class="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 transition flex items-center justify-between text-left shadow-2xs cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed {{ $buttonClass }}"
+        @keydown.enter.prevent="onOpen()"
+        @keydown.space.prevent="onOpen()"
+        :class="{ 'opacity-60 cursor-not-allowed pointer-events-none': disabled }"
+        class="w-full p-2.5 sm:p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-800 outline-none focus:border-pp-500 transition flex items-center justify-between text-left shadow-2xs cursor-pointer select-none {{ $buttonClass }}"
     >
-        <span class="truncate" :class="{ 'text-slate-400 font-normal': selected === null || selected === undefined || selected === '', 'text-slate-900 font-bold': selected !== null && selected !== undefined && selected !== '' }" x-text="selectedLabel">
+        <span class="truncate pr-2" :class="{ 'text-slate-400 font-normal': !hasSelection, 'text-slate-900 font-bold': hasSelection }" x-text="selectedLabel">
             {{ $placeholder }}
         </span>
 
-        <svg class="w-4 h-4 text-slate-400 shrink-0 ml-2 transition-transform duration-200" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
-        </svg>
-    </button>
+        <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+            <!-- CLEAR BUTTON (X) -->
+            <button
+                type="button"
+                x-show="clearable && hasSelection && !disabled"
+                x-cloak
+                @click.stop="clear()"
+                title="Clear selection"
+                class="w-5 h-5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer flex items-center justify-center shrink-0"
+            >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- CHEVRON ICON -->
+            <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 pointer-events-none" :class="{ 'rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+            </svg>
+        </div>
+    </div>
 
     <!-- DROPDOWN PANEL -->
     <div
@@ -133,6 +185,26 @@
                 <i class="fas fa-times"></i>
             </button>
         </div>
+
+        <!-- CLEAR / RESET OPTION IN DROPDOWN -->
+        <template x-if="clearable && hasSelection && (!search || '{{ strtolower(addslashes($placeholder)) }}'.includes(search.toLowerCase().trim()) || 'clear'.includes(search.toLowerCase().trim()))">
+            <div class="border-b border-slate-100 pb-1 mb-1">
+                <button
+                    type="button"
+                    @click="clear(); open = false;"
+                    class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between text-slate-500 hover:bg-rose-50 hover:text-rose-700 transition cursor-pointer font-medium group/clear"
+                >
+                    <span class="flex items-center gap-2 truncate">
+                        <i class="fas fa-times-circle text-xs text-rose-500 group-hover/clear:scale-110 transition-transform"></i>
+                        <span class="truncate">
+                            <span>Clear selection</span>
+                            <span class="text-slate-400 font-normal ml-1">({{ $placeholder }})</span>
+                        </span>
+                    </span>
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Reset</span>
+                </button>
+            </div>
+        </template>
 
         <!-- OPTIONS LIST -->
         <div class="max-h-56 overflow-y-auto space-y-0.5 divide-y divide-transparent pr-1">

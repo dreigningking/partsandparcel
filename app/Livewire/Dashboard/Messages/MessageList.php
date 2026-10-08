@@ -22,8 +22,12 @@ class MessageList extends Component
         $user = Auth::user();
         if ($user) {
             // Find existing support conversation or ensure one exists
-            $supportConv = Conversation::where('contextable_type', User::class)
-                ->where('contextable_id', $user->id)
+            $supportConv = Conversation::support()
+                ->where(function ($q) use ($user) {
+                    $q->where('contextable_id', $user->id)
+                      ->orWhereHas('participants', fn($p) => $p->where('user_id', $user->id));
+                })
+                ->latest('updated_at')
                 ->first();
 
             if ($supportConv) {
@@ -88,8 +92,11 @@ class MessageList extends Component
         $conversations = Conversation::query()
             ->where(function ($q) use ($userId) {
                 $q->where(function ($sub) use ($userId) {
-                    $sub->where('contextable_type', User::class)
-                        ->where('contextable_id', $userId);
+                    $sub->support()
+                        ->where(function ($sq) use ($userId) {
+                            $sq->where('contextable_id', $userId)
+                               ->orWhereHas('participants', fn($p) => $p->where('user_id', $userId));
+                        });
                 })->orWhereHas('participants', function ($p) use ($userId) {
                     $p->where('user_id', $userId);
                 });

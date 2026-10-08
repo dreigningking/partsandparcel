@@ -3,6 +3,7 @@
 namespace App\Livewire\Marketplace\Blog;
 
 use App\Models\Category;
+use App\Models\Like;
 use App\Models\Post;
 use App\Models\PostComment;
 use App\Models\ViewedEntity;
@@ -16,6 +17,8 @@ class BlogPost extends Component
 {
     public Post $post;
     public bool $isSubscribed = false;
+    public int $likesCount = 0;
+    public bool $isLiked = false;
 
     // Comment form fields
     public string $commentName = '';
@@ -31,7 +34,8 @@ class BlogPost extends Component
             }
         }
 
-        $this->post = $post->load(['user', 'category', 'media']);
+        $this->post = $post->load(['user', 'category', 'media', 'likes']);
+        $this->likesCount = $this->post->likes()->count();
 
         // 1. Record view in ViewedEntity via morph relation
         try {
@@ -45,9 +49,10 @@ class BlogPost extends Component
             // Silently ignore if logging view fails
         }
 
-        // 2. Check if currently logged in user is subscribed (in Watchlist)
+        // 2. Check if currently logged in user is subscribed (in Watchlist) and liked
         if (Auth::check()) {
             $this->isSubscribed = $this->post->isWatchedBy(Auth::user());
+            $this->isLiked = $this->post->isLikedBy(Auth::user());
             $this->commentName = Auth::user()->name;
             $this->commentEmail = Auth::user()->email;
         }
@@ -107,6 +112,35 @@ class BlogPost extends Component
         $this->commentBody = '';
 
         session()->flash('comment_status', 'Thank you! Your comment has been submitted and is pending moderator approval before it appears publicly.');
+    }
+
+    public function toggleHelpful(): mixed
+    {
+        if (! Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        $userId = Auth::id();
+        $existingLike = Like::where('user_id', $userId)
+            ->where('likeable_type', Post::class)
+            ->where('likeable_id', $this->post->id)
+            ->first();
+
+        if ($existingLike) {
+            $existingLike->delete();
+            $this->isLiked = false;
+            $this->likesCount = max(0, $this->likesCount - 1);
+        } else {
+            Like::create([
+                'user_id' => $userId,
+                'likeable_type' => Post::class,
+                'likeable_id' => $this->post->id,
+            ]);
+            $this->isLiked = true;
+            $this->likesCount++;
+        }
+
+        return null;
     }
 
     public function render()

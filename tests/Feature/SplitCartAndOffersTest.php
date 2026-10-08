@@ -237,11 +237,18 @@ class SplitCartAndOffersTest extends TestCase
         $this->assertNotNull($cart);
 
         // Call Livewire Checkout placeOrder
-        \Livewire\Livewire::test(\App\Livewire\Marketplace\CheckoutPage::class, ['seller' => $this->seller1->id])
+        $test = \Livewire\Livewire::test(\App\Livewire\Marketplace\CheckoutPage::class, ['seller' => $this->seller1->id])
             ->set('deliveryMethod', 'seller_delivery')
             ->set('paymentMethod', 'escrow')
-            ->call('placeOrder')
-            ->assertRedirect(route('invoices'));
+            ->call('placeOrder');
+
+        $payment = \App\Models\Payment::where('user_id', $this->buyer->id)->latest()->first();
+        $this->assertNotNull($payment);
+        $test->assertRedirect(route('payment.callback', [
+            'reference' => $payment->reference,
+            'provider' => 'paystack',
+            'mock_success' => 1,
+        ]));
 
         // Check invoice was generated
         $this->assertDatabaseHas('invoices', [

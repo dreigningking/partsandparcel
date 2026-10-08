@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Models\ConversationParticipant;
 use App\Models\DeviceModel;
 use App\Models\Discussion;
+use App\Models\Like;
 use App\Models\Location;
 use App\Models\Offer;
 use App\Models\Report;
@@ -75,7 +76,8 @@ class CommunityRequest extends Component
     public ?int $editLocationId = null;
     public string $editFulfillment = 'flexible';
     public string $editUrgency = 'standard';
-    public string $editStatus = 'open';
+    public $currentUserResponse = null;
+    public bool $showUserResponseModal = false;
 
     public $responses = [];
     public $mediaItems = [];
@@ -108,7 +110,8 @@ class CommunityRequest extends Component
                 'media',
                 'watchlists',
                 'responses.user.primaryLocation',
-                'responses.offers.items'
+                'responses.offers.items',
+                'responses.likes',
             ])->find($this->discussionId);
 
             if ($dbDiscussion) {
@@ -138,6 +141,11 @@ class CommunityRequest extends Component
                         ->whereIn('reportable_id', $respIds)
                         ->pluck('reportable_id')
                         ->toArray();
+
+                    $this->currentUserResponse = $dbDiscussion->responses->firstWhere('user_id', $user->id);
+                    if ($this->currentUserResponse) {
+                        $this->currentUserResponse->loadMissing(['offers.items', 'user.primaryLocation.state']);
+                    }
                 }
 
                 // Map dynamic media items
@@ -192,6 +200,8 @@ class CommunityRequest extends Component
                         'time' => $r->created_at->diffForHumans(),
                         'text' => $r->body,
                         'negotiation' => $negotiation,
+                        'likes_count' => $r->likes->count(),
+                        'is_liked' => $user ? $r->likes->contains('user_id', $user->id) : false,
                     ];
                 }
 
@@ -218,6 +228,8 @@ class CommunityRequest extends Component
                 'location' => 'Computer Village, Ikeja',
                 'time' => '2 hours ago',
                 'text' => "I have the motherboard you're looking for. It's from an EliteBook 840 G5 with a working motherboard. You can test it before buying.",
+                'likes_count' => 0,
+                'is_liked' => false,
                 'negotiation' => [
                     [
                         'id' => 101,
@@ -253,6 +265,8 @@ class CommunityRequest extends Component
                 'location' => 'Oregun, Ikeja',
                 'time' => '1 hour ago',
                 'text' => "We have 2 units of HP 840 G5 motherboards available at our shop. Core i5 8th Gen, tested with 30 days warranty.",
+                'likes_count' => 0,
+                'is_liked' => false,
                 'negotiation' => [
                     [
                         'id' => 201,
@@ -423,6 +437,12 @@ class CommunityRequest extends Component
         // The discussion author cannot respond to his own discussion
         if ($this->discussion && $this->discussion->user_id === $user->id) {
             session()->flash('warning', 'As the author of this request, you cannot reply to your own discussion. You can edit your request above.');
+            return;
+        }
+
+        // A user cannot submit more than one response to the same request
+        if ($this->currentUserResponse) {
+            session()->flash('warning', 'You have already submitted a response to this request.');
             return;
         }
 
@@ -696,6 +716,56 @@ class CommunityRequest extends Component
         return $similar;
     }
 
+    public function openUserResponseModal(): void
+    {
+        $this->showUserResponseModal = true;
+    }
+
+    public function closeUserResponseModal(): void
+    {
+        $this->showUserResponseModal = false;
+    }
+
+    public function toggleHelpful(int $responseId): void
+    {
+        if (! Auth::check()) {
+            return;
+        }
+
+        $userId = Auth::id();
+        $response = Response::find($responseId);
+        if (! $response) {
+            return;
+        }
+
+        $existingLike = Like::where('user_id', $userId)
+            ->where('likeable_type', Response::class)
+            ->where('likeable_id', $responseId)
+            ->first();
+
+        if ($existingLike) {
+            $existingLike->delete();
+            $isLiked = false;
+        } else {
+            Like::create([
+                'user_id' => $userId,
+                'likeable_type' => Response::class,
+                'likeable_id' => $responseId,
+            ]);
+            $isLiked = true;
+        }
+
+        // Update in-memory responses array
+        foreach ($this->responses as $index => $resp) {
+            if ($resp['id'] === $responseId) {
+                $currentCount = $resp['likes_count'] ?? 0;
+                $this->responses[$index]['likes_count'] = max(0, $currentCount + ($isLiked ? 1 : -1));
+                $this->responses[$index]['is_liked'] = $isLiked;
+                break;
+            }
+        }
+    }
+
     public function render()
     {
         $allCategories = Category::orderBy('name')->get();
@@ -705,7 +775,7 @@ class CommunityRequest extends Component
             : DeviceModel::orderBy('name')->take(100)->get();
 
         $allLocations = Auth::check()
-            ? Location::where('user_id', Auth::id())->orderBy('is_primary', 'desc')->get()
+            ? Location::where('user_id', Auth::id())->orderBy('is_default', 'desc')->get()
             : Location::orderBy('city')->get();
 
         return view('livewire.marketplace.community.community-request', [
@@ -715,6 +785,7 @@ class CommunityRequest extends Component
             'allBrands' => $allBrands,
             'allModels' => $allModels,
             'allLocations' => $allLocations,
+            'currentUserResponse' => $this->currentUserResponse,
         ]);
     }
 }

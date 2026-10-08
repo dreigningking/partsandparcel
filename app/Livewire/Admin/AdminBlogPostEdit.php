@@ -24,6 +24,8 @@ class AdminBlogPostEdit extends Component
     public ?int $category_id = null;
     public string $tagsInput = '';
     public string $status = 'draft';
+    public bool $is_help = false;
+    public string $helpTopic = '';
 
     public $featuredImage = null;
     public $featuredVideo = null;
@@ -37,6 +39,8 @@ class AdminBlogPostEdit extends Component
         $this->category_id = $post->category_id;
         $this->tagsInput = is_string($post->tags) ? $post->tags : (is_array($post->tags) ? implode(', ', $post->tags) : '');
         $this->status = $post->status;
+        $this->is_help = (bool) $post->is_help;
+        $this->helpTopic = (string) ($post->help_topic ?? '');
     }
 
     protected function rules(): array
@@ -45,7 +49,9 @@ class AdminBlogPostEdit extends Component
             'title' => ['required', 'string', 'max:255'],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string', 'min:10'],
-            'category_id' => ['required', 'exists:categories,id'],
+            'is_help' => ['boolean'],
+            'category_id' => [$this->is_help ? 'nullable' : 'required', 'nullable', 'exists:categories,id'],
+            'helpTopic' => [$this->is_help ? 'required' : 'nullable', 'string', 'max:100'],
             'tagsInput' => ['nullable', 'string', 'max:500'],
             'status' => ['required', 'in:draft,published,archived'],
             'featuredImage' => ['nullable', 'image', 'max:5120'], // 5MB max
@@ -72,7 +78,13 @@ class AdminBlogPostEdit extends Component
     {
         $this->validate();
 
-        $tagsString = implode(', ', array_values(array_filter(array_map('trim', explode(',', $this->tagsInput)))));
+        $tagsArray = array_values(array_filter(array_map('trim', explode(',', $this->tagsInput))));
+        if ($this->is_help && $this->helpTopic !== '') {
+            if (! in_array($this->helpTopic, $tagsArray, true)) {
+                array_unshift($tagsArray, $this->helpTopic);
+            }
+        }
+        $tagsString = implode(', ', $tagsArray);
 
         // Update slug if title changed
         $slug = $this->post->slug;
@@ -89,7 +101,8 @@ class AdminBlogPostEdit extends Component
         $nowPublished = $this->status === 'published';
 
         $this->post->update([
-            'category_id' => $this->category_id,
+            'category_id' => $this->is_help ? null : $this->category_id,
+            'is_help' => $this->is_help,
             'title' => $this->title,
             'slug' => $slug,
             'excerpt' => $this->excerpt ?: null,

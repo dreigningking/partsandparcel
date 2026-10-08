@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             DemoCouponsSeeder::class,
             DemoRequestAndResponseSeeder::class,
             PostsSeeder::class,
+            HelpArticlesSeeder::class,
             EngagementsSeeder::class,
             PromotionsSeeder::class,
             CartsAndOffersSeeder::class,

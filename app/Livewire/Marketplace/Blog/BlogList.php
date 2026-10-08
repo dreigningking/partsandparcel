@@ -51,7 +51,7 @@ class BlogList extends Component
 
     public function render()
     {
-        $posts = Post::query()
+        $posts = Post::blog()
             ->where('status', 'published')
             ->whereNotNull('published_at')
             ->with(['user', 'category', 'media'])
@@ -70,14 +70,14 @@ class BlogList extends Component
             ->paginate(9);
 
         $categories = Category::query()
-            ->whereHas('posts', fn ($q) => $q->where('status', 'published'))
-            ->withCount(['posts' => fn ($q) => $q->where('status', 'published')])
+            ->whereHas('posts', fn ($q) => $q->blog()->where('status', 'published'))
+            ->withCount(['posts' => fn ($q) => $q->blog()->where('status', 'published')])
             ->orderBy('name', 'asc')
             ->get();
 
         $featuredPost = null;
         if (empty($this->search) && empty($this->category) && empty($this->tag) && $this->getPage() === 1) {
-            $featuredPost = Post::query()
+            $featuredPost = Post::blog()
                 ->where('status', 'published')
                 ->whereNotNull('published_at')
                 ->with(['user', 'category', 'media'])

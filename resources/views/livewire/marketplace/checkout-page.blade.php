@@ -20,6 +20,26 @@
     </div>
   @endif
 
+  @if (session()->has('error'))
+    <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 font-bold text-xs flex items-center justify-between shadow-2xs">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-circle-xmark text-rose-600 text-base"></i>
+        <span>{{ session('error') }}</span>
+      </div>
+      <button onclick="this.parentElement.remove()" class="text-rose-700 hover:text-rose-900 cursor-pointer"><i class="fas fa-times"></i></button>
+    </div>
+  @endif
+
+  @if (session()->has('message') || session()->has('success'))
+    <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 font-bold text-xs flex items-center justify-between shadow-2xs">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-check-circle text-emerald-600 text-base"></i>
+        <span>{{ session('message') ?: session('success') }}</span>
+      </div>
+      <button onclick="this.parentElement.remove()" class="text-emerald-700 hover:text-emerald-900 cursor-pointer"><i class="fas fa-times"></i></button>
+    </div>
+  @endif
+
   <div class="grid lg:grid-cols-12 gap-8">
     
     <!-- LEFT CHECKOUT STEPS -->
@@ -202,8 +222,44 @@
             </div>
 
             @if ($paymentMethod === 'platform')
-              <div class="mt-3 pt-3 border-t border-slate-200/60 text-xs text-slate-700 space-y-2">
-                <p class="font-bold text-pp-800 flex items-center gap-1.5">
+              <div class="mt-3 pt-3 border-t border-slate-200/60 text-xs text-slate-700 space-y-3">
+                <!-- GATEWAY SELECTION -->
+                <div class="space-y-1.5" wire:click.stop>
+                  <span class="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">
+                    Choose Payment Gateway:
+                  </span>
+                  <div class="grid grid-cols-2 gap-2.5">
+                    <label class="p-3 rounded-xl border cursor-pointer flex items-center justify-between transition {{ $paymentProvider === 'paystack' ? 'border-pp-600 bg-white shadow-2xs ring-1 ring-pp-500' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300' }}">
+                      <div class="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="gateway_provider"
+                          value="paystack"
+                          wire:model.live="paymentProvider"
+                          class="accent-pp-600"
+                        />
+                        <span class="text-xs font-bold text-slate-900">Paystack</span>
+                      </div>
+                      <span class="text-[9px] font-extrabold text-slate-400 uppercase">Cards · Bank · USSD</span>
+                    </label>
+
+                    <label class="p-3 rounded-xl border cursor-pointer flex items-center justify-between transition {{ $paymentProvider === 'flutterwave' ? 'border-pp-600 bg-white shadow-2xs ring-1 ring-pp-500' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300' }}">
+                      <div class="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="gateway_provider"
+                          value="flutterwave"
+                          wire:model.live="paymentProvider"
+                          class="accent-pp-600"
+                        />
+                        <span class="text-xs font-bold text-slate-900">Flutterwave</span>
+                      </div>
+                      <span class="text-[9px] font-extrabold text-slate-400 uppercase">Cards · Mobile</span>
+                    </label>
+                  </div>
+                </div>
+
+                <p class="font-bold text-pp-800 flex items-center gap-1.5 pt-1">
                   <i class="fas fa-check-circle text-pp-600"></i> Why Pay via Parts &amp; Parcel Escrow?
                 </p>
                 <ul class="list-disc pl-5 space-y-1 text-[11px] text-slate-600">
@@ -372,13 +428,33 @@
 
         <!-- DYNAMIC ACTION BUTTON BASED ON PAYMENT METHOD -->
         @if ($paymentMethod === 'platform')
-          <button wire:click="placeOrder" class="w-full py-3.5 px-4 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs text-center block shadow-xs transition cursor-pointer">
-            Pay ₦{{ number_format($totalPayable) }} &amp; Place Order <i class="fas fa-arrow-right text-[10px] ml-1"></i>
+          <button 
+            type="button"
+            wire:click="placeOrder" 
+            wire:loading.attr="disabled"
+            class="w-full py-3.5 px-4 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs text-center block shadow-xs transition cursor-pointer disabled:opacity-50"
+          >
+            <span wire:loading.remove wire:target="placeOrder">
+              Pay ₦{{ number_format($totalPayable) }} with {{ ucfirst($paymentProvider) }} <i class="fas fa-arrow-right text-[10px] ml-1"></i>
+            </span>
+            <span wire:loading wire:target="placeOrder">
+              <i class="fas fa-spinner fa-spin mr-1"></i> Redirecting to {{ ucfirst($paymentProvider) }}...
+            </span>
           </button>
         @else
-          <button wire:click="placeOrder" class="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs text-center block shadow-xs transition cursor-pointer flex items-center justify-center gap-2">
-            <i class="fas fa-check-circle text-emerald-400"></i>
-            <span>Mark Payment Completed</span>
+          <button 
+            type="button"
+            wire:click="placeOrder" 
+            wire:loading.attr="disabled"
+            class="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs text-center block shadow-xs transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <span wire:loading.remove wire:target="placeOrder" class="flex items-center gap-2">
+              <i class="fas fa-check-circle text-emerald-400"></i>
+              <span>Generate Invoice for Direct Transfer</span>
+            </span>
+            <span wire:loading wire:target="placeOrder">
+              <i class="fas fa-spinner fa-spin mr-1"></i> Generating Invoice...
+            </span>
           </button>
         @endif
 

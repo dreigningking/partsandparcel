@@ -349,13 +349,13 @@
                   </span>
                 @endif
                 <span class="text-[10px] font-bold text-emerald-700 block">
-                  Quotes ready for review &amp; checkout
+                  Offers ready for review &amp; checkout
                 </span>
               </div>
             @else
               <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3 sm:px-4 text-left lg:text-right min-w-[190px] space-y-0.5">
                 <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
-                  Private Quotes
+                  Private Offers
                 </span>
                 <span class="text-xs font-bold text-slate-600 block">
                   Awaiting vendor proposals
@@ -381,7 +381,7 @@
             <span class="text-slate-300">·</span>
             <span class="flex items-center gap-1.5 font-bold {{ $hasOffers ? 'text-pp-700 font-extrabold' : 'text-slate-500' }}">
               <i class="fas fa-file-invoice-dollar {{ $hasOffers ? 'text-pp-600' : 'text-slate-400' }}"></i>
-              <span>{{ $offersCount }} {{ Str::plural('Vendor Quote', $offersCount) }}</span>
+              <span>{{ $offersCount }} {{ Str::plural('Vendor Offer', $offersCount) }}</span>
             </span>
           </div>
 
@@ -451,7 +451,7 @@
             <button
               type="button"
               wire:click="deleteRequest({{ $req->id }})"
-              wire:confirm="Are you sure you want to delete this community request? All related responses and quotes will also be removed."
+              wire:confirm="Are you sure you want to delete this community request? All related responses and offers will also be removed."
               class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
               title="Delete request"
             >
@@ -485,7 +485,7 @@
             @if (!empty($search) || $typeFilter !== 'all' || $categoryFilter !== 'all')
               Try clearing search terms or resetting the filter options above to see all your posted requests.
             @else
-              Can't find a specific spare part, component, or repair technician? Post what you're looking for to receive private quotes from verified vendors across the country!
+              Can't find a specific spare part, component, or repair technician? Post what you're looking for to receive private offers from verified vendors across the country!
             @endif
           </p>
         </div>

@@ -43,4 +43,32 @@ class Conversation extends Model
     {
         return $this->hasOne(ConversationMessage::class)->latestOfMany();
     }
+
+    public function isSupport(): bool
+    {
+        return is_null($this->contextable_type) || in_array($this->contextable_type, ['user', User::class]);
+    }
+
+    public function scopeSupport($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('contextable_type')
+              ->orWhereIn('contextable_type', ['user', User::class]);
+        });
+    }
+
+    /**
+     * Resolve the customer user associated with this support conversation.
+     */
+    public function getCustomerUserAttribute(): ?User
+    {
+        if ($this->contextable instanceof User) {
+            return $this->contextable;
+        }
+
+        $supportUser = User::getSupportUser();
+        $participant = $this->participants->firstWhere('user_id', '!=', $supportUser->id);
+
+        return $participant?->user ?? $this->creator;
+    }
 }

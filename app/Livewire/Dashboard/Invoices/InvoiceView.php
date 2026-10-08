@@ -19,6 +19,8 @@ use App\Models\Settlement;
 use App\Models\Shipment;
 use App\Models\WarrantyClaim;
 use App\Services\Payment\EscrowService;
+use App\Services\Payment\FlutterwaveService;
+use App\Services\Payment\PaystackService;
 use App\Services\PostSale\IssueResolutionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -1181,7 +1183,7 @@ class InvoiceView extends Component
         $this->resetErrorBag('couponCode');
     }
 
-    public function payWithPlatformEscrow(): void
+    public function payWithPlatformEscrow()
     {
         if (! $this->invoice || $this->invoice->status === 'paid' || $this->invoice->status === 'cancelled') {
             return;
@@ -1214,16 +1216,17 @@ class InvoiceView extends Component
             'discount' => $offerDiscount + $couponDisc,
             'total' => $totalPayable,
             'commission' => 0.00,
-            'status' => 'paid',
-            'paid_at' => now(),
         ]);
+
+        $provider = config('services.payment.default_gateway', 'paystack');
+        $reference = 'PAY-' . strtoupper(Str::random(12));
 
         $payment = Payment::create([
             'user_id' => $user->id,
             'paymentable_id' => $this->invoice->id,
             'paymentable_type' => Invoice::class,
-            'reference' => 'PAY-' . strtoupper(Str::random(12)),
-            'provider' => 'paystack',
+            'reference' => $reference,
+            'provider' => $provider,
             'status' => 'pending',
             'amount' => $totalPayable,
             'escrow_fee' => $escrowFee,
@@ -1238,14 +1241,52 @@ class InvoiceView extends Component
             ],
         ]);
 
-        app(EscrowService::class)->handlePaymentSuccessful($payment);
-
         if ($this->appliedCouponId) {
             Coupon::find($this->appliedCouponId)?->recordUsage();
         }
 
-        $this->invoice->refresh();
-        session()->flash('buyer_payment_success', 'Payment of ' . $this->invoice->currency_symbol . number_format($totalPayable) . ' confirmed with Parts & Parcel Escrow! Funds are securely locked in escrow pending shipment and inspection.');
+        // If 100% discount, mark successful without payment gateway
+        if ($totalPayable <= 0.0) {
+            app(EscrowService::class)->handlePaymentSuccessful($payment);
+            $this->invoice->refresh();
+            session()->flash('buyer_payment_success', 'Payment confirmed with Parts & Parcel Escrow! Funds are securely locked in escrow.');
+            return;
+        }
+
+        $callbackUrl = route('payment.callback', [
+            'reference' => $reference,
+            'provider' => $provider,
+        ]);
+
+        $authorizationUrl = null;
+        $gatewayKey = config("services.{$provider}.secret");
+
+        if (empty($gatewayKey) && (app()->isLocal() || app()->environment('testing'))) {
+            $authorizationUrl = route('payment.callback', [
+                'reference' => $reference,
+                'provider' => $provider,
+                'mock_success' => 1,
+            ]);
+        } else {
+            try {
+                if ($provider === 'flutterwave') {
+                    $response = app(FlutterwaveService::class)->initialize($payment, $callbackUrl);
+                    $authorizationUrl = $response['link'] ?? $response['authorization_url'] ?? null;
+                } else {
+                    $response = app(PaystackService::class)->initialize($payment, $callbackUrl);
+                    $authorizationUrl = $response['authorization_url'] ?? null;
+                }
+            } catch (\Throwable $e) {
+                session()->flash('error', 'Failed to communicate with payment gateway: ' . $e->getMessage());
+                return;
+            }
+        }
+
+        if ($authorizationUrl) {
+            return redirect()->away($authorizationUrl);
+        }
+
+        session()->flash('error', 'Could not initialize payment with ' . ucfirst($provider) . '. Please try again.');
     }
 
     public function confirmDirectTransferSent(): void
@@ -1317,7 +1358,9 @@ class InvoiceView extends Component
         if (! $invoiceSettlement && $this->invoice) {
             $invoiceSettlement = Settlement::with('payment')->where('invoice_id', $this->invoice->id)->first();
         }
-        $invoicePayment = $invoiceSettlement?->payment ?: $this->invoice?->payments()->whereIn('status', ['successful', 'paid', 'held_in_escrow'])->latest()->first();
+        $invoicePayment = $invoiceSettlement?->payment 
+            ?: $this->invoice?->payments()->whereIn('status', ['successful', 'paid', 'held_in_escrow'])->latest()->first()
+            ?: $this->invoice?->payments()->latest()->first();
 
         // Dynamic Tab Availability Flags
         $hasShipments = (bool) ($outboundShipment || $returnShipment || ($this->invoice && $this->invoice->items->whereIn('type', ['pickup', 'delivery', 'return'])->isNotEmpty()));

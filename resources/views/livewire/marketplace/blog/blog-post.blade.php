@@ -31,6 +31,10 @@
                         <i class="fas fa-bell text-amber-300"></i>
                         {{ $watchersCount }} {{ Str::plural('subscriber', $watchersCount) }}
                     </span>
+                    <span class="text-xs text-pp-200 flex items-center gap-1.5">
+                        <i class="fas fa-thumbs-up text-pp-300"></i>
+                        {{ $likesCount }} {{ Str::plural('helpful', $likesCount) }}
+                    </span>
                 </div>
 
                 <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
@@ -100,35 +104,55 @@
                         </div>
                     @endif
 
-                    <!-- SHARE BAR -->
+                    <!-- SHARE & REACTION BAR -->
                     <div class="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
-                        <span class="text-xs font-extrabold text-slate-500">Share this guide with technicians &amp; colleagues:</span>
-                        <div class="flex items-center gap-2">
-                            <a
-                                href="https://twitter.com/intent/tweet?text={{ urlencode($post->title) }}&url={{ urlencode(request()->url()) }}"
-                                target="_blank"
-                                class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 grid place-items-center text-xs transition"
-                                title="Share on X"
-                            >
-                                <i class="fab fa-x-twitter"></i>
-                            </a>
-                            <a
-                                href="https://wa.me/?text={{ urlencode($post->title . ' ' . request()->url()) }}"
-                                target="_blank"
-                                class="w-8 h-8 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 grid place-items-center text-xs transition"
-                                title="Share on WhatsApp"
-                            >
-                                <i class="fab fa-whatsapp"></i>
-                            </a>
-                            <button
-                                type="button"
-                                onclick="navigator.clipboard.writeText(window.location.href); alert('Article link copied to clipboard!');"
-                                class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
-                            >
-                                <i class="fas fa-link text-[11px]"></i>
-                                <span>Copy Link</span>
-                            </button>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="text-xs font-extrabold text-slate-500">Share this guide:</span>
+                            <div class="flex items-center gap-2">
+                                <a
+                                    href="https://twitter.com/intent/tweet?text={{ urlencode($post->title) }}&url={{ urlencode(request()->url()) }}"
+                                    target="_blank"
+                                    class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 grid place-items-center text-xs transition"
+                                    title="Share on X"
+                                >
+                                    <i class="fab fa-x-twitter"></i>
+                                </a>
+                                <a
+                                    href="https://wa.me/?text={{ urlencode($post->title . ' ' . request()->url()) }}"
+                                    target="_blank"
+                                    class="w-8 h-8 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-800 grid place-items-center text-xs transition"
+                                    title="Share on WhatsApp"
+                                >
+                                    <i class="fab fa-whatsapp"></i>
+                                </a>
+                                <button
+                                    type="button"
+                                    onclick="navigator.clipboard.writeText(window.location.href); alert('Article link copied to clipboard!');"
+                                    class="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs transition cursor-pointer flex items-center gap-1.5"
+                                >
+                                    <i class="fas fa-link text-[11px]"></i>
+                                    <span>Copy Link</span>
+                                </button>
+                            </div>
                         </div>
+
+                        @auth
+                            <!-- HELPFUL REACTION BUTTON -->
+                            <div class="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    wire:click="toggleHelpful"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer {{ $isLiked ? 'bg-pp-100 text-pp-800 border border-pp-200 font-extrabold shadow-2xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-transparent' }}"
+                                    title="{{ $isLiked ? 'Marked as helpful (Click to unlike)' : 'Mark as helpful' }}"
+                                >
+                                    <i class="{{ $isLiked ? 'fas text-pp-600' : 'far text-slate-400' }} fa-thumbs-up text-xs"></i>
+                                    <span>Helpful</span>
+                                    <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black {{ $isLiked ? 'bg-pp-200 text-pp-900' : 'bg-white text-slate-700 shadow-2xs' }}">
+                                        {{ $likesCount }}
+                                    </span>
+                                </button>
+                            </div>
+                        @endauth
                     </div>
                 </article>
 
@@ -321,6 +345,24 @@
                             </a>
                         @endauth
                     @endif
+
+                    @auth
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-600">Did you find this helpful?</span>
+                            <button
+                                type="button"
+                                wire:click="toggleHelpful"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer {{ $isLiked ? 'bg-pp-100 text-pp-800 border border-pp-200 font-extrabold shadow-2xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-transparent' }}"
+                                title="{{ $isLiked ? 'Marked as helpful (Click to unlike)' : 'Mark as helpful' }}"
+                            >
+                                <i class="{{ $isLiked ? 'fas text-pp-600' : 'far text-slate-400' }} fa-thumbs-up text-xs"></i>
+                                <span>Helpful</span>
+                                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black {{ $isLiked ? 'bg-pp-200 text-pp-900' : 'bg-white text-slate-700 shadow-2xs' }}">
+                                    {{ $likesCount }}
+                                </span>
+                            </button>
+                        </div>
+                    @endauth
                 </div>
 
                 <!-- 2. AUTHOR CARD -->

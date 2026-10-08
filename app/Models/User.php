@@ -251,6 +251,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Listing::class);
     }
 
+    public function likes(): HasMany
+    {
+        return $this->hasMany(Like::class);
+    }
+
     public function buyerCarts(): HasMany
     {
         return $this->hasMany(Cart::class, 'buyer_id');
