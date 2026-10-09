@@ -15,7 +15,7 @@ return new class extends Migration {
                 $table->foreignId('receiver_id')->nullable()->constrained('users')->nullOnDelete();
                 $table->string('provider_name')->nullable();
                 $table->string('tracking_number')->nullable();
-                $table->string('status')->default('pending');
+                $table->string('status')->default('pending'); // pending, dispatched, in_transit, out_for_delivery, delivered, failed, returned
                 $table->foreignId('origin_location_id')->nullable()->constrained('locations')->nullOnDelete();
                 $table->string('origin_contact_name')->nullable();
                 $table->string('origin_contact_phone')->nullable();

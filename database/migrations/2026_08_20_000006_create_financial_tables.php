@@ -38,7 +38,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('subscription_plan_id')->constrained()->restrictOnDelete();
-            $table->string('status')->default('active');
+            $table->string('status')->default('active'); // active, expired, cancelled, past_due, pending
             $table->timestamp('starts_at');
             $table->timestamp('ends_at');
             $table->unsignedInteger('response_limit');
@@ -54,7 +54,7 @@ return new class extends Migration {
             $table->morphs('paymentable');
             $table->string('reference')->unique();
             $table->string('provider')->nullable(); //paystack, flutterwave
-            $table->string('status')->default('pending');
+            $table->string('status')->default('pending'); // pending, successful, failed, refunded, reversed
             $table->decimal('amount', 15, 2);
             $table->decimal('escrow_fee', 15, 2)->default(0.00);
             $table->string('currency', 3)->default('NGN');
@@ -82,7 +82,7 @@ return new class extends Migration {
             $table->foreignId('payment_id')->nullable()->constrained('payments')->nullOnDelete();
             $table->decimal('amount', 15, 2)->default(0);
             $table->string('currency', 3)->default('NGN');
-            $table->string('status')->default('pending');
+            $table->string('status')->default('pending'); // pending, eligible, disputed, settled, cancelled
             $table->string('payout_reference')->nullable();
             $table->string('provider')->nullable();
             $table->json('metadata')->nullable();
@@ -100,7 +100,7 @@ return new class extends Migration {
             $table->string('reference')->unique();
             $table->decimal('amount', 15, 2);
             $table->string('currency', 3)->default('NGN');
-            $table->string('status')->default('pending');
+            $table->string('status')->default('pending'); // pending, processing, successful, failed
             $table->string('provider')->nullable();
             $table->timestamp('paid_at')->nullable();
             $table->json('metadata')->nullable();
@@ -123,7 +123,7 @@ return new class extends Migration {
             $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('seller_id')->nullable()->constrained('users')->nullOnDelete();
             $table->decimal('amount', 15, 2);
-            $table->string('status')->default('pending');
+            $table->string('status')->default('pending'); // pending, processing, completed, failed, rejected
             $table->string('reason')->nullable();
             $table->timestamp('processed_at')->nullable();
             $table->timestamps();

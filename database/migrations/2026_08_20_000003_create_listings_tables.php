@@ -47,7 +47,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete();
-            $table->string('status')->default('active');
+            $table->string('status')->default('active'); // active, ordered, abandoned
             $table->timestamps();
             $table->index(['buyer_id', 'seller_id', 'status']);
         });

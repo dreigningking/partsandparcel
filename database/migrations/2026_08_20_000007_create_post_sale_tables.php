@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->foreignId('invoice_id')->constrained()->cascadeOnDelete();
             $table->foreignId('reported_by')->constrained('users')->cascadeOnDelete();
             $table->string('type');
-            $table->string('status')->default('open');
+            $table->string('status')->default('open'); // open, resolved, closed, escalated
             $table->text('description');
             $table->timestamp('resolved_at')->nullable();
             $table->timestamps();
@@ -53,7 +53,7 @@ return new class extends Migration {
             $table->foreignId('warranty_claim_id')->nullable()->constrained('warranty_claims')->nullOnDelete();
             $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete();
-            $table->string('status')->default('pending');
+            $table->string('status')->default('pending'); // pending, approved, shipped, received, accepted, rejected, disputed, expired, cancelled
             $table->string('delivery_method')->nullable(); // pickup|dropoff|shipment
             $table->foreignId('shipment_id')->nullable()->constrained('shipments')->nullOnDelete();
             $table->text('notes')->nullable();
@@ -71,7 +71,7 @@ return new class extends Migration {
             $table->foreignId('return_id')->constrained()->cascadeOnDelete();
             $table->foreignId('invoice_item_id')->nullable()->constrained()->nullOnDelete();
             $table->unsignedInteger('quantity')->default(1);
-            $table->string('condition_status')->nullable();
+            $table->string('condition_status')->nullable(); // working, damaged, opened, tampered, unaltered
             $table->text('notes')->nullable();
             $table->timestamps();
         });
@@ -83,7 +83,7 @@ return new class extends Migration {
             $table->foreignId('warranty_claim_id')->nullable()->constrained('warranty_claims')->nullOnDelete();
             $table->foreignId('buyer_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('seller_id')->constrained('users')->cascadeOnDelete();
-            $table->string('status')->default('pending');
+            $table->string('status')->default('pending'); // pending, approved, sent, received, accepted, rejected, disputed, cancelled
             $table->string('delivery_method')->nullable();
             $table->foreignId('shipment_id')->nullable()->constrained('shipments')->nullOnDelete();
             $table->text('notes')->nullable();
@@ -125,7 +125,7 @@ return new class extends Migration {
             $table->boolean('require_return')->default(false);
             $table->text('resolution_notes')->nullable();
             $table->text('internal_notes')->nullable();
-            $table->string('status')->default('open');
+            $table->string('status')->default('open'); // open, under_review, evidence_required, resolved, closed
             $table->text('reason');
             $table->text('respondent_defense')->nullable();
             $table->timestamp('respondent_defended_at')->nullable();

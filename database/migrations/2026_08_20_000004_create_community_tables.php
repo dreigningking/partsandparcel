@@ -19,7 +19,7 @@ return new class extends Migration {
             $table->string('title');
             $table->text('body');
             $table->text('attachments')->nullable();
-            $table->string('status')->default('open');
+            $table->string('status')->default('open'); // open, resolved, closed, fulfilled
             $table->timestamps();
             $table->index(['category_id', 'status']);
             $table->index(['model_id', 'status']);
@@ -32,7 +32,7 @@ return new class extends Migration {
             $table->foreignId('discussion_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->text('body')->nullable();
-            $table->string('status')->default('visible');
+            $table->string('status')->default('visible'); // visible, hidden, flagged, deleted
             $table->timestamps();
             $table->index(['discussion_id', 'created_at']);
             $table->index(['user_id', 'created_at']);
@@ -50,7 +50,7 @@ return new class extends Migration {
             $table->enum('delivery_method', ['buyer_responsible','seller_responsible','platform_responsible'])->nullable();
             $table->decimal('discount', 15, 2)->default(0);
             $table->text('terms')->nullable();
-            $table->string('status')->default('pending');
+            $table->string('status')->default('pending'); // pending, accepted, countered, declined, expired
             $table->timestamp('expires_at')->nullable();
             $table->timestamps();
             $table->index(['discussion_id', 'status']);

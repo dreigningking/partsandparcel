@@ -44,7 +44,7 @@ return new class extends Migration {
             $table->string('year')->nullable();
             $table->string('name')->nullable();
             $table->enum('item_type', ['whole', 'part','scrap'])->default('whole');
-            $table->string('condition_status');
+            $table->string('condition_status'); // new, used, refurbished, faulty, working
             $table->text('condition_notes')->nullable();
             $table->text('description')->nullable();
             $table->softDeletes();
