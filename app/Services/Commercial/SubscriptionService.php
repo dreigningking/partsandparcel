@@ -52,7 +52,11 @@ class SubscriptionService
 
         // 3. Total listings altogether limit and usage
         $listingLimit = (int) ($plan?->listing_limit ?: ($plan?->features['listing_limit'] ?? 10));
-        $totalListingsCount = Listing::where('user_id', $user->id)->count();
+        $totalListingsCount = Listing::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->where('is_published', true)
+            ->whereRaw('(COALESCE(quantity, 0) - COALESCE(reserved_quantity, 0) - COALESCE(sold_quantity, 0)) > 0')
+            ->count();
         $listingsRemaining = max(0, $listingLimit - $totalListingsCount);
         $canCreateListing = $totalListingsCount < $listingLimit;
 
@@ -64,9 +68,10 @@ class SubscriptionService
         return [
             'plan_id' => $plan?->id,
             'plan_name' => $plan?->name ?? 'Starter Free',
-            'is_paid' => $activeSub !== null && (float) ($plan?->price ?? 0) > 0,
+            'is_paid' => $activeSub !== null && ($plan ? ! $plan->isFree() : false),
             'is_active' => $activeSub !== null ? $activeSub->isActive() : true,
             'subscription' => $activeSub,
+            'has_disassembly_tool' => (bool) ($plan?->features['disassembly_tool'] ?? false),
 
             // Community Requests
             'daily_request_limit' => $dailyRequestLimit,
@@ -132,8 +137,12 @@ class SubscriptionService
         $plan = SubscriptionPlan::findOrFail($planId);
         $provider = $provider ?: config('services.payment.default_gateway', 'paystack');
 
+        $currency = $user->currency ?? session('current_location.currency', 'NGN');
+        $countryCode = $user->country_code ?? session('current_location.country_code', 'NG');
+        $monthlyPrice = (float) $plan->getMonthlyPrice($currency, $countryCode);
+
         // If plan is Free, activate immediately without checkout gateway
-        if ((float) $plan->price <= 0.0) {
+        if ($plan->isFree($currency, $countryCode)) {
             $subscription = $this->activateFreeSubscription($user, $plan);
             return [
                 'status' => 'success',
@@ -147,7 +156,7 @@ class SubscriptionService
         if ($customAmount !== null) {
             $payableAmount = max(0.0, $customAmount);
         } else {
-            $baseTotal = (float) $plan->price * max(1, $months);
+            $baseTotal = $monthlyPrice * max(1, $months);
             $payableAmount = max(0.0, $baseTotal - $durationDiscount - $promoDiscount);
         }
 
@@ -156,11 +165,13 @@ class SubscriptionService
             $reference = 'FREE-' . strtoupper(Str::random(10));
             $payment = Payment::create([
                 'user_id' => $user->id,
+                'paymentable_type' => SubscriptionPlan::class,
+                'paymentable_id' => $plan->id,
                 'reference' => $reference,
                 'provider' => $provider,
                 'status' => 'successful',
                 'amount' => 0.00,
-                'currency' => 'NGN',
+                'currency' => $currency,
                 'paid_at' => now(),
                 'metadata' => [
                     'payment_type' => 'subscription',
@@ -187,11 +198,13 @@ class SubscriptionService
 
         $payment = Payment::create([
             'user_id' => $user->id,
+            'paymentable_type' => SubscriptionPlan::class,
+            'paymentable_id' => $plan->id,
             'reference' => $reference,
             'provider' => $provider,
             'status' => 'pending',
             'amount' => $payableAmount,
-            'currency' => 'NGN',
+            'currency' => $currency,
             'metadata' => [
                 'payment_type' => 'subscription',
                 'plan_id' => $plan->id,
@@ -262,7 +275,8 @@ class SubscriptionService
         ]);
 
         $payment->update([
-            'subscription_id' => $subscription->id,
+            'paymentable_type' => Subscription::class,
+            'paymentable_id' => $subscription->id,
             'status' => 'successful',
             'paid_at' => now(),
         ]);

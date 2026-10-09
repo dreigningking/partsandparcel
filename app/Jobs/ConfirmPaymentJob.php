@@ -11,6 +11,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ConfirmPaymentJob implements ShouldQueue
@@ -31,49 +33,62 @@ class ConfirmPaymentJob implements ShouldQueue
         PaystackService $paystackService,
         FlutterwaveService $flutterwaveService
     ): void {
-        $payment = Payment::where('reference', $this->reference)->first();
+        $lockKey = "confirm_payment_{$this->reference}";
 
-        if (! $payment) {
-            Log::error("ConfirmPaymentJob: Payment reference '{$this->reference}' not found.");
-            return;
-        }
+        try {
+            Cache::lock($lockKey, 30)->block(10, function () use (
+                $escrowService,
+                $paystackService,
+                $flutterwaveService
+            ) {
+                $payment = Payment::where('reference', $this->reference)->first();
 
-        if ($payment->status === 'successful') {
-            Log::info("ConfirmPaymentJob: Payment '{$this->reference}' already marked successful.");
-            return;
-        }
+                if (! $payment) {
+                    Log::error("ConfirmPaymentJob: Payment reference '{$this->reference}' not found.");
+                    return;
+                }
 
-        $provider = strtolower($this->provider ?? $payment->provider ?? 'paystack');
-        $verification = [];
+                if ($payment->status === 'successful') {
+                    Log::info("ConfirmPaymentJob: Payment '{$this->reference}' already marked successful.");
+                    return;
+                }
 
-        if (! empty($this->gatewayData)) {
-            // Use webhook-supplied data if verified
-            $verification = $this->gatewayData;
-            $isSuccess = ($verification['status'] ?? '') === 'success' || ($verification['status'] ?? '') === 'successful';
-        } else {
-            // Query gateway API directly
-            if ($provider === 'flutterwave') {
-                $verification = $flutterwaveService->verify($this->reference);
-            } else {
-                $verification = $paystackService->verify($this->reference);
-            }
+                $provider = strtolower($this->provider ?? $payment->provider ?? 'paystack');
+                $verification = [];
 
-            $isSuccess = ! empty($verification['success']);
-        }
+                if (! empty($this->gatewayData)) {
+                    // Use webhook-supplied data if verified
+                    $verification = $this->gatewayData;
+                    $isSuccess = ($verification['status'] ?? '') === 'success' || ($verification['status'] ?? '') === 'successful';
+                } else {
+                    // Query gateway API directly
+                    if ($provider === 'flutterwave') {
+                        $verification = $flutterwaveService->verify($this->reference);
+                    } else {
+                        $verification = $paystackService->verify($this->reference);
+                    }
 
-        if ($isSuccess) {
-            if (($payment->metadata['payment_type'] ?? '') === 'subscription') {
-                app(\App\Services\Commercial\SubscriptionService::class)->activateSubscription($payment);
-            } else {
-                $escrowService->handlePaymentSuccessful($payment, $verification);
-            }
-            Log::info("ConfirmPaymentJob: Payment '{$this->reference}' verified and handled successfully.");
-        } else {
-            Log::warning("ConfirmPaymentJob: Verification failed for reference '{$this->reference}'. Provider: {$provider}.");
-            $payment->update([
-                'status' => 'failed',
-                'metadata' => array_merge($payment->metadata ?? [], ['failed_verification' => $verification]),
-            ]);
+                    $isSuccess = ! empty($verification['success']);
+                }
+
+                if ($isSuccess) {
+                    if (($payment->metadata['payment_type'] ?? '') === 'subscription') {
+                        app(\App\Services\Commercial\SubscriptionService::class)->activateSubscription($payment);
+                    } else {
+                        $escrowService->handlePaymentSuccessful($payment, $verification);
+                    }
+                    Log::info("ConfirmPaymentJob: Payment '{$this->reference}' verified and handled successfully.");
+                } else {
+                    Log::warning("ConfirmPaymentJob: Verification failed for reference '{$this->reference}'. Provider: {$provider}.");
+                    $payment->update([
+                        'status' => 'failed',
+                        'metadata' => array_merge($payment->metadata ?? [], ['failed_verification' => $verification]),
+                    ]);
+                }
+            });
+        } catch (LockTimeoutException $e) {
+            Log::warning("ConfirmPaymentJob: Lock timeout for reference '{$this->reference}'. Releasing job to queue.");
+            $this->release(5);
         }
     }
 }

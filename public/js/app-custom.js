@@ -391,3 +391,18 @@ function toggleMobileCat(catId, e) {
 function handleMobileAccountClick() {
     toggleMobileSidebar();
 }
+
+// 9. LIVEWIRE ECHO SOCKET ID SANITIZER
+// Prevents sending literal string "undefined" as X-Socket-ID when WebSocket is connecting or offline
+document.addEventListener('livewire:init', () => {
+    if (window.Livewire) {
+        Livewire.hook('request', ({ options }) => {
+            if (options && options.headers && options.headers['X-Socket-ID']) {
+                const sId = String(options.headers['X-Socket-ID']).trim();
+                if (!sId || sId === 'undefined' || sId === 'null' || !/^\d+\.\d+$/.test(sId)) {
+                    delete options.headers['X-Socket-ID'];
+                }
+            }
+        });
+    }
+});

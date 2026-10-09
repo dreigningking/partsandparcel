@@ -262,7 +262,7 @@ class MediaSeeder extends Seeder
 
         $conversation = Conversation::firstOrCreate(
             [
-                'contextable_type' => 'listing',
+                'contextable_type' => Listing::class,
                 'contextable_id' => $listing->id,
                 'created_by' => $buyer->id,
             ]

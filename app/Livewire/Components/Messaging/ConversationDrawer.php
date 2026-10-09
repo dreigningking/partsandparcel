@@ -23,10 +23,15 @@ class ConversationDrawer extends Component
 
     public function getListeners()
     {
+        $userId = Auth::id();
         $listeners = [
             'open-conversation' => 'loadConversation',
             'close-conversation' => 'closeDrawer',
         ];
+
+        if ($userId) {
+            $listeners["echo-private:user.{$userId},MessageSent"] = 'onMessageReceived';
+        }
 
         if ($this->conversationId && is_numeric($this->conversationId)) {
             $listeners["echo-private:conversation.{$this->conversationId},MessageSent"] = 'onMessageReceived';
@@ -53,11 +58,11 @@ class ConversationDrawer extends Component
                     return;
                 }
 
-                $peer = $conv->participants->where('user_id', '!=', $user?->id)->first()?->user;
+                $peer = $conv->getOtherParticipant($user);
                 $this->recipientId = $peer?->id;
-                $this->recipientName = $peer?->business_name ?: $peer?->name ?: 'Vendor';
+                $this->recipientName = $conv->getOtherPartyName($user);
                 $this->avatarLetter = strtoupper(substr($this->recipientName, 0, 1));
-                $this->itemTitle = $conv->contextable?->title ?: 'Discussion Inquiry';
+                $this->itemTitle = $conv->contextable?->title ?: ($conv->isSupport() ? 'Official Support Desk' : 'Discussion Inquiry');
 
                 // Mark unread messages sent by peer as read
                 if ($user) {
@@ -70,8 +75,8 @@ class ConversationDrawer extends Component
                     $this->dispatch('messages-marked-read');
                 }
 
-                // Load messages
-                $this->messages = $conv->messages->map(function ($msg) use ($user) {
+                // Load messages in entry order (chronological)
+                $this->messages = $conv->messages->sortBy('created_at')->values()->map(function ($msg) use ($user) {
                     $isMe = $user && ($msg->sender_id === $user->id);
                     return [
                         'id' => $msg->id,
@@ -136,8 +141,18 @@ class ConversationDrawer extends Component
                     'read_at' => null,
                 ]);
 
-                // Broadcast real-time event to Reverb
-                broadcast(new MessageSent($msg, $this->recipientId))->toOthers();
+                // Broadcast real-time event to Reverb safely
+                try {
+                    $socketId = request()->header('X-Socket-ID');
+                    $pendingBroadcast = broadcast(new MessageSent($msg, $this->recipientId));
+                    if ($socketId && is_string($socketId) && preg_match('/\A\d+\.\d+\z/', $socketId)) {
+                        $pendingBroadcast->toOthers();
+                    }
+                    // Explicitly destroy PendingBroadcast instance so __destruct() dispatches inside try-catch
+                    unset($pendingBroadcast);
+                } catch (\Throwable $e) {
+                    logger()->warning('Realtime message broadcast skipped or failed: ' . $e->getMessage());
+                }
 
                 $this->messages[] = [
                     'id' => $msg->id,
@@ -164,19 +179,33 @@ class ConversationDrawer extends Component
 
     public function onMessageReceived($payload)
     {
-        if (isset($payload['sender_id']) && Auth::check() && $payload['sender_id'] === Auth::id()) {
+        if (! $payload) {
+            return;
+        }
+
+        if (isset($payload['sender_id']) && Auth::check() && (int) $payload['sender_id'] === (int) Auth::id()) {
+            return;
+        }
+
+        // Only append if this drawer has this conversation currently loaded
+        if (! $this->conversationId || ! isset($payload['conversation_id']) || (int) $payload['conversation_id'] !== (int) $this->conversationId) {
+            return;
+        }
+
+        // Deduplicate if already present
+        if (! empty($payload['id']) && collect($this->messages)->contains('id', $payload['id'])) {
             return;
         }
 
         $this->messages[] = [
             'id' => $payload['id'] ?? null,
             'sender' => 'them',
-            'text' => $payload['text'] ?? '',
+            'text' => $payload['body'] ?? ($payload['text'] ?? ''),
             'time' => $payload['time'] ?? 'Just now',
         ];
 
         // If open, automatically mark as read
-        if ($this->isOpen && !empty($payload['id'])) {
+        if ($this->isOpen && ! empty($payload['id'])) {
             ConversationMessage::where('id', $payload['id'])->update(['read_at' => now()]);
             $this->dispatch('messages-marked-read');
         }

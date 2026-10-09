@@ -189,7 +189,7 @@ class SettingsImpactWorkflowTest extends TestCase
             'invoice_number' => 'INV-TEST-PICKUP',
             'buyer_id' => $buyer->id,
             'seller_id' => $seller->id,
-            'delivery_method' => 'self_pickup',
+            'delivery_method' => 'buyer_responsible',
             'payment_method' => 'platform',
             'subtotal' => 15000,
             'total' => 15500,

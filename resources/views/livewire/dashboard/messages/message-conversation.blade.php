@@ -1,5 +1,4 @@
 <div class="space-y-8">
-  
   <div class="bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden flex flex-col h-[calc(100vh-140px)] min-h-[680px]">
     
     <!-- CHAT HEADER BAR -->
@@ -12,139 +11,104 @@
         </a>
 
         <div class="relative shrink-0">
-          <span class="w-10 h-10 rounded-full bg-pp-100 text-pp-700 font-extrabold grid place-items-center text-sm">A</span>
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white absolute bottom-0 right-0"></span>
+          @if($isSupport)
+            <span class="w-10 h-10 rounded-full bg-pp-100 text-pp-700 font-extrabold grid place-items-center text-base shadow-2xs">🎧</span>
+          @else
+            <span class="w-10 h-10 rounded-full bg-pp-100 text-pp-700 font-extrabold grid place-items-center text-sm shadow-2xs">
+              {{ $avatarLetter }}
+            </span>
+          @endif
         </div>
 
         <div class="min-w-0">
           <div class="flex items-center gap-1.5">
-            <h3 class="font-extrabold text-sm text-slate-950 truncate">Adam Computers</h3>
-            <span class="px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 text-[9px] font-extrabold">VERIFIED SELLER</span>
+            <h3 class="font-extrabold text-sm text-slate-950 truncate">{{ $otherPartyName }}</h3>
+            @if($isSupport)
+              <span class="px-1.5 py-0.2 rounded bg-pp-100 text-pp-800 text-[9px] font-extrabold uppercase">OFFICIAL SUPPORT</span>
+            @endif
           </div>
-          <p class="text-[11px] text-slate-500 truncate">Computer Village, Ikeja, Lagos · Active 5m ago</p>
+          <p class="text-[11px] text-slate-500 truncate">{{ $contextTitle }}</p>
         </div>
       </div>
 
       <div class="flex items-center gap-2 shrink-0">
-        <a href="{{ route('listing-details', $conversation->listing_id ?? 1) }}" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-pp-300 text-slate-700 font-bold text-xs transition">
-          <i class="fas fa-laptop text-pp-600"></i> View Listing
-        </a>
-        <button class="p-2 rounded-xl hover:bg-slate-100 text-slate-500 text-sm cursor-pointer" title="More options">
-          <i class="fas fa-ellipsis-v"></i>
-        </button>
+        @if($conversation && $conversation->contextable instanceof \App\Models\Listing)
+          <a href="{{ route('listing-details', $conversation->contextable->id) }}" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-pp-300 text-slate-700 font-bold text-xs transition">
+            <i class="fas fa-box text-pp-600"></i> View Listing
+          </a>
+        @elseif($conversation && $conversation->contextable instanceof \App\Models\Discussion)
+          <a href="{{ route('community.request', $conversation->contextable->id) }}" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:border-pp-300 text-slate-700 font-bold text-xs transition">
+            <i class="fas fa-comments text-pp-600"></i> View Request
+          </a>
+        @endif
       </div>
     </div>
 
     <!-- ITEM CONTEXT BANNER -->
-    <div class="px-4 sm:px-6 py-2.5 bg-pp-50/80 border-b border-pp-100 flex items-center justify-between gap-3 text-xs shrink-0">
-      <div class="flex items-center gap-2.5 min-w-0">
-        <span class="text-xl">💻</span>
-        <div class="truncate">
-          <span class="font-extrabold text-slate-900">HP EliteBook 840 G5 Laptop</span>
-          <span class="text-slate-500 ml-1">· Intel i5, 8GB RAM, 256GB SSD</span>
+    @if($isSupport)
+      <div class="px-4 sm:px-6 py-2.5 bg-pp-50 border-b border-pp-100 flex items-center justify-between gap-3 text-xs shrink-0">
+        <div class="flex items-center gap-2 text-slate-700 font-medium">
+          <span class="text-base">🛡️</span>
+          <span>Official Customer Support. Our support specialists are here to assist with escrow, disputes, or requests.</span>
         </div>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <span class="font-black text-slate-950 text-sm">₦280,000</span>
-        <a href="{{ route('cart') }}" class="px-3 py-1 rounded-lg bg-pp-600 hover:bg-pp-700 text-white font-bold text-[11px] transition">Make Package Offer</a>
-      </div>
-    </div>
-
-    <!-- CHAT MESSAGES STREAM -->
-    <div class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/50">
-      
-      <div class="text-center my-2">
-        <span class="px-3 py-1 rounded-full bg-slate-200/70 text-slate-600 text-[10px] font-bold uppercase tracking-wider">Today, August 25</span>
-      </div>
-
-      <!-- MESSAGE 1: BUYER -->
-      <div class="flex justify-start">
-        <div class="max-w-[85%] sm:max-w-[70%] space-y-1">
-          <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-xs p-3.5 text-xs text-slate-800 shadow-2xs leading-relaxed">
-            Hi Adam, is this EliteBook 840 G5 still available at your Computer Village shop? I need a clean unit for client work.
+    @elseif($conversation && $conversation->contextable)
+      <div class="px-4 sm:px-6 py-2.5 bg-pp-50/80 border-b border-pp-100 flex items-center justify-between gap-3 text-xs shrink-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="text-xl">💬</span>
+          <div class="truncate">
+            <span class="font-extrabold text-slate-900">{{ $conversation->contextable->title ?? 'Item Inquiry' }}</span>
           </div>
-          <span class="text-[10px] text-slate-400 block px-1">1:45 PM</span>
         </div>
       </div>
+    @endif
 
-      <!-- MESSAGE 2: SELLER -->
-      <div class="flex justify-end">
-        <div class="max-w-[85%] sm:max-w-[70%] space-y-1">
-          <div class="bg-pp-600 text-white rounded-2xl rounded-tr-xs p-3.5 text-xs shadow-2xs leading-relaxed">
-            Hello! Yes, it is fully tested and available at Stall 14, Otigba Street, opposite Slot.
+    <!-- CHAT MESSAGES STREAM (ARRANGED IN ORDER OF ENTRY) -->
+    <div class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/50 custom-scrollbar">
+      @forelse($messages as $msg)
+        @php
+          $isMe = ($msg['sender'] === 'me');
+        @endphp
+        <div class="flex {{ $isMe ? 'justify-end' : 'justify-start' }}">
+          <div class="max-w-[85%] sm:max-w-[70%] space-y-1">
+            <div class="p-3.5 text-xs shadow-2xs leading-relaxed rounded-2xl {{ $isMe ? 'bg-pp-600 text-white rounded-tr-xs' : 'bg-white border border-slate-200 text-slate-800 rounded-tl-xs' }}">
+              @if(! $isMe)
+                <div class="text-[10px] font-bold text-slate-400 mb-1">
+                  {{ $msg['sender_name'] ?? $otherPartyName }}
+                </div>
+              @endif
+              <div class="whitespace-pre-line">{{ $msg['body'] ?? $msg['text'] ?? '' }}</div>
+            </div>
+            <span class="text-[10px] text-slate-400 block px-1 {{ $isMe ? 'text-right' : 'text-left' }}">
+              {{ $msg['time'] ?? 'Just now' }}
+            </span>
           </div>
-          <span class="text-[10px] text-slate-400 text-right block px-1">1:48 PM</span>
         </div>
-      </div>
-
-      <!-- MESSAGE 3: SELLER -->
-      <div class="flex justify-end">
-        <div class="max-w-[85%] sm:max-w-[70%] space-y-1">
-          <div class="bg-pp-600 text-white rounded-2xl rounded-tr-xs p-3.5 text-xs shadow-2xs leading-relaxed">
-            It comes with clean original HP charger and 14-day warranty for testing.
-          </div>
-          <span class="text-[10px] text-slate-400 text-right block px-1">1:49 PM</span>
+      @empty
+        <div class="p-12 text-center text-slate-400 text-xs">
+          <i class="far fa-comments text-3xl text-slate-300 block mb-2"></i>
+          No messages yet. Send a message to start this conversation!
         </div>
-      </div>
-
-      <!-- MESSAGE 4: BUYER -->
-      <div class="flex justify-start">
-        <div class="max-w-[85%] sm:max-w-[70%] space-y-1">
-          <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-xs p-3.5 text-xs text-slate-800 shadow-2xs leading-relaxed">
-            Great! Can you accept ₦260,000 if I come for pickup this afternoon?
-          </div>
-          <span class="text-[10px] text-slate-400 block px-1">2:10 PM</span>
-        </div>
-      </div>
-
-      <!-- MESSAGE 5: SELLER (ACCEPTED OFFER) -->
-      <div class="flex justify-end">
-        <div class="max-w-[85%] sm:max-w-[70%] space-y-1">
-          <div class="bg-pp-600 text-white rounded-2xl rounded-tr-xs p-3.5 text-xs shadow-2xs leading-relaxed">
-            I can accept ₦260,000 if you can pick up today at Stall 14 before 5 PM.
-          </div>
-          <span class="text-[10px] text-slate-400 text-right block px-1">2:14 PM</span>
-        </div>
-      </div>
-
-      <!-- SYSTEM CALLOUT NOTICE -->
-      <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1 my-2">
-        <div class="flex items-center justify-between font-extrabold text-emerald-800">
-          <span class="flex items-center gap-1.5"><i class="fas fa-handshake text-emerald-600"></i> Offer Agreed by Seller</span>
-          <span>₦260,000</span>
-        </div>
-        <p class="text-[11px] text-emerald-700 leading-relaxed">
-          Adam Computers agreed to sell HP EliteBook 840 G5 for ₦260,000. Proceed to checkout to reserve item in Escrow.
-        </p>
-      </div>
-
-      <!-- MESSAGE 6: SELLER -->
-      <div class="flex justify-end">
-        <div class="max-w-[85%] sm:max-w-[70%] space-y-1">
-          <div class="bg-pp-600 text-white rounded-2xl rounded-tr-xs p-3.5 text-xs shadow-2xs leading-relaxed">
-            Let me know when your rider is outside or if you're coming yourself!
-          </div>
-          <span class="text-[10px] text-slate-400 text-right block px-1">2:18 PM</span>
-        </div>
-      </div>
-
+      @endforelse
     </div>
 
     <!-- CHAT INPUT FOOTER WITH ATTACHMENT ICON ON THE LEFT -->
     <div class="p-4 border-t border-slate-200 bg-white shrink-0">
-      <form onsubmit="event.preventDefault();" class="flex items-center gap-2">
-        
-        <!-- ATTACHMENT ICON BUTTON (ATTACHMENT ICON TO LEFT OF MESSAGE INPUT) -->
-        <label class="p-2.5 rounded-xl text-slate-500 hover:text-pp-600 hover:bg-pp-50 transition cursor-pointer shrink-0" title="Attach file, image, or receipt">
-          <i class="fas fa-paperclip text-base"></i>
-          <input type="file" class="hidden" />
-        </label>
-
+      <form wire:submit.prevent="sendMessage" class="flex items-center gap-2">
         <!-- MESSAGE TEXT INPUT -->
-        <input type="text" placeholder="Write a message to Adam Computers..." class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-pp-500 focus:bg-white transition" />
+        <input
+          type="text"
+          wire:model="messageText"
+          placeholder="Write a message to {{ $otherPartyName }}..."
+          class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-pp-500 focus:bg-white transition"
+          autocomplete="off"
+        />
 
         <!-- SEND BUTTON -->
-        <button type="submit" class="px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 shrink-0 shadow-2xs">
+        <button
+          type="submit"
+          class="px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5 shrink-0 shadow-2xs"
+        >
           <i class="fas fa-paper-plane text-xs"></i>
           <span class="hidden sm:inline">Send</span>
         </button>
@@ -152,5 +116,4 @@
     </div>
 
   </div>
-
 </div>

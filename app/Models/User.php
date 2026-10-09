@@ -207,17 +207,20 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $supportRole = Role::whereIn('slug', ['customer_support', 'super_admin'])->first();
 
-        return static::where('email', 'support@partsandparcel.com')
-            ->orWhere('role_id', $supportRole?->id)
-            ->first() ?? static::firstOrCreate(
-                ['email' => 'support@partsandparcel.com'],
-                [
-                    'name' => 'Parts & Parcel Support',
-                    'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(32)),
-                    'role_id' => $supportRole?->id,
-                    'email_verified_at' => now(),
-                ]
-            );
+        $query = static::where('email', 'support@partsandparcel.com');
+        if ($supportRole) {
+            $query->orWhere('role_id', $supportRole->id);
+        }
+
+        return $query->first() ?? static::firstOrCreate(
+            ['email' => 'support@partsandparcel.com'],
+            [
+                'name' => 'Parts & Parcel Support',
+                'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(32)),
+                'role_id' => $supportRole?->id,
+                'email_verified_at' => now(),
+            ]
+        );
     }
 
     // Relationships

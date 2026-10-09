@@ -68,11 +68,14 @@ class PaystackWebhookController extends Controller
             case 'transfer.reversed':
                 $reference = $data['reference'] ?? null;
                 if ($reference) {
-                    Payout::where('reference', $reference)->update([
-                        'status' => 'failed',
-                        'metadata' => DB::raw("json_set(coalesce(metadata, '{}'), '$.failure_webhook', '" . json_encode($data) . "')"),
-                    ]);
-                    Log::warning("PaystackWebhookController: Payout {$reference} failed/reversed.");
+                    $payout = Payout::where('reference', $reference)->first();
+                    if ($payout) {
+                        $payout->update([
+                            'status' => 'failed',
+                            'metadata' => array_merge($payout->metadata ?? [], ['failure_webhook' => $data]),
+                        ]);
+                        Log::warning("PaystackWebhookController: Payout {$reference} failed/reversed.");
+                    }
                 }
                 break;
 

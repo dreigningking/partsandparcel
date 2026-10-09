@@ -683,10 +683,17 @@
                 <button
                   type="button"
                   wire:click="payWithPlatformEscrow"
-                  class="w-full py-3 px-4 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                  wire:loading.attr="disabled"
+                  class="w-full py-3 px-4 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  <i class="fas fa-shield-alt text-white"></i>
-                  <span>Pay {{ $invoice->currency_symbol }}{{ number_format($totalPayable) }} with Escrow Protection →</span>
+                  <span wire:loading.remove wire:target="payWithPlatformEscrow" class="flex items-center gap-2">
+                    <i class="fas fa-shield-alt text-white"></i>
+                    <span>Pay {{ $invoice->currency_symbol }}{{ number_format($totalPayable) }} with Escrow Protection →</span>
+                  </span>
+                  <span wire:loading wire:target="payWithPlatformEscrow" class="flex items-center gap-2">
+                    <i class="fas fa-spinner fa-spin text-white"></i>
+                    <span>Redirecting to Payment Gateway...</span>
+                  </span>
                 </button>
               </div>
             @endif

@@ -89,6 +89,7 @@ class ProcessOrderFulfillmentTimelinesJob implements ShouldQueue
             ->get();
 
         foreach ($invoices as $invoice) {
+            $invoice->restoreInventory();
             $invoice->update([
                 'status' => 'cancelled',
                 'cancelled_at' => now(),

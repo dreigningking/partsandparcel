@@ -41,7 +41,8 @@ class SubscriptionAutoRenewJob implements ShouldQueue
 
             $payment = Payment::create([
                 'user_id' => $user->id,
-                'subscription_id' => $subscription->id,
+                'paymentable_type' => Subscription::class,
+                'paymentable_id' => $subscription->id,
                 'reference' => $reference,
                 'provider' => $defaultGateway,
                 'status' => 'successful',

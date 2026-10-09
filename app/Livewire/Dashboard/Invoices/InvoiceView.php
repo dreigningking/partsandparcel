@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Dashboard\Invoices;
 
+use App\Models\Country;
 use App\Models\Coupon;
 use App\Models\Dispute;
 use App\Models\Invoice;
@@ -17,6 +18,7 @@ use App\Models\ServiceReview;
 use App\Models\Setting;
 use App\Models\Settlement;
 use App\Models\Shipment;
+use App\Models\User;
 use App\Models\WarrantyClaim;
 use App\Services\Payment\EscrowService;
 use App\Services\Payment\FlutterwaveService;
@@ -166,6 +168,8 @@ class InvoiceView extends Component
             'payments',
         ];
 
+        $user = Auth::user();
+
         if ($identifier instanceof Invoice) {
             $this->invoice = $identifier;
             if (! $this->invoice->relationLoaded('items')) {
@@ -176,10 +180,27 @@ class InvoiceView extends Component
                 ->where('id', $identifier)
                 ->orWhere('invoice_number', $identifier)
                 ->first();
+        } elseif ($user) {
+            // Load user's latest invoice if no specific identifier provided
+            $this->invoice = Invoice::with($relations)
+                ->where(function ($q) use ($user) {
+                    $q->where('buyer_id', $user->id)
+                      ->orWhere('seller_id', $user->id);
+                })
+                ->latest()
+                ->first();
         }
 
         if (! $this->invoice) {
-            $this->invoice = Invoice::with($relations)->latest()->first();
+            abort(404, 'Invoice not found.');
+        }
+
+        // Authorization check: User must be buyer, seller, or admin
+        if ($user) {
+            $isAdmin = method_exists($user, 'isAdmin') && $user->isAdmin();
+            if ($this->invoice->buyer_id !== $user->id && $this->invoice->seller_id !== $user->id && ! $isAdmin) {
+                abort(403, 'Unauthorized access to this invoice.');
+            }
         }
 
         if ($this->invoice && in_array($this->invoice->payment_method, ['direct', 'platform'])) {
@@ -323,6 +344,7 @@ class InvoiceView extends Component
             return;
         }
 
+        $this->invoice->restoreInventory();
         $this->invoice->update([
             'status' => 'cancelled',
             'paid_at' => null,
@@ -551,6 +573,7 @@ class InvoiceView extends Component
         $user = Auth::user();
         $wasPaid = ($this->invoice->status === 'paid');
 
+        $this->invoice->restoreInventory();
         $this->invoice->update([
             'status' => 'cancelled',
             'cancelled_at' => now(),
@@ -1183,6 +1206,35 @@ class InvoiceView extends Component
         $this->resetErrorBag('couponCode');
     }
 
+    /**
+     * Resolve ordered payment gateways configured for the country.
+     */
+    public function getCountryPaymentGateways(?User $seller = null): array
+    {
+        $user = Auth::user();
+        $country = $seller?->country ?? $user?->country ?? Country::where('is_default', true)->first();
+
+        $raw = $country?->payment_gateway;
+        if (is_string($raw)) {
+            $raw = json_decode($raw, true);
+        }
+
+        $supported = ['paystack', 'flutterwave'];
+
+        $gateways = collect(is_array($raw) ? $raw : [])
+            ->map(fn ($g) => strtolower(trim((string) $g)))
+            ->filter(fn ($g) => in_array($g, $supported))
+            ->values()
+            ->all();
+
+        if (empty($gateways)) {
+            $default = config('services.payment.default_gateway', 'paystack');
+            $gateways = array_values(array_unique([$default, 'paystack', 'flutterwave']));
+        }
+
+        return $gateways;
+    }
+
     public function payWithPlatformEscrow()
     {
         if (! $this->invoice || $this->invoice->status === 'paid' || $this->invoice->status === 'cancelled') {
@@ -1218,7 +1270,9 @@ class InvoiceView extends Component
             'commission' => 0.00,
         ]);
 
-        $provider = config('services.payment.default_gateway', 'paystack');
+        $seller = $this->invoice->seller;
+        $gateways = $this->getCountryPaymentGateways($seller);
+        $initialProvider = $gateways[0] ?? config('services.payment.default_gateway', 'paystack');
         $reference = 'PAY-' . strtoupper(Str::random(12));
 
         $payment = Payment::create([
@@ -1226,7 +1280,7 @@ class InvoiceView extends Component
             'paymentable_id' => $this->invoice->id,
             'paymentable_type' => Invoice::class,
             'reference' => $reference,
-            'provider' => $provider,
+            'provider' => $initialProvider,
             'status' => 'pending',
             'amount' => $totalPayable,
             'escrow_fee' => $escrowFee,
@@ -1253,40 +1307,62 @@ class InvoiceView extends Component
             return;
         }
 
-        $callbackUrl = route('payment.callback', [
-            'reference' => $reference,
-            'provider' => $provider,
-        ]);
-
+        // Automatically attempt country's payment_gateway[0], falling back to second option if needed
         $authorizationUrl = null;
-        $gatewayKey = config("services.{$provider}.secret");
+        $selectedProvider = null;
+        $lastError = null;
 
-        if (empty($gatewayKey) && (app()->isLocal() || app()->environment('testing'))) {
-            $authorizationUrl = route('payment.callback', [
+        foreach ($gateways as $provider) {
+            $callbackUrl = route('payment.callback', [
                 'reference' => $reference,
                 'provider' => $provider,
-                'mock_success' => 1,
             ]);
-        } else {
+
+            $gatewayKey = config("services.{$provider}.secret");
+            $isMock = (empty($gatewayKey) && (app()->isLocal() || app()->environment('testing')))
+                || (app()->environment('testing') && ! config('services.payment.enable_gateway_http', false));
+
+            if ($isMock) {
+                $authorizationUrl = route('payment.callback', [
+                    'reference' => $reference,
+                    'provider' => $provider,
+                    'mock_success' => 1,
+                ]);
+                $selectedProvider = $provider;
+                break;
+            }
+
             try {
                 if ($provider === 'flutterwave') {
                     $response = app(FlutterwaveService::class)->initialize($payment, $callbackUrl);
-                    $authorizationUrl = $response['link'] ?? $response['authorization_url'] ?? null;
+                    $url = $response['link'] ?? $response['authorization_url'] ?? null;
                 } else {
                     $response = app(PaystackService::class)->initialize($payment, $callbackUrl);
-                    $authorizationUrl = $response['authorization_url'] ?? null;
+                    $url = $response['authorization_url'] ?? null;
                 }
+
+                if (! empty($url)) {
+                    $authorizationUrl = $url;
+                    $selectedProvider = $provider;
+                    break;
+                }
+
+                $lastError = $response['message'] ?? "Could not initialize {$provider}";
+                \Illuminate\Support\Facades\Log::warning("Payment gateway '{$provider}' failed on invoice #{$this->invoice->id}, checking fallback option: {$lastError}");
             } catch (\Throwable $e) {
-                session()->flash('error', 'Failed to communicate with payment gateway: ' . $e->getMessage());
-                return;
+                $lastError = $e->getMessage();
+                \Illuminate\Support\Facades\Log::warning("Payment gateway '{$provider}' exception on invoice #{$this->invoice->id}, checking fallback option: {$lastError}");
             }
         }
 
-        if ($authorizationUrl) {
-            return redirect()->away($authorizationUrl);
+        if ($authorizationUrl && $selectedProvider) {
+            if ($payment->provider !== $selectedProvider) {
+                $payment->update(['provider' => $selectedProvider]);
+            }
+            return $this->redirect($authorizationUrl, navigate: false);
         }
 
-        session()->flash('error', 'Could not initialize payment with ' . ucfirst($provider) . '. Please try again.');
+        session()->flash('error', 'Could not initialize payment with available gateways: ' . ($lastError ?? 'All available gateways failed. Please try again.'));
     }
 
     public function confirmDirectTransferSent(): void

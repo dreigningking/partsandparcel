@@ -118,7 +118,7 @@ class UserDisputeViewTest extends TestCase
             'issue_id' => $issue->id,
             'opened_by' => $this->user->id,
             'respondent_id' => $seller->id,
-            'type' => 'item_mismatch',
+            'type' => 'rejection_contested',
             'status' => 'open',
             'reason' => 'Delivered 12V alternators instead of 24V commercial alternator specs.',
         ]);

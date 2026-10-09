@@ -1,41 +1,62 @@
-<div>
-    @if ($isOpen)
-        <!-- BACKDROP OVERLAY -->
-        <div wire:click="closeDrawer" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs transition"></div>
+<div x-data="{
+    open: @entangle('isOpen'),
+    init() {
+        window.addEventListener('open-counter-offer', () => { this.open = true; });
+        window.addEventListener('close-counter-offer', () => { this.open = false; });
+    }
+}">
+    <!-- BACKDROP OVERLAY -->
+    <div class="overlay fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs transition"
+         :class="{ 'open': open }"
+         @click="open = false; $wire.closeDrawer()"></div>
 
-        <!-- COUNTER OFFER STEP WIZARD DRAWER -->
-        <div class="fixed top-0 right-0 bottom-0 z-50 w-full sm:w-[520px] bg-white shadow-2xl flex flex-col transition">
+    <!-- COUNTER OFFER STEP WIZARD DRAWER -->
+    <div class="drawer fixed top-0 right-0 bottom-0 z-50 w-full sm:w-[520px] bg-white shadow-2xl flex flex-col"
+         :class="{ 'open': open }">
 
-            <!-- DRAWER HEADER -->
-            <div class="h-16 px-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
-                <div>
-                    <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
-                        <i class="fas fa-exchange-alt text-pp-600"></i>
-                        <span>{{ $isEditMode ? 'Edit Offer Proposal' : 'Construct Counter-Offer' }}</span>
-                    </h3>
-                    <p class="text-[11px] text-slate-400">
-                        Step {{ $currentStep }} of {{ $totalSteps }} · 
-                        @if ($offer)
-                            Ref #OFF-{{ $offer->id }}
-                        @endif
-                    </p>
-                </div>
-                <button wire:click="closeDrawer" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 font-bold text-lg grid place-items-center transition cursor-pointer">
-                    <i class="fas fa-times"></i>
-                </button>
+        <!-- LOADING STATE -->
+        <div wire:loading.flex wire:target="loadOffer" class="absolute inset-0 bg-white/90 z-20 flex-col items-center justify-center p-8 text-center gap-3">
+            <div class="w-8 h-8 rounded-full border-2 border-pp-600 border-t-transparent animate-spin"></div>
+            <span class="text-xs font-semibold text-slate-500">Loading counter-offer details...</span>
+        </div>
+
+        <!-- DRAWER HEADER -->
+        <div class="h-16 px-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+            <div>
+                <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    <i class="fas fa-exchange-alt text-pp-600"></i>
+                    <span>{{ $isEditMode ? 'Edit Offer Proposal' : 'Construct Counter-Offer' }}</span>
+                </h3>
+                <p class="text-[11px] text-slate-400">
+                    Step {{ $currentStep }} of {{ $totalSteps }} · 
+                    @if ($offer)
+                        Ref #OFF-{{ $offer->id }}
+                    @endif
+                </p>
             </div>
+            <button type="button" @click="open = false; $wire.closeDrawer()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 font-bold text-lg grid place-items-center transition cursor-pointer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
 
-            <!-- STEP PROGRESS BAR -->
-            <div class="w-full bg-slate-100 h-1">
-                <div class="bg-pp-600 h-1 transition-all duration-300" style="width: {{ ($currentStep / $totalSteps) * 100 }}%"></div>
+        <!-- STEP PROGRESS BAR -->
+        <div class="w-full bg-slate-100 h-1">
+            <div class="bg-pp-600 h-1 transition-all duration-300" style="width: {{ ($currentStep / $totalSteps) * 100 }}%"></div>
+        </div>
+
+        <!-- NON-BINDING & AVAILABILITY DISCLAIMER BANNER -->
+        <div class="px-6 py-2.5 bg-amber-50 border-b border-amber-200 text-amber-900 text-[11px] flex items-center gap-2 shrink-0">
+            <i class="fas fa-info-circle text-amber-600 shrink-0"></i>
+            <span>Offers are subject to item availability and non-binding until payment is completed.</span>
+        </div>
+
+        @if (! $offer)
+            <div class="p-6 space-y-4 animate-pulse flex-1">
+                <div class="h-20 bg-slate-100 rounded-2xl"></div>
+                <div class="h-36 bg-slate-100 rounded-2xl"></div>
+                <div class="h-28 bg-slate-100 rounded-2xl"></div>
             </div>
-
-            <!-- NON-BINDING & AVAILABILITY DISCLAIMER BANNER -->
-            <div class="px-6 py-2.5 bg-amber-50 border-b border-amber-200 text-amber-900 text-[11px] flex items-center gap-2 shrink-0">
-                <i class="fas fa-info-circle text-amber-600 shrink-0"></i>
-                <span>Offers are subject to item availability and non-binding until payment is completed.</span>
-            </div>
-
+        @else
             <!-- DRAWER BODY (SCROLLABLE) -->
             <div class="flex-1 min-h-0 overflow-y-auto p-6 space-y-5 text-xs">
 
@@ -285,7 +306,7 @@
                         <i class="fas fa-chevron-left text-[10px]"></i> Previous
                     </button>
                 @else
-                    <button type="button" wire:click="closeDrawer" class="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition cursor-pointer">
+                    <button type="button" @click="open = false; $wire.closeDrawer()" class="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition cursor-pointer">
                         Cancel
                     </button>
                 @endif
@@ -301,7 +322,7 @@
                     </button>
                 @endif
             </div>
+        @endif
 
-        </div>
-    @endif
+    </div>
 </div>

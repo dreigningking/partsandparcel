@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Country;
+use App\Models\Listing;
 use App\Models\Replacement;
 use App\Models\ReturnRecord;
 use App\Models\Setting;
@@ -65,6 +66,12 @@ class Invoice extends Model
 
             if (empty($invoice->due_at)) {
                 $invoice->due_at = now()->addDays(static::defaultExpiryDays());
+            }
+        });
+
+        static::updating(function (Invoice $invoice) {
+            if ($invoice->isDirty('status') && $invoice->status === 'cancelled' && $invoice->getOriginal('status') !== 'cancelled') {
+                $invoice->restoreInventory();
             }
         });
     }
@@ -317,5 +324,54 @@ class Invoice extends Model
     {
         $endsAt = $this->activeWarrantyEndsAt();
         return $endsAt ? now()->lessThanOrEqualTo($endsAt) : false;
+    }
+
+    public bool $inventoryRestored = false;
+
+    /**
+     * Restore reserved or sold inventory back to listings upon cancellation.
+     */
+    public function restoreInventory(): void
+    {
+        if ($this->inventoryRestored) {
+            return;
+        }
+
+        if ($this->getOriginal('status') === 'cancelled' && $this->status === 'cancelled') {
+            return;
+        }
+
+        $wasPaid = ($this->getOriginal('status') === 'paid' || $this->status === 'paid' || $this->paid_at !== null);
+
+        foreach ($this->items as $invItem) {
+            if ($invItem->itemable_type === Listing::class && $invItem->itemable_id) {
+                $listing = Listing::find($invItem->itemable_id);
+                if (! $listing) {
+                    continue;
+                }
+
+                $qty = (int) $invItem->quantity;
+                if ($wasPaid) {
+                    $decrementSold = min($qty, (int) $listing->sold_quantity);
+                    if ($decrementSold > 0) {
+                        $listing->decrement('sold_quantity', $decrementSold);
+                    }
+                } else {
+                    if ($this->isDirectPayment()) {
+                        $decrementSold = min($qty, (int) $listing->sold_quantity);
+                        if ($decrementSold > 0) {
+                            $listing->decrement('sold_quantity', $decrementSold);
+                        }
+                    } else {
+                        $decrementReserved = min($qty, (int) $listing->reserved_quantity);
+                        if ($decrementReserved > 0) {
+                            $listing->decrement('reserved_quantity', $decrementReserved);
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->inventoryRestored = true;
     }
 }

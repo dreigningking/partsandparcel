@@ -36,7 +36,8 @@ class Listing extends Model
         'warranty_period_days',
         'is_warranty_negotiable',
         'warranty_terms',
-        'allow_shipping'
+        'allow_shipping',
+        'status',
     ];
 
     protected function casts(): array
@@ -367,6 +368,19 @@ class Listing extends Model
         }
         if ($this->latestModeration->status == 'approved'){
             return 'live';
+        }
+    }
+
+    public function setStatusAttribute($value): void
+    {
+        $status = strtolower((string) $value);
+        if ($status === 'active' || $status === 'live') {
+            $this->attributes['is_published'] = true;
+            $this->attributes['is_active'] = true;
+        } elseif ($status === 'sold' || $status === 'sold out') {
+            $this->attributes['sold_quantity'] = (int) ($this->attributes['quantity'] ?? $this->quantity ?? 1);
+        } elseif ($status === 'inactive' || $status === 'draft') {
+            $this->attributes['is_active'] = false;
         }
     }
 

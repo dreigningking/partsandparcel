@@ -1,24 +1,38 @@
-<div>
-    @if ($isOpen)
-        <!-- BACKDROP OVERLAY -->
-        <div wire:click="closeDrawer" class="fixed inset-0 z-[98] bg-slate-950/50 backdrop-blur-xs transition"></div>
+<div x-data="{
+    open: @entangle('isOpen'),
+    init() {
+        window.addEventListener('open-quick-view-offer', () => { this.open = true; });
+        window.addEventListener('close-quick-view-offer', () => { this.open = false; });
+    }
+}">
+    <!-- BACKDROP OVERLAY -->
+    <div class="overlay fixed inset-0 z-[98] bg-slate-950/50 backdrop-blur-xs transition"
+         :class="{ 'open': open }"
+         @click="open = false; $wire.closeDrawer()"></div>
 
-        <!-- QUICK-VIEW OFFER DRAWER (DESKTOP SLIDE-OVER) -->
-        <div class="fixed top-0 right-0 bottom-0 z-[99] w-full sm:w-[480px] bg-white shadow-2xl flex flex-col transition">
-            
-            <!-- DRAWER HEADER -->
-            <div class="h-16 px-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
-                <div>
-                    <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
-                        <i class="fas fa-handshake text-pp-600"></i>
-                        <span>Offer Negotiation Quick View</span>
-                    </h3>
-                    <p class="text-[11px] text-slate-400">Response by: <strong class="text-slate-700">{{ $authorName }}</strong></p>
-                </div>
-                <button wire:click="closeDrawer" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500 font-bold text-lg grid place-items-center cursor-pointer">
-                    <i class="fas fa-times"></i>
-                </button>
+    <!-- QUICK-VIEW OFFER DRAWER (DESKTOP SLIDE-OVER) -->
+    <div class="drawer fixed top-0 right-0 bottom-0 z-[99] w-full sm:w-[480px] bg-white shadow-2xl flex flex-col"
+         :class="{ 'open': open }">
+        
+        <!-- LOADING STATE -->
+        <div wire:loading.flex wire:target="loadOffers" class="absolute inset-0 bg-white/90 z-20 flex-col items-center justify-center p-8 text-center gap-3">
+            <div class="w-8 h-8 rounded-full border-2 border-pp-600 border-t-transparent animate-spin"></div>
+            <span class="text-xs font-semibold text-slate-500">Loading offer details...</span>
+        </div>
+
+        <!-- DRAWER HEADER -->
+        <div class="h-16 px-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+            <div>
+                <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    <i class="fas fa-handshake text-pp-600"></i>
+                    <span>Offer Negotiation Quick View</span>
+                </h3>
+                <p class="text-[11px] text-slate-400">Response by: <strong class="text-slate-700">{{ $authorName }}</strong></p>
             </div>
+            <button type="button" @click="open = false; $wire.closeDrawer()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500 font-bold text-lg grid place-items-center cursor-pointer">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
 
             <!-- NON-BINDING & AVAILABILITY DISCLAIMER BANNER -->
             <div class="px-6 py-2.5 bg-amber-50 border-b border-amber-200 text-amber-900 text-[11px] flex items-center gap-2 shrink-0">
@@ -179,5 +193,4 @@
             @endif
 
         </div>
-    @endif
 </div>

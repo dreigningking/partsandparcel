@@ -39,6 +39,16 @@ class OfferView extends Component
                 ->find($cleanId);
 
             if ($dbOffer) {
+                $user = Auth::user();
+                if ($user) {
+                    $isAdmin = method_exists($user, 'isAdmin') && $user->isAdmin();
+                    $isParty = ($dbOffer->sender_id === $user->id || $dbOffer->recipient_id === $user->id);
+
+                    if (! $isParty && ! $isAdmin) {
+                        abort(403, 'Unauthorized access to this offer negotiation.');
+                    }
+                }
+
                 $this->offer = $dbOffer;
                 $this->counterPrice = (float) $dbOffer->total();
                 $this->counterDiscount = (float) $dbOffer->discount;

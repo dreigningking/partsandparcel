@@ -1,4 +1,4 @@
-<main class="w-full pb-16">
+<main class="w-full pb-16" x-data="{ showPostModal: @entangle('showPostModal') }" x-init="$watch('showPostModal', value => { document.body.style.overflow = value ? 'hidden' : '' })">
     <!-- ============================================================
     BREADCRUMB (CONSISTENT WITH ITEM DETAILS & CATEGORY)
     ============================================================ -->
@@ -22,7 +22,7 @@
                 <div class="text-xs sm:text-sm font-extrabold text-pp-700 mt-1">Ask. Find. Offer. Solve.</div>
                 <p class="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">Find products, parts, technicians, transporters and practical solutions from the Parts &amp; Parcel community.</p>
                 <div class="flex flex-wrap gap-3 mt-5">
-                    <button wire:click="openPostModal" class="px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-2 cursor-pointer">
+                    <button type="button" @click="showPostModal = true" class="px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition flex items-center gap-2 cursor-pointer">
                         <i class="fas fa-plus-circle"></i> Post a Request
                     </button>
                     <button onclick="document.getElementById('requestListSection').scrollIntoView({ behavior: 'smooth' })" class="px-5 py-2.5 rounded-xl bg-white border border-slate-200 hover:border-pp-300 hover:bg-pp-50 text-slate-700 hover:text-pp-700 font-bold text-xs transition flex items-center gap-2 cursor-pointer">
@@ -244,10 +244,49 @@
     <!-- ============================================================
     POST REQUEST MODAL (MARKETPLACE STYLED)
     ============================================================ -->
-    @if($showPostModal)
-        <div class="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-            <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative border border-slate-200 my-8">
-                <button wire:click="closePostModal" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center text-sm font-bold transition cursor-pointer" aria-label="Close modal">
+    <div
+        x-show="showPostModal"
+        x-cloak
+        @keydown.escape.window="showPostModal = false"
+        class="fixed inset-0 z-[100] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+    >
+        <!-- BACKDROP -->
+        <div
+            x-show="showPostModal"
+            x-transition:enter="ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
+            @click="showPostModal = false"
+            wire:click="closePostModal"
+        ></div>
+
+        <!-- SCROLLABLE WRAPPER (items-start ensures top of modal is always visible and never cut off) -->
+        <div class="flex min-h-full items-start justify-center p-4 sm:p-6 text-center">
+            <!-- MODAL CARD -->
+            <div
+                x-show="showPostModal"
+                x-transition:enter="ease-out duration-200"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="ease-in duration-150"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                @click.stop
+                class="relative w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 text-left my-6 sm:my-8 transform transition-all"
+            >
+                <button
+                    type="button"
+                    @click="showPostModal = false"
+                    wire:click="closePostModal"
+                    class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center text-sm font-bold transition cursor-pointer"
+                    aria-label="Close modal"
+                >
                     <i class="fas fa-times"></i>
                 </button>
                 
@@ -282,8 +321,13 @@
                     </div>
                 @else
                     @if($postSuccessMessage)
-                        <div class="p-4 mb-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
-                            <span>✅</span> Your request has been posted successfully! The community will start responding shortly.
+                        <div class="p-4 mb-5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <span>✅</span> Your request has been posted successfully! The community will start responding shortly.
+                            </div>
+                            <button type="button" @click="showPostModal = false" class="text-emerald-700 hover:text-emerald-900 text-xs font-bold underline shrink-0 cursor-pointer">
+                                Close
+                            </button>
                         </div>
                     @endif
 
@@ -475,7 +519,7 @@
                 @endguest
             </div>
         </div>
-    @endif
+    </div>
 
     <!-- ============================================================
     FILTER DRAWER (MOBILE VIEW — SLIDES FROM RIGHT INSTANTLY)

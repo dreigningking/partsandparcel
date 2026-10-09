@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->json('features')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('is_default')->default(false);
+            $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
         });
 

@@ -13,10 +13,10 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::job(new SubscriptionExpiringJob)->daily();
-Schedule::job(new SubscriptionExpiredJob)->daily();
-Schedule::job(new SubscriptionAutoRenewJob)->hourly();
-Schedule::job(new AbandonedCartJob)->daily();
-Schedule::job(new ModerationNotifierJob)->hourly();
-Schedule::job(new \App\Jobs\ProcessOrderFulfillmentTimelinesJob)->hourly();
-Schedule::job(new \App\Jobs\ReleasePaymentJob)->hourly();
+Schedule::job(new SubscriptionExpiringJob)->daily()->withoutOverlapping();
+Schedule::job(new SubscriptionExpiredJob)->daily()->withoutOverlapping();
+Schedule::job(new SubscriptionAutoRenewJob)->hourly()->withoutOverlapping();
+Schedule::job(new AbandonedCartJob)->daily()->withoutOverlapping();
+Schedule::job(new ModerationNotifierJob)->hourly()->withoutOverlapping();
+Schedule::job(new \App\Jobs\ProcessOrderFulfillmentTimelinesJob)->hourly()->withoutOverlapping();
+Schedule::job(new \App\Jobs\ReleasePaymentJob)->hourly()->withoutOverlapping();

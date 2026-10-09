@@ -22,9 +22,24 @@ return new class extends Migration {
                 $table->string('postal_code')->nullable();
                 $table->decimal('latitude', 10, 7)->nullable();
                 $table->decimal('longitude', 10, 7)->nullable();
+                $table->string('utility_bill_path')->nullable();
                 $table->boolean('is_default')->default(false);
                 $table->timestamps();
                 $table->index(['user_id', 'is_default']);
+            });
+        }
+
+        if (! Schema::hasTable('verifications')) {
+            Schema::create('verifications', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+                $table->string('document_type'); // 'passport', 'drivers_license', 'national_id', 'voters_card', 'govt_id'
+                $table->string('document_number')->nullable();
+                $table->string('front_image')->nullable();
+                $table->string('back_image')->nullable();
+                $table->string('selfie_image')->nullable();
+                $table->json('liveness_images')->nullable(); // multi-frame liveness snapshots sequence
+                $table->timestamps();
             });
         }
 
@@ -61,6 +76,7 @@ return new class extends Migration {
     }
 
     public function down(): void { 
+        Schema::dropIfExists('verifications');
         Schema::dropIfExists('locations'); 
         Schema::dropIfExists('bank_accounts');
         Schema::dropIfExists('device_tokens');

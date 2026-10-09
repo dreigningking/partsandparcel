@@ -27,7 +27,8 @@
         @forelse($conversations as $conv)
           @php
             $isSupport = $conv->isSupport();
-            $title = $isSupport ? 'Customer Support' : ($conv->contextable->name ?? 'Conversation #' . $conv->id);
+            $peerName = $conv->getOtherPartyName(auth()->user());
+            $contextTitle = $conv->contextable?->title ?? ($isSupport ? 'Official Support Desk' : 'Direct Conversation');
             $latest = $conv->latestMessage;
             $isSelected = (int) $activeConversationId === (int) $conv->id;
             $unread = $conv->unread_count ?? 0;
@@ -42,7 +43,7 @@
                 <span class="w-11 h-11 rounded-full bg-pp-100 text-pp-700 font-extrabold grid place-items-center text-base shadow-2xs">🎧</span>
               @else
                 <span class="w-11 h-11 rounded-full bg-slate-100 text-slate-700 font-extrabold grid place-items-center text-sm shadow-2xs">
-                  {{ strtoupper(substr($title, 0, 1)) }}
+                  {{ strtoupper(substr($peerName, 0, 1)) }}
                 </span>
               @endif
 
@@ -53,12 +54,16 @@
 
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-1">
-                <span class="font-bold text-xs text-slate-900 truncate">{{ $title }}</span>
+                <span class="font-bold text-xs text-slate-900 truncate">{{ $peerName }}</span>
                 @if($latest)
                   <span class="text-[10px] font-semibold text-slate-400 shrink-0">
                     {{ $latest->created_at->diffForHumans(null, true) }}
                   </span>
                 @endif
+              </div>
+
+              <div class="text-[11px] text-slate-400 truncate mt-0.5">
+                {{ $contextTitle }}
               </div>
 
               <div class="flex items-center gap-1.5 mt-0.5">
@@ -98,7 +103,8 @@
       @if ($activeConversation)
         @php
           $isSupport = $activeConversation->isSupport();
-          $chatTitle = $isSupport ? 'Customer Support' : ($activeConversation->contextable->name ?? 'Conversation');
+          $chatPeerName = $activeConversation->getOtherPartyName(auth()->user());
+          $chatSubtitle = $activeConversation->contextable?->title ?? ($isSupport ? '24/7 Parts & Parcel Helpdesk' : 'Direct conversation');
         @endphp
         
         <!-- CHAT HEADER BAR -->
@@ -114,20 +120,20 @@
                 <span class="w-10 h-10 rounded-full bg-pp-100 text-pp-700 font-extrabold grid place-items-center text-base shadow-2xs">🎧</span>
               @else
                 <span class="w-10 h-10 rounded-full bg-slate-100 text-slate-700 font-extrabold grid place-items-center text-sm shadow-2xs">
-                  {{ strtoupper(substr($chatTitle, 0, 1)) }}
+                  {{ strtoupper(substr($chatPeerName, 0, 1)) }}
                 </span>
               @endif
             </div>
 
             <div class="min-w-0">
               <div class="flex items-center gap-1.5">
-                <h3 class="font-extrabold text-sm text-slate-950 truncate">{{ $chatTitle }}</h3>
+                <h3 class="font-extrabold text-sm text-slate-950 truncate">{{ $chatPeerName }}</h3>
                 @if($isSupport)
                   <span class="px-1.5 py-0.2 rounded bg-pp-100 text-pp-800 text-[9px] font-extrabold uppercase">OFFICIAL</span>
                 @endif
               </div>
               <p class="text-[11px] text-slate-500 truncate">
-                {{ $isSupport ? '24/7 Parts & Parcel Helpdesk' : 'Direct conversation' }}
+                {{ $chatSubtitle }}
               </p>
             </div>
           </div>

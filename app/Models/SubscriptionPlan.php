@@ -122,6 +122,18 @@ class SubscriptionPlan extends Model
         return $priceRecord ? (float) $priceRecord->price_monthly : (float) ($this->price ?? 0.00);
     }
 
+    /**
+     * Check if the plan is free for a given currency and country.
+     */
+    public function isFree(?string $currency = null, ?string $countryCode = null, ?int $countryId = null): bool
+    {
+        if (str_contains(strtolower($this->slug ?? $this->name ?? ''), 'free')) {
+            return true;
+        }
+
+        return $this->getMonthlyPrice($currency, $countryCode, $countryId) <= 0.0;
+    }
+
     public function getMonthlyPriceAttribute(): float
     {
         return $this->getMonthlyPrice();

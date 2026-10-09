@@ -15,6 +15,7 @@ use App\Services\Payment\EscrowService;
 use App\Services\Payment\FlutterwaveService;
 use App\Services\Payment\PaystackService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -44,9 +45,6 @@ class CheckoutPage extends Component
 
     // Payment Option selection ('platform' vs 'direct')
     public $paymentMethod = 'platform';
-
-    // Payment Gateway Provider selection ('paystack' vs 'flutterwave')
-    public string $paymentProvider = 'paystack';
 
     // Fee Configuration (Computed from user subscription plan)
     public float $escrowPercentage = 10.0;
@@ -92,16 +90,36 @@ class CheckoutPage extends Component
             }
         }
 
-        $this->paymentProvider = config('services.payment.default_gateway', 'paystack');
-
         $this->loadCheckoutData();
     }
 
-    public function setPaymentProvider(string $provider): void
+    /**
+     * Resolve ordered payment gateways configured for the country.
+     */
+    public function getCountryPaymentGateways(?User $seller = null): array
     {
-        if (in_array($provider, ['paystack', 'flutterwave'])) {
-            $this->paymentProvider = $provider;
+        $user = Auth::user();
+        $country = $seller?->country ?? $user?->country ?? \App\Models\Country::where('is_default', true)->first();
+
+        $raw = $country?->payment_gateway;
+        if (is_string($raw)) {
+            $raw = json_decode($raw, true);
         }
+
+        $supported = ['paystack', 'flutterwave'];
+
+        $gateways = collect(is_array($raw) ? $raw : [])
+            ->map(fn ($g) => strtolower(trim((string) $g)))
+            ->filter(fn ($g) => in_array($g, $supported))
+            ->values()
+            ->all();
+
+        if (empty($gateways)) {
+            $default = config('services.payment.default_gateway', 'paystack');
+            $gateways = array_values(array_unique([$default, 'paystack', 'flutterwave']));
+        }
+
+        return $gateways;
     }
 
     public function saveNewAddress()
@@ -343,76 +361,128 @@ class CheckoutPage extends Component
         $seller = User::with('country')->find($sellerId);
         $currency = $seller?->country?->currency ?: 'NGN';
 
-        // Verify item availability before checkout
-        foreach ($this->cartItems as $cItem) {
-            if (! empty($cItem['listing_id'])) {
-                $listing = Listing::find($cItem['listing_id']);
-                if ($listing && $listing->availableQuantity() < (int) ($cItem['quantity'] ?? 1)) {
-                    session()->flash('error', "Item '{$cItem['title']}' is no longer available in the requested quantity ({$listing->availableQuantity()} left). Please update your cart.");
-                    return;
-                }
-            }
-        }
-
-        // Create the Invoice
-        $invoice = Invoice::create([
-            'invoice_number' => 'INV-' . strtoupper(Str::random(10)),
-            'buyer_id' => $user->id,
-            'seller_id' => $sellerId,
-            'cart_id' => $cart?->id,
-            'delivery_method' => $deliveryMethodMapped,
-            'subtotal' => $itemSubtotal,
-            'discount' => $discount,
-            'tax' => 0.00,
-            'total' => $totalPayable,
-            'currency' => $currency,
-            'payment_method' => $isPlatform ? 'platform' : 'direct',
-            'commission' => $commission,
-            'status' => 'issued',
-            'issued_at' => now(),
-            'due_at' => now()->addDays(3),
-        ]);
-
-        // Create Invoice Items
-        foreach ($this->cartItems as $cItem) {
-            InvoiceItem::create([
-                'invoice_id' => $invoice->id,
-                'itemable_id' => $cItem['listing_id'] ?? null,
-                'itemable_type' => ! empty($cItem['listing_id']) ? Listing::class : null,
-                'type' => 'item',
-                'description' => $cItem['title'],
-                'quantity' => $cItem['quantity'],
-                'unit_price' => $cItem['price'],
-                'amount' => $cItem['price'] * $cItem['quantity'],
-                'warranty_period_days' => 14,
-                'warranty_terms' => 'Standard seller inspection warranty',
-            ]);
-
-            if (! empty($cItem['listing_id'])) {
-                $listing = Listing::find($cItem['listing_id']);
-                if ($listing) {
-                    if ($isPlatform) {
-                        $listing->reserved_quantity = ($listing->reserved_quantity ?? 0) + (int) ($cItem['quantity'] ?? 1);
-                    } else {
-                        $listing->sold_quantity = ($listing->sold_quantity ?? 0) + (int) ($cItem['quantity'] ?? 1);
+        try {
+            $orderResult = DB::transaction(function () use (
+                $user, $sellerId, $seller, $deliveryMethodMapped, $itemSubtotal, $discount,
+                $totalPayable, $currency, $isPlatform, $commission, $cart
+            ) {
+                // Verify item availability before checkout with pessimistic lock
+                $listings = [];
+                foreach ($this->cartItems as $cItem) {
+                    if (! empty($cItem['listing_id'])) {
+                        $listing = Listing::where('id', $cItem['listing_id'])->lockForUpdate()->first();
+                        if ($listing && $listing->availableQuantity() < (int) ($cItem['quantity'] ?? 1)) {
+                            throw new \DomainException("Item '{$cItem['title']}' is no longer available in the requested quantity ({$listing->availableQuantity()} left). Please update your cart.");
+                        }
+                        if ($listing) {
+                            $listings[$cItem['listing_id']] = $listing;
+                        }
                     }
-                    $listing->save();
                 }
-            }
+
+                // Create the Invoice
+                $invoice = Invoice::create([
+                    'invoice_number' => 'INV-' . strtoupper(Str::random(10)),
+                    'buyer_id' => $user->id,
+                    'seller_id' => $sellerId,
+                    'cart_id' => $cart?->id,
+                    'delivery_method' => $deliveryMethodMapped,
+                    'subtotal' => $itemSubtotal,
+                    'discount' => $discount,
+                    'tax' => 0.00,
+                    'total' => $totalPayable,
+                    'currency' => $currency,
+                    'payment_method' => $isPlatform ? 'platform' : 'direct',
+                    'commission' => $commission,
+                    'status' => 'issued',
+                    'issued_at' => now(),
+                    'due_at' => now()->addDays(3),
+                ]);
+
+                // Create Invoice Items
+                foreach ($this->cartItems as $cItem) {
+                    InvoiceItem::create([
+                        'invoice_id' => $invoice->id,
+                        'itemable_id' => $cItem['listing_id'] ?? null,
+                        'itemable_type' => ! empty($cItem['listing_id']) ? Listing::class : null,
+                        'type' => 'item',
+                        'description' => $cItem['title'],
+                        'quantity' => $cItem['quantity'],
+                        'unit_price' => $cItem['price'],
+                        'amount' => $cItem['price'] * $cItem['quantity'],
+                        'warranty_period_days' => 14,
+                        'warranty_terms' => 'Standard seller inspection warranty',
+                    ]);
+
+                    if (! empty($cItem['listing_id']) && isset($listings[$cItem['listing_id']])) {
+                        $listing = $listings[$cItem['listing_id']];
+                        $qty = (int) ($cItem['quantity'] ?? 1);
+                        if ($isPlatform) {
+                            $listing->increment('reserved_quantity', $qty);
+                        } else {
+                            $listing->increment('sold_quantity', $qty);
+                        }
+                    }
+                }
+
+                // Record coupon usage if applied
+                if ($this->appliedCouponId) {
+                    $coupon = Coupon::find($this->appliedCouponId);
+                    $coupon?->recordUsage();
+                }
+
+                // Clear cart for this seller
+                app(CartService::class)->clearSellerCart($user, $sellerId);
+
+                // Only platform payments are recorded in the payments table
+                $payment = null;
+                $reference = null;
+                if ($isPlatform) {
+                    $gateways = $this->getCountryPaymentGateways($seller);
+                    $initialProvider = $gateways[0] ?? config('services.payment.default_gateway', 'paystack');
+                    $reference = 'PAY-' . strtoupper(Str::random(12));
+
+                    $payment = Payment::create([
+                        'user_id' => $user->id,
+                        'paymentable_id' => $invoice->id,
+                        'paymentable_type' => Invoice::class,
+                        'reference' => $reference,
+                        'provider' => $initialProvider,
+                        'status' => 'pending',
+                        'amount' => $totalPayable,
+                        'escrow_fee' => $this->escrowFee,
+                        'currency' => $user->currency ?? $currency ?? 'NGN',
+                        'metadata' => [
+                            'invoice_id' => $invoice->id,
+                            'coupon_code' => $this->appliedCouponId ? Coupon::find($this->appliedCouponId)?->code : null,
+                            'discount' => $discount,
+                            'escrow_fee' => $this->escrowFee,
+                            'delivery_method' => $this->deliveryMethod,
+                        ],
+                    ]);
+                }
+
+                return [
+                    'invoice' => $invoice,
+                    'payment' => $payment,
+                    'reference' => $reference,
+                ];
+            });
+        } catch (\DomainException $de) {
+            session()->flash('error', $de->getMessage());
+            return;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('CheckoutPage placeOrder failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            session()->flash('error', 'An error occurred while creating your order. Please try again.');
+            return;
         }
 
-        // Record coupon usage if applied
-        if ($this->appliedCouponId) {
-            $coupon = Coupon::find($this->appliedCouponId);
-            $coupon?->recordUsage();
-        }
-
-        // Clear cart for this seller
-        app(CartService::class)->clearSellerCart($user, $sellerId);
+        $invoice = $orderResult['invoice'];
+        $payment = $orderResult['payment'];
+        $reference = $orderResult['reference'];
 
         // Notify parties
         $user->notify(new \App\Notifications\InvoiceIssuedNotification($invoice));
-        $seller = User::find($sellerId);
         if ($seller && $seller->id !== $user->id) {
             $seller->notify(new \App\Notifications\InvoiceIssuedNotification($invoice));
         }
@@ -421,33 +491,7 @@ class CheckoutPage extends Component
             ? 'Seller delivery shipment recorded.' 
             : 'Buyer pickup selected (no shipment necessary).';
 
-        if ($isPlatform) {
-            $provider = in_array($this->paymentProvider, ['paystack', 'flutterwave'])
-                ? $this->paymentProvider
-                : config('services.payment.default_gateway', 'paystack');
-
-            $reference = 'PAY-' . strtoupper(Str::random(12));
-
-            // Only platform payments are recorded in the payments table
-            $payment = Payment::create([
-                'user_id' => $user->id,
-                'paymentable_id' => $invoice->id,
-                'paymentable_type' => Invoice::class,
-                'reference' => $reference,
-                'provider' => $provider,
-                'status' => 'pending',
-                'amount' => $totalPayable,
-                'escrow_fee' => $this->escrowFee,
-                'currency' => $user->currency ?? $currency ?? 'NGN',
-                'metadata' => [
-                    'invoice_id' => $invoice->id,
-                    'coupon_code' => $this->appliedCouponId ? Coupon::find($this->appliedCouponId)?->code : null,
-                    'discount' => $discount,
-                    'escrow_fee' => $this->escrowFee,
-                    'delivery_method' => $this->deliveryMethod,
-                ],
-            ]);
-
+        if ($isPlatform && $payment) {
             // If 100% discount, mark successful without payment gateway
             if ($totalPayable <= 0.0) {
                 app(EscrowService::class)->handlePaymentSuccessful($payment);
@@ -455,41 +499,64 @@ class CheckoutPage extends Component
                 return redirect()->route('invoices.view', $invoice->id);
             }
 
-            // Redirect user to payment gateway
-            $callbackUrl = route('payment.callback', [
-                'reference' => $reference,
-                'provider' => $provider,
-            ]);
+            $gateways = $this->getCountryPaymentGateways($seller);
 
+            // Automatically attempt country's payment_gateway[0], falling back to second option if needed
             $authorizationUrl = null;
-            $gatewayKey = config("services.{$provider}.secret");
+            $selectedProvider = null;
+            $lastError = null;
 
-            if (empty($gatewayKey) && (app()->isLocal() || app()->environment('testing'))) {
-                $authorizationUrl = route('payment.callback', [
+            foreach ($gateways as $provider) {
+                $callbackUrl = route('payment.callback', [
                     'reference' => $reference,
                     'provider' => $provider,
-                    'mock_success' => 1,
                 ]);
-            } else {
+
+                $gatewayKey = config("services.{$provider}.secret");
+                $isMock = (empty($gatewayKey) && (app()->isLocal() || app()->environment('testing')))
+                    || (app()->environment('testing') && ! config('services.payment.enable_gateway_http', false));
+
+                if ($isMock) {
+                    $authorizationUrl = route('payment.callback', [
+                        'reference' => $reference,
+                        'provider' => $provider,
+                        'mock_success' => 1,
+                    ]);
+                    $selectedProvider = $provider;
+                    break;
+                }
+
                 try {
                     if ($provider === 'flutterwave') {
                         $response = app(FlutterwaveService::class)->initialize($payment, $callbackUrl);
-                        $authorizationUrl = $response['link'] ?? $response['authorization_url'] ?? null;
+                        $url = $response['link'] ?? $response['authorization_url'] ?? null;
                     } else {
                         $response = app(PaystackService::class)->initialize($payment, $callbackUrl);
-                        $authorizationUrl = $response['authorization_url'] ?? null;
+                        $url = $response['authorization_url'] ?? null;
                     }
+
+                    if (! empty($url)) {
+                        $authorizationUrl = $url;
+                        $selectedProvider = $provider;
+                        break;
+                    }
+
+                    $lastError = $response['message'] ?? "Could not initialize {$provider}";
+                    \Illuminate\Support\Facades\Log::warning("Payment gateway '{$provider}' failed, checking fallback option: {$lastError}");
                 } catch (\Throwable $e) {
-                    session()->flash('error', 'Failed to communicate with payment gateway: ' . $e->getMessage());
-                    return redirect()->route('invoices.view', $invoice->id);
+                    $lastError = $e->getMessage();
+                    \Illuminate\Support\Facades\Log::warning("Payment gateway '{$provider}' exception, checking fallback option: {$lastError}");
                 }
             }
 
-            if ($authorizationUrl) {
+            if ($authorizationUrl && $selectedProvider) {
+                if ($payment->provider !== $selectedProvider) {
+                    $payment->update(['provider' => $selectedProvider]);
+                }
                 return redirect()->away($authorizationUrl);
             }
 
-            session()->flash('error', 'Could not initialize payment with ' . ucfirst($provider) . '. Please proceed to the invoice to complete payment.');
+            session()->flash('error', 'Could not initialize payment with available gateways: ' . ($lastError ?? 'All available gateways failed. Please try paying from the invoice.'));
             return redirect()->route('invoices.view', $invoice->id);
         } else {
             // Direct payments happen directly between buyer and seller; not recorded in payments table

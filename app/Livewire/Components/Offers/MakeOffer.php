@@ -57,6 +57,9 @@ class MakeOffer extends Component
     public bool $isNegotiable = true;
     public bool $isWarrantyNegotiable = true;
 
+    /**
+     * @deprecated Superseded by ListingOfferDrawer in views, preserved for test backward compatibility.
+     */
     #[On('open-make-offer')]
     public function loadOfferDrawer($payload = null)
     {

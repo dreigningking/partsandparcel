@@ -113,17 +113,27 @@ trait HasMedia
         $folder = 'media/' . Str::snake(class_basename($this)) . '/' . $this->getKey();
 
         if ($file instanceof UploadedFile) {
-            $originalName = $file->getClientOriginalName();
+            $originalName = preg_replace('/[^\w\.\-\s]/u', '', basename($file->getClientOriginalName()));
             $mimeType = $file->getMimeType();
             $size = $file->getSize();
-            $extension = $file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin';
+            $extension = strtolower(trim($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'bin'));
+
+            if (! static::isExtensionAllowed($extension)) {
+                throw new \InvalidArgumentException("Security error: Uploaded file extension '.{$extension}' is not permitted.");
+            }
+
             $fileName = Str::uuid() . '.' . $extension;
             $filePath = $file->storeAs($folder, $fileName, $disk);
         } elseif (is_string($file) && file_exists($file)) {
-            $originalName = basename($file);
+            $originalName = preg_replace('/[^\w\.\-\s]/u', '', basename($file));
             $mimeType = mime_content_type($file) ?: 'application/octet-stream';
             $size = filesize($file);
-            $extension = pathinfo($file, PATHINFO_EXTENSION) ?: 'bin';
+            $extension = strtolower(trim(pathinfo($file, PATHINFO_EXTENSION) ?: 'bin'));
+
+            if (! static::isExtensionAllowed($extension)) {
+                throw new \InvalidArgumentException("Security error: Uploaded file extension '.{$extension}' is not permitted.");
+            }
+
             $fileName = Str::uuid() . '.' . $extension;
             $filePath = $folder . '/' . $fileName;
             Storage::disk($disk)->put($filePath, file_get_contents($file));
@@ -294,5 +304,29 @@ trait HasMedia
         }
 
         return 'document';
+    }
+
+    /**
+     * Allowed file extensions for media uploads across the platform.
+     */
+    public static function getAllowedExtensions(): array
+    {
+        return [
+            // Images
+            'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif',
+            // Videos
+            'mp4', 'mov', 'avi', 'webm', 'mkv', 'flv', 'wmv',
+            // Documents & Spreadsheets
+            'pdf', 'doc', 'docx', 'txt', 'rtf', 'odt', 'csv', 'xls', 'xlsx',
+        ];
+    }
+
+    /**
+     * Validate whether a file extension is in the security whitelist.
+     */
+    public static function isExtensionAllowed(?string $extension): bool
+    {
+        $ext = strtolower(trim($extension ?? ''));
+        return in_array($ext, static::getAllowedExtensions(), true);
     }
 }

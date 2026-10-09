@@ -76,7 +76,7 @@ return new class extends Migration {
         
         Schema::create('conversations', function (Blueprint $table) {
             $table->id();
-            $table->morphs('contextable'); // listing, offer, etc.
+            $table->nullableMorphs('contextable'); // listing, offer, etc.
             $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
         });

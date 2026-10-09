@@ -11,6 +11,8 @@ class ConversationMessage extends Model
 {
     use HasFactory, HasMedia;
 
+    protected $touches = ['conversation'];
+
     protected $fillable = [
         'conversation_id',
         'sender_id',

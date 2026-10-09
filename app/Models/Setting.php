@@ -3,18 +3,38 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
-
     protected $fillable = [
-        'name','value','type','segment'
+        'name', 'value', 'type', 'segment',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(function (Setting $setting) {
+            static::flushCache($setting->name);
+        });
+
+        static::deleted(function (Setting $setting) {
+            static::flushCache($setting->name);
+        });
+    }
+
     public static function getValue(string $name, mixed $default = null): mixed
     {
-        $row = static::query()->where('name', $name)->first();
+        $cached = Cache::remember("app_setting:{$name}", now()->addHours(24), function () use ($name) {
+            $row = static::query()->where('name', $name)->first();
 
-        return $row ? static::castStoredValue($row->value, $row->type) : $default;
+            return $row ? ['value' => $row->value, 'type' => $row->type] : '__MISSING__';
+        });
+
+        if ($cached === '__MISSING__' || ! is_array($cached)) {
+            return $default;
+        }
+
+        return static::castStoredValue($cached['value'], $cached['type']);
     }
 
     public static function setValue(string $name, mixed $value, ?string $type = null, ?string $segment = null): void
@@ -41,6 +61,15 @@ class Setting extends Model
             ['name' => $name],
             $attributes
         );
+
+        static::flushCache($name);
+    }
+
+    public static function flushCache(?string $name = null): void
+    {
+        if ($name !== null) {
+            Cache::forget("app_setting:{$name}");
+        }
     }
 
     protected static function castStoredValue(?string $raw, ?string $type): mixed

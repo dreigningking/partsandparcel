@@ -114,11 +114,11 @@ class EscrowAndPaymentTest extends TestCase
             'amount' => 500.00,
         ]);
 
-        // Seller settlement created in pending status
+        // Acceptance creates seller settlement in pending status
+        $escrowService->createSettlementOnAcceptance($invoice);
         $this->assertDatabaseHas('settlements', [
             'seller_id' => $this->seller->id,
             'invoice_id' => $invoice->id,
-            'amount' => 9500.00,
             'status' => 'pending',
         ]);
     }

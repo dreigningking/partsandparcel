@@ -218,7 +218,7 @@
         @if($canMakeOffer)
           @auth
             <button type="button" 
-                    wire:click="$dispatch('open-listing-offer', { listing_id: {{ $listing->id }}, seller_id: {{ $seller->id }}, seller_name: '{{ addslashes($seller->business_name ?? $seller->name) }}' })" 
+                    @click="$dispatch('open-listing-offer', { listing_id: {{ $listing->id }}, seller_id: {{ $seller->id }}, seller_name: '{{ addslashes($seller->business_name ?? $seller->name) }}' })" 
                     class="h-11 bg-pp-600 text-white hover:bg-pp-700 rounded-lg font-bold text-sm transition cursor-pointer shadow-2xs">
               Make an Offer
             </button>
@@ -247,7 +247,7 @@
       <!-- OFFER ON SPECIFIC COMPONENT (SCRAP ONLY WITH AVAILABLE CHILDREN) -->
       @if($item?->item_type === 'scrap' && $item?->children->filter(fn ($child) => $child->isAvailable())->isNotEmpty())
         <button type="button" 
-                wire:click="$dispatch('open-make-offer', { listing_id: {{ $listing->id }}, seller_id: {{ $seller->id }}, seller_name: '{{ addslashes($seller->business_name ?? $seller->name) }}', component_mode: true })" 
+                @click="$dispatch('open-listing-offer', { listing_id: {{ $listing->id }}, seller_id: {{ $seller->id }}, seller_name: '{{ addslashes($seller->business_name ?? $seller->name) }}', component_mode: true })" 
                 class="w-full h-11 mt-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs">
           <i class="fas fa-microchip text-pp-400"></i>
           <span>Offer on Specific Component (e.g. Board only)</span>
@@ -256,7 +256,7 @@
 
       <!-- MESSAGE / CHAT WITH SELLER -->
       <button type="button" 
-              wire:click="$dispatch('open-conversation', { id: {{ $seller->id }} })" 
+              @click="$dispatch('open-conversation', { id: {{ $seller->id }} })" 
               class="w-full h-11 mt-2 border border-slate-200 rounded-lg font-bold text-xs hover:bg-slate-50 transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs text-slate-800">
         <i class="fas fa-comment-dots text-pp-600"></i>
         <span>Message / Chat with Seller</span>

@@ -116,11 +116,19 @@ return new class extends Migration {
             $table->foreignId('replacement_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('warranty_claim_id')->nullable()->constrained('warranty_claims')->nullOnDelete();
             $table->foreignId('refund_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('return_shipment_id')->nullable()->constrained('shipments')->nullOnDelete();
             $table->foreignId('opened_by')->constrained('users')->cascadeOnDelete();
             $table->foreignId('respondent_id')->nullable()->constrained('users')->nullOnDelete();
             $table->enum('type', ['rejection_contested','replacement_defective','return_fraud_abuse','warranty_denial','mutual_deadlock',])->default('rejection_contested');
+            $table->enum('decision', ['buyer_favor', 'seller_favor', 'split'])->nullable();
+            $table->decimal('refund_amount', 15, 2)->nullable();
+            $table->boolean('require_return')->default(false);
+            $table->text('resolution_notes')->nullable();
+            $table->text('internal_notes')->nullable();
             $table->string('status')->default('open');
             $table->text('reason');
+            $table->text('respondent_defense')->nullable();
+            $table->timestamp('respondent_defended_at')->nullable();
             $table->text('evidence')->nullable();
             $table->text('resolution')->nullable();
             $table->foreignId('resolved_by')->nullable()->constrained('users')->nullOnDelete();
@@ -137,10 +145,31 @@ return new class extends Migration {
             $table->timestamps();
         });
 
+        Schema::create('dispute_evidence', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('dispute_id')->constrained('disputes')->cascadeOnDelete();
+            $table->foreignId('requested_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->enum('target_party', ['buyer', 'seller'])->default('seller');
+            $table->foreignId('target_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('title');
+            $table->text('instructions')->nullable();
+            $table->string('deadline_preset')->default('24_hours');
+            $table->timestamp('deadline_at')->nullable();
+            $table->enum('status', ['pending', 'submitted', 'overdue', 'cancelled'])->default('pending');
+            $table->text('party_notes')->nullable();
+            $table->json('files')->nullable();
+            $table->timestamp('submitted_at')->nullable();
+            $table->foreignId('submitted_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+
+            $table->index(['dispute_id', 'status']);
+        });
+
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('dispute_evidence');
         Schema::dropIfExists('dispute_items');
         Schema::dropIfExists('disputes');
         Schema::dropIfExists('warranty_claims');

@@ -108,47 +108,55 @@ class DisputeView extends Component
     {
         $numericId = $id ? (int) preg_replace('/[^0-9]/', '', (string) $id) : null;
 
+        $relations = [
+            'invoice.buyer',
+            'invoice.seller',
+            'invoice.items',
+            'invoice.payments',
+            'invoice.settlement',
+            'opener',
+            'respondent',
+            'resolver',
+            'issue',
+            'returnRecord',
+            'replacement',
+            'warrantyClaim',
+            'evidences.requester',
+            'evidences.targetUser',
+            'evidences.submitter',
+            'returnShipment',
+        ];
+
+        $user = Auth::user();
         $dispute = null;
+
         if ($numericId) {
-            $dispute = Dispute::with([
-                'invoice.buyer',
-                'invoice.seller',
-                'invoice.items',
-                'invoice.payments',
-                'invoice.settlement',
-                'opener',
-                'respondent',
-                'resolver',
-                'issue',
-                'returnRecord',
-                'replacement',
-                'warrantyClaim',
-                'evidences.requester',
-                'evidences.targetUser',
-                'evidences.submitter',
-                'returnShipment',
-            ])->find($numericId);
+            $dispute = Dispute::with($relations)->find($numericId);
+            if (! $dispute && Dispute::exists()) {
+                abort(404, 'Dispute not found.');
+            }
+        } elseif ($user) {
+            // Load authenticated user's latest dispute
+            $dispute = Dispute::with($relations)
+                ->where(function ($q) use ($user) {
+                    $q->where('opened_by', $user->id)
+                      ->orWhere('respondent_id', $user->id)
+                      ->orWhereHas('invoice', fn ($iq) => $iq->where('buyer_id', $user->id)->orWhere('seller_id', $user->id));
+                })
+                ->latest()
+                ->first();
         }
 
-        if (! $dispute) {
-            $dispute = Dispute::with([
-                'invoice.buyer',
-                'invoice.seller',
-                'invoice.items',
-                'invoice.payments',
-                'invoice.settlement',
-                'opener',
-                'respondent',
-                'resolver',
-                'issue',
-                'returnRecord',
-                'replacement',
-                'warrantyClaim',
-                'evidences.requester',
-                'evidences.targetUser',
-                'evidences.submitter',
-                'returnShipment',
-            ])->latest()->first();
+        // Authorization check: User must be a party to this dispute or platform admin
+        if ($dispute && $user) {
+            $isAdmin = method_exists($user, 'isAdmin') && $user->isAdmin();
+            $isParty = $dispute->opened_by === $user->id
+                || $dispute->respondent_id === $user->id
+                || ($dispute->invoice && ($dispute->invoice->buyer_id === $user->id || $dispute->invoice->seller_id === $user->id));
+
+            if (! $isParty && ! $isAdmin) {
+                abort(403, 'Unauthorized access to this dispute case.');
+            }
         }
 
         if ($dispute) {

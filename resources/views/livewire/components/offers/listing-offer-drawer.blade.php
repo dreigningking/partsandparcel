@@ -1,10 +1,19 @@
-<div>
-  @if ($isOpen)
+<div x-data="{
+    open: @entangle('isOpen'),
+    init() {
+        window.addEventListener('open-listing-offer', () => { this.open = true; });
+        window.addEventListener('open-make-offer', () => { this.open = true; });
+        window.addEventListener('close-listing-offer', () => { this.open = false; });
+    }
+}">
     <!-- BACKDROP OVERLAY -->
-    <div wire:click="closeDrawer" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs transition"></div>
+    <div class="overlay fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs transition"
+         :class="{ 'open': open }"
+         @click="open = false; $wire.closeDrawer()"></div>
 
     <!-- 3-STEP LISTING OFFER DRAWER -->
-    <div class="fixed top-0 right-0 bottom-0 z-50 w-full sm:w-[500px] bg-white shadow-2xl flex flex-col transition animate-in slide-in-from-right duration-200">
+    <div class="drawer fixed top-0 right-0 bottom-0 z-50 w-full sm:w-[500px] bg-white shadow-2xl flex flex-col"
+         :class="{ 'open': open }">
 
       <!-- DRAWER HEADER -->
       <div class="h-16 px-6 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
@@ -18,7 +27,7 @@
             <strong class="text-slate-700">{{ $currentStep === 1 ? 'Configure Item' : ($currentStep === 2 ? 'Fulfillment & Address' : 'Review & Submit') }}</strong>
           </p>
         </div>
-        <button wire:click="closeDrawer" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 font-bold text-lg grid place-items-center transition cursor-pointer">
+        <button type="button" @click="open = false; $wire.closeDrawer()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 font-bold text-lg grid place-items-center transition cursor-pointer">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -36,9 +45,15 @@
 
       <!-- DRAWER BODY (SCROLLABLE) -->
       <div class="flex-1 min-h-0 overflow-y-auto p-6 space-y-5 text-xs">
-
-        <!-- STEP 1: ITEM CONFIGURATION -->
-        @if ($currentStep === 1)
+        @if (! $listingId)
+          <!-- SKELETON PLACEHOLDER WHILE LOADING -->
+          <div class="space-y-4 animate-pulse">
+            <div class="h-20 bg-slate-100 rounded-2xl"></div>
+            <div class="h-36 bg-slate-100 rounded-2xl"></div>
+            <div class="h-28 bg-slate-100 rounded-2xl"></div>
+          </div>
+        @else
+          @if ($currentStep === 1)
           <div class="space-y-4">
             <!-- LISTING HEADER CARD -->
             <div class="p-4 rounded-2xl bg-pp-50/80 border border-pp-100 flex items-center gap-3">
@@ -270,32 +285,33 @@
             </div>
           </div>
         @endif
-
+        @endif
       </div>
 
       <!-- DRAWER FOOTER ACTIONS -->
-      <div class="p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3 shrink-0">
-        @if ($currentStep > 1)
-          <button type="button" wire:click="prevStep" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition cursor-pointer">
-            <i class="fas fa-arrow-left mr-1"></i> Back
-          </button>
-        @else
-          <div></div>
-        @endif
+      @if ($listingId)
+        <div class="p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3 shrink-0">
+          @if ($currentStep > 1)
+            <button type="button" wire:click="prevStep" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition cursor-pointer">
+              <i class="fas fa-arrow-left mr-1"></i> Back
+            </button>
+          @else
+            <div></div>
+          @endif
 
-        @if ($currentStep < 3)
-          <button type="button" wire:click="nextStep" class="px-6 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5">
-            <span>Continue</span>
-            <i class="fas fa-arrow-right"></i>
-          </button>
-        @else
-          <button type="button" wire:click="submitOffer" class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5">
-            <i class="fas fa-paper-plane"></i>
-            <span>Send Offer Proposal</span>
-          </button>
-        @endif
-      </div>
+          @if ($currentStep < 3)
+            <button type="button" wire:click="nextStep" class="px-6 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5">
+              <span>Continue</span>
+              <i class="fas fa-arrow-right"></i>
+            </button>
+          @else
+            <button type="button" wire:click="submitOffer" class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5">
+              <i class="fas fa-paper-plane"></i>
+              <span>Send Offer Proposal</span>
+            </button>
+          @endif
+        </div>
+      @endif
 
     </div>
-  @endif
 </div>

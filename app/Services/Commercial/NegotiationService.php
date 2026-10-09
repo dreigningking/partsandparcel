@@ -16,6 +16,7 @@ use App\Models\Setting;
 use App\Models\Shipment;
 use App\Models\ShipmentItem;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class NegotiationService
@@ -394,20 +395,21 @@ class NegotiationService
             return $offer->invoice ?? Invoice::where('offer_id', $offer->id)->firstOrFail();
         }
 
-        // Verify listing availability and lock reserved_quantity for all items in the offer
-        foreach ($offer->items->where('type', 'item') as $oItem) {
-            if ($oItem->listing_id) {
-                $listing = Listing::find($oItem->listing_id);
-                if ($listing) {
-                    if ($listing->availableQuantity() < $oItem->quantity) {
-                        throw new \DomainException("Item '{$listing->title}' is no longer available in the requested quantity ({$listing->availableQuantity()} left). Offers are non-binding and subject to availability until payment.");
+        return DB::transaction(function () use ($user, $offer) {
+            // Verify listing availability and lock reserved_quantity for all items in the offer
+            foreach ($offer->items->where('type', 'item') as $oItem) {
+                if ($oItem->listing_id) {
+                    $listing = Listing::where('id', $oItem->listing_id)->lockForUpdate()->first();
+                    if ($listing) {
+                        if ($listing->availableQuantity() < $oItem->quantity) {
+                            throw new \DomainException("Item '{$listing->title}' is no longer available in the requested quantity ({$listing->availableQuantity()} left). Offers are non-binding and subject to availability until payment.");
+                        }
+                        $listing->increment('reserved_quantity', $oItem->quantity);
                     }
-                    $listing->increment('reserved_quantity', $oItem->quantity);
                 }
             }
-        }
 
-        $offer->update(['status' => 'accepted']);
+            $offer->update(['status' => 'accepted']);
 
         // Determine Buyer and Seller
         if ($offer->cart_id && $offer->cart) {
@@ -571,7 +573,8 @@ class NegotiationService
             $invoice->buyer->notify(new \App\Notifications\InvoiceIssuedNotification($invoice));
         }
 
-        return $invoice->load('items');
+            return $invoice->load('items');
+        });
     }
 
     /**

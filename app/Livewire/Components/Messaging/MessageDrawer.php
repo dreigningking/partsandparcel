@@ -23,10 +23,15 @@ class MessageDrawer extends Component
         ];
 
         if ($userId) {
-            $listeners["echo-private:user.{$userId},MessageSent"] = '$refresh';
+            $listeners["echo-private:user.{$userId},MessageSent"] = 'onMessageReceived';
         }
 
         return $listeners;
+    }
+
+    public function onMessageReceived($payload = null)
+    {
+        // Re-renders the component: conversation list re-queries with updated_at desc
     }
 
     #[On('open-message-drawer')]
@@ -53,8 +58,16 @@ class MessageDrawer extends Component
         $conversations = collect();
 
         if ($user) {
-            $query = Conversation::whereHas('participants', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
+            $query = Conversation::where(function ($q) use ($user) {
+                $q->where(function ($sub) use ($user) {
+                    $sub->support()
+                        ->where(function ($sq) use ($user) {
+                            $sq->where('contextable_id', $user->id)
+                               ->orWhereHas('participants', fn($p) => $p->where('user_id', $user->id));
+                        });
+                })->orWhereHas('participants', function ($p) use ($user) {
+                    $p->where('user_id', $user->id);
+                });
             })
             ->with(['participants.user', 'latestMessage.sender', 'contextable'])
             ->latest('updated_at');
@@ -72,16 +85,15 @@ class MessageDrawer extends Component
             }
 
             $conversations = $query->take(20)->get()->map(function ($c) use ($user) {
-                $peer = $c->participants->where('user_id', '!=', $user->id)->first()?->user;
-                $peerName = $peer?->business_name ?: $peer?->name ?: 'Vendor';
+                $peerName = $c->getOtherPartyName($user);
                 $latest = $c->latestMessage;
                 $unread = $c->messages()->where('sender_id', '!=', $user->id)->whereNull('read_at')->exists();
 
                 return [
                     'id' => $c->id,
                     'peer_name' => $peerName,
-                    'avatar' => strtoupper(substr($peerName, 0, 1)),
-                    'title' => $c->contextable?->title ?: 'Direct Inquiry',
+                    'avatar' => $c->isSupport() ? '🎧' : strtoupper(substr($peerName, 0, 1)),
+                    'title' => $c->contextable?->title ?: ($c->isSupport() ? 'Official Support Desk' : 'Direct Inquiry'),
                     'snippet' => $latest?->body ?: 'No messages yet',
                     'time' => $latest?->created_at ? $latest->created_at->diffForHumans() : $c->created_at->diffForHumans(),
                     'unread' => $unread,

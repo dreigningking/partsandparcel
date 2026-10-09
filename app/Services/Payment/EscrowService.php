@@ -40,7 +40,7 @@ class EscrowService
             }
 
             // If payment is for a Subscription
-            if ($payment->subscription_id && $payment->subscription) {
+            if (($payment->subscription_id && $payment->subscription) || ($payment->metadata['payment_type'] ?? '') === 'subscription') {
                 $this->processSubscriptionPayment($payment);
             }
 
@@ -56,11 +56,11 @@ class EscrowService
     protected function processInvoicePayment(Payment $payment): void
     {
         $invoice = $payment->invoice;
+        $commissionAmount = (float) $invoice->commission;
 
         $invoice->update([
             'status' => 'paid',
             'paid_at' => now(),
-            'commission' => 0.00,
         ]);
 
         // Convert reserved quantity to sold quantity for listing invoice items
@@ -90,12 +90,32 @@ class EscrowService
                     'currency' => $payment->currency ?? 'NGN',
                 ]
             );
+        } elseif ($commissionAmount > 0) {
+            Revenue::firstOrCreate(
+                [
+                    'payment_id' => $payment->id,
+                    'invoice_id' => $invoice->id,
+                    'type' => 'commission',
+                ],
+                [
+                    'amount' => $commissionAmount,
+                    'currency' => $payment->currency ?? 'NGN',
+                ]
+            );
         }
 
         // Notify seller that payment is securely held in platform escrow
         if ($invoice->isPlatformEscrow() && $invoice->seller) {
             $invoice->seller->notify(new \App\Notifications\PaymentHeldInEscrowNotification($invoice));
         }
+    }
+
+    /**
+     * Process subscription payment confirmation by delegating to SubscriptionService.
+     */
+    protected function processSubscriptionPayment(Payment $payment): void
+    {
+        app(\App\Services\Commercial\SubscriptionService::class)->activateSubscription($payment);
     }
 
     /**
@@ -110,6 +130,15 @@ class EscrowService
         }
 
         if ($invoice->settlement) {
+            if (! $invoice->settlement->eligible_at) {
+                $eligibleHours = (int) Setting::getValue('order_accepted_to_settlement_eligible_hours', 24);
+                $warrantyDays = $invoice->maxWarrantyDays();
+                $eligibleAt = now()->addHours($eligibleHours);
+                if ($warrantyDays && $warrantyDays > 0) {
+                    $eligibleAt = $eligibleAt->addDays($warrantyDays);
+                }
+                $invoice->settlement->update(['eligible_at' => $eligibleAt]);
+            }
             return $invoice->settlement;
         }
 
@@ -187,8 +216,8 @@ class EscrowService
             return false;
         }
 
-        // 2. Must not be settled already or cancelled
-        if (in_array($settlement->status, ['settled', 'disputed'])) {
+        // 2. Must be in pending status (must not already be eligible, settled, disputed, or cancelled)
+        if ($settlement->status !== 'pending') {
             return false;
         }
 
@@ -217,19 +246,20 @@ class EscrowService
      */
     public function releaseSettlement(Settlement $settlement): bool
     {
-        if (! $this->canReleaseSettlement($settlement)) {
-            Log::warning("Settlement #{$settlement->id} cannot be released due to warranty/inspection window or open disputes.");
-            return false;
-        }
-
         return DB::transaction(function () use ($settlement) {
-            $settlement->update([
+            $lockedSettlement = Settlement::where('id', $settlement->id)->lockForUpdate()->first();
+            if (! $lockedSettlement || ! $this->canReleaseSettlement($lockedSettlement)) {
+                Log::warning("Settlement #{$settlement->id} cannot be released due to warranty/inspection window, open disputes, or already released.");
+                return false;
+            }
+
+            $lockedSettlement->update([
                 'status' => 'eligible',
             ]);
 
             // Mark invoice completed timestamp if not already set
-            if ($settlement->invoice && ! $settlement->invoice->completed_at) {
-                $settlement->invoice->update([
+            if ($lockedSettlement->invoice && ! $lockedSettlement->invoice->completed_at) {
+                $lockedSettlement->invoice->update([
                     'completed_at' => now(),
                 ]);
             }
