@@ -126,7 +126,7 @@
           <div class="flex items-center gap-2.5 w-full sm:w-auto">
             @auth
               @if (auth()->id() !== $user->id)
-                <button type="button" @click="$dispatch('open-conversation', { id: {{ $user->id }} })" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center justify-center gap-2">
+                <button type="button" @click="$dispatch('open-conversation', { recipientId: {{ $user->id }} })" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-pp-600 hover:bg-pp-700 text-white font-extrabold text-xs shadow-xs transition cursor-pointer flex items-center justify-center gap-2">
                   <i class="fas fa-comment-dots"></i> Message Seller
                 </button>
               @else

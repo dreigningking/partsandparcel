@@ -271,3 +271,10 @@ Route::get('create-moderation',function(){
 
 });
 
+Route::get('test-notification', function(){
+    
+    Illuminate\Support\Facades\Notification::route('mail', 'is.oluwadamilola@gmail.com')
+    ->notify(new \App\Notifications\TestNotification('Something important happened!'));
+    return 'Notification sent!';
+});
+

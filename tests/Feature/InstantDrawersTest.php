@@ -155,6 +155,52 @@ class InstantDrawersTest extends TestCase
             ->assertSet('isOpen', false);
     }
 
+    public function test_conversation_drawer_opens_by_recipient_id_and_resolves_or_creates_conversation(): void
+    {
+        $newSeller = User::factory()->create([
+            'name' => 'Brand New Seller',
+            'business_name' => 'New Parts Shop',
+        ]);
+
+        Livewire::actingAs($this->buyer)
+            ->test(ConversationDrawer::class)
+            ->assertSet('isOpen', false)
+            ->dispatch('open-conversation', recipientId: $newSeller->id, contextType: 'listing', contextId: $this->listing->id)
+            ->assertSet('isOpen', true)
+            ->assertSet('recipientName', 'New Parts Shop')
+            ->assertSet('recipientId', $newSeller->id)
+            ->set('newMessage', 'Hi, is this still available?')
+            ->call('sendMessage')
+            ->assertSee('Hi, is this still available?');
+
+        $this->assertDatabaseHas('conversations', [
+            'created_by' => $this->buyer->id,
+            'contextable_id' => $this->listing->id,
+        ]);
+    }
+
+    public function test_conversation_drawer_opens_when_id_is_seller_user_id(): void
+    {
+        Livewire::actingAs($this->buyer)
+            ->test(ConversationDrawer::class)
+            ->assertSet('isOpen', false)
+            ->dispatch('open-conversation', id: $this->seller->id)
+            ->assertSet('isOpen', true)
+            ->assertSet('recipientName', 'Drawer Parts Hub')
+            ->assertSee('Hello seller, is this board available?');
+    }
+
+    public function test_seller_cannot_open_conversation_with_themselves(): void
+    {
+        Livewire::actingAs($this->seller)
+            ->test(ConversationDrawer::class)
+            ->assertSet('isOpen', false)
+            ->dispatch('open-conversation', recipientId: $this->seller->id)
+            ->assertSet('isOpen', false);
+    }
+
+
+
     public function test_listing_offer_drawer_opens_via_events_and_closes(): void
     {
         Livewire::actingAs($this->buyer)

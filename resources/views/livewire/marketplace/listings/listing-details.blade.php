@@ -255,12 +255,24 @@
       @endif
 
       <!-- MESSAGE / CHAT WITH SELLER -->
-      <button type="button" 
-              @click="$dispatch('open-conversation', { id: {{ $seller->id }} })" 
-              class="w-full h-11 mt-2 border border-slate-200 rounded-lg font-bold text-xs hover:bg-slate-50 transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs text-slate-800">
-        <i class="fas fa-comment-dots text-pp-600"></i>
-        <span>Message / Chat with Seller</span>
-      </button>
+      @if($seller)
+        @auth
+          @if(auth()->id() !== $seller->id)
+            <button type="button" 
+                    @click="$dispatch('open-conversation', { recipientId: {{ $seller->id }}, contextType: 'listing', contextId: {{ $listing->id }} })" 
+                    class="w-full h-11 mt-2 border border-slate-200 rounded-lg font-bold text-xs hover:bg-slate-50 transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs text-slate-800">
+              <i class="fas fa-comment-dots text-pp-600"></i>
+              <span>Message / Chat with Seller</span>
+            </button>
+          @endif
+        @else
+          <a href="{{ route('login') }}" 
+             class="w-full h-11 mt-2 border border-slate-200 rounded-lg font-bold text-xs hover:bg-slate-50 transition cursor-pointer flex items-center justify-center gap-2 shadow-2xs text-slate-800">
+            <i class="fas fa-comment-dots text-pp-600"></i>
+            <span>Sign in to Message Seller</span>
+          </a>
+        @endauth
+      @endif
 
       @if (session('report_success'))
         <div class="mt-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 flex items-center gap-2">
