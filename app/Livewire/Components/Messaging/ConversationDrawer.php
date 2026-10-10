@@ -20,6 +20,8 @@ class ConversationDrawer extends Component
     public ?int $recipientId = null;
     public string $itemTitle = 'Community Request';
     public string $avatarLetter = 'V';
+    public ?string $contextType = null;
+    public $contextId = null;
     public array $messages = [];
     public string $newMessage = '';
 
@@ -62,8 +64,13 @@ class ConversationDrawer extends Component
                     $this->isOpen = false;
                     return;
                 }
-                $conv = $this->resolveConversationForUsers($user, $peer, $contextType, $contextId);
-                $this->setLoadedConversation($conv, $user);
+
+                $existingConv = $this->findExistingConversationBetween($user, $peer, $contextType, $contextId);
+                if ($existingConv) {
+                    $this->setLoadedConversation($existingConv, $user);
+                } else {
+                    $this->startDraftConversation($peer, $contextType, $contextId);
+                }
                 return;
             }
         }
@@ -111,8 +118,13 @@ class ConversationDrawer extends Component
                     $this->isOpen = false;
                     return;
                 }
-                $conv = $this->resolveConversationForUsers($user, $peer, $contextType, $contextId);
-                $this->setLoadedConversation($conv, $user);
+
+                $existingConv = $this->findExistingConversationBetween($user, $peer, $contextType, $contextId);
+                if ($existingConv) {
+                    $this->setLoadedConversation($existingConv, $user);
+                } else {
+                    $this->startDraftConversation($peer, $contextType, $contextId);
+                }
                 return;
             }
 
@@ -135,6 +147,61 @@ class ConversationDrawer extends Component
             ['sender' => 'me', 'text' => 'Can I test the laptop before payment?', 'time' => '2:17 PM'],
             ['sender' => 'them', 'text' => 'Yes. You can test it at my location before completing purchase.', 'time' => '2:19 PM'],
         ];
+    }
+
+    protected function startDraftConversation(User $peer, ?string $contextType = null, $contextId = null): void
+    {
+        $this->conversationId = null;
+        $this->recipientId = $peer->id;
+        $this->recipientName = $peer->business_name ?: $peer->name;
+        $this->avatarLetter = strtoupper(substr($this->recipientName, 0, 1));
+        $this->contextType = $contextType;
+        $this->contextId = $contextId;
+
+        if ($contextType === 'listing' && $contextId) {
+            $listing = Listing::with('item')->find($contextId);
+            $this->itemTitle = $listing?->item?->name ?? $listing?->description ?? 'Listing Inquiry';
+        } else {
+            $this->itemTitle = 'Direct Inquiry';
+        }
+
+        $this->messages = [];
+        $this->isOpen = true;
+    }
+
+    protected function findExistingConversationBetween(User $user, User $peer, ?string $contextType = null, $contextId = null): ?Conversation
+    {
+        $query = Conversation::whereHas('participants', fn($q) => $q->where('user_id', $user->id))
+            ->whereHas('participants', fn($q) => $q->where('user_id', $peer->id));
+
+        if ($contextType === 'listing' && $contextId) {
+            $conv = (clone $query)
+                ->where('contextable_type', Listing::class)
+                ->where('contextable_id', (int) $contextId)
+                ->latest('updated_at')
+                ->first();
+
+            if ($conv) {
+                return $conv;
+            }
+        }
+
+        return (clone $query)->latest('updated_at')->first();
+    }
+
+    protected function formatMessageTime($dateTime): string
+    {
+        if (! $dateTime) {
+            return 'Just now';
+        }
+
+        $dt = $dateTime instanceof \Carbon\CarbonInterface ? $dateTime : \Illuminate\Support\Carbon::parse($dateTime);
+
+        if ($dt->diffInHours(now()) >= 24) {
+            return $dt->format('M j, g:i A');
+        }
+
+        return $dt->format('g:i A');
     }
 
     protected function setLoadedConversation(Conversation $conv, User $user): void
@@ -180,7 +247,7 @@ class ConversationDrawer extends Component
                     'id' => $msg->id,
                     'sender' => $isMe ? 'me' : 'them',
                     'text' => $msg->body,
-                    'time' => $msg->created_at ? $msg->created_at->diffForHumans() : 'Just now',
+                    'time' => $this->formatMessageTime($msg->created_at),
                 ];
             })
             ->toArray();
@@ -253,6 +320,15 @@ class ConversationDrawer extends Component
             return redirect()->route('login');
         }
 
+        // If conversation has not been created yet in DB (draft mode), create it now!
+        if (! $this->conversationId && $this->recipientId) {
+            $peer = User::find($this->recipientId);
+            if ($peer) {
+                $conv = $this->resolveConversationForUsers($user, $peer, $this->contextType, $this->contextId);
+                $this->conversationId = $conv->id;
+            }
+        }
+
         if (is_numeric($this->conversationId)) {
             $conv = Conversation::find($this->conversationId);
             if ($conv) {
@@ -262,6 +338,9 @@ class ConversationDrawer extends Component
                     'body' => $body,
                     'read_at' => null,
                 ]);
+
+                // Touch conversation updated_at
+                $conv->touch();
 
                 // Broadcast real-time event to Reverb safely
                 try {
@@ -280,7 +359,7 @@ class ConversationDrawer extends Component
                     'id' => $msg->id,
                     'sender' => 'me',
                     'text' => $msg->body,
-                    'time' => 'Just now',
+                    'time' => $this->formatMessageTime($msg->created_at),
                 ];
 
                 $this->newMessage = '';
@@ -294,7 +373,7 @@ class ConversationDrawer extends Component
             'id' => rand(1000, 9999),
             'sender' => 'me',
             'text' => $body,
-            'time' => 'Just now',
+            'time' => $this->formatMessageTime(now()),
         ];
         $this->newMessage = '';
     }
@@ -323,7 +402,7 @@ class ConversationDrawer extends Component
             'id' => $payload['id'] ?? null,
             'sender' => 'them',
             'text' => $payload['body'] ?? ($payload['text'] ?? ''),
-            'time' => $payload['time'] ?? 'Just now',
+            'time' => $this->formatMessageTime($payload['created_at'] ?? now()),
         ];
 
         // If open, automatically mark as read

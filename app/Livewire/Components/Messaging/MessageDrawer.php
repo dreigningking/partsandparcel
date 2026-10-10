@@ -58,7 +58,8 @@ class MessageDrawer extends Component
         $conversations = collect();
 
         if ($user) {
-            $query = Conversation::where(function ($q) use ($user) {
+            $query = Conversation::has('messages')
+                ->where(function ($q) use ($user) {
                 $q->where(function ($sub) use ($user) {
                     $sub->support()
                         ->where(function ($sq) use ($user) {
@@ -95,7 +96,7 @@ class MessageDrawer extends Component
                     'avatar' => $c->isSupport() ? '🎧' : strtoupper(substr($peerName, 0, 1)),
                     'title' => $c->contextable?->title ?: ($c->isSupport() ? 'Official Support Desk' : 'Direct Inquiry'),
                     'snippet' => $latest?->body ?: 'No messages yet',
-                    'time' => $latest?->created_at ? $latest->created_at->diffForHumans() : $c->created_at->diffForHumans(),
+                    'time' => $this->formatConversationTime($latest?->created_at ?: $c->updated_at),
                     'unread' => $unread,
                 ];
             });
@@ -107,5 +108,28 @@ class MessageDrawer extends Component
             'conversations' => $conversations,
             'unreadCount' => $unreadCount,
         ]);
+    }
+
+    protected function formatConversationTime($dateTime): string
+    {
+        if (! $dateTime) {
+            return '';
+        }
+
+        $dt = $dateTime instanceof \Carbon\CarbonInterface ? $dateTime : \Illuminate\Support\Carbon::parse($dateTime);
+
+        if ($dt->isToday()) {
+            return $dt->format('g:i A');
+        }
+
+        if ($dt->isYesterday()) {
+            return 'Yesterday';
+        }
+
+        if ($dt->diffInHours(now()) < 24) {
+            return $dt->format('g:i A');
+        }
+
+        return $dt->format('M j');
     }
 }

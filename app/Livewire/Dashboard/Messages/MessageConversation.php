@@ -109,12 +109,16 @@ class MessageConversation extends Component
                 // Load messages strictly in order of entry (chronological ascending)
                 $this->messages = $conv->messages->sortBy('created_at')->values()->map(function ($msg) use ($user) {
                     $isMe = $user && ($msg->sender_id === $user->id);
+                    $timeFormatted = $msg->created_at
+                        ? ($msg->created_at->diffInHours(now()) >= 24 ? $msg->created_at->format('M j, g:i A') : $msg->created_at->format('g:i A'))
+                        : 'Just now';
+
                     return [
                         'id' => $msg->id,
                         'sender' => $isMe ? 'me' : 'them',
                         'sender_name' => $msg->sender?->business_name ?: $msg->sender?->name ?: ($this->isSupport ? 'Support' : 'Vendor'),
                         'body' => $msg->body,
-                        'time' => $msg->created_at ? $msg->created_at->format('g:i A') : 'Just now',
+                        'time' => $timeFormatted,
                         'date' => $msg->created_at ? $msg->created_at->format('M d, Y') : 'Today',
                     ];
                 })->toArray();

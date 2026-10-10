@@ -57,7 +57,7 @@
                 <span class="font-bold text-xs text-slate-900 truncate">{{ $peerName }}</span>
                 @if($latest)
                   <span class="text-[10px] font-semibold text-slate-400 shrink-0">
-                    {{ $latest->created_at->diffForHumans(null, true) }}
+                    {{ $latest->created_at->isToday() ? $latest->created_at->format('g:i A') : ($latest->created_at->isYesterday() ? 'Yesterday' : ($latest->created_at->diffInHours(now()) < 24 ? $latest->created_at->format('g:i A') : $latest->created_at->format('M j'))) }}
                   </span>
                 @endif
               </div>
@@ -166,7 +166,7 @@
                   <div class="whitespace-pre-line">{{ $msg->body }}</div>
                 </div>
                 <span class="text-[10px] text-slate-400 block px-1 {{ $isMe ? 'text-right' : 'text-left' }}">
-                  {{ $msg->created_at->format('h:i A') }}
+                  {{ $msg->created_at->diffInHours(now()) >= 24 ? $msg->created_at->format('M j, g:i A') : $msg->created_at->format('g:i A') }}
                 </span>
               </div>
             </div>

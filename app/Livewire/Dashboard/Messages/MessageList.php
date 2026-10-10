@@ -122,8 +122,9 @@ class MessageList extends Component
     {
         $userId = Auth::id();
 
-        // Query user's conversations: support conversation + any participated conversations
+        // Query user's conversations: support conversation + any participated conversations (must have messages)
         $query = Conversation::query()
+            ->has('messages')
             ->where(function ($q) use ($userId) {
                 $q->where(function ($sub) use ($userId) {
                     $sub->support()
