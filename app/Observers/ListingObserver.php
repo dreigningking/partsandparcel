@@ -17,21 +17,15 @@ class ListingObserver
             return;
         }
 
-        // Active flag deals with subscription limit
-        if ($listing->is_active && $listing->user_id) {
+        // Active flag is determined by remaining subscription listing seats
+        if ($listing->user_id) {
             $user = $listing->user ?: User::find($listing->user_id);
             if ($user) {
                 $subService = app(SubscriptionService::class);
-                $stats = $subService->getUsageStats($user);
-                $limit = (int) ($stats['listing_limit'] ?? 10);
-                $currentActiveCount = Listing::where('user_id', $user->id)
-                    ->where('is_active', true)
-                    ->when($listing->id, fn($q) => $q->where('id', '!=', $listing->id))
-                    ->count();
+                $remainingSeats = $subService->getRemainingListingSeats($user, $listing->id);
 
-                if ($currentActiveCount >= $limit) {
-                    $listing->is_active = false;
-                }
+                // User's remaining listing seats determine whether is_active is true or false
+                $listing->is_active = ($remainingSeats > 0);
             }
         }
     }

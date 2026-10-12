@@ -78,7 +78,7 @@
                     <span class="text-slate-400 text-sm font-bold">›</span>
                 </a>
 
-                <a class="flex items-center gap-3 p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-100/80 dark:border-amber-900/40 hover:bg-amber-100/70 transition" href="{{ route('mylistings') }}">
+                <a class="flex items-center gap-3 p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-100/80 dark:border-amber-900/40 hover:bg-amber-100/70 transition" href="{{ route('admin.listings', ['status' => 'pending']) }}">
                     <span class="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-400 grid place-items-center font-bold text-base shrink-0">⚑</span>
                     <div class="flex-1 min-w-0">
                         <b class="text-xs text-slate-900 dark:text-slate-100">{{ $pendingListingsCount }} listings awaiting moderation</b>
@@ -134,7 +134,7 @@
                     </div>
                 </div>
             </div>
-            <a href="{{ route('welcome') }}" class="w-full mt-6 rounded-xl bg-pp-600 hover:bg-pp-700 text-white py-3 text-xs font-bold text-center block transition shadow-xs">
+            <a href="{{ route('admin.listings') }}" class="w-full mt-6 rounded-xl bg-pp-600 hover:bg-pp-700 text-white py-3 text-xs font-bold text-center block transition shadow-xs">
                 Manage Marketplace
             </a>
         </div>

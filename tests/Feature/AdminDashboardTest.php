@@ -114,4 +114,46 @@ class AdminDashboardTest extends TestCase
             ->call('submit')
             ->assertRedirect(route('admin.dashboard'));
     }
+
+    public function test_admin_dashboard_renders_metrics_with_active_and_pending_listings(): void
+    {
+        $role = Role::create([
+            'name' => 'Administrator',
+            'slug' => 'admin',
+            'is_active' => true,
+        ]);
+
+        $admin = User::factory()->create(['role_id' => $role->id]);
+        $seller = User::factory()->create();
+
+        // Active listing
+        \App\Models\Listing::create([
+            'user_id' => $seller->id,
+            'price' => 1000,
+            'quantity' => 5,
+            'is_published' => true,
+            'is_active' => true,
+        ]);
+
+        // Pending listing (published with pending moderation)
+        $pendingListing = \App\Models\Listing::create([
+            'user_id' => $seller->id,
+            'price' => 2000,
+            'quantity' => 1,
+            'is_published' => true,
+            'is_active' => false,
+        ]);
+        \App\Models\Moderation::create([
+            'moderatable_type' => \App\Models\Listing::class,
+            'moderatable_id' => $pendingListing->id,
+            'status' => 'pending',
+            'action' => 'created',
+        ]);
+
+        Livewire::actingAs($admin)
+            ->test(\App\Livewire\Admin\AdminDashboard::class)
+            ->assertStatus(200)
+            ->assertSee('listings awaiting moderation')
+            ->assertSee('Active listings');
+    }
 }

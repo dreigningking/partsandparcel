@@ -38,7 +38,7 @@ class AdminDashboard extends Component
         $newUsersThisWeek = User::where('created_at', '>=', now()->startOfWeek())->count();
 
         $activeDisputesCount = Dispute::whereIn('status', ['opened', 'pending', 'escalated'])->count();
-        $pendingListingsCount = Listing::where('status', 'pending')->count();
+        $pendingListingsCount = Listing::pending()->count();
         $unverifiedUsersCount = User::where('is_verified', false)->count();
 
         $needsAttentionCount = $activeDisputesCount + $pendingListingsCount + $unverifiedUsersCount;
@@ -79,7 +79,7 @@ class AdminDashboard extends Component
         $pendingSettlementsAmount = Settlement::where('status', 'pending')->sum('amount') ?: 0;
 
         // 4. Marketplace Metrics
-        $activeListings = Listing::where('status', 'active')->count();
+        $activeListings = Listing::active()->count();
         $newListingsToday = Listing::whereDate('created_at', $today)->count();
         $offersToday = Offer::whereDate('created_at', $today)->count();
         $completedSales = Invoice::where('status', 'paid')->count();

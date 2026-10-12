@@ -51,7 +51,7 @@ class SubscriptionService
         $canRespond = $todayResponsesUsed < $dailyResponseLimit;
 
         // 3. Total listings altogether limit and usage
-        $listingLimit = (int) ($plan?->listing_limit ?: ($plan?->features['listing_limit'] ?? 10));
+        $listingLimit = (int) ($activeSub?->listing_limit ?: ($plan?->listing_limit ?: ($plan?->features['listing_limit'] ?? 10)));
         $totalListingsCount = Listing::where('user_id', $user->id)
             ->where('is_active', true)
             ->where('is_published', true)
@@ -114,11 +114,34 @@ class SubscriptionService
     }
 
     /**
+     * Get remaining listing seats for a user, optionally excluding a specific listing ID.
+     */
+    public function getRemainingListingSeats(User $user, ?int $excludeListingId = null): int
+    {
+        /** @var Subscription|null $activeSub */
+        $activeSub = $user->activeSubscription()->with('plan')->first();
+
+        /** @var SubscriptionPlan|null $plan */
+        $plan = $activeSub?->plan ?? SubscriptionPlan::where('name', 'like', '%Starter%')->first();
+
+        $listingLimit = (int) ($activeSub?->listing_limit ?: ($plan?->listing_limit ?: ($plan?->features['listing_limit'] ?? 10)));
+
+        $otherActiveCount = Listing::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->where('is_published', true)
+            ->whereRaw('(COALESCE(quantity, 0) - COALESCE(reserved_quantity, 0) - COALESCE(sold_quantity, 0)) > 0')
+            ->when($excludeListingId, fn($q) => $q->where('id', '!=', $excludeListingId))
+            ->count();
+
+        return max(0, $listingLimit - $otherActiveCount);
+    }
+
+    /**
      * Check if a user can create another listing based on dynamic quota.
      */
     public function canCreateListing(User $user): bool
     {
-        return $this->getUsageStats($user)['can_create_listing'];
+        return $this->getRemainingListingSeats($user) > 0;
     }
 
     /**

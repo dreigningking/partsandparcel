@@ -151,6 +151,58 @@ class SubscriptionAndNotificationsTest extends TestCase
         $this->assertTrue($updatedStats['can_create_listing']);
     }
 
+    public function test_listing_is_active_is_determined_by_remaining_subscription_seats_on_create_and_update(): void
+    {
+        $user = User::factory()->create();
+        $subscriptionService = app(SubscriptionService::class);
+
+        // 1. Create first 10 listings without explicitly passing is_active or status
+        $listings = [];
+        for ($i = 0; $i < 10; $i++) {
+            $listings[] = Listing::create([
+                'user_id' => $user->id,
+                'item_id' => $this->item->id,
+                'price' => 1000 + ($i * 100),
+                'quantity' => 1,
+                'is_published' => true,
+            ]);
+        }
+
+        // All 10 must be active because user had remaining seats
+        foreach ($listings as $l) {
+            $l->refresh();
+            $this->assertTrue((bool) $l->is_active);
+        }
+
+        $this->assertEquals(0, $subscriptionService->getRemainingListingSeats($user));
+
+        // 2. 11th listing exceeds the 10 limit -> automatically saved with is_active = false
+        $overflowListing = Listing::create([
+            'user_id' => $user->id,
+            'item_id' => $this->item->id,
+            'price' => 9999,
+            'quantity' => 1,
+            'is_published' => true,
+        ]);
+
+        $this->assertFalse((bool) $overflowListing->is_active);
+        $this->assertEquals('inactive', $overflowListing->status);
+
+        // 3. Updating an existing active listing while at capacity (10/10) keeps it active
+        $listings[0]->update(['price' => 1500]);
+        $listings[0]->refresh();
+        $this->assertTrue((bool) $listings[0]->is_active);
+
+        // 4. Free up a seat by selling out one of the active listings
+        $listings[0]->update(['status' => 'sold']);
+        $this->assertEquals(1, $subscriptionService->getRemainingListingSeats($user));
+
+        // 5. Updating the inactive 11th listing now activates it
+        $overflowListing->update(['price' => 8888]);
+        $overflowListing->refresh();
+        $this->assertTrue((bool) $overflowListing->is_active);
+    }
+
     public function test_community_request_livewire_blocks_response_when_quota_exhausted(): void
     {
         $requester = User::factory()->create();

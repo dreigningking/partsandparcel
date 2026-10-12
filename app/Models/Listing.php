@@ -303,6 +303,11 @@ class Listing extends Model
 
 
 
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_published', true)->where('is_active', true);
+    }
+
     public function scopeModerationStatus(Builder $query, string $status): Builder
     {
         return $query->whereHas('latestModeration', function (Builder $m) use ($status) {
@@ -317,7 +322,11 @@ class Listing extends Model
 
     public function scopePending(Builder $query): Builder
     {
-        return $this->scopeModerationStatus($query, 'pending');
+        return $query->where('is_published', true)
+            ->where(function (Builder $q) {
+                $q->whereDoesntHave('latestModeration')
+                    ->orWhereHas('latestModeration', fn (Builder $m) => $m->where('status', 'pending'));
+            });
     }
 
     public function scopeRejected(Builder $query): Builder
@@ -354,6 +363,9 @@ class Listing extends Model
         if (! $this->is_published) {
             return 'draft';
         }
+        if ($this->availableQuantity() <= 0){
+            return 'sold out';
+        }
         if (! $this->is_active){
             return 'inactive';
         }
@@ -362,9 +374,6 @@ class Listing extends Model
         }
         if ($this->latestModeration->status == 'rejected'){
             return 'rejected';
-        }
-        if ($this->availableQuantity() <= 0){
-            return 'sold out';
         }
         if ($this->latestModeration->status == 'approved'){
             return 'live';
@@ -379,7 +388,9 @@ class Listing extends Model
             $this->attributes['is_active'] = true;
         } elseif ($status === 'sold' || $status === 'sold out') {
             $this->attributes['sold_quantity'] = (int) ($this->attributes['quantity'] ?? $this->quantity ?? 1);
-        } elseif ($status === 'inactive' || $status === 'draft') {
+        } elseif ($status === 'draft') {
+            $this->attributes['is_published'] = false;
+        } elseif ($status === 'inactive') {
             $this->attributes['is_active'] = false;
         }
     }

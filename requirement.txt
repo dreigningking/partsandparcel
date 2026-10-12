@@ -160,6 +160,6 @@ version2{
 }
 #Admin
 ==============================
-1. performance issues with wire:click before display.
-with message drawer,offer drawers
-2. 
+1. ui fixes
+2. seo after buying domain
+3. invoice details

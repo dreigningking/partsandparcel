@@ -7,6 +7,7 @@ use App\Models\Brand;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Category;
+use App\Models\Country;
 use App\Models\DeviceModel;
 use App\Models\Discussion;
 use App\Models\Invoice;
@@ -63,13 +64,26 @@ class ListingDetailsTest extends TestCase
             'slug' => 'latitude-5420',
         ]);
 
+        $country = Country::firstOrCreate(
+            ['code' => 'NG'],
+            [
+                'name' => 'Nigeria',
+                'phone_code' => '+234',
+                'currency' => 'NGN',
+                'currency_symbol' => '₦',
+                'is_active' => true,
+            ]
+        );
+
+        $this->seller->update(['country_id' => $country->id]);
+
         $this->location = Location::create([
             'user_id' => $this->seller->id,
+            'country_id' => $country->id,
             'label' => 'Main Workshop',
             'address_line_1' => 'Computer Village',
             'city' => 'Ikeja',
             'state' => 'Lagos',
-            'country' => 'NG',
             'is_default' => true,
         ]);
     }
@@ -330,8 +344,9 @@ class ListingDetailsTest extends TestCase
             'allow_shipping' => false,
         ]);
 
-        Livewire::test(ListingDetails::class, ['listing' => $listingLocked])
-            ->assertDontSeeHtml('open-make-offer');
+        Livewire::actingAs($this->buyer)
+            ->test(ListingDetails::class, ['listing' => $listingLocked])
+            ->assertDontSeeHtml('open-listing-offer');
 
         // At least one true (e.g. is_negotiable = true)
         $listingNegotiable = Listing::create([
@@ -346,7 +361,8 @@ class ListingDetailsTest extends TestCase
             'allow_shipping' => false,
         ]);
 
-        Livewire::test(ListingDetails::class, ['listing' => $listingNegotiable])
-            ->assertSeeHtml('open-make-offer');
+        Livewire::actingAs($this->buyer)
+            ->test(ListingDetails::class, ['listing' => $listingNegotiable])
+            ->assertSeeHtml('open-listing-offer');
     }
 }

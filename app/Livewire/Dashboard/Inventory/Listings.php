@@ -148,18 +148,7 @@ class Listings extends Component
             $this->quantity = 1;
         }
 
-        $user = Auth::user();
-        if ($user) {
-            $subscriptionService = app(\App\Services\Commercial\SubscriptionService::class);
-            $usage = $subscriptionService->getUsageStats($user);
-
-            if (! $usage['can_create_listing']) {
-                session()->flash('error', "You have reached your total active listings quota ({$usage['listings_used']}/{$usage['listing_limit']} for {$usage['plan_name']}). Please upgrade your subscription to list more parts.");
-                return;
-            }
-        }
-
-        Listing::create([
+        $listing = Listing::create([
             'user_id' => Auth::id(),
             'item_id' => $asset->id,
             'quantity' => $this->quantity,
@@ -172,7 +161,12 @@ class Listings extends Component
             'allow_shipping' => $this->allow_shipping,
         ]);
 
-        session()->flash('message', 'Marketplace listing published successfully!');
+        if ($listing->is_active) {
+            session()->flash('message', 'Marketplace listing published successfully!');
+        } else {
+            session()->flash('message', 'Listing created! However, because your subscription active listing limit is full, this listing is currently Inactive. Upgrade your subscription to activate it.');
+        }
+
         $this->showCreateListingModal = false;
         $this->reset(['selectedAssetKey', 'price', 'is_negotiable', 'quantity', 'warranty_period_days', 'is_warranty_negotiable', 'warranty_terms', 'allow_shipping', 'isQuantityDisabled']);
     }
@@ -229,7 +223,13 @@ class Listings extends Component
                 'allow_shipping' => $this->editAllowShipping,
             ]);
 
-            session()->flash('message', 'Listing updated successfully!');
+            $listing->refresh();
+
+            if ($listing->is_active) {
+                session()->flash('message', 'Listing updated successfully!');
+            } else {
+                session()->flash('message', 'Listing updated! Note: this listing is Inactive because your subscription listing limit is full.');
+            }
         }
 
         $this->showEditModal = false;
