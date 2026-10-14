@@ -9,7 +9,7 @@ Nigeria's marketplace and logistics platform for devices, machines, spare parts,
 ---
 
 ## 🌐 Live Production Deployment
-* **Live Marketplace URL**: [http://35.178.213.234](http://35.178.213.234)
+* **Live Marketplace URL**: https://3.8.106.189.nip.io/
 * **Cloud Infrastructure**: Amazon Lightsail (`eu-west-2a`, London)
 * **Docker Hub Registry**: [`dreigningking/partsandparcel:latest`](https://hub.docker.com/r/dreigningking/partsandparcel)
 
